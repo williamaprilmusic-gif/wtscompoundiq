@@ -1,0 +1,130 @@
+/* src/components/PowerTools.css */
+.power-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.power-header h2 {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  color: #f1f5f9;
+}
+
+.power-header p {
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.power-tool-card {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 22px;
+}
+
+.power-tool-card h3 {
+  font-size: 1.05rem;
+  color: #f1f5f9;
+  margin-bottom: 6px;
+}
+
+.power-tool-desc {
+  color: #94a3b8;
+  font-size: 0.88rem;
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+.power-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.power-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.power-form label {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.power-form input {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.power-form input:focus {
+  border-color: #38bdf8;
+}
+
+.power-result {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.power-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.power-stat span {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.power-stat strong {
+  font-size: 1.3rem;
+  color: #f1f5f9;
+}
+
+.power-stat strong.positive {
+  color: #4ade80;
+}
+
+.power-stat strong.warn {
+  color: #fbbf24;
+}
+
+.power-verdict {
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  border: 1px solid;
+}
+
+.power-verdict.debt {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+}
+
+.power-verdict.invest {
+  background: rgba(74, 222, 128, 0.1);
+  border-color: rgba(74, 222, 128, 0.3);
+  color: #4ade80;
+}
+
+.power-tool-note {
+  margin-top: 14px;
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.5;
+}

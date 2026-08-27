@@ -1,0 +1,13 @@
+{
+  "name": "WTS CompoundIQ — Smart Money Planner",
+  "short_name": "WTS CompoundIQ",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "description": "Global compound interest, tax-shelter and investment planning.",
+  "icons": [
+    { "src": "/icons.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/og.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

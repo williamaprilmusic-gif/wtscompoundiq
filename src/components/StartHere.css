@@ -1,0 +1,99 @@
+/* src/components/StartHere.css */
+.start-header h2 {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  color: #f1f5f9;
+}
+
+.start-header p {
+  color: #94a3b8;
+  margin-bottom: 25px;
+  font-size: 0.95rem;
+}
+
+.start-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.start-question {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 16px 20px;
+}
+
+.start-question span {
+  color: #f1f5f9;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.start-toggle {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.start-toggle button {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.start-toggle button.active {
+  background: #38bdf8;
+  border-color: #38bdf8;
+  color: #0f172a;
+}
+
+.start-recommendation {
+  margin-top: 25px;
+  padding-top: 25px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(74, 222, 128, 0.06);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.start-recommendation h3 {
+  margin: 0 0 10px;
+  font-size: 1.15rem;
+  color: #f1f5f9;
+}
+
+.start-recommendation p {
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+
+.start-cta {
+  background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
+  color: #042116;
+  border: none;
+  padding: 12px 26px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.start-cta:hover {
+  transform: translateY(-2px);
+}

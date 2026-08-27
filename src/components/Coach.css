@@ -1,0 +1,71 @@
+/* src/components/Coach.css */
+.coach-header h2 {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  color: #f1f5f9;
+}
+
+.coach-header p {
+  color: #94a3b8;
+  margin-bottom: 25px;
+  font-size: 0.95rem;
+}
+
+.coach-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.coach-step {
+  display: flex;
+  gap: 18px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.coach-step.done {
+  border-color: rgba(74, 222, 128, 0.35);
+  background: rgba(74, 222, 128, 0.06);
+}
+
+.coach-step-number {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.coach-step.done .coach-step-number {
+  background: rgba(74, 222, 128, 0.2);
+  color: #4ade80;
+}
+
+.coach-step-content h3 {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+  color: #f1f5f9;
+}
+
+.coach-step-content p {
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.coach-assumption-note {
+  margin-top: 20px;
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.5;
+}

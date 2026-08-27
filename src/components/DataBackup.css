@@ -1,0 +1,40 @@
+/* src/components/DataBackup.css */
+.data-backup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.data-backup-text {
+  font-size: 0.78rem;
+  color: var(--mut);
+}
+
+.data-backup-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.data-backup-btn {
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: var(--accent);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+
+.data-backup-btn.secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border);
+  color: var(--mut);
+}

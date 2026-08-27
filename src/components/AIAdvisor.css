@@ -1,0 +1,188 @@
+/* src/components/AIAdvisor.css */
+.ai-header h2 {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  color: #f1f5f9;
+}
+
+.ai-header p {
+  color: #94a3b8;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+.ai-honesty-note {
+  font-size: 0.78rem !important;
+  color: #64748b !important;
+  margin-bottom: 25px !important;
+}
+
+.profile-setup h3 {
+  font-size: 1.1rem;
+  color: #f1f5f9;
+  margin-bottom: 15px;
+}
+
+.profile-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.profile-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profile-form label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.profile-form input,
+.profile-form select {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.profile-form input:focus,
+.profile-form select:focus {
+  border-color: #38bdf8;
+}
+
+.ai-button {
+  background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+}
+
+.ai-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4);
+}
+
+.ai-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.recommendations {
+  margin-top: 30px;
+  padding-top: 25px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.recommendations h3 {
+  font-size: 1.1rem;
+  color: #f1f5f9;
+  margin-bottom: 18px;
+}
+
+.recommendations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.recommendation-card {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 4px solid #38bdf8;
+  border-radius: 10px;
+  padding: 18px;
+}
+
+.rec-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.rec-header h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.rec-type {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 3px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.rec-message {
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.rec-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+}
+
+.rec-detail strong {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.rec-detail span {
+  color: #f1f5f9;
+}
+
+.rec-accounts {
+  margin-top: 8px;
+}
+
+.rec-accounts strong {
+  display: block;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 6px;
+}
+
+.account-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.account-tag {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}

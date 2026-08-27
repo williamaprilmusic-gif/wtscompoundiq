@@ -1,0 +1,193 @@
+import React, { useState } from 'react';
+import './AIAdvisor.css';
+
+const AIAdvisor = ({ country, profile, onProfileUpdate }) => {
+  const [advice, setAdvice] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const generateAdvice = () => {
+    setLoading(true);
+    
+    // Simulate AI processing
+    setTimeout(() => {
+      const recommendations = generateRecommendations(country, profile);
+      setAdvice(recommendations);
+      setLoading(false);
+    }, 2000);
+  };
+
+  const generateRecommendations = (country, profile) => {
+    const recommendations = [];
+    
+    // Age-based advice
+    if (profile.age < 30) {
+      recommendations.push({
+        type: "aggressive",
+        title: "🚀 Growth Phase",
+        message: "You're in the optimal time for compound growth. Consider higher-risk, higher-return options.",
+        allocation: "80% stocks, 20% bonds",
+        color: "#10b981"
+      });
+    } else if (profile.age < 50) {
+      recommendations.push({
+        type: "balanced",
+        title: "⚖️ Wealth Accumulation",
+        message: "Balance growth with stability as you approach middle age.",
+        allocation: "60% stocks, 40% bonds",
+        color: "#3b82f6"
+      });
+    } else {
+      recommendations.push({
+        type: "conservative",
+        title: "🛡️ Capital Preservation",
+        message: "Focus on protecting your accumulated wealth while maintaining some growth.",
+        allocation: "40% stocks, 60% bonds",
+        color: "#f59e0b"
+      });
+    }
+
+    // Income-based advice
+    if (profile.income > 100000) {
+      recommendations.push({
+        type: "tax",
+        title: "💰 Tax Optimization",
+        message: "With your income level, maximize tax-advantaged accounts like retirement funds.",
+        strategy: "Max out employer matching, then contribute to tax-free accounts",
+        color: "#8b5cf6"
+      });
+    }
+
+    // Country-specific advice
+    if (country.wrapperLabel && country.wrapperLabel !== 'N/A') {
+      recommendations.push({
+        type: "account",
+        title: "🏆 Tax-Free Benefits",
+        message: `${country.name} offers ${country.taxFreeWrapper}. Prioritize this for maximum compounding.`,
+        accounts: [country.wrapperLabel],
+        color: "#ef4444"
+      });
+    }
+
+    // Savings-based advice
+    const savingsRatio = profile.income > 0 ? (profile.savings / profile.income) * 100 : 0;
+    if (savingsRatio < 10) {
+      recommendations.push({
+        type: "savings",
+        title: "📈 Increase Savings",
+        message: `Your savings rate is ${savingsRatio.toFixed(1)}%. Aim for at least 20% of your income.`,
+        strategy: "Automate savings and reduce non-essential spending",
+        color: "#f59e0b"
+      });
+    }
+
+    return recommendations;
+  };
+
+  return (
+    <div className="card ai-advisor">
+      <div className="ai-header">
+        <h2>🤖 AI Investment Advisor</h2>
+        <p>Get personalized investment recommendations based on your profile</p>
+        <p className="ai-honesty-note">
+          Rule-based, not a live AI model: your answers run through fixed if/else logic below, not a generative AI call.
+        </p>
+      </div>
+
+      <div className="profile-setup">
+        <h3>Personalize Your Advice</h3>
+        <div className="profile-form">
+          <div className="form-group">
+            <label>Age</label>
+            <input
+              type="number"
+              value={profile.age}
+              onChange={(e) => onProfileUpdate({...profile, age: Number(e.target.value)})}
+              min="18"
+              max="100"
+            />
+          </div>
+          <div className="form-group">
+            <label>Annual Income ({country.symbol})</label>
+            <input
+              type="number"
+              value={profile.income}
+              onChange={(e) => onProfileUpdate({...profile, income: Number(e.target.value)})}
+              min="0"
+              step="10000"
+            />
+          </div>
+          <div className="form-group">
+            <label>Current Savings ({country.symbol})</label>
+            <input
+              type="number"
+              value={profile.savings}
+              onChange={(e) => onProfileUpdate({...profile, savings: Number(e.target.value)})}
+              min="0"
+              step="1000"
+            />
+          </div>
+          <div className="form-group">
+            <label>Risk Tolerance</label>
+            <select
+              value={profile.riskTolerance}
+              onChange={(e) => onProfileUpdate({...profile, riskTolerance: e.target.value})}
+            >
+              <option value="conservative">Conservative</option>
+              <option value="moderate">Moderate</option>
+              <option value="aggressive">Aggressive</option>
+            </select>
+          </div>
+        </div>
+        
+        <button
+          className="ai-button"
+          onClick={generateAdvice}
+          disabled={loading}
+        >
+          {loading ? 'Analyzing Your Profile...' : 'Get AI Recommendations'}
+        </button>
+      </div>
+
+      {advice && (
+        <div className="recommendations">
+          <h3>🎯 Personalized Recommendations</h3>
+          <div className="recommendations-grid">
+            {advice.map((rec, index) => (
+              <div key={index} className="recommendation-card" style={{ borderLeftColor: rec.color }}>
+                <div className="rec-header">
+                  <h4 style={{ color: rec.color }}>{rec.title}</h4>
+                  <span className="rec-type">{rec.type}</span>
+                </div>
+                <p className="rec-message">{rec.message}</p>
+                {rec.allocation && (
+                  <div className="rec-detail">
+                    <strong>Recommended Allocation:</strong>
+                    <span>{rec.allocation}</span>
+                  </div>
+                )}
+                {rec.strategy && (
+                  <div className="rec-detail">
+                    <strong>Strategy:</strong>
+                    <span>{rec.strategy}</span>
+                  </div>
+                )}
+                {rec.accounts && (
+                  <div className="rec-accounts">
+                    <strong>Recommended Accounts:</strong>
+                    <div className="account-tags">
+                      {rec.accounts.map((account, idx) => (
+                        <span key={idx} className="account-tag">{account}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AIAdvisor;

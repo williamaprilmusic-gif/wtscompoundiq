@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#0f172a"/><stop offset="1" stop-color="#164e63"/></linearGradient></defs>
+  <rect width="1200" height="630" fill="url(#g)"/>
+  <text x="80" y="180" fill="#4ade80" font-family="system-ui" font-size="72" font-weight="800">WTS CompoundIQ</text>
+  <text x="82" y="250" fill="#94a3b8" font-family="system-ui" font-size="34">Compound interest · tax shelters · Monte Carlo · AI plans</text>
+  <path d="M100 520 Q400 480 550 380 T1100 160" stroke="#4ade80" stroke-width="14" fill="none" stroke-linecap="round"/>
+  <circle cx="1100" cy="160" r="22" fill="#38bdf8"/>
+</svg>

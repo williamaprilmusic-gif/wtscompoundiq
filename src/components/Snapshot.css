@@ -1,0 +1,190 @@
+/* src/components/Snapshot.css */
+.snapshot-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 25px;
+}
+
+.snapshot-actions-text h2 {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  color: #f1f5f9;
+}
+
+.snapshot-actions-text p {
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.snapshot-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.snapshot-btn {
+  background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+  white-space: nowrap;
+}
+
+.snapshot-btn.secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.snapshot-btn:hover {
+  transform: translateY(-2px);
+}
+
+.snapshot-print-area {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 30px;
+}
+
+.snapshot-report-header {
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.snapshot-report-header h1 {
+  font-size: 1.3rem;
+  color: #f1f5f9;
+  margin: 0 0 4px;
+}
+
+.snapshot-report-header p {
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.snapshot-section {
+  margin-bottom: 20px;
+}
+
+.snapshot-section h3 {
+  font-size: 1rem;
+  color: #38bdf8;
+  margin-bottom: 10px;
+}
+
+.snapshot-section p {
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.snapshot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.snapshot-grid div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.snapshot-grid span {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.snapshot-grid strong {
+  font-size: 1rem;
+  color: #f1f5f9;
+}
+
+.snapshot-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-size: 0.85rem;
+}
+
+.snapshot-table th, .snapshot-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+.snapshot-table th {
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+}
+
+.snapshot-disclaimer {
+  margin-top: 20px;
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+/* Print stylesheet: strip the app chrome, show only the report, in ink-friendly colors */
+@media print {
+  .app-header, .tabs-nav, .app-footer, .no-print {
+    display: none !important;
+  }
+
+  body, .app-container, .main-content {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .snapshot-page {
+    background: white !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .snapshot-print-area {
+    background: white !important;
+    border: none !important;
+    padding: 0 !important;
+    color: black !important;
+  }
+
+  .snapshot-report-header h1,
+  .snapshot-section h3,
+  .snapshot-grid strong,
+  .snapshot-table td,
+  .snapshot-table th {
+    color: black !important;
+  }
+
+  .snapshot-report-header p,
+  .snapshot-section p,
+  .snapshot-grid span,
+  .snapshot-disclaimer {
+    color: #333 !important;
+  }
+
+  .snapshot-table th, .snapshot-table td {
+    border-bottom: 1px solid #ccc !important;
+  }
+
+  .snapshot-section {
+    page-break-inside: avoid;
+  }
+}

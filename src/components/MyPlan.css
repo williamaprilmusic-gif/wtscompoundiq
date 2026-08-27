@@ -1,0 +1,146 @@
+/* src/components/MyPlan.css */
+.plan-header h2 {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  color: #f1f5f9;
+}
+
+.plan-header p {
+  color: #94a3b8;
+  margin-bottom: 22px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.plan-section {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 22px;
+  margin-bottom: 18px;
+}
+
+.plan-section h3 {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.plan-saved-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #64748b;
+  text-transform: none;
+}
+
+.plan-baseline {
+  color: #94a3b8;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.plan-checkin {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 320px;
+}
+
+.plan-checkin label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.plan-checkin input {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+}
+
+.plan-checkin input:focus {
+  border-color: #38bdf8;
+}
+
+.plan-drift {
+  margin: 14px 0 0;
+  font-size: 0.9rem;
+  padding: 12px 16px;
+  border-radius: 8px;
+  line-height: 1.5;
+}
+
+.plan-drift.ahead {
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  color: #4ade80;
+}
+
+.plan-drift.behind {
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+}
+
+.plan-reminder {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 18px 0;
+  font-size: 0.88rem;
+  color: #cbd5e1;
+}
+
+.plan-reminder-due {
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+.plan-reminder-btn {
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  color: #a78bfa;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.plan-reminder-btn.secondary {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+}
+
+.plan-clear-btn {
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: #f87171;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.plan-note {
+  margin-top: 16px;
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.5;
+}
