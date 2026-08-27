@@ -20,6 +20,7 @@ import MyPlan from './components/MyPlan';
 import Snapshot from './components/Snapshot';
 import NetWorth from './components/NetWorth';
 import DataBackup from './components/DataBackup';
+import Term from './components/Term';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('Start Here');
@@ -225,11 +226,11 @@ export default function App() {
                   <input type="number" min="1" value={years} onChange={(e) => setYears(Number(e.target.value))} />
                 </div>
                 <div className="form-group">
-                  <label>Inflation (%/yr)</label>
+                  <label><Term k="inflation">Inflation</Term> (%/yr)</label>
                   <input type="number" step="0.1" value={inflation} onChange={(e) => setInflation(Number(e.target.value))} />
                 </div>
                 <div className="form-group">
-                  <label>Compounding Frequency</label>
+                  <label><Term k="compoundingFrequency">Compounding Frequency</Term></label>
                   <select value={compoundFrequency} onChange={(e) => setCompoundFrequency(Number(e.target.value))}>
                     <option value="1">Annually</option>
                     <option value="2">Semi-Annually</option>
@@ -241,7 +242,7 @@ export default function App() {
                 <div className="form-group checkbox-group">
                   <label>
                     <input type="checkbox" checked={wrapper} onChange={(e) => setWrapper(e.target.checked)} />
-                    Use Tax-Free Wrapper ({country.wrapperLabel})
+                    Use <Term k="wrapper">Tax-Free Wrapper</Term> ({country.wrapperLabel})
                   </label>
                 </div>
               </div>
@@ -266,7 +267,7 @@ export default function App() {
                   <strong style={{ color: '#4ade80' }}>{country.symbol} {results.totalInterest.toLocaleString()}</strong>
                 </div>
                 <div className="result-item">
-                  <span>Real Value (Today's money):</span>
+                  <span><Term k="realValue">Real Value</Term> (Today's money):</span>
                   <strong style={{ color: '#94a3b8' }}>{country.symbol} {(results.yearlyData[results.yearlyData.length - 1]?.realValue ?? 0).toLocaleString()}</strong>
                 </div>
               </div>
@@ -408,7 +409,7 @@ export default function App() {
 
         {activeTab === 'Coach' && canAccess('Enterprise') && (
           <div className="tab-pane active">
-            <Coach country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} />
+            <Coach country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} onSetWrapper={setWrapper} onSetMonthly={setMonthly} onSetYears={setYears} />
           </div>
         )}
 

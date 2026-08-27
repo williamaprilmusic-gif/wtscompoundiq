@@ -1,6 +1,7 @@
 // src/components/DebtPayoff.jsx
 import React, { useState } from 'react';
 import './DebtPayoff.css';
+import Term from './Term';
 
 const DEFAULT_DEBTS = [];
 
@@ -130,7 +131,7 @@ const DebtPayoff = ({ country }) => {
       {validDebts.length > 0 && (
         <div className="debt-results">
           <div className="debt-result-card avalanche">
-            <h3>Avalanche</h3>
+            <h3><Term k="avalanche">Avalanche</Term></h3>
             <span className="debt-result-label">Debt-free in</span>
             <strong>{avalanche.reachable ? `${avalanche.months} months` : `50+ years`}</strong>
             <span className="debt-result-label">Total interest paid</span>
@@ -141,7 +142,7 @@ const DebtPayoff = ({ country }) => {
           </div>
 
           <div className="debt-result-card snowball">
-            <h3>Snowball</h3>
+            <h3><Term k="snowball">Snowball</Term></h3>
             <span className="debt-result-label">Debt-free in</span>
             <strong>{snowball.reachable ? `${snowball.months} months` : `50+ years`}</strong>
             <span className="debt-result-label">Total interest paid</span>

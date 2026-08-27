@@ -60,7 +60,37 @@
   color: #cbd5e1;
   font-size: 0.9rem;
   line-height: 1.5;
-  margin: 0;
+  margin: 0 0 10px;
+}
+
+.coach-slider-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  max-width: 320px;
+}
+
+.coach-slider-row label {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.coach-slider-row input[type="range"] {
+  width: 100%;
+  accent-color: #38bdf8;
+}
+
+.coach-apply-btn {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .coach-assumption-note {

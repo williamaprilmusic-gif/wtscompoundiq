@@ -1,6 +1,7 @@
 // src/components/NetWorth.jsx
 import React, { useState, useEffect } from 'react';
 import './NetWorth.css';
+import Term from './Term';
 
 const HISTORY_KEY = 'wts_compoundiq_networth_history';
 
@@ -47,7 +48,7 @@ const NetWorth = ({ country }) => {
   return (
     <div className="card net-worth">
       <div className="nw-header">
-        <h2>💰 Net Worth Tracker</h2>
+        <h2>💰 <Term k="netWorth">Net Worth</Term> Tracker</h2>
         <p>List everything you own (assets) and owe (debts) to see the full picture -- then save snapshots to track it over time.</p>
       </div>
 

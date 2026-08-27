@@ -1,6 +1,7 @@
 // src/components/EmergencyFund.jsx
 import React, { useState } from 'react';
 import './EmergencyFund.css';
+import Term from './Term';
 
 const PLAN_STORAGE_KEY = 'wts_compoundiq_plan_snapshot';
 
@@ -36,7 +37,7 @@ const EmergencyFund = ({ country }) => {
   return (
     <div className="card emergency-fund">
       <div className="ef-header">
-        <h2>🛟 Emergency Fund Tracker</h2>
+        <h2>🛟 <Term k="emergencyFund">Emergency Fund</Term> Tracker</h2>
         <p>Before investing, most guidance recommends this as your financial foundation -- money that's there when life happens, without needing to sell investments or go into debt.</p>
       </div>
 

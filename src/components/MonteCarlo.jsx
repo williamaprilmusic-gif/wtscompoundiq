@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import './MonteCarlo.css';
 import { calculateCompoundInterest } from '../engine';
+import Term from './Term';
 
 const NUM_SIMULATIONS = 1000;
 
@@ -58,7 +59,7 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
   return (
     <div className="card monte-carlo">
       <div className="mc-header">
-        <h2>🎲 Monte Carlo Simulation</h2>
+        <h2>🎲 <Term k="monteCarloSimulation">Monte Carlo Simulation</Term></h2>
         <p>{NUM_SIMULATIONS.toLocaleString()} randomized market paths over {years} years -- pre-tax, ignores wrapper effects for simplicity.</p>
       </div>
 
@@ -69,7 +70,7 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
           <small>From your Calculator tab inputs</small>
         </div>
         <div className="form-group">
-          <label>Volatility / Std. Deviation (%)</label>
+          <label><Term k="volatility">Volatility</Term> / Std. Deviation (%)</label>
           <input type="number" min="0" max="60" step="1" value={volatility} onChange={(e) => setVolatility(Number(e.target.value))} />
         </div>
         <div className="form-group">
@@ -108,7 +109,7 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
           </div>
 
           <div className="mc-percentiles">
-            <div className="mc-stat"><span>10th percentile</span><strong>{country.symbol} {Math.round(result.p10).toLocaleString()}</strong></div>
+            <div className="mc-stat"><span><Term k="percentile">10th percentile</Term></span><strong>{country.symbol} {Math.round(result.p10).toLocaleString()}</strong></div>
             <div className="mc-stat"><span>25th percentile</span><strong>{country.symbol} {Math.round(result.p25).toLocaleString()}</strong></div>
             <div className="mc-stat median"><span>Median (50th)</span><strong>{country.symbol} {Math.round(result.p50).toLocaleString()}</strong></div>
             <div className="mc-stat"><span>75th percentile</span><strong>{country.symbol} {Math.round(result.p75).toLocaleString()}</strong></div>

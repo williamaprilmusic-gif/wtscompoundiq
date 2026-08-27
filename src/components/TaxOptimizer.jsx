@@ -3,6 +3,7 @@ import React from 'react';
 import './TaxOptimizer.css';
 import { calculateCompoundInterest } from '../engine';
 import { getVerificationInfo } from '../data/countries';
+import Term from './Term';
 
 const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compoundFrequency = 12 }) => {
   const hasWrapper = country.wrapperLabel && country.wrapperLabel !== 'N/A';
@@ -54,7 +55,7 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
       <div className="tax-plans-grid">
         {hasWrapper && (
           <div className="tax-plan-card">
-            <h3>Tax-Free Wrapper Strategy</h3>
+            <h3><Term k="wrapper">Tax-Free Wrapper</Term> Strategy</h3>
             <p>Use your {country.taxFreeWrapper} to shelter these contributions from tax entirely.</p>
             <ul>
               <li>Contribution limit: {country.taxFreeLimit}</li>
@@ -65,7 +66,7 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
         )}
 
         <div className="tax-plan-card">
-          <h3>Tax-Loss Harvesting</h3>
+          <h3><Term k="taxLossHarvesting">Tax-Loss Harvesting</Term></h3>
           <p>Offset capital gains with investment losses to reduce your tax burden.</p>
           <ul>
             <li>Sell investments at a loss to offset gains elsewhere in your portfolio</li>
@@ -75,7 +76,7 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
         </div>
 
         <div className="tax-plan-card">
-          <h3>Asset Location Strategy</h3>
+          <h3><Term k="assetLocation">Asset Location Strategy</Term></h3>
           <p>Place tax-inefficient investments in tax-advantaged accounts, and tax-efficient ones in taxable accounts.</p>
           <ul>
             <li>Put bonds and interest-heavy assets in tax-advantaged wrappers first</li>

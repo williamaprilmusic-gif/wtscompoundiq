@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import './Compare.css';
 import { countriesData, convertAmount } from '../data/countries';
 import { calculateCompoundInterest } from '../engine';
+import Term from './Term';
 
 const Compare = ({ country, initial, monthly, rate, years, inflation, compoundFrequency = 12 }) => {
   const otherDefault = countriesData.find(c => c.code !== country.code) || countriesData[0];
@@ -47,7 +48,7 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, compoundFr
           <h3>{countryA.name}</h3>
           <span className="compare-tax">{countryA.taxRate}% tax on gains</span>
           <strong className="compare-value">{countryA.symbol} {resultsA.finalBalance.toLocaleString()}</strong>
-          <span className="compare-converted">≈ {countryB.symbol} {Math.round(balanceA_inB).toLocaleString()}</span>
+          <span className="compare-converted"><Term k="fxConversion">≈</Term> {countryB.symbol} {Math.round(balanceA_inB).toLocaleString()}</span>
           <div className="compare-details">
             <span>Deposited: {countryA.symbol} {resultsA.totalDeposited.toLocaleString()}</span>
             <span>Interest: {countryA.symbol} {resultsA.totalInterest.toLocaleString()}</span>

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import './PowerTools.css';
 import { calculateCompoundInterest } from '../engine';
+import Term from './Term';
 
 const MAX_YEARS_TO_SEARCH = 60;
 
@@ -37,7 +38,7 @@ const PowerTools = ({ country, initial, monthly, rate, inflation, wrapper, compo
       </div>
 
       <div className="power-tool-card">
-        <h3>🔥 FIRE Number Calculator</h3>
+        <h3>🔥 <Term k="fireNumber">FIRE Number</Term> Calculator</h3>
         <p className="power-tool-desc">Financial Independence, Retire Early -- how big a pot do you need, and how long until you get there?</p>
         <div className="power-form">
           <div className="form-group">
@@ -45,7 +46,7 @@ const PowerTools = ({ country, initial, monthly, rate, inflation, wrapper, compo
             <input type="number" min="0" step="1000" value={annualExpenses} onChange={(e) => setAnnualExpenses(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Safe Withdrawal Rate (%)</label>
+            <label><Term k="safeWithdrawalRate">Safe Withdrawal Rate</Term> (%)</label>
             <input type="number" min="1" max="10" step="0.1" value={withdrawalRate} onChange={(e) => setWithdrawalRate(Number(e.target.value))} />
           </div>
         </div>
