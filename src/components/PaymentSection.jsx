@@ -25,9 +25,11 @@ export default function PaymentSection({ tier, price, country, onSuccess, onClos
 
   const handlePaystackRedirect = () => {
     // Real Paystack Integration Key placeholder:
-    if (!window.Paystack) {
+    if (!window.Paystack || typeof price !== 'number') {
       // No live Paystack script is loaded in this demo build, so fall back to the
-      // local simulation instead of crashing when a user picks bank-redirect.
+      // local simulation instead of crashing when a user picks bank-redirect. Also
+      // covers Enterprise, whose price is the string 'Custom' -- `price * 100` would
+      // silently send Paystack a NaN amount if this path is ever wired up for real.
       simulateLocalPayment();
       return;
     }

@@ -343,7 +343,7 @@ export default function App() {
                         <td style={{ color: '#94a3b8' }}>{country.symbol} {row.realValue.toLocaleString()}</td>
                         <td>{country.symbol} {row.deposited.toLocaleString()}</td>
                         <td style={{ color: '#4ade80' }}>{country.symbol} {row.interest.toLocaleString()}</td>
-                        <td style={{ color: '#fbbf24' }}>{wrapper ? '-' : country.symbol} {row.taxPaid.toLocaleString()}</td>
+                        <td style={{ color: '#fbbf24' }}>{row.sheltered ? '-' : country.symbol} {row.taxPaid.toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>

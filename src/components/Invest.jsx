@@ -13,14 +13,33 @@ const GOAL_PRESETS = [
 // Binary-search the monthly contribution needed to reach goalAmount by goalYears,
 // reusing the same engine the rest of the app uses so numbers stay consistent.
 const solveMonthlyForGoal = ({ startingAmount, rate, years, inflation, taxRate, wrapper, goalAmount, compoundFrequency, annualWrapperLimit, lifetimeWrapperLimit }) => {
-  let lo = 0;
-  let hi = Math.max(goalAmount, 100000);
-  for (let i = 0; i < 60; i++) {
-    const mid = (lo + hi) / 2;
-    const { finalBalance } = calculateCompoundInterest({ initial: startingAmount, monthly: mid, rate, years, inflation, taxRate, wrapper, compoundFrequency, annualWrapperLimit, lifetimeWrapperLimit });
-    if (finalBalance < goalAmount) lo = mid; else hi = mid;
+  const evaluate = (monthly) => calculateCompoundInterest({
+    initial: startingAmount, monthly, rate, years, inflation, taxRate, wrapper, compoundFrequency, annualWrapperLimit, lifetimeWrapperLimit
+  }).finalBalance;
+
+  const binarySearch = (lo, hi) => {
+    for (let i = 0; i < 60; i++) {
+      const mid = (lo + hi) / 2;
+      if (evaluate(mid) < goalAmount) lo = mid; else hi = mid;
+    }
+    return hi;
+  };
+
+  // A wrapper's annual contribution cap creates a cliff in finalBalance(monthly) --
+  // engine.js taxes a whole year's growth once yearlyContribution crosses
+  // annualWrapperLimit, so a slightly HIGHER monthly contribution can land on a lower
+  // final balance than staying just under the cap. A plain binary search assumes a
+  // monotonically increasing function and can jump past that cliff, overstating the
+  // monthly contribution actually needed. If the goal is reachable while staying fully
+  // under the cap (a monotonic sub-range), solve within that sub-range instead.
+  if (wrapper && annualWrapperLimit != null) {
+    const capMonthly = annualWrapperLimit / 12;
+    if (evaluate(capMonthly) >= goalAmount) {
+      return binarySearch(0, capMonthly);
+    }
   }
-  return hi;
+
+  return binarySearch(0, Math.max(goalAmount, 100000));
 };
 
 const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12 }) => {

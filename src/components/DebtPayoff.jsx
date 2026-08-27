@@ -75,7 +75,8 @@ const DebtPayoff = ({ country }) => {
 
   const [saved, setSaved] = useState(false);
   const savePlan = () => {
-    const existing = JSON.parse(localStorage.getItem(PLAN_STORAGE_KEY) || '{}');
+    let existing = {};
+    try { existing = JSON.parse(localStorage.getItem(PLAN_STORAGE_KEY) || '{}'); } catch { /* ignore corrupt snapshot, start fresh */ }
     const updated = {
       ...existing,
       debt: {

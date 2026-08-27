@@ -41,7 +41,9 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
       body: !hasWrapper
         ? `${country.name} has no standard tax-free wrapper in this dataset -- your foundation is a taxable account at an indicative ${country.taxRate}% tax rate.`
         : wrapper
-          ? `You're already using ${country.wrapperLabel} -- nice, your gains are sheltered from tax entirely.`
+          ? (baseline.wrapperCapExceeded
+            ? `You're using ${country.wrapperLabel}, but your contributions exceed its real-world limit in at least one year -- the portion over the cap is taxed like a normal account, not fully sheltered.`
+            : `You're already using ${country.wrapperLabel} -- nice, your gains are sheltered from tax entirely.`)
           : `Switch on your ${country.wrapperLabel} to shelter this plan from tax. That alone is worth an extra ${country.symbol} ${Math.round(wrapperGain).toLocaleString()} over ${years} years.`,
       interactive: hasWrapper && !wrapper,
       onApply: applyWrapper,

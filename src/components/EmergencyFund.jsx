@@ -19,7 +19,8 @@ const EmergencyFund = ({ country }) => {
   const monthsToTarget = monthlyContribution > 0 ? Math.ceil(remaining / monthlyContribution) : null;
 
   const savePlan = () => {
-    const existing = JSON.parse(localStorage.getItem(PLAN_STORAGE_KEY) || '{}');
+    let existing = {};
+    try { existing = JSON.parse(localStorage.getItem(PLAN_STORAGE_KEY) || '{}'); } catch { /* ignore corrupt snapshot, start fresh */ }
     const updated = {
       ...existing,
       emergencyFund: {
