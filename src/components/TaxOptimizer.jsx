@@ -65,7 +65,7 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
             </ul>
             {wrapperResults.wrapperCapExceeded && (
               <p className="wrapper-cap-note">
-                ⚠️ Your {monthly.toLocaleString()}/mo contribution exceeds this wrapper's real-world limit in at least one year --
+                ⚠️ Your contribution plan exceeds this wrapper's real-world annual or lifetime limit in at least one year --
                 the figures above assume full shelter, but the portion over the cap would actually be taxed like a normal account.
               </p>
             )}
