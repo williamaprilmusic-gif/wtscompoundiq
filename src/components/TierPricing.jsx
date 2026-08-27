@@ -43,11 +43,9 @@ const tiers = [
     name: 'Ultra',
     price: 'R399',
     billing: '/ month',
-    description: 'Extra guidance and scenario tools on top of Pro.',
+    description: 'Extra scenario tools on top of Pro.',
     features: [
       'Everything in Pro, plus:',
-      'AI Wealth Coach (Step 1-3 planner)',
-      'AI Investment Advisor (personalized recommendations)',
       'Monte Carlo simulation (1,000-path outcome range)'
     ],
     cta: 'Upgrade to Ultra',
@@ -59,6 +57,9 @@ const tiers = [
     billing: 'contact us',
     description: 'For financial advisors and fintech white-labeling.',
     features: [
+      'Everything in Ultra, plus:',
+      'AI Wealth Coach (Step 1-3 planner)',
+      'AI Investment Advisor (personalized recommendations)',
       'White-label branding (your own logo)',
       'Bulk user management & admin dashboard',
       'API access for external integrations',

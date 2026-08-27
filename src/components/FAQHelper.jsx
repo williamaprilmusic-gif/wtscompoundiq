@@ -25,7 +25,7 @@ const FAQ_DATA = [
   },
   {
     question: 'What is the difference between Basic, Pro, Ultra, and Enterprise?',
-    answer: 'Basic is free and covers Start Here and the Calculator (all 36 countries, tax-free wrapper comparison). Pro unlocks the full planning toolkit: Emergency Fund tracker, Debt Payoff planner, My Plan (with reminders), multi-goal Invest planner, Tax Optimizer, Power Tools, Financial Snapshot export, and country comparison. Ultra adds the AI Wealth Coach, AI Investment Advisor, and Monte Carlo simulator. Enterprise is aimed at advisors/white-label use.',
+    answer: 'Basic is free and covers Start Here and the Calculator (all 36 countries, tax-free wrapper comparison). Pro unlocks the full planning toolkit: Emergency Fund tracker, Debt Payoff planner, My Plan (with reminders), multi-goal Invest planner, Tax Optimizer, Power Tools, Financial Snapshot export, and country comparison. Ultra adds the Monte Carlo simulator. Enterprise adds the AI Wealth Coach and AI Investment Advisor, plus advisor/white-label features.',
     keywords: ['tier', 'plan', 'basic', 'pro', 'ultra', 'enterprise', 'difference', 'compare plans', 'free']
   },
   {

@@ -126,9 +126,9 @@ export default function App() {
     {
       label: 'AI & Analysis',
       tabs: [
-        { name: 'Coach', tier: 'Ultra' },
+        { name: 'Coach', tier: 'Enterprise' },
         { name: 'Monte Carlo', tier: 'Ultra' },
-        { name: 'AI Advisor', tier: 'Ultra' }
+        { name: 'AI Advisor', tier: 'Enterprise' }
       ]
     }
   ];
@@ -352,7 +352,7 @@ export default function App() {
           </div>
         )}
 
-        {activeTab === 'AI Advisor' && canAccess('Ultra') && (
+        {activeTab === 'AI Advisor' && canAccess('Enterprise') && (
           <div className="tab-pane active">
             <AIAdvisor country={country} profile={profile} onProfileUpdate={setProfile} />
           </div>
@@ -406,7 +406,7 @@ export default function App() {
           </div>
         )}
 
-        {activeTab === 'Coach' && canAccess('Ultra') && (
+        {activeTab === 'Coach' && canAccess('Enterprise') && (
           <div className="tab-pane active">
             <Coach country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} />
           </div>
