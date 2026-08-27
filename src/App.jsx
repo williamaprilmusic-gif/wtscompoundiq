@@ -99,7 +99,9 @@ export default function App() {
     inflation,
     taxRate: country.taxRate,
     wrapper,
-    compoundFrequency
+    compoundFrequency,
+    annualWrapperLimit: country.annualWrapperLimit,
+    lifetimeWrapperLimit: country.lifetimeWrapperLimit
   });
 
   const tabGroups = [
@@ -252,6 +254,17 @@ export default function App() {
                   ? `${verification.stale ? '⚠️ ' : '✓ '}${country.name}'s tax rate & wrapper data last verified ${verification.date} (${verification.daysAgo} day${verification.daysAgo === 1 ? '' : 's'} ago)${verification.stale ? ' -- overdue for a recheck' : ''}`
                   : '⚠️ Verification date unknown for this country'}
               </span>
+
+              {wrapper && results.wrapperCapExceeded && (
+                <span className="tax-verification stale">
+                  ⚠️ Your contributions exceed {country.wrapperLabel}'s limit
+                  {country.annualWrapperLimit != null ? ` (${country.symbol}${country.annualWrapperLimit.toLocaleString()}/year` : ''}
+                  {country.annualWrapperLimit != null && country.lifetimeWrapperLimit != null ? ', ' : ''}
+                  {country.lifetimeWrapperLimit != null ? `${country.symbol}${country.lifetimeWrapperLimit.toLocaleString()} lifetime` : ''}
+                  {(country.annualWrapperLimit != null || country.lifetimeWrapperLimit != null) ? ') -- ' : ' -- '}
+                  the portion over the limit is taxed like a normal account, not sheltered.
+                </span>
+              )}
 
               <div className="results-summary">
                 <div className="result-item">

@@ -6,10 +6,10 @@ import Term from './Term';
 
 const MAX_YEARS_TO_SEARCH = 60;
 
-const yearsToReachTarget = ({ initial, monthly, rate, inflation, taxRate, wrapper, target, compoundFrequency }) => {
+const yearsToReachTarget = ({ initial, monthly, rate, inflation, taxRate, wrapper, target, compoundFrequency, annualWrapperLimit, lifetimeWrapperLimit }) => {
   if (initial >= target) return 0;
   for (let y = 1; y <= MAX_YEARS_TO_SEARCH; y++) {
-    const { finalBalance } = calculateCompoundInterest({ initial, monthly, rate, years: y, inflation, taxRate, wrapper, compoundFrequency });
+    const { finalBalance } = calculateCompoundInterest({ initial, monthly, rate, years: y, inflation, taxRate, wrapper, compoundFrequency, annualWrapperLimit, lifetimeWrapperLimit });
     if (finalBalance >= target) return y;
   }
   return null; // not reachable within MAX_YEARS_TO_SEARCH
@@ -25,7 +25,8 @@ const PowerTools = ({ country, initial, monthly, rate, inflation, wrapper, compo
   const safeWithdrawalRate = withdrawalRate > 0 ? withdrawalRate : 0.01;
   const fireNumber = annualExpenses / (safeWithdrawalRate / 100);
   const yearsToFire = yearsToReachTarget({
-    initial, monthly, rate, inflation, taxRate: country.taxRate, wrapper, target: fireNumber, compoundFrequency
+    initial, monthly, rate, inflation, taxRate: country.taxRate, wrapper, target: fireNumber, compoundFrequency,
+    annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit
   });
 
   const debtIsWorse = debtRate > rate;

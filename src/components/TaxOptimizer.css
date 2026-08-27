@@ -145,3 +145,14 @@
 .tax-plan-card .positive {
   color: #4ade80;
 }
+
+.wrapper-cap-note {
+  margin-top: 12px;
+  font-size: 0.8rem;
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  border-radius: 8px;
+  padding: 10px 12px;
+  line-height: 1.4;
+}

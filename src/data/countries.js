@@ -23,6 +23,8 @@ export const countriesData = [
     wrapperLabel: 'TFSA',
     taxFreeWrapper: 'TFSA (Tax-Free Savings Account)',
     taxFreeLimit: 'R46,000 per year (from 1 March 2026) / R500,000 lifetime',
+    annualWrapperLimit: 46000,
+    lifetimeWrapperLimit: 500000,
     typicalBankRate: 6.8,
     taxRules: {
       interestDeduction: 'Interest income is taxable up to your marginal tax bracket.',
@@ -38,6 +40,8 @@ export const countriesData = [
     wrapperLabel: 'Roth IRA',
     taxFreeWrapper: 'Roth IRA / IRA',
     taxFreeLimit: '$7,500 per year (under 50) / $8,600 (50+ catch-up, 2026 IRS figures)',
+    annualWrapperLimit: 7500,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 4.2,
     taxRules: {
       interestDeduction: 'Standard interest is fully taxed as ordinary income.',
@@ -53,6 +57,8 @@ export const countriesData = [
     wrapperLabel: 'ISA',
     taxFreeWrapper: 'ISA (Individual Savings Account)',
     taxFreeLimit: '£20,000 per year',
+    annualWrapperLimit: 20000,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 4.5,
     taxRules: {
       interestDeduction: 'Interest is taxed based on your Income Tax band.',
@@ -68,6 +74,8 @@ export const countriesData = [
     wrapperLabel: 'Superannuation',
     taxFreeWrapper: 'Superannuation (concessional contributions)',
     taxFreeLimit: 'A$32,500 per year concessional cap (from 1 July 2026)',
+    annualWrapperLimit: 32500,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 4.1,
     taxRules: {
       interestDeduction: 'Fully taxable; Australian residents get imputation credits on dividends.',
@@ -83,6 +91,8 @@ export const countriesData = [
     wrapperLabel: 'TFSA',
     taxFreeWrapper: 'TFSA / FHSA',
     taxFreeLimit: 'C$7,000 per year (TFSA)',
+    annualWrapperLimit: 7000,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 3.8,
     taxRules: {
       interestDeduction: 'Fully taxed as ordinary income at your marginal rate (26% used here is a mid-upper federal bracket, not the 33% top bracket).',
@@ -98,6 +108,8 @@ export const countriesData = [
     wrapperLabel: 'Sparerpauschbetrag',
     taxFreeWrapper: "Saver's allowance (Sparerpauschbetrag)",
     taxFreeLimit: "Freigrenze (Saver's allowance €1,000/year)",
+    annualWrapperLimit: 1000,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 3.0,
     taxRules: {
       interestDeduction: 'Abgeltungsteuer (flat 25% + solidarity surcharge) on interest/dividends.',
@@ -113,6 +125,8 @@ export const countriesData = [
     wrapperLabel: 'PEA',
     taxFreeWrapper: "PEA (Plan d'Épargne en Actions)",
     taxFreeLimit: '€150,000 lifetime contribution cap',
+    annualWrapperLimit: null,
+    lifetimeWrapperLimit: 150000,
     typicalBankRate: 3.0,
     taxRules: {
       interestDeduction: 'Flat tax (PFU) of 30% on interest and dividends by default.',
@@ -128,6 +142,8 @@ export const countriesData = [
     wrapperLabel: 'Box 3 allowance',
     taxFreeWrapper: 'Box 3 tax-free asset allowance',
     taxFreeLimit: '≈€59,357 exempt threshold per person (2026)',
+    annualWrapperLimit: null,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 3.0,
     taxRules: {
       interestDeduction: 'Savings/investments taxed via deemed return under Box 3 (36% rate on the deemed return, not the actual gain).',
@@ -143,6 +159,8 @@ export const countriesData = [
     wrapperLabel: 'PRSA',
     taxFreeWrapper: 'PRSA (Personal Retirement Savings Account)',
     taxFreeLimit: 'Age-related pension contribution limits',
+    annualWrapperLimit: null,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 2.8,
     taxRules: {
       interestDeduction: 'DIRT (Deposit Interest Retention Tax) of 33% on bank interest.',
@@ -158,6 +176,8 @@ export const countriesData = [
     wrapperLabel: 'Plan de Pensiones',
     taxFreeWrapper: 'Plan de Pensiones (private pension)',
     taxFreeLimit: '€1,500 per year contribution limit',
+    annualWrapperLimit: 1500,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 2.8,
     taxRules: {
       interestDeduction: 'Savings income tax bands from 19% to 30% (top rate applies above €300,000).',
@@ -173,6 +193,8 @@ export const countriesData = [
     wrapperLabel: 'PIR',
     taxFreeWrapper: 'PIR (Piano Individuale di Risparmio)',
     taxFreeLimit: '€40,000 per year / €200,000 lifetime',
+    annualWrapperLimit: 40000,
+    lifetimeWrapperLimit: 200000,
     typicalBankRate: 2.8,
     taxRules: {
       interestDeduction: 'Flat 26% withholding tax on interest and capital income.',
@@ -188,6 +210,8 @@ export const countriesData = [
     wrapperLabel: 'Pillar 3a',
     taxFreeWrapper: 'Pillar 3a (private pension)',
     taxFreeLimit: 'CHF 7,258 per year (with pension fund)',
+    annualWrapperLimit: 7258,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 1.0,
     taxRules: {
       interestDeduction: 'Interest taxed as income at federal + cantonal marginal rates.',
@@ -203,6 +227,8 @@ export const countriesData = [
     wrapperLabel: 'ISK',
     taxFreeWrapper: 'ISK (Investeringssparkonto)',
     taxFreeLimit: 'No contribution cap; first SEK 300,000 tax-free (2026 threshold, up from 150,000)',
+    annualWrapperLimit: null,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 2.5,
     taxRules: {
       interestDeduction: 'Flat 30% capital income tax on interest outside an ISK.',
@@ -218,6 +244,8 @@ export const countriesData = [
     wrapperLabel: 'ASK',
     taxFreeWrapper: 'ASK (Aksjesparekonto)',
     taxFreeLimit: 'No cap; gains deferred until withdrawal',
+    annualWrapperLimit: null,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 4.0,
     taxRules: {
       interestDeduction: 'Flat 22% tax on interest and capital income.',
@@ -233,6 +261,8 @@ export const countriesData = [
     wrapperLabel: 'Aktiesparekonto',
     taxFreeWrapper: 'Aktiesparekonto (share savings account)',
     taxFreeLimit: 'DKK 174,200 deposit cap (2026)',
+    annualWrapperLimit: null,
+    lifetimeWrapperLimit: 174200,
     typicalBankRate: 2.3,
     taxRules: {
       interestDeduction: 'Capital income taxed at ~37% up to the progressive threshold, 42% above.',
@@ -248,6 +278,8 @@ export const countriesData = [
     wrapperLabel: 'NISA',
     taxFreeWrapper: 'NISA (Nippon Individual Savings Account)',
     taxFreeLimit: '¥3.6 million per year (new NISA)',
+    annualWrapperLimit: 3600000,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 0.2,
     taxRules: {
       interestDeduction: 'Flat 20.315% withholding tax on interest and dividends.',
@@ -263,6 +295,8 @@ export const countriesData = [
     wrapperLabel: 'Personal Pension',
     taxFreeWrapper: 'Personal Pension Scheme (个人养老金)',
     taxFreeLimit: '¥12,000 per year contribution cap',
+    annualWrapperLimit: 12000,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 1.5,
     taxRules: {
       interestDeduction: 'Bank savings interest is generally tax-exempt; other interest taxed at 20% (Personal Pension contributions up to ¥12,000/year are pre-tax deductible).',
@@ -278,6 +312,8 @@ export const countriesData = [
     wrapperLabel: 'PPF',
     taxFreeWrapper: 'PPF (Public Provident Fund)',
     taxFreeLimit: '₹150,000 per year',
+    annualWrapperLimit: 150000,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 6.5,
     taxRules: {
       interestDeduction: 'Interest taxed at your income slab rate; TDS may apply above threshold.',
@@ -293,6 +329,8 @@ export const countriesData = [
     wrapperLabel: 'SRS',
     taxFreeWrapper: 'SRS (Supplementary Retirement Scheme)',
     taxFreeLimit: 'S$15,300 per year (S$35,700 for foreigners)',
+    annualWrapperLimit: 15300,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 3.0,
     taxRules: {
       interestDeduction: 'Personal savings interest is not taxed in Singapore.',
@@ -308,6 +346,8 @@ export const countriesData = [
     wrapperLabel: 'N/A',
     taxFreeWrapper: 'No standard retail tax-free wrapper',
     taxFreeLimit: 'N/A',
+    annualWrapperLimit: null,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 3.5,
     taxRules: {
       interestDeduction: 'No tax on personal interest income.',
@@ -323,6 +363,8 @@ export const countriesData = [
     wrapperLabel: 'KiwiSaver',
     taxFreeWrapper: 'KiwiSaver (retirement savings scheme)',
     taxFreeLimit: 'Employer + member min. 3.5% each of gross pay (from April 2026); no fixed cap',
+    annualWrapperLimit: null,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 4.5,
     taxRules: {
       interestDeduction: 'Interest taxed via RWT at your marginal rate.',
@@ -338,6 +380,8 @@ export const countriesData = [
     wrapperLabel: 'LCI/LCA',
     taxFreeWrapper: 'LCI/LCA (tax-exempt bank bonds)',
     taxFreeLimit: 'No fixed cap; product-specific',
+    annualWrapperLimit: null,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 10.5,
     taxRules: {
       interestDeduction: 'Regressive IR table on fixed income: 22.5% down to 15% by holding term.',
@@ -353,6 +397,8 @@ export const countriesData = [
     wrapperLabel: 'Afore',
     taxFreeWrapper: 'Afore (retirement savings account)',
     taxFreeLimit: 'Voluntary contributions tax-deductible up to 10% of income or 5 UMA (~MX$198,000/year, 2026)',
+    annualWrapperLimit: 198000,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 9.0,
     taxRules: {
       interestDeduction: 'Interest subject to withholding tax plus annual ISR reconciliation.',
@@ -368,6 +414,8 @@ export const countriesData = [
     wrapperLabel: 'N/A',
     taxFreeWrapper: 'No personal income tax wrapper needed',
     taxFreeLimit: 'N/A',
+    annualWrapperLimit: null,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 3.5,
     taxRules: {
       interestDeduction: 'No personal income tax on interest for individuals.',
@@ -383,6 +431,8 @@ export const countriesData = [
     wrapperLabel: 'N/A',
     taxFreeWrapper: 'No personal income tax wrapper needed',
     taxFreeLimit: 'N/A',
+    annualWrapperLimit: null,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 3.0,
     taxRules: {
       interestDeduction: 'No personal income tax on interest for individuals.',
@@ -398,6 +448,8 @@ export const countriesData = [
     wrapperLabel: 'N/A',
     taxFreeWrapper: 'No standard retail tax-free wrapper',
     taxFreeLimit: 'N/A',
+    annualWrapperLimit: null,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 15.0,
     taxRules: {
       interestDeduction: '10% withholding tax on bank interest.',
@@ -413,6 +465,8 @@ export const countriesData = [
     wrapperLabel: 'N/A',
     taxFreeWrapper: 'No standard retail tax-free wrapper',
     taxFreeLimit: 'N/A',
+    annualWrapperLimit: null,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 8.0,
     taxRules: {
       interestDeduction: '15% withholding tax on bank/deposit interest.',
@@ -428,6 +482,8 @@ export const countriesData = [
     wrapperLabel: 'N/A',
     taxFreeWrapper: 'No standard retail tax-free wrapper',
     taxFreeLimit: 'N/A',
+    annualWrapperLimit: null,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 18.0,
     taxRules: {
       interestDeduction: 'Bank deposit interest generally taxed at source.',
@@ -443,6 +499,8 @@ export const countriesData = [
     wrapperLabel: 'ISA',
     taxFreeWrapper: 'ISA (Individual Savings Account, Korea)',
     taxFreeLimit: '₩20,000,000/year, ₩100,000,000 lifetime cap (min. 3-year term)',
+    annualWrapperLimit: 20000000,
+    lifetimeWrapperLimit: 100000000,
     typicalBankRate: 3.2,
     taxRules: {
       interestDeduction: 'Flat 15.4% withholding tax on interest income.',
@@ -458,6 +516,8 @@ export const countriesData = [
     wrapperLabel: 'IKE',
     taxFreeWrapper: 'IKE (Individual Retirement Account)',
     taxFreeLimit: 'PLN 28,260 per year (2026 limit)',
+    annualWrapperLimit: 28260,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 5.0,
     taxRules: {
       interestDeduction: "Flat 19% 'Belka tax' on interest and capital income.",
@@ -473,6 +533,8 @@ export const countriesData = [
     wrapperLabel: 'BES',
     taxFreeWrapper: 'BES (private pension system)',
     taxFreeLimit: 'Voluntary contributions, government match up to 20% (2026, reduced from 25%)',
+    annualWrapperLimit: null,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 35.5,
     taxRules: {
       interestDeduction: 'Withholding tax on deposit interest, rate varies by maturity (~15%).',
@@ -488,6 +550,8 @@ export const countriesData = [
     wrapperLabel: 'N/A',
     taxFreeWrapper: 'No standard retail tax-free wrapper',
     taxFreeLimit: 'N/A',
+    annualWrapperLimit: null,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 19.5,
     taxRules: {
       interestDeduction: "Interest on ARS savings and time deposits (plazo fijo) is broadly exempt from income tax for individual retail savers, but the ~19-23% nominal rates (Aug 2026) mostly compensate for Argentina's persistently high inflation rather than real growth.",
@@ -503,6 +567,8 @@ export const countriesData = [
     wrapperLabel: 'VPS',
     taxFreeWrapper: 'VPS (Voluntary Pension Scheme)',
     taxFreeLimit: 'Tax credit on contributions up to 20% of annual taxable income',
+    annualWrapperLimit: null,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 11.5,
     taxRules: {
       interestDeduction: 'Profit on debt (bank and National Savings interest) is withheld at source under Section 151 -- 15% for FBR active filers, rising to 30-40% for non-filers.',
@@ -518,6 +584,8 @@ export const countriesData = [
     wrapperLabel: 'Tier 3',
     taxFreeWrapper: 'Tier 3 Provident Fund (voluntary pension)',
     taxFreeLimit: 'Contributions tax-deductible up to 16.5% of basic salary',
+    annualWrapperLimit: null,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 13.0,
     taxRules: {
       interestDeduction: 'Government of Ghana Treasury bills (a very popular retail savings vehicle, yielding ~13% on a 364-day bill in 2026) are tax-exempt for individuals, while other interest/dividend income generally attracts an 8% final withholding tax.',
@@ -533,6 +601,8 @@ export const countriesData = [
     wrapperLabel: 'Voluntary Pension Fund',
     taxFreeWrapper: 'Voluntary Pension Fund (Quỹ hưu trí tự nguyện)',
     taxFreeLimit: 'Employee contributions deductible up to VND 1 million/month',
+    annualWrapperLimit: 12000000,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 6.5,
     taxRules: {
       interestDeduction: 'Interest on VND bank savings and time deposits is currently exempt from personal income tax, though 2026 reform proposals could scale this exemption back for larger balances.',
@@ -548,6 +618,8 @@ export const countriesData = [
     wrapperLabel: 'DPLK',
     taxFreeWrapper: 'DPLK (Dana Pensiun Lembaga Keuangan)',
     taxFreeLimit: 'Deductible contributions up to Rp200,000/month (Rp2.4 million/year)',
+    annualWrapperLimit: 2400000,
+    lifetimeWrapperLimit: null,
     typicalBankRate: 6.25,
     taxRules: {
       interestDeduction: 'Time deposit interest is subject to a flat 20% final withholding tax; smaller regional banks (BPR) commonly pay up to the LPS-guaranteed ceiling of 6.25% (mid-2026) to attract savers, well above the ~2-3.5% major banks offer.',

@@ -13,7 +13,8 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
     initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper: false, compoundFrequency
   });
   const wrapperResults = calculateCompoundInterest({
-    initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper: true, compoundFrequency
+    initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper: true, compoundFrequency,
+    annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit
   });
 
   const totalTaxPaid = taxableResults.yearlyData.reduce((sum, row) => sum + row.taxPaid, 0);
@@ -62,6 +63,12 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
               <li>Tax avoided over {years} years: <strong>{country.symbol} {totalTaxPaid.toLocaleString()}</strong></li>
               <li>Extra balance from using the wrapper: <strong className="positive">{country.symbol} {wrapperBenefit.toLocaleString()}</strong></li>
             </ul>
+            {wrapperResults.wrapperCapExceeded && (
+              <p className="wrapper-cap-note">
+                ⚠️ Your {monthly.toLocaleString()}/mo contribution exceeds this wrapper's real-world limit in at least one year --
+                the figures above assume full shelter, but the portion over the cap would actually be taxed like a normal account.
+              </p>
+            )}
           </div>
         )}
 

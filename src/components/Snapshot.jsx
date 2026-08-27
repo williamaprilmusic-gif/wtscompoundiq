@@ -30,11 +30,17 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
     }
   }, []);
 
-  const results = calculateCompoundInterest({ initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper, compoundFrequency });
+  const results = calculateCompoundInterest({
+    initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper, compoundFrequency,
+    annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit
+  });
 
   const hasWrapper = country.wrapperLabel && country.wrapperLabel !== 'N/A';
   const taxableResults = calculateCompoundInterest({ initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper: false, compoundFrequency });
-  const wrapperResults = calculateCompoundInterest({ initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper: true, compoundFrequency });
+  const wrapperResults = calculateCompoundInterest({
+    initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper: true, compoundFrequency,
+    annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit
+  });
   const wrapperBenefit = wrapperResults.finalBalance - taxableResults.finalBalance;
 
   const today = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
@@ -77,6 +83,7 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
               Using your {country.wrapperLabel} instead of a taxable account is worth an extra{' '}
               <strong>{country.symbol} {Math.round(wrapperBenefit).toLocaleString()}</strong> over {years} years,
               by avoiding the indicative {country.taxRate}% tax on gains.
+              {wrapperResults.wrapperCapExceeded && ' Note: this contribution level exceeds the wrapper\'s real-world limit in at least one year, so the portion over the cap would actually be taxed.'}
             </p>
           ) : (
             <p>{country.name} has no standard tax-free wrapper in this dataset; gains are taxed at an indicative {country.taxRate}%.</p>

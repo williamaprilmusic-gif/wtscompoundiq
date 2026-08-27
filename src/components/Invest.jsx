@@ -12,12 +12,12 @@ const GOAL_PRESETS = [
 
 // Binary-search the monthly contribution needed to reach goalAmount by goalYears,
 // reusing the same engine the rest of the app uses so numbers stay consistent.
-const solveMonthlyForGoal = ({ startingAmount, rate, years, inflation, taxRate, wrapper, goalAmount, compoundFrequency }) => {
+const solveMonthlyForGoal = ({ startingAmount, rate, years, inflation, taxRate, wrapper, goalAmount, compoundFrequency, annualWrapperLimit, lifetimeWrapperLimit }) => {
   let lo = 0;
   let hi = Math.max(goalAmount, 100000);
   for (let i = 0; i < 60; i++) {
     const mid = (lo + hi) / 2;
-    const { finalBalance } = calculateCompoundInterest({ initial: startingAmount, monthly: mid, rate, years, inflation, taxRate, wrapper, compoundFrequency });
+    const { finalBalance } = calculateCompoundInterest({ initial: startingAmount, monthly: mid, rate, years, inflation, taxRate, wrapper, compoundFrequency, annualWrapperLimit, lifetimeWrapperLimit });
     if (finalBalance < goalAmount) lo = mid; else hi = mid;
   }
   return hi;
@@ -51,10 +51,12 @@ const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12 }) =
     // "required monthly". Clamp only for the calculation, not the stored/displayed value.
     const safeYears = g.goalYears > 0 ? g.goalYears : 1;
     const requiredMonthly = solveMonthlyForGoal({
-      startingAmount: g.startingAmount, rate, years: safeYears, inflation, taxRate: country.taxRate, wrapper, goalAmount: g.goalAmount, compoundFrequency
+      startingAmount: g.startingAmount, rate, years: safeYears, inflation, taxRate: country.taxRate, wrapper, goalAmount: g.goalAmount, compoundFrequency,
+      annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit
     });
     const projection = calculateCompoundInterest({
-      initial: g.startingAmount, monthly: requiredMonthly, rate, years: safeYears, inflation, taxRate: country.taxRate, wrapper, compoundFrequency
+      initial: g.startingAmount, monthly: requiredMonthly, rate, years: safeYears, inflation, taxRate: country.taxRate, wrapper, compoundFrequency,
+      annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit
     });
     return { ...g, requiredMonthly, projection };
   });

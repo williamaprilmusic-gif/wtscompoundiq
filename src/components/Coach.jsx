@@ -4,7 +4,7 @@ import './Coach.css';
 import { calculateCompoundInterest } from '../engine';
 
 const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, compoundFrequency = 12, onSetWrapper, onSetMonthly, onSetYears }) => {
-  const base = { initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper, compoundFrequency };
+  const base = { initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper, compoundFrequency, annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit };
   const baseline = calculateCompoundInterest(base);
 
   const [boostPercent, setBoostPercent] = useState(20);
