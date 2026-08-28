@@ -5,18 +5,18 @@ import { calculateCompoundInterest } from '../engine';
 import { getVerificationInfo } from '../data/countries';
 import Term from './Term';
 
-const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compoundFrequency = 12, contributionIncrease = 0 }) => {
+const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [] }) => {
   const hasWrapper = country.wrapperLabel && country.wrapperLabel !== 'N/A';
   const verification = getVerificationInfo(country.code);
 
   const taxableResults = calculateCompoundInterest({
     initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper: false, compoundFrequency,
-    contributionIncreaseRate: contributionIncrease
+    contributionIncreaseRate: contributionIncrease, lumpSums
   });
   const wrapperResults = calculateCompoundInterest({
     initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper: true, compoundFrequency,
     annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit,
-    contributionIncreaseRate: contributionIncrease
+    contributionIncreaseRate: contributionIncrease, lumpSums
   });
 
   const totalTaxPaid = taxableResults.yearlyData.reduce((sum, row) => sum + row.taxPaid, 0);

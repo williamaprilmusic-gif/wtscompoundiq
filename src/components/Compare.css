@@ -2,11 +2,11 @@
 .compare-header h2 {
   margin: 0 0 6px;
   font-size: 1.5rem;
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .compare-header p {
-  color: #94a3b8;
+  color: var(--mut);
   margin-bottom: 22px;
   font-size: 0.95rem;
 }
@@ -21,8 +21,8 @@
 .compare-pickers select {
   flex: 1;
   background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #f1f5f9;
+  border: 1px solid var(--border);
+  color: var(--text);
   padding: 10px 12px;
   border-radius: 8px;
   font-size: 1rem;
@@ -30,7 +30,7 @@
 }
 
 .compare-vs {
-  color: #64748b;
+  color: var(--mut2);
   font-weight: 700;
   font-size: 0.85rem;
   text-transform: uppercase;
@@ -45,7 +45,7 @@
 
 .compare-card {
   background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 22px;
   display: flex;
@@ -61,29 +61,29 @@
 .compare-card h3 {
   margin: 0;
   font-size: 1.1rem;
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .compare-tax {
   font-size: 0.78rem;
-  color: #94a3b8;
+  color: var(--mut);
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
 
 .compare-value {
   font-size: 1.6rem;
-  color: #f1f5f9;
+  color: var(--text);
   margin: 4px 0;
 }
 
 .compare-card.winner .compare-value {
-  color: #4ade80;
+  color: var(--accent-green);
 }
 
 .compare-converted {
   font-size: 0.8rem;
-  color: #38bdf8;
+  color: var(--accent);
   margin-bottom: 4px;
 }
 
@@ -92,11 +92,11 @@
   flex-direction: column;
   gap: 3px;
   font-size: 0.82rem;
-  color: #94a3b8;
+  color: var(--mut);
 }
 
 .compare-note {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--mut2);
   line-height: 1.4;
 }

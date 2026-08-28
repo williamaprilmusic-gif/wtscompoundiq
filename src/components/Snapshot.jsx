@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import './Snapshot.css';
 import { calculateCompoundInterest } from '../engine';
+import GrowthChart from './GrowthChart';
 
 const PLAN_STORAGE_KEY = 'wts_compoundiq_plan_snapshot';
 
@@ -20,7 +21,7 @@ const downloadCSV = (results, country) => {
   URL.revokeObjectURL(url);
 };
 
-const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, compoundFrequency, contributionIncrease = 0 }) => {
+const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, compoundFrequency, contributionIncrease = 0, lumpSums = [] }) => {
   const [plan, setPlan] = useState(null);
 
   useEffect(() => {
@@ -33,15 +34,15 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
   const results = calculateCompoundInterest({
     initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper, compoundFrequency,
     annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit,
-    contributionIncreaseRate: contributionIncrease
+    contributionIncreaseRate: contributionIncrease, lumpSums
   });
 
   const hasWrapper = country.wrapperLabel && country.wrapperLabel !== 'N/A';
-  const taxableResults = calculateCompoundInterest({ initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper: false, compoundFrequency, contributionIncreaseRate: contributionIncrease });
+  const taxableResults = calculateCompoundInterest({ initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper: false, compoundFrequency, contributionIncreaseRate: contributionIncrease, lumpSums });
   const wrapperResults = calculateCompoundInterest({
     initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper: true, compoundFrequency,
     annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit,
-    contributionIncreaseRate: contributionIncrease
+    contributionIncreaseRate: contributionIncrease, lumpSums
   });
   const wrapperBenefit = wrapperResults.finalBalance - taxableResults.finalBalance;
 
@@ -76,6 +77,7 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
             <div><span>Projected Balance</span><strong>{country.symbol} {results.finalBalance.toLocaleString()}</strong></div>
             <div><span>Total Interest Earned</span><strong>{country.symbol} {results.totalInterest.toLocaleString()}</strong></div>
           </div>
+          <GrowthChart yearlyData={results.yearlyData} initial={initial} symbol={country.symbol} />
         </section>
 
         <section className="snapshot-section">

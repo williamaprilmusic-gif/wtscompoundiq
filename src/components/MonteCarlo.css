@@ -2,11 +2,11 @@
 .mc-header h2 {
   margin: 0 0 6px;
   font-size: 1.5rem;
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .mc-header p {
-  color: #94a3b8;
+  color: var(--mut);
   margin-bottom: 22px;
   font-size: 0.95rem;
 }
@@ -26,19 +26,19 @@
 
 .mc-form label {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--mut);
   font-weight: 500;
 }
 
 .mc-form small {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--mut2);
 }
 
 .mc-form input {
   background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #f1f5f9;
+  border: 1px solid var(--border);
+  color: var(--text);
   padding: 10px 12px;
   border-radius: 8px;
   font-size: 1rem;
@@ -52,11 +52,11 @@
 }
 
 .mc-form input:focus {
-  border-color: #38bdf8;
+  border-color: var(--accent);
 }
 
 .mc-run-btn {
-  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-purple-deep) 100%);
   color: white;
   border: none;
   padding: 12px 28px;
@@ -76,7 +76,7 @@
 .mc-results {
   margin-top: 28px;
   padding-top: 25px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--border);
 }
 
 .mc-probability {
@@ -88,7 +88,7 @@
 
 .mc-probability span {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--mut);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -99,45 +99,47 @@
 }
 
 .mc-probability strong.positive {
-  color: #4ade80;
+  color: var(--accent-green);
 }
 
 .mc-probability strong.warn {
-  color: #fbbf24;
+  color: var(--accent-yellow);
 }
 
-.mc-spread {
-  margin-bottom: 28px;
-}
-
-.mc-spread-bar {
-  position: relative;
-  height: 10px;
-  border-radius: 5px;
-  background: linear-gradient(to right, #f87171, #fbbf24, #4ade80);
-  margin-bottom: 8px;
-}
-
-.mc-spread-marker {
-  position: absolute;
-  top: -4px;
-  width: 2px;
-  height: 18px;
-  background: #f1f5f9;
-  transform: translateX(-50%);
-}
-
-.mc-spread-marker.p50 {
-  width: 3px;
-  background: #0f172a;
-  box-shadow: 0 0 0 1px #f1f5f9;
-}
-
-.mc-spread-labels {
+.mc-model-toggle {
   display: flex;
-  justify-content: space-between;
-  font-size: 0.75rem;
-  color: #64748b;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.mc-model-btn {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border);
+  color: var(--mut);
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mc-model-btn.active {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: var(--accent-purple);
+  color: var(--accent-purple);
+}
+
+.mc-model-note {
+  font-size: 0.8rem;
+  color: var(--mut2);
+  line-height: 1.5;
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  border: 1px solid var(--border);
 }
 
 .mc-percentiles {
@@ -148,7 +150,7 @@
 
 .mc-stat {
   background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 14px;
   display: flex;
@@ -163,12 +165,12 @@
 
 .mc-stat span {
   font-size: 0.72rem;
-  color: #94a3b8;
+  color: var(--mut);
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
 
 .mc-stat strong {
   font-size: 1.05rem;
-  color: #f1f5f9;
+  color: var(--text);
 }

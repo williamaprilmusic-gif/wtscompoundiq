@@ -1,13 +1,69 @@
 /* src/App.css */
+
+/* Theme tokens -- dark is the default (:root), matching this app's original,
+   always-dark design. [data-theme="light"] on <html> (toggled in the header, see
+   .theme-toggle-btn below and App.jsx) overrides the same token set. Every color in
+   every component .css file below is expressed as one of these tokens (or an
+   intentionally fixed value -- print styles, the white logo badge, category colors
+   in AI Advisor) specifically so the toggle can flip the whole app from one place. */
 :root {
   --bg: #0f172a;
   --card-bg: rgba(30, 41, 59, 0.7);
   --text: #f1f5f9;
+  --heading: #fff;
   --mut: #94a3b8;
+  --mut2: #64748b;
+  --text-soft: #cbd5e1;
+  --surface-2: #1e293b;
   --accent: #38bdf8;
   --accent-green: #4ade80;
   --accent-yellow: #fbbf24;
+  --accent-red: #f87171;
+  --accent-blue-deep: #2563eb;
+  --accent-purple: #8b5cf6;
+  --accent-purple-deep: #6d28d9;
   --border: rgba(255, 255, 255, 0.08);
+  /* "Raised" panel tints (badges, hover backgrounds) -- lighten-on-dark in this
+     default theme; the light override below flips these to a dark-on-light tint of
+     the same alpha so raised elements still stand out once the background is white.
+     Recessed panels (inputs, nested cards) use rgba(0,0,0,X) directly in the
+     component files instead -- a dark tint reads as "recede" on either background,
+     so those don't need a token/override pair. */
+  --raise-02: rgba(255, 255, 255, 0.02);
+  --raise-05: rgba(255, 255, 255, 0.05);
+  --raise-06: rgba(255, 255, 255, 0.06);
+  --raise-1: rgba(255, 255, 255, 0.1);
+  --raise-15: rgba(255, 255, 255, 0.15);
+  /* Chart series colors -- validated (dataviz skill: validate_palette.js) for both
+     light and dark chart surfaces, so charts use these fixed hexes directly rather
+     than the lighter --accent/--accent-green text-emphasis tokens above. */
+  --chart-green: #16a34a;
+  --chart-blue: #2563eb;
+  --chart-surface: var(--bg);
+}
+
+:root[data-theme='light'] {
+  --bg: #f3f5fa;
+  --card-bg: rgba(255, 255, 255, 0.78);
+  --text: #0f172a;
+  --heading: #0f172a;
+  --mut: #55607a;
+  --mut2: #6b7688;
+  --text-soft: #334155;
+  --surface-2: #e6eaf3;
+  --accent: #0284c7;
+  --accent-green: #16a34a;
+  --accent-yellow: #b45309;
+  --accent-red: #dc2626;
+  --accent-blue-deep: #1d4ed8;
+  --accent-purple: #7c3aed;
+  --accent-purple-deep: #5b21b6;
+  --border: rgba(15, 23, 42, 0.12);
+  --raise-02: rgba(15, 23, 42, 0.035);
+  --raise-05: rgba(15, 23, 42, 0.06);
+  --raise-06: rgba(15, 23, 42, 0.07);
+  --raise-1: rgba(15, 23, 42, 0.09);
+  --raise-15: rgba(15, 23, 42, 0.13);
 }
 
 body {
@@ -16,6 +72,7 @@ body {
   color: var(--text);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .app-container {
@@ -64,7 +121,7 @@ body {
 .brand-text h1 {
   margin: 0;
   font-size: 1.8rem;
-  color: #fff;
+  color: var(--heading);
   letter-spacing: -0.5px;
 }
 
@@ -84,15 +141,35 @@ body {
 }
 
 .tier-badge {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--raise-05);
   padding: 8px 16px;
   border-radius: 30px;
   border: 1px solid var(--border);
   font-size: 0.9rem;
 }
 
+.theme-toggle-btn {
+  background: var(--raise-05);
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.theme-toggle-btn:hover {
+  background: var(--raise-1);
+  transform: rotate(15deg);
+}
+
 .btn-upgrade {
-  background: linear-gradient(135deg, var(--accent) 0%, #2563eb 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-blue-deep) 100%);
   color: white;
   border: none;
   padding: 10px 24px;
@@ -243,7 +320,7 @@ body {
 .tax-verification {
   display: inline-block;
   font-size: 0.75rem;
-  color: #4ade80;
+  color: var(--accent-green);
   background: rgba(74, 222, 128, 0.08);
   border: 1px solid rgba(74, 222, 128, 0.25);
   padding: 4px 10px;
@@ -252,7 +329,7 @@ body {
 }
 
 .tax-verification.stale {
-  color: #fbbf24;
+  color: var(--accent-yellow);
   background: rgba(251, 191, 36, 0.08);
   border-color: rgba(251, 191, 36, 0.25);
 }
@@ -369,7 +446,7 @@ body {
 .scenario-remove {
   background: rgba(248, 113, 113, 0.15);
   border: 1px solid rgba(248, 113, 113, 0.3);
-  color: #f87171;
+  color: var(--accent-red);
   width: 28px;
   height: 28px;
   border-radius: 6px;
@@ -409,7 +486,100 @@ body {
 }
 
 .scenario-values strong.positive {
-  color: #4ade80;
+  color: var(--accent-green);
+}
+
+/* One-off contributions */
+.lumpsum-section {
+  margin-bottom: 30px;
+}
+
+.lumpsum-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.lumpsum-header h3 {
+  font-size: 1rem;
+  color: var(--text);
+  margin: 0;
+}
+
+.lumpsum-add-btn {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: var(--accent);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.lumpsum-empty {
+  color: var(--mut);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.lumpsum-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lumpsum-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.lumpsum-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.lumpsum-field label {
+  font-size: 0.72rem;
+  color: var(--mut);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lumpsum-field input {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  width: 130px;
+  outline: none;
+}
+
+.lumpsum-field input:focus {
+  border-color: var(--accent);
+}
+
+.lumpsum-remove {
+  background: rgba(248, 113, 113, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: var(--accent-red);
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 /* Table styling */
@@ -434,7 +604,7 @@ body {
 }
 
 .data-table th {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--raise-05);
   color: var(--mut);
   font-weight: 600;
   text-transform: uppercase;
@@ -485,7 +655,7 @@ body {
 
 .btn-upgrade-lock {
   background: var(--accent-green);
-  color: #0f172a;
+  color: var(--bg);
   border: none;
   padding: 14px 32px;
   border-radius: 10px;

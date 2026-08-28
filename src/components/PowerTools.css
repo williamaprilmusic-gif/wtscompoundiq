@@ -8,29 +8,29 @@
 .power-header h2 {
   margin: 0 0 6px;
   font-size: 1.5rem;
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .power-header p {
-  color: #94a3b8;
+  color: var(--mut);
   font-size: 0.95rem;
 }
 
 .power-tool-card {
   background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 22px;
 }
 
 .power-tool-card h3 {
   font-size: 1.05rem;
-  color: #f1f5f9;
+  color: var(--text);
   margin-bottom: 6px;
 }
 
 .power-tool-desc {
-  color: #94a3b8;
+  color: var(--mut);
   font-size: 0.88rem;
   margin-bottom: 16px;
   line-height: 1.4;
@@ -51,14 +51,14 @@
 
 .power-form label {
   font-size: 0.82rem;
-  color: #94a3b8;
+  color: var(--mut);
   font-weight: 500;
 }
 
 .power-form input {
   background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #f1f5f9;
+  border: 1px solid var(--border);
+  color: var(--text);
   padding: 10px 12px;
   border-radius: 8px;
   font-size: 1rem;
@@ -67,7 +67,7 @@
 }
 
 .power-form input:focus {
-  border-color: #38bdf8;
+  border-color: var(--accent);
 }
 
 .power-result {
@@ -84,22 +84,22 @@
 
 .power-stat span {
   font-size: 0.78rem;
-  color: #94a3b8;
+  color: var(--mut);
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
 
 .power-stat strong {
   font-size: 1.3rem;
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .power-stat strong.positive {
-  color: #4ade80;
+  color: var(--accent-green);
 }
 
 .power-stat strong.warn {
-  color: #fbbf24;
+  color: var(--accent-yellow);
 }
 
 .power-verdict {
@@ -113,18 +113,44 @@
 .power-verdict.debt {
   background: rgba(251, 191, 36, 0.1);
   border-color: rgba(251, 191, 36, 0.3);
-  color: #fbbf24;
+  color: var(--accent-yellow);
 }
 
 .power-verdict.invest {
   background: rgba(74, 222, 128, 0.1);
   border-color: rgba(74, 222, 128, 0.3);
-  color: #4ade80;
+  color: var(--accent-green);
+}
+
+.power-verdict.danger {
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.3);
+  color: var(--accent-red);
+}
+
+.power-verdict-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.power-use-fire-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.78rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  margin-top: -12px;
+  margin-bottom: 16px;
+  display: inline-block;
 }
 
 .power-tool-note {
   margin-top: 14px;
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--mut2);
   line-height: 1.5;
 }

@@ -2,11 +2,11 @@
 .ef-header h2 {
   margin: 0 0 6px;
   font-size: 1.5rem;
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .ef-header p {
-  color: #94a3b8;
+  color: var(--mut);
   margin-bottom: 25px;
   font-size: 0.95rem;
   line-height: 1.5;
@@ -27,14 +27,14 @@
 
 .ef-form label {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--mut);
   font-weight: 500;
 }
 
 .ef-form input, .ef-form select {
   background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #f1f5f9;
+  border: 1px solid var(--border);
+  color: var(--text);
   padding: 10px 12px;
   border-radius: 8px;
   font-size: 1rem;
@@ -43,7 +43,7 @@
 }
 
 .ef-form input:focus, .ef-form select:focus {
-  border-color: #38bdf8;
+  border-color: var(--accent);
 }
 
 .ef-result {
@@ -62,13 +62,13 @@
   display: flex;
   justify-content: space-between;
   font-size: 0.85rem;
-  color: #cbd5e1;
+  color: var(--text-soft);
   margin-bottom: 8px;
 }
 
 .ef-progress-bar {
   height: 12px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--border);
   border-radius: 6px;
   overflow: hidden;
   margin-bottom: 16px;
@@ -76,7 +76,7 @@
 
 .ef-progress-fill {
   height: 100%;
-  background: linear-gradient(to right, #fbbf24, #4ade80);
+  background: linear-gradient(to right, var(--accent-yellow), var(--accent-green));
   border-radius: 6px;
   transition: width 0.4s ease;
 }
@@ -84,14 +84,14 @@
 .ef-status {
   margin: 0;
   font-size: 0.92rem;
-  color: #f1f5f9;
+  color: var(--text);
   line-height: 1.5;
 }
 
 .ef-note {
   margin-top: 18px;
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--mut2);
   line-height: 1.5;
 }
 
@@ -99,7 +99,7 @@
   margin-top: 18px;
   background: rgba(56, 189, 248, 0.1);
   border: 1px solid rgba(56, 189, 248, 0.3);
-  color: #38bdf8;
+  color: var(--accent);
   padding: 10px 20px;
   border-radius: 8px;
   font-size: 0.85rem;

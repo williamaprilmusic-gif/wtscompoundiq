@@ -16,8 +16,8 @@
 }
 
 .pricing-modal {
-  background: #0f172a;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg);
+  border: 1px solid var(--raise-1);
   border-radius: 24px;
   padding: 40px;
   max-width: 1200px;
@@ -34,26 +34,26 @@
   right: 20px;
   background: none;
   border: none;
-  color: #94a3b8;
+  color: var(--mut);
   font-size: 32px;
   cursor: pointer;
   line-height: 1;
 }
 
 .close-btn:hover {
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .pricing-title {
   text-align: center;
   font-size: 2rem;
   margin-bottom: 10px;
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .pricing-subtitle {
   text-align: center;
-  color: #94a3b8;
+  color: var(--mut);
   margin-bottom: 40px;
   font-size: 1.05rem;
 }
@@ -66,7 +66,7 @@
 
 .tier-card {
   background: rgba(30, 41, 59, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 30px 25px;
   display: flex;
@@ -83,7 +83,7 @@
 }
 
 .tier-card.highlighted {
-  border-color: #38bdf8;
+  border-color: var(--accent);
   background: linear-gradient(180deg, rgba(56, 189, 248, 0.1) 0%, rgba(30, 41, 59, 0.7) 100%);
 }
 
@@ -91,8 +91,8 @@
   position: absolute;
   top: -12px;
   right: 20px;
-  background: #38bdf8;
-  color: #0f172a;
+  background: var(--accent);
+  color: var(--bg);
   font-size: 0.75rem;
   font-weight: 700;
   padding: 5px 12px;
@@ -104,7 +104,7 @@
 .tier-name {
   font-size: 1.3rem;
   margin: 0 0 15px 0;
-  color: #f1f5f9;
+  color: var(--text);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -120,17 +120,17 @@
 .tier-price .currency {
   font-size: 2rem;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .tier-price .billing {
   font-size: 0.95rem;
-  color: #94a3b8;
+  color: var(--mut);
 }
 
 .tier-desc {
   font-size: 0.9rem;
-  color: #94a3b8;
+  color: var(--mut);
   margin-bottom: 25px;
   line-height: 1.5;
 }
@@ -143,7 +143,7 @@
 
 .tier-features li {
   font-size: 0.85rem;
-  color: #cbd5e1;
+  color: var(--text-soft);
   margin-bottom: 12px;
   display: flex;
   align-items: flex-start;
@@ -151,7 +151,7 @@
 }
 
 .tier-features li svg {
-  color: #4ade80;
+  color: var(--accent-green);
   flex-shrink: 0;
   margin-top: 2px;
 }
@@ -169,14 +169,14 @@
 
 /* Style specific buttons based on card type */
 .tier-card.highlighted .upgrade-btn {
-  background: #38bdf8;
-  color: #0f172a;
+  background: var(--accent);
+  color: var(--bg);
 }
 
 .tier-card:not(.highlighted) .upgrade-btn {
-  background: rgba(255, 255, 255, 0.05);
-  color: #f1f5f9;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--raise-05);
+  color: var(--text);
+  border: 1px solid var(--raise-1);
 }
 
 .upgrade-btn:hover:not(:disabled) {
@@ -187,5 +187,5 @@
   opacity: 0.5;
   cursor: not-allowed;
   background: rgba(74, 222, 128, 0.2);
-  color: #4ade80;
+  color: var(--accent-green);
 }

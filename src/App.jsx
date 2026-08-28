@@ -21,10 +21,27 @@ import Snapshot from './components/Snapshot';
 import NetWorth from './components/NetWorth';
 import DataBackup from './components/DataBackup';
 import Term from './components/Term';
+import GrowthChart from './components/GrowthChart';
+
+const THEME_KEY = 'wts_compoundiq_theme';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('Start Here');
   const [userTier, setUserTier] = useState('Basic');
+  // Dark is this app's original, always-on look -- only switch to light if the user
+  // explicitly chose it last time (no OS prefers-color-scheme auto-detection, since
+  // the app never followed system theme before and silently flipping on a light-OS
+  // visitor would be a surprise, not a fix).
+  const [theme, setTheme] = useState(() => {
+    try { return localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark'; } catch { return 'dark'; }
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    try { localStorage.setItem(THEME_KEY, theme); } catch { /* ignore (private mode, storage full, etc.) */ }
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
   const [showPricing, setShowPricing] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [selectedUpgradeTier, setSelectedUpgradeTier] = useState(null);
@@ -40,6 +57,20 @@ export default function App() {
   const [wrapper, setWrapper] = useState(false);
   const [compoundFrequency, setCompoundFrequency] = useState(12);
   const [contributionIncrease, setContributionIncrease] = useState(0);
+  const [lumpSums, setLumpSums] = useState([]); // one-off future contributions: [{ id, year, amount }]
+
+  const handleCountryChange = (code) => {
+    const c = getCountryByCode(code);
+    setCountry(c);
+    // Prefill inflation with this country's typical rate -- a convenience default the
+    // user can still overwrite, not a substitute for the blank-until-entered calculator
+    // inputs above (those come from the user, this is a starting point tied to the country).
+    setInflation(c.typicalInflation ?? 0);
+  };
+
+  const addLumpSum = () => setLumpSums(prev => [...prev, { id: Date.now(), year: 1, amount: 0 }]);
+  const updateLumpSum = (id, field, value) => setLumpSums(prev => prev.map(l => l.id === id ? { ...l, [field]: Number(value) } : l));
+  const removeLumpSum = (id) => setLumpSums(prev => prev.filter(l => l.id !== id));
 
   // AI Advisor profile state -- no assumed persona; blank until the user fills it in.
   const [profile, setProfile] = useState({ age: 18, income: 0, savings: 0, riskTolerance: 'moderate' });
@@ -103,7 +134,8 @@ export default function App() {
     compoundFrequency,
     annualWrapperLimit: country.annualWrapperLimit,
     lifetimeWrapperLimit: country.lifetimeWrapperLimit,
-    contributionIncreaseRate: contributionIncrease
+    contributionIncreaseRate: contributionIncrease,
+    lumpSums
   });
 
   const tabGroups = [
@@ -161,8 +193,16 @@ export default function App() {
         </div>
         <div className="header-actions">
           <div className="tier-badge">
-            Current Plan: <strong style={{ color: userTier === 'Basic' ? '#fbbf24' : '#4ade80' }}>{userTier}</strong>
+            Current Plan: <strong style={{ color: userTier === 'Basic' ? 'var(--accent-yellow)' : 'var(--accent-green)' }}>{userTier}</strong>
           </div>
+          <button
+            className="theme-toggle-btn"
+            onClick={toggleTheme}
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
           <button className="btn-upgrade" onClick={() => setShowPricing(true)}>
             ⭐ Upgrade Plan
           </button>
@@ -209,7 +249,7 @@ export default function App() {
               <div className="form-grid">
                 <div className="form-group">
                   <label>Country</label>
-                  <select value={country.code} onChange={(e) => setCountry(getCountryByCode(e.target.value))}>
+                  <select value={country.code} onChange={(e) => handleCountryChange(e.target.value)}>
                     {WTS_COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
                   </select>
                 </div>
@@ -255,6 +295,32 @@ export default function App() {
                 </div>
               </div>
 
+              <div className="lumpsum-section">
+                <div className="lumpsum-header">
+                  <h3>One-Off Contributions</h3>
+                  <button className="lumpsum-add-btn" onClick={addLumpSum}>+ Add a One-Off Contribution</button>
+                </div>
+                {lumpSums.length === 0 ? (
+                  <p className="lumpsum-empty">None added -- use this for a bonus, inheritance, tax refund, or any extra deposit landing in a specific year, on top of your regular monthly contribution above.</p>
+                ) : (
+                  <div className="lumpsum-list">
+                    {lumpSums.map((l) => (
+                      <div key={l.id} className="lumpsum-row">
+                        <div className="lumpsum-field">
+                          <label>In year</label>
+                          <input type="number" min="1" max={years} value={l.year} onChange={(e) => updateLumpSum(l.id, 'year', e.target.value)} />
+                        </div>
+                        <div className="lumpsum-field">
+                          <label>Amount ({country.symbol})</label>
+                          <input type="number" min="0" step="1000" value={l.amount} onChange={(e) => updateLumpSum(l.id, 'amount', e.target.value)} />
+                        </div>
+                        <button className="lumpsum-remove" onClick={() => removeLumpSum(l.id)} aria-label="Remove one-off contribution">&times;</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <span className={`tax-verification ${verification.stale ? 'stale' : ''}`}>
                 {verification.date
                   ? `${verification.stale ? '⚠️ ' : '✓ '}${country.name}'s tax rate & wrapper data last verified ${verification.date} (${verification.daysAgo} day${verification.daysAgo === 1 ? '' : 's'} ago)${verification.stale ? ' -- overdue for a recheck' : ''}`
@@ -275,7 +341,7 @@ export default function App() {
               <div className="results-summary">
                 <div className="result-item">
                   <span>Projected Balance:</span>
-                  <strong style={{ color: '#4ade80' }}>{country.symbol} {results.finalBalance.toLocaleString()}</strong>
+                  <strong style={{ color: 'var(--accent-green)' }}>{country.symbol} {results.finalBalance.toLocaleString()}</strong>
                 </div>
                 <div className="result-item">
                   <span>Total Deposits:</span>
@@ -283,13 +349,15 @@ export default function App() {
                 </div>
                 <div className="result-item">
                   <span>Compound Interest Earned:</span>
-                  <strong style={{ color: '#4ade80' }}>{country.symbol} {results.totalInterest.toLocaleString()}</strong>
+                  <strong style={{ color: 'var(--accent-green)' }}>{country.symbol} {results.totalInterest.toLocaleString()}</strong>
                 </div>
                 <div className="result-item">
                   <span><Term k="realValue">Real Value</Term> (Today's money):</span>
-                  <strong style={{ color: '#94a3b8' }}>{country.symbol} {(results.yearlyData[results.yearlyData.length - 1]?.realValue ?? 0).toLocaleString()}</strong>
+                  <strong style={{ color: 'var(--mut)' }}>{country.symbol} {(results.yearlyData[results.yearlyData.length - 1]?.realValue ?? 0).toLocaleString()}</strong>
                 </div>
               </div>
+
+              <GrowthChart yearlyData={results.yearlyData} initial={initial} symbol={country.symbol} />
 
               <div className="scenario-section">
                 <div className="scenario-header">
@@ -345,11 +413,11 @@ export default function App() {
                     {results.yearlyData.map((row) => (
                       <tr key={row.year}>
                         <td>{row.year}</td>
-                        <td style={{ color: '#fff', fontWeight: '600' }}>{country.symbol} {row.balance.toLocaleString()}</td>
-                        <td style={{ color: '#94a3b8' }}>{country.symbol} {row.realValue.toLocaleString()}</td>
+                        <td style={{ color: 'var(--heading)', fontWeight: '600' }}>{country.symbol} {row.balance.toLocaleString()}</td>
+                        <td style={{ color: 'var(--mut)' }}>{country.symbol} {row.realValue.toLocaleString()}</td>
                         <td>{country.symbol} {row.deposited.toLocaleString()}</td>
-                        <td style={{ color: '#4ade80' }}>{country.symbol} {row.interest.toLocaleString()}</td>
-                        <td style={{ color: '#fbbf24' }}>{row.sheltered ? '-' : country.symbol} {row.taxPaid.toLocaleString()}</td>
+                        <td style={{ color: 'var(--accent-green)' }}>{country.symbol} {row.interest.toLocaleString()}</td>
+                        <td style={{ color: 'var(--accent-yellow)' }}>{row.sheltered ? '-' : country.symbol} {row.taxPaid.toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -410,13 +478,13 @@ export default function App() {
 
         {activeTab === 'Snapshot' && canAccess('Pro') && (
           <div className="tab-pane active">
-            <Snapshot country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} />
+            <Snapshot country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} />
           </div>
         )}
 
         {activeTab === 'Tax Optimizer' && canAccess('Pro') && (
           <div className="tab-pane active">
-            <TaxOptimizer country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} />
+            <TaxOptimizer country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} />
           </div>
         )}
 
@@ -428,25 +496,25 @@ export default function App() {
 
         {activeTab === 'Coach' && canAccess('Enterprise') && (
           <div className="tab-pane active">
-            <Coach country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} onSetWrapper={setWrapper} onSetMonthly={setMonthly} onSetYears={setYears} />
+            <Coach country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} onSetWrapper={setWrapper} onSetMonthly={setMonthly} onSetYears={setYears} />
           </div>
         )}
 
         {activeTab === 'Power Tools' && canAccess('Pro') && (
           <div className="tab-pane active">
-            <PowerTools country={country} initial={initial} monthly={monthly} rate={rate} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} />
+            <PowerTools country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} />
           </div>
         )}
 
         {activeTab === 'Compare' && canAccess('Pro') && (
           <div className="tab-pane active">
-            <Compare country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} />
+            <Compare country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} />
           </div>
         )}
 
         {activeTab === 'Monte Carlo' && canAccess('Ultra') && (
           <div className="tab-pane active">
-            <MonteCarlo country={country} initial={initial} monthly={monthly} rate={rate} years={years} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} />
+            <MonteCarlo country={country} initial={initial} monthly={monthly} rate={rate} years={years} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} />
           </div>
         )}
       </main>

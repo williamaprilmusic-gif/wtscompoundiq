@@ -34,7 +34,7 @@
 }
 
 .data-backup-btn.secondary {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--raise-05);
   border-color: var(--border);
   color: var(--mut);
 }

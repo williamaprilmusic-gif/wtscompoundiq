@@ -2,7 +2,7 @@
 .faq-section {
   margin-top: 45px;
   padding-top: 35px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--border);
 }
 
 .faq-helper {
@@ -16,11 +16,11 @@
 .faq-helper h3 {
   margin: 0 0 6px;
   font-size: 1.15rem;
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .faq-helper-note {
-  color: #94a3b8;
+  color: var(--mut);
   font-size: 0.85rem;
   line-height: 1.5;
   margin-bottom: 16px;
@@ -29,8 +29,8 @@
 .faq-search-input {
   width: 100%;
   background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #f1f5f9;
+  border: 1px solid var(--raise-1);
+  color: var(--text);
   padding: 12px 16px;
   border-radius: 10px;
   font-size: 0.95rem;
@@ -40,7 +40,7 @@
 }
 
 .faq-search-input:focus {
-  border-color: #38bdf8;
+  border-color: var(--accent);
 }
 
 .faq-matches {
@@ -60,34 +60,34 @@
 .faq-match-card h4 {
   margin: 0 0 6px;
   font-size: 0.95rem;
-  color: #4ade80;
+  color: var(--accent-green);
 }
 
 .faq-match-card p {
   margin: 0;
   font-size: 0.88rem;
-  color: #cbd5e1;
+  color: var(--text-soft);
   line-height: 1.5;
 }
 
 .faq-no-match {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--mut);
   padding: 10px 0;
 }
 
 .faq-list h3 {
   font-size: 1.1rem;
-  color: #f1f5f9;
+  color: var(--text);
   margin-bottom: 16px;
 }
 
 .faq-item {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
   border-radius: 10px;
   margin-bottom: 10px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--raise-02);
 }
 
 .faq-item-question {
@@ -95,7 +95,7 @@
   text-align: left;
   background: none;
   border: none;
-  color: #f1f5f9;
+  color: var(--text);
   font-size: 0.92rem;
   font-weight: 600;
   padding: 16px 18px;
@@ -106,11 +106,11 @@
 }
 
 .faq-item.open .faq-item-question {
-  color: #38bdf8;
+  color: var(--accent);
 }
 
 .faq-item-icon {
-  color: #64748b;
+  color: var(--mut2);
   font-size: 1.1rem;
   flex-shrink: 0;
   margin-left: 12px;
@@ -119,7 +119,7 @@
 .faq-item-answer {
   padding: 0 18px 16px;
   margin: 0;
-  color: #94a3b8;
+  color: var(--mut);
   font-size: 0.88rem;
   line-height: 1.55;
 }

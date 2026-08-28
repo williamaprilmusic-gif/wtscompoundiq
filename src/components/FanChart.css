@@ -1,0 +1,113 @@
+/* src/components/FanChart.css */
+.fan-chart {
+  position: relative;
+  margin: 20px 0 10px;
+}
+
+.fan-chart-legend {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.fan-chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--mut);
+}
+
+.fan-chart-swatch {
+  width: 14px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.fan-chart-swatch.median { height: 3px; background: var(--chart-green); }
+.fan-chart-swatch.band-inner { background: rgba(22, 163, 74, 0.32); }
+.fan-chart-swatch.band-outer { background: rgba(22, 163, 74, 0.14); }
+
+.fan-chart-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  outline: none;
+  touch-action: none;
+}
+
+.fan-chart-svg:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+.fan-chart-gridline {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.fan-chart-axis-label {
+  font-size: 9px;
+  fill: var(--mut);
+}
+
+.fan-chart-band.outer { fill: rgba(22, 163, 74, 0.14); }
+.fan-chart-band.inner { fill: rgba(22, 163, 74, 0.32); }
+
+.fan-chart-median {
+  stroke: var(--chart-green);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fan-chart-endpoint {
+  fill: var(--chart-green);
+  stroke: var(--chart-surface);
+  stroke-width: 2;
+}
+
+.fan-chart-crosshair {
+  stroke: var(--mut);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.fan-chart-tooltip {
+  position: absolute;
+  top: 4px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.76rem;
+  pointer-events: none;
+  backdrop-filter: blur(6px);
+  min-width: 130px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.fan-chart-tooltip-year {
+  color: var(--mut);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.fan-chart-tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--mut);
+}
+
+.fan-chart-tooltip-row.median strong,
+.fan-chart-tooltip-row.median {
+  color: var(--chart-green);
+}
+
+.fan-chart-tooltip-row strong {
+  color: var(--text);
+}

@@ -26,6 +26,7 @@ export const countriesData = [
     annualWrapperLimit: 46000,
     lifetimeWrapperLimit: 500000,
     typicalBankRate: 6.8,
+    typicalInflation: 4.5, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Interest income is taxable up to your marginal tax bracket.',
       capitalGains: 'CGT applies on equity withdrawals outside TFSA wrappers.'
@@ -43,6 +44,7 @@ export const countriesData = [
     annualWrapperLimit: 7500,
     lifetimeWrapperLimit: null,
     typicalBankRate: 4.2,
+    typicalInflation: 2.5, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Standard interest is fully taxed as ordinary income.',
       capitalGains: 'Long-term capital gains are 0%, 15%, or 20% depending on bracket.'
@@ -60,6 +62,7 @@ export const countriesData = [
     annualWrapperLimit: 20000,
     lifetimeWrapperLimit: null,
     typicalBankRate: 4.5,
+    typicalInflation: 2.3, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Interest is taxed based on your Income Tax band.',
       capitalGains: 'CGT allowance applies on non-ISA assets.'
@@ -77,6 +80,7 @@ export const countriesData = [
     annualWrapperLimit: 32500,
     lifetimeWrapperLimit: null,
     typicalBankRate: 4.1,
+    typicalInflation: 2.8, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Fully taxable; Australian residents get imputation credits on dividends.',
       capitalGains: 'CGT discount of 50% for assets held over 1 year.'
@@ -94,6 +98,7 @@ export const countriesData = [
     annualWrapperLimit: 7000,
     lifetimeWrapperLimit: null,
     typicalBankRate: 3.8,
+    typicalInflation: 2.2, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Fully taxed as ordinary income at your marginal rate (26% used here is a mid-upper federal bracket, not the 33% top bracket).',
       capitalGains: '50% inclusion rate for capital gains tax.'
@@ -111,6 +116,7 @@ export const countriesData = [
     annualWrapperLimit: 1000,
     lifetimeWrapperLimit: null,
     typicalBankRate: 3.0,
+    typicalInflation: 2.2, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Abgeltungsteuer (flat 25% + solidarity surcharge) on interest/dividends.',
       capitalGains: 'Exempt up to €1,000 annual allowance.'
@@ -128,6 +134,7 @@ export const countriesData = [
     annualWrapperLimit: null,
     lifetimeWrapperLimit: 150000,
     typicalBankRate: 3.0,
+    typicalInflation: 1.8, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Flat tax (PFU) of 30% on interest and dividends by default.',
       capitalGains: 'PEA gains are tax-free after 5 years (social charges still apply).'
@@ -145,6 +152,7 @@ export const countriesData = [
     annualWrapperLimit: null,
     lifetimeWrapperLimit: null,
     typicalBankRate: 3.0,
+    typicalInflation: 2.5, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Savings/investments taxed via deemed return under Box 3 (36% rate on the deemed return, not the actual gain).',
       capitalGains: 'No separate capital gains tax; covered by Box 3 wealth tax.'
@@ -162,6 +170,7 @@ export const countriesData = [
     annualWrapperLimit: null,
     lifetimeWrapperLimit: null,
     typicalBankRate: 2.8,
+    typicalInflation: 1.9, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'DIRT (Deposit Interest Retention Tax) of 33% on bank interest.',
       capitalGains: 'Standard CGT rate of 33% above the annual €1,270 exemption.'
@@ -179,6 +188,7 @@ export const countriesData = [
     annualWrapperLimit: 1500,
     lifetimeWrapperLimit: null,
     typicalBankRate: 2.8,
+    typicalInflation: 2.4, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Savings income tax bands from 19% to 30% (top rate applies above €300,000).',
       capitalGains: 'Taxed at the same progressive savings-income rates as interest.'
@@ -196,6 +206,7 @@ export const countriesData = [
     annualWrapperLimit: 40000,
     lifetimeWrapperLimit: 200000,
     typicalBankRate: 2.8,
+    typicalInflation: 1.9, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Flat 26% withholding tax on interest and capital income.',
       capitalGains: 'PIR gains held 5+ years are exempt from capital gains tax.'
@@ -213,6 +224,7 @@ export const countriesData = [
     annualWrapperLimit: 7258,
     lifetimeWrapperLimit: null,
     typicalBankRate: 1.0,
+    typicalInflation: 1, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Interest taxed as income at federal + cantonal marginal rates.',
       capitalGains: 'Private capital gains on movable assets are generally tax-free.'
@@ -230,6 +242,7 @@ export const countriesData = [
     annualWrapperLimit: null,
     lifetimeWrapperLimit: null,
     typicalBankRate: 2.5,
+    typicalInflation: 2, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Flat 30% capital income tax on interest outside an ISK.',
       capitalGains: 'ISK accounts pay a low annual flat tax (~1.07% effective in 2026) instead of CGT.'
@@ -247,6 +260,7 @@ export const countriesData = [
     annualWrapperLimit: null,
     lifetimeWrapperLimit: null,
     typicalBankRate: 4.0,
+    typicalInflation: 3, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Flat 22% tax on interest and capital income.',
       capitalGains: 'ASK share gains are tax-deferred until money leaves the account.'
@@ -264,6 +278,7 @@ export const countriesData = [
     annualWrapperLimit: null,
     lifetimeWrapperLimit: 174200,
     typicalBankRate: 2.3,
+    typicalInflation: 1.8, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Capital income taxed at ~37% up to the progressive threshold, 42% above.',
       capitalGains: 'Aktiesparekonto gains taxed at a reduced flat 17% rate.'
@@ -281,6 +296,7 @@ export const countriesData = [
     annualWrapperLimit: 3600000,
     lifetimeWrapperLimit: null,
     typicalBankRate: 0.2,
+    typicalInflation: 2, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Flat 20.315% withholding tax on interest and dividends.',
       capitalGains: 'NISA investment gains are fully tax-exempt.'
@@ -298,6 +314,7 @@ export const countriesData = [
     annualWrapperLimit: 12000,
     lifetimeWrapperLimit: null,
     typicalBankRate: 1.5,
+    typicalInflation: 0.5, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Bank savings interest is generally tax-exempt; other interest taxed at 20% (Personal Pension contributions up to ¥12,000/year are pre-tax deductible).',
       capitalGains: 'Individual A-share capital gains are currently exempt.'
@@ -315,6 +332,7 @@ export const countriesData = [
     annualWrapperLimit: 150000,
     lifetimeWrapperLimit: null,
     typicalBankRate: 6.5,
+    typicalInflation: 4.5, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Interest taxed at your income slab rate; TDS may apply above threshold.',
       capitalGains: 'LTCG above ₹100,000/year on equities taxed at 10%.'
@@ -332,6 +350,7 @@ export const countriesData = [
     annualWrapperLimit: 15300,
     lifetimeWrapperLimit: null,
     typicalBankRate: 3.0,
+    typicalInflation: 2, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Personal savings interest is not taxed in Singapore.',
       capitalGains: 'No capital gains tax for individuals.'
@@ -349,6 +368,7 @@ export const countriesData = [
     annualWrapperLimit: null,
     lifetimeWrapperLimit: null,
     typicalBankRate: 3.5,
+    typicalInflation: 2, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'No tax on personal interest income.',
       capitalGains: 'No capital gains tax for individuals.'
@@ -366,6 +386,7 @@ export const countriesData = [
     annualWrapperLimit: null,
     lifetimeWrapperLimit: null,
     typicalBankRate: 4.5,
+    typicalInflation: 2.5, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Interest taxed via RWT at your marginal rate.',
       capitalGains: 'No general capital gains tax for most individual investors.'
@@ -383,6 +404,7 @@ export const countriesData = [
     annualWrapperLimit: null,
     lifetimeWrapperLimit: null,
     typicalBankRate: 10.5,
+    typicalInflation: 4.2, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Regressive IR table on fixed income: 22.5% down to 15% by holding term.',
       capitalGains: 'LCI/LCA interest is exempt from income tax for individuals.'
@@ -400,6 +422,7 @@ export const countriesData = [
     annualWrapperLimit: 198000,
     lifetimeWrapperLimit: null,
     typicalBankRate: 9.0,
+    typicalInflation: 4, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Interest subject to withholding tax plus annual ISR reconciliation.',
       capitalGains: 'Stock exchange gains taxed at a flat 10% for residents.'
@@ -417,6 +440,7 @@ export const countriesData = [
     annualWrapperLimit: null,
     lifetimeWrapperLimit: null,
     typicalBankRate: 3.5,
+    typicalInflation: 2, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'No personal income tax on interest for individuals.',
       capitalGains: 'No personal capital gains tax.'
@@ -434,6 +458,7 @@ export const countriesData = [
     annualWrapperLimit: null,
     lifetimeWrapperLimit: null,
     typicalBankRate: 3.0,
+    typicalInflation: 2, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'No personal income tax on interest for individuals.',
       capitalGains: 'No personal capital gains tax (Zakat applies to businesses).'
@@ -451,6 +476,7 @@ export const countriesData = [
     annualWrapperLimit: null,
     lifetimeWrapperLimit: null,
     typicalBankRate: 15.0,
+    typicalInflation: 20, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: '10% withholding tax on bank interest.',
       capitalGains: 'Since the 2026 tax reform, individual capital gains are folded into progressive PIT (up to 25%) instead of the old flat 10% rate.'
@@ -468,6 +494,7 @@ export const countriesData = [
     annualWrapperLimit: null,
     lifetimeWrapperLimit: null,
     typicalBankRate: 8.0,
+    typicalInflation: 6.5, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: '15% withholding tax on bank/deposit interest.',
       capitalGains: 'Capital gains tax rate of 15% on disposal of property/securities.'
@@ -485,6 +512,7 @@ export const countriesData = [
     annualWrapperLimit: null,
     lifetimeWrapperLimit: null,
     typicalBankRate: 18.0,
+    typicalInflation: 15, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Bank deposit interest generally taxed at source.',
       capitalGains: 'Capital gains on EGX-listed securities are exempt from income tax since 2026 (only a small stamp duty applies).'
@@ -502,6 +530,7 @@ export const countriesData = [
     annualWrapperLimit: 20000000,
     lifetimeWrapperLimit: 100000000,
     typicalBankRate: 3.2,
+    typicalInflation: 2.2, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Flat 15.4% withholding tax on interest income.',
       capitalGains: 'ISA gains up to ₩2-4 million are tax-exempt.'
@@ -519,6 +548,7 @@ export const countriesData = [
     annualWrapperLimit: 28260,
     lifetimeWrapperLimit: null,
     typicalBankRate: 5.0,
+    typicalInflation: 4, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: "Flat 19% 'Belka tax' on interest and capital income.",
       capitalGains: 'IKE investment gains are fully tax-exempt on qualifying withdrawal.'
@@ -536,6 +566,7 @@ export const countriesData = [
     annualWrapperLimit: null,
     lifetimeWrapperLimit: null,
     typicalBankRate: 35.5,
+    typicalInflation: 45, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Withholding tax on deposit interest, rate varies by maturity (~15%).',
       capitalGains: 'Equity gains held over 1 year on BIST-listed shares are exempt.'
@@ -553,6 +584,7 @@ export const countriesData = [
     annualWrapperLimit: null,
     lifetimeWrapperLimit: null,
     typicalBankRate: 19.5,
+    typicalInflation: 60, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: "Interest on ARS savings and time deposits (plazo fijo) is broadly exempt from income tax for individual retail savers, but the ~19-23% nominal rates (Aug 2026) mostly compensate for Argentina's persistently high inflation rather than real growth.",
       capitalGains: 'Gains on Argentine-listed shares and bonds held by individual non-habitual investors are also generally exempt from income tax.'
@@ -570,6 +602,7 @@ export const countriesData = [
     annualWrapperLimit: null,
     lifetimeWrapperLimit: null,
     typicalBankRate: 11.5,
+    typicalInflation: 12, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Profit on debt (bank and National Savings interest) is withheld at source under Section 151 -- 15% for FBR active filers, rising to 30-40% for non-filers.',
       capitalGains: 'Capital gains on listed securities are taxed under the CGT regime, with rates depending on holding period and filer status.'
@@ -587,6 +620,7 @@ export const countriesData = [
     annualWrapperLimit: null,
     lifetimeWrapperLimit: null,
     typicalBankRate: 13.0,
+    typicalInflation: 15, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Government of Ghana Treasury bills (a very popular retail savings vehicle, yielding ~13% on a 364-day bill in 2026) are tax-exempt for individuals, while other interest/dividend income generally attracts an 8% final withholding tax.',
       capitalGains: 'Capital gains tax on disposal of shares and other chargeable assets is generally 15%, though individuals may elect to have the gain taxed as ordinary income instead.'
@@ -604,6 +638,7 @@ export const countriesData = [
     annualWrapperLimit: 12000000,
     lifetimeWrapperLimit: null,
     typicalBankRate: 6.5,
+    typicalInflation: 3.5, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Interest on VND bank savings and time deposits is currently exempt from personal income tax, though 2026 reform proposals could scale this exemption back for larger balances.',
       capitalGains: 'Listed securities transfers are taxed at a flat 0.1% of the gross sale value per trade, regardless of whether the trade was profitable.'
@@ -621,6 +656,7 @@ export const countriesData = [
     annualWrapperLimit: 2400000,
     lifetimeWrapperLimit: null,
     typicalBankRate: 6.25,
+    typicalInflation: 3, // illustrative avg. annual CPI, not live data
     taxRules: {
       interestDeduction: 'Time deposit interest is subject to a flat 20% final withholding tax; smaller regional banks (BPR) commonly pay up to the LPS-guaranteed ceiling of 6.25% (mid-2026) to attract savers, well above the ~2-3.5% major banks offer.',
       capitalGains: 'Sales of Indonesian-listed shares are subject to a final 0.1% tax on the gross transaction value rather than a tax on the gain itself.'

@@ -2,11 +2,11 @@
 .invest-header h2 {
   margin: 0 0 6px;
   font-size: 1.5rem;
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .invest-header p {
-  color: #94a3b8;
+  color: var(--mut);
   margin-bottom: 22px;
   font-size: 0.95rem;
 }
@@ -20,8 +20,8 @@
 
 .goal-preset-btn {
   background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #cbd5e1;
+  border: 1px solid var(--border);
+  color: var(--text-soft);
   padding: 8px 16px;
   border-radius: 20px;
   font-size: 0.85rem;
@@ -31,12 +31,12 @@
 }
 
 .goal-preset-btn:hover {
-  border-color: #38bdf8;
-  color: #38bdf8;
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .invest-empty-state {
-  color: #64748b;
+  color: var(--mut2);
   font-size: 0.88rem;
   margin-bottom: 10px;
 }
@@ -49,7 +49,7 @@
 
 .goal-card {
   background: rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 22px;
 }
@@ -64,8 +64,8 @@
 .goal-label {
   flex: 1;
   background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #f1f5f9;
+  border: 1px solid var(--raise-1);
+  color: var(--text);
   padding: 10px 12px;
   border-radius: 8px;
   font-size: 1rem;
@@ -74,13 +74,13 @@
 }
 
 .goal-label:focus {
-  border-color: #38bdf8;
+  border-color: var(--accent);
 }
 
 .goal-remove {
   background: rgba(248, 113, 113, 0.15);
   border: 1px solid rgba(248, 113, 113, 0.3);
-  color: #f87171;
+  color: var(--accent-red);
   width: 36px;
   height: 36px;
   border-radius: 8px;
@@ -103,14 +103,14 @@
 
 .invest-combined span {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--mut);
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
 
 .invest-combined strong {
   font-size: 1.3rem;
-  color: #38bdf8;
+  color: var(--accent);
 }
 
 .invest-form {
@@ -128,14 +128,14 @@
 
 .invest-form label {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--mut);
   font-weight: 500;
 }
 
 .invest-form input {
   background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #f1f5f9;
+  border: 1px solid var(--border);
+  color: var(--text);
   padding: 10px 12px;
   border-radius: 8px;
   font-size: 1rem;
@@ -144,7 +144,7 @@
 }
 
 .invest-form input:focus {
-  border-color: #38bdf8;
+  border-color: var(--accent);
 }
 
 .invest-result {
@@ -160,12 +160,12 @@
   gap: 6px;
   margin-bottom: 22px;
   padding-bottom: 22px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--border);
 }
 
 .invest-result-label {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--mut);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -173,13 +173,13 @@
 .invest-result-value {
   font-size: 2.2rem;
   font-weight: 800;
-  color: #4ade80;
+  color: var(--accent-green);
 }
 
 .invest-result-value span {
   font-size: 1rem;
   font-weight: 500;
-  color: #94a3b8;
+  color: var(--mut);
   margin-left: 4px;
 }
 
@@ -197,23 +197,23 @@
 
 .invest-stat span {
   font-size: 0.78rem;
-  color: #94a3b8;
+  color: var(--mut);
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
 
 .invest-stat strong {
   font-size: 1.2rem;
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .invest-stat strong.positive {
-  color: #4ade80;
+  color: var(--accent-green);
 }
 
 .invest-assumption-note {
   margin-top: 18px;
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--mut2);
   line-height: 1.5;
 }

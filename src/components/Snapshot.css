@@ -11,11 +11,11 @@
 .snapshot-actions-text h2 {
   margin: 0 0 6px;
   font-size: 1.5rem;
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .snapshot-actions-text p {
-  color: #94a3b8;
+  color: var(--mut);
   font-size: 0.95rem;
 }
 
@@ -26,7 +26,7 @@
 }
 
 .snapshot-btn {
-  background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-blue-deep) 100%);
   color: white;
   border: none;
   padding: 12px 22px;
@@ -39,8 +39,8 @@
 }
 
 .snapshot-btn.secondary {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--raise-06);
+  border: 1px solid var(--raise-15);
 }
 
 .snapshot-btn:hover {
@@ -49,25 +49,25 @@
 
 .snapshot-print-area {
   background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 30px;
 }
 
 .snapshot-report-header {
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 2px solid var(--raise-1);
   padding-bottom: 16px;
   margin-bottom: 20px;
 }
 
 .snapshot-report-header h1 {
   font-size: 1.3rem;
-  color: #f1f5f9;
+  color: var(--text);
   margin: 0 0 4px;
 }
 
 .snapshot-report-header p {
-  color: #94a3b8;
+  color: var(--mut);
   font-size: 0.85rem;
 }
 
@@ -77,12 +77,12 @@
 
 .snapshot-section h3 {
   font-size: 1rem;
-  color: #38bdf8;
+  color: var(--accent);
   margin-bottom: 10px;
 }
 
 .snapshot-section p {
-  color: #cbd5e1;
+  color: var(--text-soft);
   font-size: 0.9rem;
   line-height: 1.5;
 }
@@ -101,14 +101,14 @@
 
 .snapshot-grid span {
   font-size: 0.72rem;
-  color: #94a3b8;
+  color: var(--mut);
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
 
 .snapshot-grid strong {
   font-size: 1rem;
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .snapshot-table {
@@ -121,12 +121,12 @@
 .snapshot-table th, .snapshot-table td {
   padding: 8px 10px;
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  color: #cbd5e1;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-soft);
 }
 
 .snapshot-table th {
-  color: #94a3b8;
+  color: var(--mut);
   font-weight: 600;
   text-transform: uppercase;
   font-size: 0.7rem;
@@ -135,7 +135,7 @@
 .snapshot-disclaimer {
   margin-top: 20px;
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--mut2);
   line-height: 1.5;
 }
 

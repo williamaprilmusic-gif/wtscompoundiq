@@ -2,11 +2,11 @@
 .coach-header h2 {
   margin: 0 0 6px;
   font-size: 1.5rem;
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .coach-header p {
-  color: #94a3b8;
+  color: var(--mut);
   margin-bottom: 25px;
   font-size: 0.95rem;
 }
@@ -21,7 +21,7 @@
   display: flex;
   gap: 18px;
   background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 20px;
 }
@@ -37,7 +37,7 @@
   height: 36px;
   border-radius: 50%;
   background: rgba(56, 189, 248, 0.15);
-  color: #38bdf8;
+  color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -47,17 +47,17 @@
 
 .coach-step.done .coach-step-number {
   background: rgba(74, 222, 128, 0.2);
-  color: #4ade80;
+  color: var(--accent-green);
 }
 
 .coach-step-content h3 {
   margin: 0 0 6px;
   font-size: 1.05rem;
-  color: #f1f5f9;
+  color: var(--text);
 }
 
 .coach-step-content p {
-  color: #cbd5e1;
+  color: var(--text-soft);
   font-size: 0.9rem;
   line-height: 1.5;
   margin: 0 0 10px;
@@ -73,19 +73,19 @@
 
 .coach-slider-row label {
   font-size: 0.82rem;
-  color: #94a3b8;
+  color: var(--mut);
   font-weight: 600;
 }
 
 .coach-slider-row input[type="range"] {
   width: 100%;
-  accent-color: #38bdf8;
+  accent-color: var(--accent);
 }
 
 .coach-apply-btn {
   background: rgba(56, 189, 248, 0.12);
   border: 1px solid rgba(56, 189, 248, 0.35);
-  color: #38bdf8;
+  color: var(--accent);
   padding: 8px 16px;
   border-radius: 8px;
   font-size: 0.82rem;
@@ -96,6 +96,6 @@
 .coach-assumption-note {
   margin-top: 20px;
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--mut2);
   line-height: 1.5;
 }

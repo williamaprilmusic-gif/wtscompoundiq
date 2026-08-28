@@ -1,0 +1,119 @@
+/* src/components/GrowthChart.css */
+.growth-chart {
+  position: relative;
+  margin: 20px 0 28px;
+}
+
+.growth-chart-legend {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.growth-chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--mut);
+}
+
+.growth-chart-swatch {
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.growth-chart-swatch.balance { background: var(--chart-green); }
+.growth-chart-swatch.real { background: var(--chart-blue); }
+
+.growth-chart-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  outline: none;
+  touch-action: none;
+}
+
+.growth-chart-svg:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+.growth-chart-gridline {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.growth-chart-axis-label {
+  font-size: 9px;
+  fill: var(--mut);
+}
+
+.growth-chart-line {
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.growth-chart-line.balance { stroke: var(--chart-green); }
+.growth-chart-line.real { stroke: var(--chart-blue); }
+
+.growth-chart-endpoint {
+  stroke: var(--chart-surface);
+  stroke-width: 2;
+}
+
+.growth-chart-endpoint.balance { fill: var(--chart-green); }
+.growth-chart-endpoint.real { fill: var(--chart-blue); }
+
+.growth-chart-crosshair {
+  stroke: var(--mut);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.growth-chart-tooltip {
+  position: absolute;
+  top: 4px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  pointer-events: none;
+  backdrop-filter: blur(6px);
+  min-width: 150px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.growth-chart-tooltip-year {
+  color: var(--mut);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.growth-chart-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--mut);
+}
+
+.growth-chart-tooltip-row strong {
+  color: var(--text);
+  margin-left: auto;
+}
+
+.growth-chart-key {
+  width: 10px;
+  height: 2px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.growth-chart-key.balance { background: var(--chart-green); }
+.growth-chart-key.real { background: var(--chart-blue); }

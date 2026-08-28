@@ -12,8 +12,10 @@ export function calculateCompoundInterest({
   compoundFrequency = 12, // periods per year interest is credited (1=annually, 12=monthly, 365=daily, ...)
   annualWrapperLimit = null, // max contributions/year that still qualify for wrapper shelter, or null = no cap
   lifetimeWrapperLimit = null, // max cumulative contributions ever that still qualify, or null = no cap
-  contributionIncreaseRate = 0 // % the monthly contribution grows by, once per year (e.g. an annual raise/COLA).
-  // Defaults to 0 so every existing caller that doesn't pass it behaves exactly as before.
+  contributionIncreaseRate = 0, // % the monthly contribution grows by, once per year (e.g. an annual raise/COLA).
+  lumpSums = [] // optional one-off extra deposits: [{ year, amount }, ...]. `year` is
+  // 1-indexed to match yearlyData.year (year 1 = the first 12 months). Multiple entries
+  // for the same year are summed. Defaults to [] so every existing caller behaves exactly as before.
 }) {
   let balance = initial;
   let totalDeposited = initial;
@@ -33,7 +35,11 @@ export function calculateCompoundInterest({
     // always equals yearMonthly * 12, regardless of frequency.
     const yearMonthly = monthly * Math.pow(1 + contributionIncreaseRate / 100, y);
     const depositPerPeriod = yearMonthly * (12 / compoundFrequency);
-    const yearlyContribution = yearMonthly * 12;
+    // Any one-off lump-sum deposits earmarked for this year (e.g. a bonus, inheritance,
+    // or tax refund) count as contributions too -- both for the running total and for
+    // the wrapper cap checks below.
+    const yearLumpSum = lumpSums.filter(l => l.year === y + 1).reduce((sum, l) => sum + (l.amount || 0), 0);
+    const yearlyContribution = yearMonthly * 12 + yearLumpSum;
 
     // Decide, once per year, whether THIS year's growth still qualifies for wrapper
     // shelter -- coarse (whole-year) rather than exact-rand precision, but it's the
@@ -52,6 +58,13 @@ export function calculateCompoundInterest({
     const breachesLifetimeCap = lifetimeWrapperLimit != null && projectedCumulative > lifetimeWrapperLimit;
     const yearIsSheltered = wrapper && !breachesAnnualCap && !breachesLifetimeCap;
     if (wrapper && (breachesAnnualCap || breachesLifetimeCap)) wrapperCapExceeded = true;
+
+    // Lump sums land at the start of their year, so they compound for the full year
+    // (like the initial deposit does in year 1) rather than trickling in period by period.
+    if (yearLumpSum > 0) {
+      balance += yearLumpSum;
+      totalDeposited += yearLumpSum;
+    }
 
     for (let p = 0; p < compoundFrequency; p++) {
       // 1. Calculate this period's interest on current balance
