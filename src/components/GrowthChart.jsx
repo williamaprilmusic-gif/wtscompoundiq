@@ -105,6 +105,13 @@ const GrowthChart = ({ yearlyData, initial = 0, symbol = '' }) => {
         <span className="growth-chart-legend-item"><span className="growth-chart-swatch real" />Real Value (today's money)</span>
       </div>
 
+      {/* A narrow phone shrinking this SVG down would shrink its text past legibility --
+          same fix as the data table elsewhere in the app: a horizontally-scrollable
+          container with a min-width, instead of letting the chart (and its text) scale
+          down arbitrarily. The tooltip lives inside this same inner div so its
+          percentage-based positioning stays correct at whatever width is actually rendered. */}
+      <div className="growth-chart-scroll">
+      <div className="growth-chart-inner">
       <svg
         ref={svgRef}
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
@@ -165,6 +172,8 @@ const GrowthChart = ({ yearlyData, initial = 0, symbol = '' }) => {
           <div className="growth-chart-tooltip-row"><span className="growth-chart-key real" />Real Value <strong>{symbol}{Math.round(hover.realValue).toLocaleString()}</strong></div>
         </div>
       )}
+      </div>
+      </div>
     </div>
   );
 };

@@ -120,6 +120,7 @@ const NetWorth = ({ country }) => {
   };
 
   const clearHistory = () => {
+    if (!window.confirm(`Clear all ${history.length} saved net worth snapshot${history.length === 1 ? '' : 's'}? This can't be undone.`)) return;
     localStorage.removeItem(HISTORY_KEY);
     setHistory([]);
   };

@@ -58,6 +58,7 @@ const MyPlan = ({ country }) => {
   };
 
   const clearPlan = () => {
+    if (!window.confirm("Clear your saved plan? This removes your saved Debt Payoff and Emergency Fund snapshot from My Plan -- it doesn't affect the Debt Payoff or Emergency Fund tabs themselves.")) return;
     localStorage.removeItem(STORAGE_KEY);
     setSnapshot(null);
     setCurrentDebtBalance('');

@@ -30,6 +30,16 @@
 .fan-chart-swatch.band-inner { background: rgba(22, 163, 74, 0.32); }
 .fan-chart-swatch.band-outer { background: rgba(22, 163, 74, 0.14); }
 
+.fan-chart-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.fan-chart-inner {
+  position: relative;
+  min-width: 480px;
+}
+
 .fan-chart-svg {
   width: 100%;
   height: auto;

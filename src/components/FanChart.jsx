@@ -98,6 +98,9 @@ const FanChart = ({ yearlyPercentiles, symbol = '' }) => {
         <span className="fan-chart-legend-item"><span className="fan-chart-swatch band-outer" />10th-90th percentile</span>
       </div>
 
+      {/* Same fix as GrowthChart -- scroll instead of shrinking the SVG's text past legibility. */}
+      <div className="fan-chart-scroll">
+      <div className="fan-chart-inner">
       <svg
         ref={svgRef}
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
@@ -147,6 +150,8 @@ const FanChart = ({ yearlyPercentiles, symbol = '' }) => {
           <div className="fan-chart-tooltip-row">10th <strong>{symbol}{Math.round(hover.p10).toLocaleString()}</strong></div>
         </div>
       )}
+      </div>
+      </div>
     </div>
   );
 };

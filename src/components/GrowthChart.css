@@ -29,6 +29,16 @@
 .growth-chart-swatch.balance { background: var(--chart-green); }
 .growth-chart-swatch.real { background: var(--chart-blue); }
 
+.growth-chart-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.growth-chart-inner {
+  position: relative;
+  min-width: 480px;
+}
+
 .growth-chart-svg {
   width: 100%;
   height: auto;

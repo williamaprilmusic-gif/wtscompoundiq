@@ -173,6 +173,18 @@ export default function App() {
     alert(`Successfully upgraded to ${tier}! Premium features unlocked.`);
   };
 
+  // Basic is free -- downgrading to it shouldn't go through the (fake) payment flow at
+  // all, unlike upgrading to Pro/Ultra/Enterprise. Confirmed first since it immediately
+  // locks every premium tab again.
+  const downgradeToBasic = () => {
+    if (userTier === 'Basic') return;
+    if (!window.confirm(`Downgrade to the free Basic plan? You'll lose access to ${userTier}-tier tabs immediately (your saved data stays put -- upgrading again later restores access to it).`)) return;
+    setUserTier('Basic');
+    localStorage.setItem('wts_compoundiq_tier', 'Basic');
+    setShowPricing(false);
+    alert("You're now on the Basic plan.");
+  };
+
   const verification = getVerificationInfo(country.code);
 
   const results = calculateCompoundInterest({
@@ -609,6 +621,7 @@ export default function App() {
           currentTier={userTier}
           onUpgrade={(tier) => {
             if (tier === userTier) return;
+            if (tier === 'Basic') { downgradeToBasic(); return; }
             setSelectedUpgradeTier(tier);
             // This path isn't tied to any specific locked tab, so don't let a stale
             // pendingTab from an earlier abandoned locked-tab click hijack navigation

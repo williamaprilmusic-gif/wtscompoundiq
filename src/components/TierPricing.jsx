@@ -16,7 +16,7 @@ const tiers = [
       'Compounding frequency control',
       'Year-by-year growth data table'
     ],
-    cta: 'Current Plan',
+    cta: 'Downgrade to Basic',
     highlighted: false
   },
   {
@@ -73,8 +73,7 @@ const tiers = [
 
 export default function TierPricing({ currentTier, onUpgrade, onClose }) {
   const handleUpgrade = (tierName) => {
-    if (tierName === 'Basic') return;
-    onUpgrade(tierName);
+    onUpgrade(tierName); // App.jsx branches: Basic downgrades directly (it's free, no payment flow), anything else goes through checkout
   };
 
   return (

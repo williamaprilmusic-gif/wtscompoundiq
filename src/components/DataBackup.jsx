@@ -55,6 +55,10 @@ const DataBackup = () => {
   const handleImportFile = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!window.confirm('Import this backup? It will overwrite your current tier, saved plans, and net worth history in this browser.')) {
+      e.target.value = '';
+      return;
+    }
     importData(file, (error) => {
       if (error) {
         alert(error);
