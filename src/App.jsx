@@ -20,12 +20,18 @@ import MyPlan from './components/MyPlan';
 import Snapshot from './components/Snapshot';
 import NetWorth from './components/NetWorth';
 import DataBackup from './components/DataBackup';
+import LegalModal from './components/LegalModal';
 import Term from './components/Term';
 import GrowthChart from './components/GrowthChart';
 import { buildShareUrl, parseShareParams, clearShareParamsFromUrl } from './utils/shareLink';
 import { downloadCSV } from './utils/csv';
 
 const THEME_KEY = 'wts_compoundiq_theme';
+// Generous enough for any realistic plan (a 20-year-old projecting to age 100+), but
+// bounded -- an unbounded "years" value feeds every per-year loop in the app (the
+// yearly table, the growth chart, and especially Monte Carlo's 1,000-path simulation),
+// and a huge typed-in value would otherwise freeze the tab with zero feedback.
+const MAX_YEARS = 100;
 
 export default function App() {
   // Computed fresh each render, but only ever matters on the very first one (the
@@ -51,6 +57,7 @@ export default function App() {
   const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
   const [showPricing, setShowPricing] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [showLegal, setShowLegal] = useState(false);
   const [selectedUpgradeTier, setSelectedUpgradeTier] = useState(null);
   const [pendingTab, setPendingTab] = useState(null);
 
@@ -313,8 +320,8 @@ export default function App() {
                   <input type="number" step="0.1" value={rate} onChange={(e) => setRate(Number(e.target.value))} />
                 </div>
                 <div className="form-group">
-                  <label>Years to Grow</label>
-                  <input type="number" min="1" value={years} onChange={(e) => setYears(Number(e.target.value))} />
+                  <label>Years to Grow (max {MAX_YEARS})</label>
+                  <input type="number" min="1" max={MAX_YEARS} value={years} onChange={(e) => setYears(Math.min(MAX_YEARS, Number(e.target.value)))} />
                 </div>
                 <div className="form-group">
                   <label><Term k="inflation">Inflation</Term> (%/yr)</label>
@@ -625,9 +632,14 @@ export default function App() {
       )}
 
       <footer className="app-footer">
-        <p>WTS CompoundIQ · educational tool · indicative rates drift weekly · not financial advice.</p>
+        <p>
+          WTS CompoundIQ · educational tool · indicative rates drift weekly · not financial advice
+          {' '}· <button className="footer-link-btn" onClick={() => setShowLegal(true)}>Privacy &amp; Terms</button>
+        </p>
         <DataBackup />
       </footer>
+
+      {showLegal && <LegalModal onClose={() => setShowLegal(false)} />}
     </div>
   );
 }

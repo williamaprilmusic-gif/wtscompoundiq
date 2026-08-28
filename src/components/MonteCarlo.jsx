@@ -111,25 +111,34 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
   const [compareWrapper, setCompareWrapper] = useState(false);
   const [result, setResult] = useState(null);
   const [wrapperCompare, setWrapperCompare] = useState(null);
+  const [isRunning, setIsRunning] = useState(false);
 
   const activeHistoricalModel = RETURN_MODELS.find(m => m.key === historicalModelKey) || RETURN_MODELS[0];
 
   const handleRun = () => {
-    const base = {
-      initial, monthly, rate, years, volatility, goal,
-      contributionIncreaseRate: contributionIncrease, lumpSums, returnModel,
-      historicalSeries: activeHistoricalModel.data
-    };
-    if (compareWrapper && hasWrapper) {
-      setResult(null);
-      setWrapperCompare({
-        taxable: runSimulation({ ...base, taxRate: country.taxRate, wrapper: false }),
-        sheltered: runSimulation({ ...base, taxRate: country.taxRate, wrapper: true, annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit })
-      });
-    } else {
-      setWrapperCompare(null);
-      setResult(runSimulation(base)); // no taxRate/wrapper passed -- stays pre-tax, as this mode always has been
-    }
+    // years is capped app-wide (see App.jsx's MAX_YEARS) so 1,000 simulated paths never
+    // gets truly heavy, but this still runs synchronously on the main thread -- flip to
+    // a "Running..." state and defer the actual work a tick so the button visibly
+    // responds to the click instead of looking frozen while it computes.
+    setIsRunning(true);
+    setTimeout(() => {
+      const base = {
+        initial, monthly, rate, years, volatility, goal,
+        contributionIncreaseRate: contributionIncrease, lumpSums, returnModel,
+        historicalSeries: activeHistoricalModel.data
+      };
+      if (compareWrapper && hasWrapper) {
+        setResult(null);
+        setWrapperCompare({
+          taxable: runSimulation({ ...base, taxRate: country.taxRate, wrapper: false }),
+          sheltered: runSimulation({ ...base, taxRate: country.taxRate, wrapper: true, annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit })
+        });
+      } else {
+        setWrapperCompare(null);
+        setResult(runSimulation(base)); // no taxRate/wrapper passed -- stays pre-tax, as this mode always has been
+      }
+      setIsRunning(false);
+    }, 20);
   };
 
   return (
@@ -190,7 +199,9 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
         </label>
       )}
 
-      <button className="mc-run-btn" onClick={handleRun}>Run Simulation</button>
+      <button className="mc-run-btn" onClick={handleRun} disabled={isRunning}>
+        {isRunning ? '⏳ Running…' : 'Run Simulation'}
+      </button>
 
       {result && (
         <div className="mc-results">

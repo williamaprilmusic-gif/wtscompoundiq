@@ -41,6 +41,25 @@ export function calculateCompoundInterest({
   otherTaxableIncome = 0 // your non-investment taxable income, for placing the gain on
   // the right marginal slice -- irrelevant unless taxBrackets is set.
 }) {
+  // Defend against non-finite/malformed input reaching the math below. Every current
+  // caller already sanitizes its own inputs (form fields, CSV import, share links all
+  // clamp before calling this), but this function is the one thing all of them funnel
+  // through -- a bad NaN here would otherwise silently poison every downstream number
+  // (finalBalance, yearlyData, ...) instead of failing loudly or falling back sanely.
+  const safeNumber = (value, fallback) => (Number.isFinite(value) ? value : fallback);
+  initial = safeNumber(initial, 0);
+  monthly = safeNumber(monthly, 0);
+  rate = safeNumber(rate, 0);
+  years = Math.max(0, Math.floor(safeNumber(years, 0)));
+  inflation = safeNumber(inflation, 0);
+  taxRate = safeNumber(taxRate, 0);
+  compoundFrequency = Math.max(1, Math.floor(safeNumber(compoundFrequency, 12)));
+  annualWrapperLimit = annualWrapperLimit == null ? null : safeNumber(annualWrapperLimit, null);
+  lifetimeWrapperLimit = lifetimeWrapperLimit == null ? null : safeNumber(lifetimeWrapperLimit, null);
+  contributionIncreaseRate = safeNumber(contributionIncreaseRate, 0);
+  otherTaxableIncome = safeNumber(otherTaxableIncome, 0);
+  if (!Array.isArray(lumpSums)) lumpSums = [];
+
   let balance = initial;
   let totalDeposited = initial;
   let totalInterest = 0;

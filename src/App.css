@@ -747,3 +747,17 @@ body {
   color: var(--mut);
   font-size: 0.8rem;
 }
+
+.footer-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--mut);
+  font-size: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.footer-link-btn:hover {
+  color: var(--accent);
+}

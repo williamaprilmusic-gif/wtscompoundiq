@@ -1,0 +1,48 @@
+/* src/components/ErrorBoundary.css */
+.error-boundary {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: var(--bg);
+}
+
+.error-boundary-card {
+  max-width: 440px;
+  text-align: center;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 40px 32px;
+  backdrop-filter: blur(12px);
+}
+
+.error-boundary-icon {
+  font-size: 2.5rem;
+  margin-bottom: 16px;
+}
+
+.error-boundary-card h1 {
+  font-size: 1.3rem;
+  color: var(--heading);
+  margin: 0 0 12px;
+}
+
+.error-boundary-card p {
+  color: var(--mut);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+
+.error-boundary-btn {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-blue-deep) 100%);
+  color: white;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
