@@ -39,6 +39,7 @@ export default function App() {
   const [inflation, setInflation] = useState(0);
   const [wrapper, setWrapper] = useState(false);
   const [compoundFrequency, setCompoundFrequency] = useState(12);
+  const [contributionIncrease, setContributionIncrease] = useState(0);
 
   // AI Advisor profile state -- no assumed persona; blank until the user fills it in.
   const [profile, setProfile] = useState({ age: 18, income: 0, savings: 0, riskTolerance: 'moderate' });
@@ -101,7 +102,8 @@ export default function App() {
     wrapper,
     compoundFrequency,
     annualWrapperLimit: country.annualWrapperLimit,
-    lifetimeWrapperLimit: country.lifetimeWrapperLimit
+    lifetimeWrapperLimit: country.lifetimeWrapperLimit,
+    contributionIncreaseRate: contributionIncrease
   });
 
   const tabGroups = [
@@ -240,6 +242,10 @@ export default function App() {
                     <option value="12">Monthly</option>
                     <option value="365">Daily</option>
                   </select>
+                </div>
+                <div className="form-group">
+                  <label><Term k="contributionIncrease">Annual Contribution Increase</Term> (%/yr)</label>
+                  <input type="number" min="0" step="0.5" value={contributionIncrease} onChange={(e) => setContributionIncrease(Number(e.target.value))} />
                 </div>
                 <div className="form-group checkbox-group">
                   <label>
@@ -404,43 +410,43 @@ export default function App() {
 
         {activeTab === 'Snapshot' && canAccess('Pro') && (
           <div className="tab-pane active">
-            <Snapshot country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} />
+            <Snapshot country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} />
           </div>
         )}
 
         {activeTab === 'Tax Optimizer' && canAccess('Pro') && (
           <div className="tab-pane active">
-            <TaxOptimizer country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} compoundFrequency={compoundFrequency} />
+            <TaxOptimizer country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} />
           </div>
         )}
 
         {activeTab === 'Invest' && canAccess('Pro') && (
           <div className="tab-pane active">
-            <Invest country={country} initial={initial} monthly={monthly} rate={rate} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} />
+            <Invest country={country} initial={initial} monthly={monthly} rate={rate} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} />
           </div>
         )}
 
         {activeTab === 'Coach' && canAccess('Enterprise') && (
           <div className="tab-pane active">
-            <Coach country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} onSetWrapper={setWrapper} onSetMonthly={setMonthly} onSetYears={setYears} />
+            <Coach country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} onSetWrapper={setWrapper} onSetMonthly={setMonthly} onSetYears={setYears} />
           </div>
         )}
 
         {activeTab === 'Power Tools' && canAccess('Pro') && (
           <div className="tab-pane active">
-            <PowerTools country={country} initial={initial} monthly={monthly} rate={rate} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} />
+            <PowerTools country={country} initial={initial} monthly={monthly} rate={rate} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} />
           </div>
         )}
 
         {activeTab === 'Compare' && canAccess('Pro') && (
           <div className="tab-pane active">
-            <Compare country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} compoundFrequency={compoundFrequency} />
+            <Compare country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} />
           </div>
         )}
 
         {activeTab === 'Monte Carlo' && canAccess('Ultra') && (
           <div className="tab-pane active">
-            <MonteCarlo country={country} initial={initial} monthly={monthly} rate={rate} years={years} compoundFrequency={compoundFrequency} />
+            <MonteCarlo country={country} initial={initial} monthly={monthly} rate={rate} years={years} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} />
           </div>
         )}
       </main>

@@ -19,5 +19,6 @@ export const GLOSSARY = {
   percentile: "A way of showing a range of possible outcomes instead of one guess. The '10th percentile' result is worse than 90% of simulated outcomes; the '90th percentile' is better than 90% of them.",
   volatility: "How much an investment's returns bounce around from year to year. Higher volatility means bigger swings, both up and down.",
   monteCarloSimulation: "Running the same plan through thousands of randomly-varied possible futures, to see a realistic range of outcomes instead of pretending returns are perfectly smooth every year.",
-  fxConversion: "Turning an amount in one currency into another using an exchange rate, so figures in different currencies can be compared fairly."
+  fxConversion: "Turning an amount in one currency into another using an exchange rate, so figures in different currencies can be compared fairly.",
+  contributionIncrease: "How much your monthly contribution grows every year, e.g. to keep pace with a raise or cost-of-living increase. 0% means you contribute the same fixed amount every year."
 };

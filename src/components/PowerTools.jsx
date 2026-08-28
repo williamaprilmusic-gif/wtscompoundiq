@@ -6,16 +6,16 @@ import Term from './Term';
 
 const MAX_YEARS_TO_SEARCH = 60;
 
-const yearsToReachTarget = ({ initial, monthly, rate, inflation, taxRate, wrapper, target, compoundFrequency, annualWrapperLimit, lifetimeWrapperLimit }) => {
+const yearsToReachTarget = ({ initial, monthly, rate, inflation, taxRate, wrapper, target, compoundFrequency, annualWrapperLimit, lifetimeWrapperLimit, contributionIncreaseRate }) => {
   if (initial >= target) return 0;
   for (let y = 1; y <= MAX_YEARS_TO_SEARCH; y++) {
-    const { finalBalance } = calculateCompoundInterest({ initial, monthly, rate, years: y, inflation, taxRate, wrapper, compoundFrequency, annualWrapperLimit, lifetimeWrapperLimit });
+    const { finalBalance } = calculateCompoundInterest({ initial, monthly, rate, years: y, inflation, taxRate, wrapper, compoundFrequency, annualWrapperLimit, lifetimeWrapperLimit, contributionIncreaseRate });
     if (finalBalance >= target) return y;
   }
   return null; // not reachable within MAX_YEARS_TO_SEARCH
 };
 
-const PowerTools = ({ country, initial, monthly, rate, inflation, wrapper, compoundFrequency = 12 }) => {
+const PowerTools = ({ country, initial, monthly, rate, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0 }) => {
   const [annualExpenses, setAnnualExpenses] = useState(0);
   const [withdrawalRate, setWithdrawalRate] = useState(4);
 
@@ -26,7 +26,8 @@ const PowerTools = ({ country, initial, monthly, rate, inflation, wrapper, compo
   const fireNumber = annualExpenses / (safeWithdrawalRate / 100);
   const yearsToFire = yearsToReachTarget({
     initial, monthly, rate, inflation, taxRate: country.taxRate, wrapper, target: fireNumber, compoundFrequency,
-    annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit
+    annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit,
+    contributionIncreaseRate: contributionIncrease
   });
 
   const debtIsWorse = debtRate > rate;

@@ -11,7 +11,9 @@ export function calculateCompoundInterest({
   wrapper = false, // tax-free wrapper
   compoundFrequency = 12, // periods per year interest is credited (1=annually, 12=monthly, 365=daily, ...)
   annualWrapperLimit = null, // max contributions/year that still qualify for wrapper shelter, or null = no cap
-  lifetimeWrapperLimit = null // max cumulative contributions ever that still qualify, or null = no cap
+  lifetimeWrapperLimit = null, // max cumulative contributions ever that still qualify, or null = no cap
+  contributionIncreaseRate = 0 // % the monthly contribution grows by, once per year (e.g. an annual raise/COLA).
+  // Defaults to 0 so every existing caller that doesn't pass it behaves exactly as before.
 }) {
   let balance = initial;
   let totalDeposited = initial;
@@ -21,13 +23,17 @@ export function calculateCompoundInterest({
   let wrapperCapExceeded = false;
 
   const periodRate = (rate / 100) / compoundFrequency;
-  // Monthly contributions are spread evenly across each compounding period so the
-  // total deposited per year always equals monthly * 12, regardless of frequency.
-  const depositPerPeriod = monthly * (12 / compoundFrequency);
-  const yearlyContribution = monthly * 12;
 
   for (let y = 0; y < years; y++) {
     let yearInterestEarned = 0;
+
+    // This year's monthly contribution, escalated from the base `monthly` amount by
+    // contributionIncreaseRate compounding once per year. Monthly contributions are
+    // spread evenly across each compounding period so the total deposited per year
+    // always equals yearMonthly * 12, regardless of frequency.
+    const yearMonthly = monthly * Math.pow(1 + contributionIncreaseRate / 100, y);
+    const depositPerPeriod = yearMonthly * (12 / compoundFrequency);
+    const yearlyContribution = yearMonthly * 12;
 
     // Decide, once per year, whether THIS year's growth still qualifies for wrapper
     // shelter -- coarse (whole-year) rather than exact-rand precision, but it's the
@@ -36,8 +42,13 @@ export function calculateCompoundInterest({
     // shown as 100% tax-free growth regardless of size, which is not how any real
     // tax-free wrapper works. Once the lifetime cap is breached it stays breached
     // (contributions only accumulate); the annual cap re-opens fresh room every year.
+    // Year 1's contribution also includes the lump-sum `initial` deposit -- a real
+    // wrapper's annual cap applies to everything paid in that year, so a large upfront
+    // deposit that alone exceeds the annual limit must breach it too, not just the
+    // ongoing monthly contributions.
+    const firstYearContribution = y === 0 ? initial + yearlyContribution : yearlyContribution;
     const projectedCumulative = cumulativeContributions + yearlyContribution;
-    const breachesAnnualCap = annualWrapperLimit != null && yearlyContribution > annualWrapperLimit;
+    const breachesAnnualCap = annualWrapperLimit != null && firstYearContribution > annualWrapperLimit;
     const breachesLifetimeCap = lifetimeWrapperLimit != null && projectedCumulative > lifetimeWrapperLimit;
     const yearIsSheltered = wrapper && !breachesAnnualCap && !breachesLifetimeCap;
     if (wrapper && (breachesAnnualCap || breachesLifetimeCap)) wrapperCapExceeded = true;

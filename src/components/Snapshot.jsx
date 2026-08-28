@@ -20,7 +20,7 @@ const downloadCSV = (results, country) => {
   URL.revokeObjectURL(url);
 };
 
-const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, compoundFrequency }) => {
+const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, compoundFrequency, contributionIncrease = 0 }) => {
   const [plan, setPlan] = useState(null);
 
   useEffect(() => {
@@ -32,14 +32,16 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
 
   const results = calculateCompoundInterest({
     initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper, compoundFrequency,
-    annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit
+    annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit,
+    contributionIncreaseRate: contributionIncrease
   });
 
   const hasWrapper = country.wrapperLabel && country.wrapperLabel !== 'N/A';
-  const taxableResults = calculateCompoundInterest({ initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper: false, compoundFrequency });
+  const taxableResults = calculateCompoundInterest({ initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper: false, compoundFrequency, contributionIncreaseRate: contributionIncrease });
   const wrapperResults = calculateCompoundInterest({
     initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper: true, compoundFrequency,
-    annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit
+    annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit,
+    contributionIncreaseRate: contributionIncrease
   });
   const wrapperBenefit = wrapperResults.finalBalance - taxableResults.finalBalance;
 

@@ -5,7 +5,7 @@ import { countriesData, convertAmount } from '../data/countries';
 import { calculateCompoundInterest } from '../engine';
 import Term from './Term';
 
-const Compare = ({ country, initial, monthly, rate, years, inflation, compoundFrequency = 12 }) => {
+const Compare = ({ country, initial, monthly, rate, years, inflation, compoundFrequency = 12, contributionIncrease = 0 }) => {
   const otherDefault = countriesData.find(c => c.code !== country.code) || countriesData[0];
   const [codeA, setCodeA] = useState(country.code);
   const [codeB, setCodeB] = useState(otherDefault.code);
@@ -13,7 +13,7 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, compoundFr
   const countryA = countriesData.find(c => c.code === codeA) || country;
   const countryB = countriesData.find(c => c.code === codeB) || otherDefault;
 
-  const base = { initial, monthly, rate, years, inflation, compoundFrequency };
+  const base = { initial, monthly, rate, years, inflation, compoundFrequency, contributionIncreaseRate: contributionIncrease };
   const resultsA = calculateCompoundInterest({ ...base, taxRate: countryA.taxRate, wrapper: false });
   const resultsB = calculateCompoundInterest({ ...base, taxRate: countryB.taxRate, wrapper: false });
 

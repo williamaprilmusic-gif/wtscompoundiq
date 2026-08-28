@@ -15,7 +15,7 @@ const gaussianRandom = (mean, stddev) => {
   return mean + z * stddev;
 };
 
-const runSimulation = ({ initial, monthly, rate, years, volatility, goal }) => {
+const runSimulation = ({ initial, monthly, rate, years, volatility, goal, contributionIncreaseRate = 0 }) => {
   const meanReturn = rate / 100;
   const stddev = volatility / 100;
   const finalBalances = [];
@@ -24,7 +24,8 @@ const runSimulation = ({ initial, monthly, rate, years, volatility, goal }) => {
     let balance = initial;
     for (let y = 0; y < years; y++) {
       const annualReturn = Math.max(gaussianRandom(meanReturn, stddev), -0.95);
-      balance = balance * (1 + annualReturn) + monthly * 12;
+      const yearMonthly = monthly * Math.pow(1 + contributionIncreaseRate / 100, y);
+      balance = balance * (1 + annualReturn) + yearMonthly * 12;
     }
     finalBalances.push(Math.max(balance, 0));
   }
@@ -45,15 +46,15 @@ const runSimulation = ({ initial, monthly, rate, years, volatility, goal }) => {
   };
 };
 
-const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency = 12 }) => {
-  const deterministic = calculateCompoundInterest({ initial, monthly, rate, years, inflation: 0, taxRate: country.taxRate, wrapper: false, compoundFrequency });
+const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency = 12, contributionIncrease = 0 }) => {
+  const deterministic = calculateCompoundInterest({ initial, monthly, rate, years, inflation: 0, taxRate: country.taxRate, wrapper: false, compoundFrequency, contributionIncreaseRate: contributionIncrease });
 
   const [volatility, setVolatility] = useState(15);
   const [goal, setGoal] = useState(deterministic.finalBalance);
   const [result, setResult] = useState(null);
 
   const handleRun = () => {
-    setResult(runSimulation({ initial, monthly, rate, years, volatility, goal }));
+    setResult(runSimulation({ initial, monthly, rate, years, volatility, goal, contributionIncreaseRate: contributionIncrease }));
   };
 
   return (

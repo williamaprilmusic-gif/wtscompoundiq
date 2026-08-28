@@ -12,9 +12,9 @@ const GOAL_PRESETS = [
 
 // Binary-search the monthly contribution needed to reach goalAmount by goalYears,
 // reusing the same engine the rest of the app uses so numbers stay consistent.
-const solveMonthlyForGoal = ({ startingAmount, rate, years, inflation, taxRate, wrapper, goalAmount, compoundFrequency, annualWrapperLimit, lifetimeWrapperLimit }) => {
+const solveMonthlyForGoal = ({ startingAmount, rate, years, inflation, taxRate, wrapper, goalAmount, compoundFrequency, annualWrapperLimit, lifetimeWrapperLimit, contributionIncreaseRate }) => {
   const evaluate = (monthly) => calculateCompoundInterest({
-    initial: startingAmount, monthly, rate, years, inflation, taxRate, wrapper, compoundFrequency, annualWrapperLimit, lifetimeWrapperLimit
+    initial: startingAmount, monthly, rate, years, inflation, taxRate, wrapper, compoundFrequency, annualWrapperLimit, lifetimeWrapperLimit, contributionIncreaseRate
   }).finalBalance;
 
   const binarySearch = (lo, hi) => {
@@ -42,7 +42,7 @@ const solveMonthlyForGoal = ({ startingAmount, rate, years, inflation, taxRate, 
   return binarySearch(0, Math.max(goalAmount, 100000));
 };
 
-const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12 }) => {
+const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0 }) => {
   const [goals, setGoals] = useState([]);
 
   const addGoal = (preset) => {
@@ -71,11 +71,11 @@ const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12 }) =
     const safeYears = g.goalYears > 0 ? g.goalYears : 1;
     const requiredMonthly = solveMonthlyForGoal({
       startingAmount: g.startingAmount, rate, years: safeYears, inflation, taxRate: country.taxRate, wrapper, goalAmount: g.goalAmount, compoundFrequency,
-      annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit
+      annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit, contributionIncreaseRate: contributionIncrease
     });
     const projection = calculateCompoundInterest({
       initial: g.startingAmount, monthly: requiredMonthly, rate, years: safeYears, inflation, taxRate: country.taxRate, wrapper, compoundFrequency,
-      annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit
+      annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit, contributionIncreaseRate: contributionIncrease
     });
     return { ...g, requiredMonthly, projection };
   });
