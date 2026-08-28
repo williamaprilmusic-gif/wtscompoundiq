@@ -1,6 +1,24 @@
 // src/engine.js
 // Robust, lightweight compound interest engine with tax and wrapper support.
 
+// Marginal tax owed on `income` given ascending brackets [{ upTo, rate }] (upTo: null
+// marks the top, unbounded bracket). Standard progressive-bracket math: each slice of
+// income is taxed at its own bracket's rate, not the whole amount at the top rate.
+export function taxOwedAtBrackets(income, brackets) {
+  if (!brackets || !brackets.length || income <= 0) return 0;
+  let tax = 0;
+  let lower = 0;
+  for (const b of brackets) {
+    const upper = b.upTo == null ? Infinity : b.upTo;
+    if (income > lower) {
+      tax += (Math.min(income, upper) - lower) * (b.rate / 100);
+    }
+    lower = upper;
+    if (income <= upper) break;
+  }
+  return tax;
+}
+
 export function calculateCompoundInterest({
   initial = 0,
   monthly = 0,
@@ -13,9 +31,15 @@ export function calculateCompoundInterest({
   annualWrapperLimit = null, // max contributions/year that still qualify for wrapper shelter, or null = no cap
   lifetimeWrapperLimit = null, // max cumulative contributions ever that still qualify, or null = no cap
   contributionIncreaseRate = 0, // % the monthly contribution grows by, once per year (e.g. an annual raise/COLA).
-  lumpSums = [] // optional one-off extra deposits: [{ year, amount }, ...]. `year` is
+  lumpSums = [], // optional one-off extra deposits: [{ year, amount }, ...]. `year` is
   // 1-indexed to match yearlyData.year (year 1 = the first 12 months). Multiple entries
   // for the same year are summed. Defaults to [] so every existing caller behaves exactly as before.
+  taxBrackets = null, // optional progressive brackets [{ upTo, rate }, ...] -- when
+  // provided, this year's gain is taxed at its marginal rate on top of otherTaxableIncome
+  // instead of the flat `taxRate`. null (the default) keeps every existing caller on
+  // the flat-rate behavior.
+  otherTaxableIncome = 0 // your non-investment taxable income, for placing the gain on
+  // the right marginal slice -- irrelevant unless taxBrackets is set.
 }) {
   let balance = initial;
   let totalDeposited = initial;
@@ -82,9 +106,17 @@ export function calculateCompoundInterest({
     // 3. Apply tax on gains if NOT sheltered this year (not a wrapper, or a wrapper
     // whose contribution cap was breached)
     let taxPaid = 0;
-    if (!yearIsSheltered && taxRate > 0) {
-      // Simple tax on nominal interest earned this year
-      taxPaid = yearInterestEarned * (taxRate / 100);
+    if (!yearIsSheltered) {
+      if (taxBrackets) {
+        // Marginal tax attributable to this year's gain: the extra tax paid by having
+        // otherTaxableIncome + gain instead of just otherTaxableIncome -- i.e. the gain
+        // sits on top of (is taxed at the marginal rate above) whatever else you earn,
+        // not naively re-run through the bottom bracket every year.
+        taxPaid = taxOwedAtBrackets(otherTaxableIncome + yearInterestEarned, taxBrackets) - taxOwedAtBrackets(otherTaxableIncome, taxBrackets);
+      } else if (taxRate > 0) {
+        // Simple flat tax on nominal interest earned this year
+        taxPaid = yearInterestEarned * (taxRate / 100);
+      }
       balance -= taxPaid;
       totalInterest -= taxPaid; // Net interest after tax
     }

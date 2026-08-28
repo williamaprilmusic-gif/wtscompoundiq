@@ -384,6 +384,24 @@ body {
   margin: 0;
 }
 
+.scenario-header-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.scenario-export-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--mut);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 .scenario-save-btn {
   background: rgba(56, 189, 248, 0.12);
   border: 1px solid rgba(56, 189, 248, 0.35);
@@ -487,6 +505,57 @@ body {
 
 .scenario-values strong.positive {
   color: var(--accent-green);
+}
+
+.share-plan-btn {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: var(--accent);
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+
+.share-plan-note {
+  color: var(--mut2);
+  font-size: 0.75rem;
+  margin-bottom: 24px;
+}
+
+/* Progressive tax brackets */
+.bracket-section {
+  margin-bottom: 24px;
+  padding: 16px 18px;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.bracket-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.bracket-form {
+  margin-top: 14px;
+}
+
+.bracket-form .form-group {
+  max-width: 320px;
+  margin-bottom: 10px;
+}
+
+.bracket-note {
+  color: var(--mut2);
+  font-size: 0.78rem;
+  line-height: 1.5;
 }
 
 /* One-off contributions */

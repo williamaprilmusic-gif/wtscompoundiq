@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import './MonteCarlo.css';
 import { calculateCompoundInterest } from '../engine';
-import { SP500_ANNUAL_RETURNS } from '../data/historicalReturns';
+import { RETURN_MODELS } from '../data/historicalReturns';
 import Term from './Term';
 import FanChart from './FanChart';
 
@@ -19,7 +19,14 @@ const gaussianRandom = (mean, stddev) => {
 
 const percentileOf = (sortedArr, p) => sortedArr[Math.floor(p * (sortedArr.length - 1))];
 
-const runSimulation = ({ initial, monthly, rate, years, volatility, goal, contributionIncreaseRate = 0, lumpSums = [], returnModel = 'normal' }) => {
+// taxRate/wrapper/cap params default to "no tax at all" (this simulation's original
+// behavior) -- only the wrapper-comparison mode below passes real tax figures in, so
+// the plain single-run mode stays exactly as pre-tax as it always was.
+const runSimulation = ({
+  initial, monthly, rate, years, volatility, goal, contributionIncreaseRate = 0, lumpSums = [],
+  returnModel = 'normal', historicalSeries = [], taxRate = 0, wrapper = false,
+  annualWrapperLimit = null, lifetimeWrapperLimit = null
+}) => {
   const meanReturn = rate / 100;
   const stddev = volatility / 100;
   const finalBalances = [];
@@ -30,17 +37,36 @@ const runSimulation = ({ initial, monthly, rate, years, volatility, goal, contri
 
   for (let sim = 0; sim < NUM_SIMULATIONS; sim++) {
     let balance = initial;
+    let cumulativeContributions = initial;
     balancesByYear[0].push(balance);
     for (let y = 0; y < years; y++) {
       const annualReturn = returnModel === 'historical'
         // Bootstrap: independently draw a random year's real historical return each
         // simulated year, rather than requiring years <= the dataset's length or
         // replaying one fixed historical sequence.
-        ? SP500_ANNUAL_RETURNS[Math.floor(Math.random() * SP500_ANNUAL_RETURNS.length)] / 100
+        ? historicalSeries[Math.floor(Math.random() * historicalSeries.length)] / 100
         : Math.max(gaussianRandom(meanReturn, stddev), -0.95);
+
       const yearMonthly = monthly * Math.pow(1 + contributionIncreaseRate / 100, y);
       const yearLumpSum = lumpSums.filter(l => l.year === y + 1).reduce((s, l) => s + (l.amount || 0), 0);
-      balance = Math.max(balance * (1 + annualReturn) + yearMonthly * 12 + yearLumpSum, 0);
+      const yearlyContribution = yearMonthly * 12 + yearLumpSum;
+
+      // Same wrapper-cap logic as engine.js's calculateCompoundInterest, so the
+      // taxable-vs-wrapper comparison here stays consistent with the deterministic
+      // numbers on the Tax Optimizer tab -- just re-evaluated every simulated year
+      // against that year's random return instead of one fixed rate.
+      const firstYearContribution = y === 0 ? initial + yearlyContribution : yearlyContribution;
+      const projectedCumulative = cumulativeContributions + yearlyContribution;
+      const breachesAnnualCap = annualWrapperLimit != null && firstYearContribution > annualWrapperLimit;
+      const breachesLifetimeCap = lifetimeWrapperLimit != null && projectedCumulative > lifetimeWrapperLimit;
+      const yearIsSheltered = wrapper && !breachesAnnualCap && !breachesLifetimeCap;
+      cumulativeContributions += yearlyContribution;
+
+      const grown = balance * (1 + annualReturn);
+      const gain = grown - balance;
+      const taxPaid = (!yearIsSheltered && taxRate > 0) ? gain * (taxRate / 100) : 0;
+
+      balance = Math.max(grown - taxPaid + yearlyContribution, 0);
       balancesByYear[y + 1].push(balance);
     }
     finalBalances.push(balance);
@@ -76,21 +102,41 @@ const runSimulation = ({ initial, monthly, rate, years, volatility, goal, contri
 
 const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [] }) => {
   const deterministic = calculateCompoundInterest({ initial, monthly, rate, years, inflation: 0, taxRate: country.taxRate, wrapper: false, compoundFrequency, contributionIncreaseRate: contributionIncrease, lumpSums });
+  const hasWrapper = country.wrapperLabel && country.wrapperLabel !== 'N/A';
 
   const [volatility, setVolatility] = useState(15);
   const [goal, setGoal] = useState(deterministic.finalBalance);
   const [returnModel, setReturnModel] = useState('normal');
+  const [historicalModelKey, setHistoricalModelKey] = useState('sp500');
+  const [compareWrapper, setCompareWrapper] = useState(false);
   const [result, setResult] = useState(null);
+  const [wrapperCompare, setWrapperCompare] = useState(null);
+
+  const activeHistoricalModel = RETURN_MODELS.find(m => m.key === historicalModelKey) || RETURN_MODELS[0];
 
   const handleRun = () => {
-    setResult(runSimulation({ initial, monthly, rate, years, volatility, goal, contributionIncreaseRate: contributionIncrease, lumpSums, returnModel }));
+    const base = {
+      initial, monthly, rate, years, volatility, goal,
+      contributionIncreaseRate: contributionIncrease, lumpSums, returnModel,
+      historicalSeries: activeHistoricalModel.data
+    };
+    if (compareWrapper && hasWrapper) {
+      setResult(null);
+      setWrapperCompare({
+        taxable: runSimulation({ ...base, taxRate: country.taxRate, wrapper: false }),
+        sheltered: runSimulation({ ...base, taxRate: country.taxRate, wrapper: true, annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit })
+      });
+    } else {
+      setWrapperCompare(null);
+      setResult(runSimulation(base)); // no taxRate/wrapper passed -- stays pre-tax, as this mode always has been
+    }
   };
 
   return (
     <div className="card monte-carlo">
       <div className="mc-header">
         <h2>🎲 <Term k="monteCarloSimulation">Monte Carlo Simulation</Term></h2>
-        <p>{NUM_SIMULATIONS.toLocaleString()} randomized market paths over {years} years -- pre-tax, ignores wrapper effects for simplicity.</p>
+        <p>{NUM_SIMULATIONS.toLocaleString()} randomized market paths over {years} years{compareWrapper && hasWrapper ? ` -- comparing taxable vs. ${country.wrapperLabel}` : ' -- pre-tax, ignores wrapper effects for simplicity'}.</p>
       </div>
 
       <div className="mc-model-toggle">
@@ -98,7 +144,7 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
           📊 Statistical (Normal Distribution)
         </button>
         <button className={`mc-model-btn ${returnModel === 'historical' ? 'active' : ''}`} onClick={() => setReturnModel('historical')}>
-          📜 Historical (S&amp;P 500 Bootstrap)
+          📜 Historical (Bootstrap)
         </button>
       </div>
 
@@ -115,9 +161,11 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
           </div>
         ) : (
           <div className="form-group">
-            <label>Return Source</label>
-            <input type="text" value={`${SP500_ANNUAL_RETURNS.length} yrs of real annual returns`} disabled />
-            <small>Illustrative/approximate, not a live feed -- see note below</small>
+            <label>Historical Benchmark</label>
+            <select value={historicalModelKey} onChange={(e) => setHistoricalModelKey(e.target.value)}>
+              {RETURN_MODELS.map(m => <option key={m.key} value={m.key}>{m.label}</option>)}
+            </select>
+            <small>{activeHistoricalModel.data.length} yrs, illustrative/approximate -- see note below</small>
           </div>
         )}
         <div className="form-group">
@@ -128,12 +176,18 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
 
       {returnModel === 'historical' && (
         <p className="mc-model-note">
-          Each simulated year independently draws one year's real historical S&amp;P 500 total return (bootstrap
-          resampling, reordered -- not a replay of any single real period), so crashes, booms, and fat tails come
-          from actual market history instead of a smooth bell curve. Figures are illustrative/approximate, not a
-          live data feed, and US equity-market history isn't necessarily representative of {country.name} or of
-          the future.
+          Each simulated year independently draws one year's real historical return from the chosen benchmark
+          (bootstrap resampling, reordered -- not a replay of any single real period), so crashes, booms, and fat
+          tails come from actual market history instead of a smooth bell curve. Figures are illustrative/approximate,
+          not a live data feed, and no single benchmark is necessarily representative of {country.name} or of the future.
         </p>
+      )}
+
+      {hasWrapper && (
+        <label className="mc-compare-toggle">
+          <input type="checkbox" checked={compareWrapper} onChange={(e) => setCompareWrapper(e.target.checked)} />
+          Compare taxable vs. {country.wrapperLabel} outcomes (applies {country.taxRate}% tax to the taxable path each simulated year)
+        </label>
       )}
 
       <button className="mc-run-btn" onClick={handleRun}>Run Simulation</button>
@@ -153,6 +207,36 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
             <div className="mc-stat median"><span>Median (50th)</span><strong>{country.symbol} {Math.round(result.p50).toLocaleString()}</strong></div>
             <div className="mc-stat"><span>75th percentile</span><strong>{country.symbol} {Math.round(result.p75).toLocaleString()}</strong></div>
             <div className="mc-stat"><span>90th percentile</span><strong>{country.symbol} {Math.round(result.p90).toLocaleString()}</strong></div>
+          </div>
+        </div>
+      )}
+
+      {wrapperCompare && (
+        <div className="mc-results mc-wrapper-compare">
+          <p className="mc-compare-summary">
+            Median outcome with {country.wrapperLabel}: <strong className="positive">{country.symbol} {Math.round(wrapperCompare.sheltered.p50).toLocaleString()}</strong>
+            {' '}vs. taxable: <strong>{country.symbol} {Math.round(wrapperCompare.taxable.p50).toLocaleString()}</strong>
+            {' '}-- a median gap of <strong className="positive">{country.symbol} {Math.round(wrapperCompare.sheltered.p50 - wrapperCompare.taxable.p50).toLocaleString()}</strong> from tax alone,
+            purely from randomness-driven variation on top of your {rate}% expected return.
+          </p>
+
+          <div className="mc-compare-grid">
+            <div className="mc-compare-col">
+              <h3>Taxable Account</h3>
+              <div className="mc-probability small">
+                <span>Probability of Reaching Goal</span>
+                <strong className={wrapperCompare.taxable.probabilityOfGoal >= 50 ? 'positive' : 'warn'}>{wrapperCompare.taxable.probabilityOfGoal.toFixed(1)}%</strong>
+              </div>
+              <FanChart yearlyPercentiles={wrapperCompare.taxable.yearlyPercentiles} symbol={country.symbol} />
+            </div>
+            <div className="mc-compare-col">
+              <h3>{country.wrapperLabel}</h3>
+              <div className="mc-probability small">
+                <span>Probability of Reaching Goal</span>
+                <strong className={wrapperCompare.sheltered.probabilityOfGoal >= 50 ? 'positive' : 'warn'}>{wrapperCompare.sheltered.probabilityOfGoal.toFixed(1)}%</strong>
+              </div>
+              <FanChart yearlyPercentiles={wrapperCompare.sheltered.yearlyPercentiles} symbol={country.symbol} />
+            </div>
           </div>
         </div>
       )}

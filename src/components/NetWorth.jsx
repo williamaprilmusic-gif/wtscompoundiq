@@ -3,12 +3,23 @@ import React, { useState, useEffect } from 'react';
 import './NetWorth.css';
 import Term from './Term';
 import { countriesData, convertAmount } from '../data/countries';
+import { parseCSV, downloadCSV } from '../utils/csv';
 
 const HISTORY_KEY = 'wts_compoundiq_networth_history';
+
+const downloadTemplate = () => {
+  downloadCSV('wts-compoundiq-networth-template.csv', [
+    ['name', 'type', 'currency', 'value'],
+    ['Savings account', 'asset', 'ZAR', '50000'],
+    ['Brokerage account', 'asset', 'USD', '3000'],
+    ['Credit card', 'debt', 'ZAR', '8000']
+  ]);
+};
 
 const NetWorth = ({ country }) => {
   const [items, setItems] = useState([]);
   const [history, setHistory] = useState([]);
+  const [importError, setImportError] = useState(null);
 
   useEffect(() => {
     const raw = localStorage.getItem(HISTORY_KEY);
@@ -29,6 +40,58 @@ const NetWorth = ({ country }) => {
   };
 
   const removeItem = (id) => setItems(prev => prev.filter(i => i.id !== id));
+
+  // Bulk-import assets/debts from a CSV (name, type, currency, value columns, any
+  // order, case-insensitive headers). Rows that don't parse to a usable name+value are
+  // silently skipped rather than failing the whole import -- a spreadsheet export often
+  // has a stray blank row or subtotal line.
+  const importCSV = (file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const rows = parseCSV(String(e.target.result));
+        if (rows.length < 2) { setImportError('That CSV has no data rows -- see the template for the expected format.'); return; }
+        const header = rows[0].map(h => h.trim().toLowerCase());
+        const nameIdx = header.indexOf('name');
+        const typeIdx = header.indexOf('type');
+        const currencyIdx = header.indexOf('currency');
+        const valueIdx = header.indexOf('value');
+        if (nameIdx === -1 || valueIdx === -1) {
+          setImportError('CSV needs at least "name" and "value" columns -- download the template below for the expected format.');
+          return;
+        }
+        const imported = rows.slice(1).map((r, idx) => {
+          const rawCurrency = (currencyIdx !== -1 ? r[currencyIdx] || '' : '').trim().toLowerCase();
+          // Accept either a country code ("za") or a currency code ("ZAR") -- whichever matches.
+          const matchedCountry = countriesData.find(c => c.code === rawCurrency || c.currency.toLowerCase() === rawCurrency);
+          const cleanValue = Number(String(r[valueIdx] || '0').replace(/[^0-9.-]/g, ''));
+          return {
+            id: Date.now() + idx,
+            name: (r[nameIdx] || '').trim().slice(0, 80),
+            type: (typeIdx !== -1 && (r[typeIdx] || '').trim().toLowerCase() === 'debt') ? 'debt' : 'asset',
+            currency: matchedCountry ? matchedCountry.code : country.code,
+            value: Number.isFinite(cleanValue) ? Math.max(0, cleanValue) : 0
+          };
+        }).filter(item => item.name && item.value > 0);
+
+        if (imported.length === 0) {
+          setImportError('No usable rows found -- each row needs a name and a value greater than 0.');
+          return;
+        }
+        setItems(prev => [...prev, ...imported]);
+        setImportError(null);
+      } catch {
+        setImportError("Could not read that file -- make sure it's a plain .csv export.");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleImportFile = (e) => {
+    const file = e.target.files?.[0];
+    if (file) importCSV(file);
+    e.target.value = ''; // allow re-selecting the same file later
+  };
 
   // Every total is converted into the currently displayed country's currency before
   // summing -- items already in that currency convert as a no-op, so a single-currency
@@ -66,6 +129,14 @@ const NetWorth = ({ country }) => {
       <div className="nw-header">
         <h2>💰 <Term k="netWorth">Net Worth</Term> Tracker</h2>
         <p>List everything you own (assets) and owe (debts) to see the full picture -- then save snapshots to track it over time. Each item can be in its own currency; totals convert to {country.name}'s {country.currency}.</p>
+        <div className="nw-import-row">
+          <label className="nw-import-btn">
+            📥 Import CSV
+            <input type="file" accept=".csv,text/csv" onChange={handleImportFile} hidden />
+          </label>
+          <button className="nw-template-btn" onClick={downloadTemplate}>Download template</button>
+        </div>
+        {importError && <p className="nw-import-error">⚠️ {importError}</p>}
       </div>
 
       <div className="nw-columns">

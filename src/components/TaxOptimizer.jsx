@@ -5,18 +5,18 @@ import { calculateCompoundInterest } from '../engine';
 import { getVerificationInfo } from '../data/countries';
 import Term from './Term';
 
-const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [] }) => {
+const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [], taxBrackets = null, otherTaxableIncome = 0 }) => {
   const hasWrapper = country.wrapperLabel && country.wrapperLabel !== 'N/A';
   const verification = getVerificationInfo(country.code);
 
   const taxableResults = calculateCompoundInterest({
     initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper: false, compoundFrequency,
-    contributionIncreaseRate: contributionIncrease, lumpSums
+    contributionIncreaseRate: contributionIncrease, lumpSums, taxBrackets, otherTaxableIncome
   });
   const wrapperResults = calculateCompoundInterest({
     initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper: true, compoundFrequency,
     annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit,
-    contributionIncreaseRate: contributionIncrease, lumpSums
+    contributionIncreaseRate: contributionIncrease, lumpSums, taxBrackets, otherTaxableIncome
   });
 
   const totalTaxPaid = taxableResults.yearlyData.reduce((sum, row) => sum + row.taxPaid, 0);
@@ -39,7 +39,7 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
           <div className="tax-compare-card taxable">
             <span className="tax-compare-label">Taxable Account</span>
             <strong className="tax-compare-value">{country.symbol} {taxableResults.finalBalance.toLocaleString()}</strong>
-            <span className="tax-compare-sub">after {years} years, {country.taxRate}% tax on gains</span>
+            <span className="tax-compare-sub">after {years} years, {taxBrackets ? 'progressive brackets' : `${country.taxRate}% tax`} on gains</span>
           </div>
           <div className="tax-compare-arrow">→</div>
           <div className="tax-compare-card wrapper">

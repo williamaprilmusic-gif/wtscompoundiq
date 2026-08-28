@@ -30,7 +30,21 @@ export const countriesData = [
     taxRules: {
       interestDeduction: 'Interest income is taxable up to your marginal tax bracket.',
       capitalGains: 'CGT applies on equity withdrawals outside TFSA wrappers.'
-    }
+    },
+    // Approximate individual (natural person) income tax brackets, 2026/27 tax year.
+    // The flat `taxRate` above (31%) is a mid-bracket approximation used everywhere by
+    // default; these are an opt-in, more precise alternative for anyone who wants to
+    // model their actual marginal rate instead. Illustrative, not SARS's live table.
+    taxBrackets: [
+      { upTo: 237100, rate: 18 },
+      { upTo: 370500, rate: 26 },
+      { upTo: 512800, rate: 31 },
+      { upTo: 673000, rate: 36 },
+      { upTo: 857900, rate: 39 },
+      { upTo: 1817000, rate: 41 },
+      { upTo: null, rate: 45 }
+    ],
+    taxBracketsNote: 'Individual (natural person) brackets, primary rebate/thresholds not modeled -- illustrative, not a SARS calculator.'
   },
   {
     code: 'us',
@@ -48,7 +62,20 @@ export const countriesData = [
     taxRules: {
       interestDeduction: 'Standard interest is fully taxed as ordinary income.',
       capitalGains: 'Long-term capital gains are 0%, 15%, or 20% depending on bracket.'
-    }
+    },
+    // Approximate federal marginal income tax brackets, single filer, 2026. State/local
+    // tax and capital-gains-specific rates aren't modeled -- interest is taxed as
+    // ordinary income (per taxRules above), which is what these brackets represent.
+    taxBrackets: [
+      { upTo: 11925, rate: 10 },
+      { upTo: 48475, rate: 12 },
+      { upTo: 103350, rate: 22 },
+      { upTo: 197300, rate: 24 },
+      { upTo: 250525, rate: 32 },
+      { upTo: 626350, rate: 35 },
+      { upTo: null, rate: 37 }
+    ],
+    taxBracketsNote: 'Federal only, single filer -- no state/local tax, no capital-gains-specific rates. Illustrative, not a tax return.'
   },
   {
     code: 'gb',
@@ -336,7 +363,19 @@ export const countriesData = [
     taxRules: {
       interestDeduction: 'Interest taxed at your income slab rate; TDS may apply above threshold.',
       capitalGains: 'LTCG above ₹100,000/year on equities taxed at 10%.'
-    }
+    },
+    // Approximate new-regime individual income tax slabs, FY2025-26. Cess/surcharge and
+    // the old-regime alternative aren't modeled -- illustrative, not an ITR calculator.
+    taxBrackets: [
+      { upTo: 400000, rate: 0 },
+      { upTo: 800000, rate: 5 },
+      { upTo: 1200000, rate: 10 },
+      { upTo: 1600000, rate: 15 },
+      { upTo: 2000000, rate: 20 },
+      { upTo: 2400000, rate: 25 },
+      { upTo: null, rate: 30 }
+    ],
+    taxBracketsNote: 'New tax regime slabs, no cess/surcharge, no Section 87A rebate. Illustrative, not an ITR calculator.'
   },
   {
     code: 'sg',

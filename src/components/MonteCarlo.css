@@ -55,6 +55,16 @@
   border-color: var(--accent);
 }
 
+.mc-compare-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--mut);
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+
 .mc-run-btn {
   background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-purple-deep) 100%);
   color: white;
@@ -173,4 +183,47 @@
 .mc-stat strong {
   font-size: 1.05rem;
   color: var(--text);
+}
+
+.mc-wrapper-compare {
+  margin-top: 20px;
+}
+
+.mc-compare-summary {
+  font-size: 0.88rem;
+  color: var(--mut);
+  line-height: 1.6;
+  margin-bottom: 24px;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.mc-compare-summary strong.positive {
+  color: var(--accent-green);
+}
+
+.mc-compare-summary strong {
+  color: var(--text);
+}
+
+.mc-compare-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.mc-compare-col h3 {
+  font-size: 0.95rem;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.mc-probability.small {
+  margin-bottom: 12px;
+}
+
+.mc-probability.small strong {
+  font-size: 1.4rem;
 }

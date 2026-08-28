@@ -22,11 +22,18 @@ import NetWorth from './components/NetWorth';
 import DataBackup from './components/DataBackup';
 import Term from './components/Term';
 import GrowthChart from './components/GrowthChart';
+import { buildShareUrl, parseShareParams, clearShareParamsFromUrl } from './utils/shareLink';
+import { downloadCSV } from './utils/csv';
 
 const THEME_KEY = 'wts_compoundiq_theme';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('Start Here');
+  // Computed fresh each render, but only ever matters on the very first one (the
+  // lazy useState initializers below run once) -- once the URL is cleaned up after
+  // mount, this naturally becomes null on subsequent renders anyway.
+  const shareParams = parseShareParams();
+
+  const [activeTab, setActiveTab] = useState(() => shareParams ? 'Calculator' : 'Start Here');
   const [userTier, setUserTier] = useState('Basic');
   // Dark is this app's original, always-on look -- only switch to light if the user
   // explicitly chose it last time (no OS prefers-color-scheme auto-detection, since
@@ -47,17 +54,48 @@ export default function App() {
   const [selectedUpgradeTier, setSelectedUpgradeTier] = useState(null);
   const [pendingTab, setPendingTab] = useState(null);
 
-  // Calculator state -- starts blank; every number here should come from the user, not a placeholder scenario.
-  const [country, setCountry] = useState(WTS_COUNTRIES[0]);
-  const [initial, setInitial] = useState(0);
-  const [monthly, setMonthly] = useState(0);
-  const [rate, setRate] = useState(0);
-  const [years, setYears] = useState(1);
-  const [inflation, setInflation] = useState(0);
-  const [wrapper, setWrapper] = useState(false);
-  const [compoundFrequency, setCompoundFrequency] = useState(12);
-  const [contributionIncrease, setContributionIncrease] = useState(0);
-  const [lumpSums, setLumpSums] = useState([]); // one-off future contributions: [{ id, year, amount }]
+  // Calculator state -- starts blank; every number here should come from the user, not
+  // a placeholder scenario. The one exception is a shared plan link: if the URL carries
+  // valid share params (see utils/shareLink.js), those seed these fields instead so a
+  // link someone sends actually opens showing their plan.
+  const [country, setCountry] = useState(() => shareParams?.countryCode ? getCountryByCode(shareParams.countryCode) : WTS_COUNTRIES[0]);
+  const [initial, setInitial] = useState(() => shareParams?.initial ?? 0);
+  const [monthly, setMonthly] = useState(() => shareParams?.monthly ?? 0);
+  const [rate, setRate] = useState(() => shareParams?.rate ?? 0);
+  const [years, setYears] = useState(() => shareParams?.years ?? 1);
+  const [inflation, setInflation] = useState(() => shareParams?.inflation ?? 0);
+  const [wrapper, setWrapper] = useState(() => shareParams?.wrapper ?? false);
+  const [compoundFrequency, setCompoundFrequency] = useState(() => shareParams?.compoundFrequency ?? 12);
+  const [contributionIncrease, setContributionIncrease] = useState(() => shareParams?.contributionIncrease ?? 0);
+  const [lumpSums, setLumpSums] = useState(() => shareParams?.lumpSums ?? []); // one-off future contributions: [{ id, year, amount }]
+  const [shareLinkCopied, setShareLinkCopied] = useState(false);
+
+  // Progressive tax brackets -- only meaningful for the handful of countries with
+  // taxBrackets data (see data/countries.js). Opt-in: off by default, the flat
+  // country.taxRate keeps being used everywhere else regardless of this toggle.
+  const [progressiveTax, setProgressiveTax] = useState(false);
+  const [otherTaxableIncome, setOtherTaxableIncome] = useState(0);
+  const hasTaxBrackets = !!country.taxBrackets;
+  const effectiveTaxBrackets = (progressiveTax && hasTaxBrackets) ? country.taxBrackets : null;
+
+  // Clean the (potentially long) share query string out of the address bar once it's
+  // done its job -- doesn't navigate or reload, just tidies the visible URL.
+  useEffect(() => {
+    if (shareParams) clearShareParamsFromUrl();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const shareCurrentPlan = async () => {
+    const url = buildShareUrl({ country: country.code, initial, monthly, rate, years, inflation, wrapper, compoundFrequency, contributionIncrease, lumpSums });
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      window.prompt('Copy this link:', url); // clipboard API unavailable (e.g. insecure context) -- fall back to a manual copy
+      return;
+    }
+    setShareLinkCopied(true);
+    setTimeout(() => setShareLinkCopied(false), 2000);
+  };
 
   const handleCountryChange = (code) => {
     const c = getCountryByCode(code);
@@ -94,6 +132,13 @@ export default function App() {
 
   const removeScenario = (id) => setScenarios(prev => prev.filter(s => s.id !== id));
   const renameScenario = (id, label) => setScenarios(prev => prev.map(s => s.id === id ? { ...s, label } : s));
+
+  const exportScenariosCSV = () => {
+    downloadCSV('wts-compoundiq-scenarios.csv', [
+      ['Label', 'Country', 'Initial', 'Monthly', 'Rate %', 'Years', 'Wrapper', 'Final Balance', 'Total Interest'],
+      ...scenarios.map(s => [s.label, s.countryName, s.initial, s.monthly, s.rate, s.years, s.wrapper ? 'Yes' : 'No', s.finalBalance, s.totalInterest])
+    ]);
+  };
 
   // Load tier from local storage
   useEffect(() => {
@@ -135,7 +180,9 @@ export default function App() {
     annualWrapperLimit: country.annualWrapperLimit,
     lifetimeWrapperLimit: country.lifetimeWrapperLimit,
     contributionIncreaseRate: contributionIncrease,
-    lumpSums
+    lumpSums,
+    taxBrackets: effectiveTaxBrackets,
+    otherTaxableIncome
   });
 
   const tabGroups = [
@@ -295,6 +342,27 @@ export default function App() {
                 </div>
               </div>
 
+              {hasTaxBrackets && (
+                <div className="bracket-section">
+                  <label className="bracket-toggle">
+                    <input type="checkbox" checked={progressiveTax} onChange={(e) => setProgressiveTax(e.target.checked)} />
+                    Use progressive tax brackets instead of the flat {country.taxRate}% estimate
+                  </label>
+                  {progressiveTax && (
+                    <div className="bracket-form">
+                      <div className="form-group">
+                        <label>Other Taxable Income ({country.symbol}/yr, excluding this plan's gains)</label>
+                        <input type="number" min="0" step="1000" value={otherTaxableIncome} onChange={(e) => setOtherTaxableIncome(Number(e.target.value))} />
+                      </div>
+                      <p className="bracket-note">
+                        Each year's investment gain is taxed at your marginal rate on top of this income, using{' '}
+                        {country.name}'s approximate brackets. {country.taxBracketsNote}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="lumpsum-section">
                 <div className="lumpsum-header">
                   <h3>One-Off Contributions</h3>
@@ -359,16 +427,26 @@ export default function App() {
 
               <GrowthChart yearlyData={results.yearlyData} initial={initial} symbol={country.symbol} />
 
+              <button className="share-plan-btn" onClick={shareCurrentPlan}>
+                {shareLinkCopied ? '✓ Link copied!' : '🔗 Share This Plan'}
+              </button>
+              <p className="share-plan-note">Copies a link that opens with these exact inputs -- nothing is uploaded, the whole plan lives in the URL itself.</p>
+
               <div className="scenario-section">
                 <div className="scenario-header">
                   <h3>Scenario Comparison</h3>
-                  <button
-                    className="scenario-save-btn"
-                    onClick={saveScenario}
-                    disabled={scenarios.length >= MAX_SCENARIOS}
-                  >
-                    {scenarios.length >= MAX_SCENARIOS ? `Max ${MAX_SCENARIOS} scenarios` : '+ Save Current as Scenario'}
-                  </button>
+                  <div className="scenario-header-actions">
+                    {scenarios.length > 0 && (
+                      <button className="scenario-export-btn" onClick={exportScenariosCSV}>⬇️ Export CSV</button>
+                    )}
+                    <button
+                      className="scenario-save-btn"
+                      onClick={saveScenario}
+                      disabled={scenarios.length >= MAX_SCENARIOS}
+                    >
+                      {scenarios.length >= MAX_SCENARIOS ? `Max ${MAX_SCENARIOS} scenarios` : '+ Save Current as Scenario'}
+                    </button>
+                  </div>
                 </div>
 
                 {scenarios.length === 0 ? (
@@ -484,7 +562,7 @@ export default function App() {
 
         {activeTab === 'Tax Optimizer' && canAccess('Pro') && (
           <div className="tab-pane active">
-            <TaxOptimizer country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} />
+            <TaxOptimizer country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} taxBrackets={effectiveTaxBrackets} otherTaxableIncome={otherTaxableIncome} />
           </div>
         )}
 

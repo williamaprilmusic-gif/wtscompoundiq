@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import './Compare.css';
 import { countriesData, convertAmount } from '../data/countries';
 import { calculateCompoundInterest } from '../engine';
+import { downloadCSV } from '../utils/csv';
 import Term from './Term';
 
 const Compare = ({ country, initial, monthly, rate, years, inflation, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [] }) => {
@@ -25,6 +26,16 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, compoundFr
 
   const balanceA_inB = convertAmount(resultsA.finalBalance, countryA.code, countryB.code);
   const balanceB_inA = convertAmount(resultsB.finalBalance, countryB.code, countryA.code);
+
+  const exportCSV = () => {
+    const header = ['Year', `${countryA.name} Balance (${countryA.currency})`, `${countryA.name} Interest`, `${countryA.name} Tax Paid`,
+      `${countryB.name} Balance (${countryB.currency})`, `${countryB.name} Interest`, `${countryB.name} Tax Paid`];
+    const rows = resultsA.yearlyData.map((rowA, i) => {
+      const rowB = resultsB.yearlyData[i] || {};
+      return [rowA.year, rowA.balance, rowA.interest, rowA.taxPaid, rowB.balance ?? '', rowB.interest ?? '', rowB.taxPaid ?? ''];
+    });
+    downloadCSV(`wts-compoundiq-compare-${countryA.code}-vs-${countryB.code}.csv`, [header, ...rows]);
+  };
 
   return (
     <div className="card country-compare">
@@ -68,6 +79,8 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, compoundFr
           </div>
         </div>
       </div>
+
+      <button className="compare-export-btn" onClick={exportCSV}>⬇️ Export Year-by-Year CSV</button>
 
       <div className="compare-note">
         Converted figures (≈) use an illustrative, approximate exchange rate table (not live rates) so the two plans
