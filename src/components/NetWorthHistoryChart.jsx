@@ -7,6 +7,7 @@
 // hovering -- this is a visual summary on top of that list, not a replacement for it.
 import React, { useState, useRef, useMemo } from 'react';
 import './NetWorthHistoryChart.css';
+import { niceCeil, niceFloor, formatCompact } from '../utils/chartFormat';
 
 const WIDTH = 640;
 const HEIGHT = 200;
@@ -14,29 +15,6 @@ const PAD_LEFT = 60;
 const PAD_RIGHT = 16;
 const PAD_TOP = 16;
 const PAD_BOTTOM = 26;
-
-const niceCeil = (value) => {
-  if (value <= 0) return 1;
-  const magnitude = Math.pow(10, Math.floor(Math.log10(value)));
-  const normalized = value / magnitude;
-  let niceNormalized;
-  if (normalized <= 1) niceNormalized = 1;
-  else if (normalized <= 2) niceNormalized = 2;
-  else if (normalized <= 2.5) niceNormalized = 2.5;
-  else if (normalized <= 5) niceNormalized = 5;
-  else niceNormalized = 10;
-  return niceNormalized * magnitude;
-};
-
-const niceFloor = (value) => value >= 0 ? 0 : -niceCeil(-value);
-
-const formatCompact = (value) => {
-  const abs = Math.abs(value);
-  const sign = value < 0 ? '-' : '';
-  if (abs >= 1000000) return sign + (abs / 1000000).toFixed(abs >= 10000000 ? 0 : 1) + 'M';
-  if (abs >= 1000) return sign + (abs / 1000).toFixed(abs >= 10000 ? 0 : 1) + 'K';
-  return sign + Math.round(abs).toString();
-};
 
 // history entries are already converted to the display currency by the caller (see
 // NetWorth.jsx's convertAmount usage) -- this component just plots numbers.

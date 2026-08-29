@@ -138,6 +138,13 @@ const NetWorth = ({ country }) => {
     setHistory([]);
   };
 
+  // Converted once and reused by both the chart and the list below instead of calling
+  // convertAmount twice per snapshot.
+  const convertedHistory = history.map(h => ({
+    date: h.date,
+    netWorth: convertAmount(h.netWorth, h.displayCurrency || country.code, country.code)
+  }));
+
   return (
     <div className="card net-worth">
       <div className="nw-header">
@@ -220,16 +227,13 @@ const NetWorth = ({ country }) => {
             <button className="nw-clear-btn" onClick={clearHistory}>Clear history</button>
           </div>
           {history.length > 1 && (
-            <NetWorthHistoryChart
-              history={history.map(h => ({ date: h.date, netWorth: convertAmount(h.netWorth, h.displayCurrency || country.code, country.code) }))}
-              symbol={country.symbol}
-            />
+            <NetWorthHistoryChart history={convertedHistory} symbol={country.symbol} />
           )}
           <div className="nw-history-list">
-            {[...history].reverse().map((h, idx) => (
+            {[...convertedHistory].reverse().map((h, idx) => (
               <div key={idx} className="nw-history-row">
                 <span>{new Date(h.date).toLocaleDateString()}</span>
-                <strong>{country.symbol} {Math.round(convertAmount(h.netWorth, h.displayCurrency || country.code, country.code)).toLocaleString()}</strong>
+                <strong>{country.symbol} {Math.round(h.netWorth).toLocaleString()}</strong>
               </div>
             ))}
           </div>

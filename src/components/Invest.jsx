@@ -54,20 +54,28 @@ const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12, con
       label: preset?.label ?? 'New Goal',
       startingAmount: 0,
       goalAmount: preset?.amount ?? 0,
-      goalYears: preset?.years ?? 1
+      goalYears: preset?.years ?? 1,
+      // Some presets (Retirement, House Deposit, Emergency Fund) start with a nonzero
+      // goalAmount, so "goalAmount > 0" alone can't tell a preset the user just clicked
+      // apart from one they've actually edited. Track edits explicitly instead: stays
+      // false until the user touches any field, so removeGoal below can tell "just
+      // added" from "has real data" regardless of the preset's own defaults.
+      touched: false
     }]);
   };
 
   const updateGoal = (id, field, value) => {
-    setGoals(prev => prev.map(g => g.id === id ? { ...g, [field]: field === 'label' ? value : Number(value) } : g));
+    setGoals(prev => prev.map(g => g.id === id ? { ...g, [field]: field === 'label' ? value : Number(value), touched: true } : g));
   };
 
   // See NetWorth.jsx's removeItem for why this only confirms once a goal actually
-  // has a real target entered -- a freshly-added preset removed right away doesn't
-  // need a safety check.
+  // has real data entered -- a freshly-added preset removed right away doesn't need a
+  // safety check. `touched !== false` (rather than `=== true`) so goals saved before
+  // this field existed -- which have no `touched` at all -- default to being treated
+  // as real data and still get a confirmation.
   const removeGoal = (id) => {
     const goal = goals.find(g => g.id === id);
-    if (goal && goal.goalAmount > 0) {
+    if (goal && goal.touched !== false) {
       if (!window.confirm(`Remove "${goal.label.trim() || 'this goal'}"? This can't be undone.`)) return;
     }
     setGoals(prev => prev.filter(g => g.id !== id));
