@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import './LoanCalculator.css';
 import { calculateLoanAmortization } from '../loanAmortization';
 import { downloadCSV } from '../utils/csv';
-import { savePlanSection } from '../utils/planStorage';
+import { savePlanSection, monthsToYearsLabel } from '../utils/planStorage';
 import Term from './Term';
 
 // Term is a sensible starting default per type -- not a rate estimate (rates vary too
@@ -184,7 +184,7 @@ const LoanCalculator = ({ country }) => {
           {extraMonthly > 0 && result.extra && (
             <div className="loan-extra-callout">
               Paying an extra {country.symbol}{extraMonthly.toLocaleString()}/month clears this {activeType.shortLabel} in{' '}
-              <strong>{Math.round(result.extra.payoffMonths / 12 * 10) / 10} years</strong> instead of {(result.payoffMonths / 12).toFixed(1)} --
+              <strong>{monthsToYearsLabel(result.extra.payoffMonths)}</strong> instead of {monthsToYearsLabel(result.payoffMonths)} --
               saving <strong className="positive">{country.symbol} {result.extra.interestSaved.toLocaleString()}</strong> in interest
               and {Math.floor(result.extra.monthsSaved / 12)} years {result.extra.monthsSaved % 12} months off the term.
             </div>
@@ -194,7 +194,7 @@ const LoanCalculator = ({ country }) => {
             <div className="loan-extra-callout biweekly">
               💡 Switching to bi-weekly payments (half your {country.symbol}{result.monthlyPayment.toLocaleString()} instalment, paid every 2
               weeks instead of once a month) works out to one extra payment a year. That alone would clear this {activeType.shortLabel} in{' '}
-              <strong>{Math.round(biweeklyResult.extra.payoffMonths / 12 * 10) / 10} years</strong> instead of {(result.payoffMonths / 12).toFixed(1)},
+              <strong>{monthsToYearsLabel(biweeklyResult.extra.payoffMonths)}</strong> instead of {monthsToYearsLabel(result.payoffMonths)},
               saving <strong className="positive">{country.symbol} {biweeklyResult.extra.interestSaved.toLocaleString()}</strong> in interest.
               You do pay one extra instalment's worth per year in total -- but if you're paid weekly or bi-weekly yourself, it often lines up
               with your paycheck rhythm instead of feeling like a separate decision (confirm your lender actually applies bi-weekly payments

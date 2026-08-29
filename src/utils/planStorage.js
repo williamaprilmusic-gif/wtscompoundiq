@@ -30,6 +30,11 @@ export const savePlanSection = (sectionKey, data) => {
 export const loanEffectiveMonthlyPayment = (loan) =>
   Math.round((loan.monthlyPayment || 0) + (loan.extraMonthly || 0));
 
+// Converts a month count to a "N years" label rounded to 1 decimal place, without a
+// trailing ".0" on whole numbers (so 60 months reads "5 years", not "5.0 years").
+// Shared so every payoff-horizon display formats months the same way.
+export const monthsToYearsLabel = (months) => `${Math.round(months / 12 * 10) / 10} years`;
+
 // Given a saved 'loan' plan section, returns a "N years" label for how long it'll
 // actually take to pay off at the saved pace. termYears is the loan's nominal
 // contractual term and doesn't shrink when there's an extra payment -- payoffMonths
@@ -38,5 +43,5 @@ export const loanEffectiveMonthlyPayment = (loan) =>
 // describe two different, contradictory payment scenarios in the same sentence.
 export const loanEffectiveTermLabel = (loan) =>
   loan.extraMonthly > 0 && loan.payoffMonths
-    ? `${Math.round(loan.payoffMonths / 12 * 10) / 10} years`
+    ? monthsToYearsLabel(loan.payoffMonths)
     : `${loan.termYears} years`;
