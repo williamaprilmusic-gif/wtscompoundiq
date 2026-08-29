@@ -111,10 +111,15 @@
   color: var(--text);
 }
 
+.snapshot-table-container {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
 .snapshot-table {
   width: 100%;
+  min-width: 480px;
   border-collapse: collapse;
-  margin-top: 20px;
   font-size: 0.85rem;
 }
 
@@ -186,5 +191,9 @@
 
   .snapshot-section {
     page-break-inside: avoid;
+  }
+
+  .snapshot-table-container {
+    overflow: visible; /* print the full table -- don't clip it to the screen scroll width */
   }
 }

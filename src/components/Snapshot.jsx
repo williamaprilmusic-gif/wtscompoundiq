@@ -116,6 +116,7 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
           </section>
         )}
 
+        <div className="snapshot-table-container">
         <table className="snapshot-table">
           <thead>
             <tr><th>Year</th><th>Balance</th><th>Real Value</th><th>Deposited</th><th>Interest</th><th>Tax Paid</th></tr>
@@ -133,6 +134,7 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
             ))}
           </tbody>
         </table>
+        </div>
 
         <p className="snapshot-disclaimer">
           WTS CompoundIQ · educational tool · figures are indicative projections, not financial advice. Tax and wrapper

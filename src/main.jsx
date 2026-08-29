@@ -21,3 +21,15 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(() => { /* offline support is a bonus, not a requirement */ });
   });
 }
+
+// Every number field across the app starts at (or can return to) 0 -- without this,
+// clicking into one and typing "5000" produces "05000" (the existing value sits
+// wherever the cursor landed, it doesn't get replaced). Select-on-focus fixes that for
+// every number input in the app at once, current and future, without touching each of
+// the dozens of individual form fields. `focusin` (unlike plain `focus`) bubbles, so
+// one listener at the document root catches all of them via delegation.
+document.addEventListener('focusin', (e) => {
+  if (e.target instanceof HTMLInputElement && e.target.type === 'number') {
+    e.target.select();
+  }
+});
