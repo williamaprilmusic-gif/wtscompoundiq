@@ -139,6 +139,52 @@
   color: var(--accent-green);
 }
 
+.loan-extra-callout.biweekly {
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.loan-tips-section {
+  margin: 28px 0 20px;
+}
+
+.loan-tips-section h3 {
+  font-size: 1.05rem;
+  color: var(--text);
+  margin: 0 0 14px;
+}
+
+.loan-tips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.loan-tip-card {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.loan-tip-card.specific {
+  border-color: rgba(56, 189, 248, 0.3);
+  background: rgba(56, 189, 248, 0.05);
+}
+
+.loan-tip-card h4 {
+  font-size: 0.9rem;
+  color: var(--text);
+  margin: 0 0 8px;
+}
+
+.loan-tip-card p {
+  font-size: 0.82rem;
+  color: var(--mut);
+  line-height: 1.55;
+  margin: 0;
+}
+
 .loan-table-actions {
   display: flex;
   justify-content: space-between;
