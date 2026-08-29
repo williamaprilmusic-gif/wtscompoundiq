@@ -211,6 +211,18 @@
   cursor: pointer;
 }
 
+.loan-save-plan-btn {
+  margin-top: 18px;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: var(--accent);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .loan-note {
   margin-top: 20px;
   font-size: 0.78rem;

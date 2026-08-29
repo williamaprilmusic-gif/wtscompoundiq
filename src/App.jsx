@@ -16,12 +16,15 @@ import wtsLogo from './assets/wts-logo.png';
 import StartHere from './components/StartHere';
 import DebtPayoff from './components/DebtPayoff';
 import LoanCalculator from './components/LoanCalculator';
+import Dashboard from './components/Dashboard';
 import EmergencyFund from './components/EmergencyFund';
 import MyPlan from './components/MyPlan';
 import Snapshot from './components/Snapshot';
 import NetWorth from './components/NetWorth';
 import DataBackup from './components/DataBackup';
 import LegalModal from './components/LegalModal';
+import LanguageSwitcher from './components/LanguageSwitcher';
+import { useLanguage } from './i18n/LanguageContext';
 import Term from './components/Term';
 import GrowthChart from './components/GrowthChart';
 import { buildShareUrl, parseShareParams, clearShareParamsFromUrl } from './utils/shareLink';
@@ -35,6 +38,7 @@ const THEME_KEY = 'wts_compoundiq_theme';
 const MAX_YEARS = 100;
 
 export default function App() {
+  const { t } = useLanguage();
   // Computed fresh each render, but only ever matters on the very first one (the
   // lazy useState initializers below run once) -- once the URL is cleaned up after
   // mount, this naturally becomes null on subsequent renders anyway.
@@ -205,35 +209,40 @@ export default function App() {
     otherTaxableIncome
   });
 
+  // `name` is the stable internal tab id -- used for activeTab routing, canAccess
+  // checks, and every onNavigate('Exact Name') call from StartHere/Dashboard/etc.
+  // Never translate `name` itself; `i18nKey` is what gets displayed (falls back to
+  // English automatically via t() if a language's translation is missing).
   const tabGroups = [
     {
-      label: 'Free',
+      label: t('nav.groupFree'),
       tabs: [
-        { name: 'Start Here', tier: 'Basic' },
-        { name: 'Calculator', tier: 'Basic' }
+        { name: 'Start Here', i18nKey: 'nav.startHere', tier: 'Basic' },
+        { name: 'Calculator', i18nKey: 'nav.calculator', tier: 'Basic' }
       ]
     },
     {
-      label: 'Planning',
+      label: t('nav.groupPlanning'),
       tabs: [
-        { name: 'Emergency Fund', tier: 'Pro' },
-        { name: 'Debt Payoff', tier: 'Pro' },
-        { name: 'Loan & Bond', tier: 'Pro' },
-        { name: 'My Plan', tier: 'Pro' },
-        { name: 'Net Worth', tier: 'Pro' },
-        { name: 'Snapshot', tier: 'Pro' },
-        { name: 'Invest', tier: 'Pro' },
-        { name: 'Tax Optimizer', tier: 'Pro' },
-        { name: 'Power Tools', tier: 'Pro' },
-        { name: 'Compare', tier: 'Pro' }
+        { name: 'Dashboard', i18nKey: 'nav.dashboard', tier: 'Pro' },
+        { name: 'Emergency Fund', i18nKey: 'nav.emergencyFund', tier: 'Pro' },
+        { name: 'Debt Payoff', i18nKey: 'nav.debtPayoff', tier: 'Pro' },
+        { name: 'Loan & Bond', i18nKey: 'nav.loanBond', tier: 'Pro' },
+        { name: 'My Plan', i18nKey: 'nav.myPlan', tier: 'Pro' },
+        { name: 'Net Worth', i18nKey: 'nav.netWorth', tier: 'Pro' },
+        { name: 'Snapshot', i18nKey: 'nav.snapshot', tier: 'Pro' },
+        { name: 'Invest', i18nKey: 'nav.invest', tier: 'Pro' },
+        { name: 'Tax Optimizer', i18nKey: 'nav.taxOptimizer', tier: 'Pro' },
+        { name: 'Power Tools', i18nKey: 'nav.powerTools', tier: 'Pro' },
+        { name: 'Compare', i18nKey: 'nav.compare', tier: 'Pro' }
       ]
     },
     {
-      label: 'AI & Analysis',
+      label: t('nav.groupAI'),
       tabs: [
-        { name: 'Coach', tier: 'Enterprise' },
-        { name: 'Monte Carlo', tier: 'Ultra' },
-        { name: 'AI Advisor', tier: 'Enterprise' }
+        { name: 'Coach', i18nKey: 'nav.coach', tier: 'Enterprise' },
+        { name: 'Monte Carlo', i18nKey: 'nav.monteCarlo', tier: 'Ultra' },
+        { name: 'AI Advisor', i18nKey: 'nav.aiAdvisor', tier: 'Enterprise' }
       ]
     }
   ];
@@ -256,13 +265,14 @@ export default function App() {
           </div>
           <div className="brand-text">
             <h1>WTS CompoundIQ</h1>
-            <p>Global money planner · Tax Optimizer · AI Coach</p>
+            <p>{t('header.tagline')}</p>
           </div>
         </div>
         <div className="header-actions">
           <div className="tier-badge">
-            Current Plan: <strong style={{ color: userTier === 'Basic' ? 'var(--accent-yellow)' : 'var(--accent-green)' }}>{userTier}</strong>
+            {t('header.currentPlan')} <strong style={{ color: userTier === 'Basic' ? 'var(--accent-yellow)' : 'var(--accent-green)' }}>{userTier}</strong>
           </div>
+          <LanguageSwitcher compact />
           <button
             className="theme-toggle-btn"
             onClick={toggleTheme}
@@ -272,7 +282,7 @@ export default function App() {
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
           <button className="btn-upgrade" onClick={() => setShowPricing(true)}>
-            ⭐ Upgrade Plan
+            {t('header.upgradePlan')}
           </button>
         </div>
       </header>
@@ -297,7 +307,7 @@ export default function App() {
                       }
                     }}
                   >
-                    {tab.name}
+                    {t(tab.i18nKey)}
                     {locked && <span className="lock-icon">🔒</span>}
                   </button>
                 );
@@ -311,54 +321,54 @@ export default function App() {
         {activeTab === 'Calculator' && (
           <div className="tab-pane active">
             <div className="card">
-              <h2>Compound Interest Calculator</h2>
-              <p className="card-subtitle">Free, with all 36 countries and tax-free wrapper comparisons included. No signup required.</p>
+              <h2>{t('calculator.title')}</h2>
+              <p className="card-subtitle">{t('calculator.subtitle')}</p>
 
               <div className="form-grid">
                 <div className="form-group">
-                  <label>Country</label>
+                  <label>{t('calculator.country')}</label>
                   <select value={country.code} onChange={(e) => handleCountryChange(e.target.value)}>
                     {WTS_COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Initial Amount ({country.symbol})</label>
+                  <label>{t('calculator.initialAmount')} ({country.symbol})</label>
                   <input type="number" value={initial} onChange={(e) => setInitial(Number(e.target.value))} />
                 </div>
                 <div className="form-group">
-                  <label>Monthly Contribution ({country.symbol})</label>
+                  <label>{t('calculator.monthlyContribution')} ({country.symbol})</label>
                   <input type="number" value={monthly} onChange={(e) => setMonthly(Number(e.target.value))} />
                 </div>
                 <div className="form-group">
-                  <label>Annual Rate (%)</label>
+                  <label>{t('calculator.annualRate')}</label>
                   <input type="number" step="0.1" value={rate} onChange={(e) => setRate(Number(e.target.value))} />
                 </div>
                 <div className="form-group">
-                  <label>Years to Grow (max {MAX_YEARS})</label>
+                  <label>{t('calculator.yearsToGrow')} (max {MAX_YEARS})</label>
                   <input type="number" min="1" max={MAX_YEARS} value={years} onChange={(e) => setYears(Math.min(MAX_YEARS, Number(e.target.value)))} />
                 </div>
                 <div className="form-group">
-                  <label><Term k="inflation">Inflation</Term> (%/yr)</label>
+                  <label><Term k="inflation">{t('calculator.inflation')}</Term> (%/yr)</label>
                   <input type="number" step="0.1" value={inflation} onChange={(e) => setInflation(Number(e.target.value))} />
                 </div>
                 <div className="form-group">
-                  <label><Term k="compoundingFrequency">Compounding Frequency</Term></label>
+                  <label><Term k="compoundingFrequency">{t('calculator.compoundingFrequency')}</Term></label>
                   <select value={compoundFrequency} onChange={(e) => setCompoundFrequency(Number(e.target.value))}>
-                    <option value="1">Annually</option>
-                    <option value="2">Semi-Annually</option>
-                    <option value="4">Quarterly</option>
-                    <option value="12">Monthly</option>
-                    <option value="365">Daily</option>
+                    <option value="1">{t('calculator.annually')}</option>
+                    <option value="2">{t('calculator.semiAnnually')}</option>
+                    <option value="4">{t('calculator.quarterly')}</option>
+                    <option value="12">{t('calculator.monthly')}</option>
+                    <option value="365">{t('calculator.daily')}</option>
                   </select>
                 </div>
                 <div className="form-group">
-                  <label><Term k="contributionIncrease">Annual Contribution Increase</Term> (%/yr)</label>
+                  <label><Term k="contributionIncrease">{t('calculator.annualContributionIncrease')}</Term> (%/yr)</label>
                   <input type="number" min="0" step="0.5" value={contributionIncrease} onChange={(e) => setContributionIncrease(Number(e.target.value))} />
                 </div>
                 <div className="form-group checkbox-group">
                   <label>
                     <input type="checkbox" checked={wrapper} onChange={(e) => setWrapper(e.target.checked)} />
-                    Use <Term k="wrapper">Tax-Free Wrapper</Term> ({country.wrapperLabel})
+                    <Term k="wrapper">{t('calculator.useWrapper')}</Term> ({country.wrapperLabel})
                   </label>
                 </div>
               </div>
@@ -386,8 +396,8 @@ export default function App() {
 
               <div className="lumpsum-section">
                 <div className="lumpsum-header">
-                  <h3>One-Off Contributions</h3>
-                  <button className="lumpsum-add-btn" onClick={addLumpSum}>+ Add a One-Off Contribution</button>
+                  <h3>{t('calculator.oneOffContributions')}</h3>
+                  <button className="lumpsum-add-btn" onClick={addLumpSum}>{t('calculator.addOneOff')}</button>
                 </div>
                 {lumpSums.length === 0 ? (
                   <p className="lumpsum-empty">None added -- use this for a bonus, inheritance, tax refund, or any extra deposit landing in a specific year, on top of your regular monthly contribution above.</p>
@@ -429,19 +439,19 @@ export default function App() {
 
               <div className="results-summary">
                 <div className="result-item">
-                  <span>Projected Balance:</span>
+                  <span>{t('calculator.projectedBalance')}</span>
                   <strong style={{ color: 'var(--accent-green)' }}>{country.symbol} {results.finalBalance.toLocaleString()}</strong>
                 </div>
                 <div className="result-item">
-                  <span>Total Deposits:</span>
+                  <span>{t('calculator.totalDeposits')}</span>
                   <strong>{country.symbol} {results.totalDeposited.toLocaleString()}</strong>
                 </div>
                 <div className="result-item">
-                  <span>Compound Interest Earned:</span>
+                  <span>{t('calculator.compoundInterestEarned')}</span>
                   <strong style={{ color: 'var(--accent-green)' }}>{country.symbol} {results.totalInterest.toLocaleString()}</strong>
                 </div>
                 <div className="result-item">
-                  <span><Term k="realValue">Real Value</Term> (Today's money):</span>
+                  <span><Term k="realValue">{t('calculator.realValue')}</Term> {t('calculator.todaysMoney')}</span>
                   <strong style={{ color: 'var(--mut)' }}>{country.symbol} {(results.yearlyData[results.yearlyData.length - 1]?.realValue ?? 0).toLocaleString()}</strong>
                 </div>
               </div>
@@ -449,13 +459,13 @@ export default function App() {
               <GrowthChart yearlyData={results.yearlyData} initial={initial} symbol={country.symbol} />
 
               <button className="share-plan-btn" onClick={shareCurrentPlan}>
-                {shareLinkCopied ? '✓ Link copied!' : '🔗 Share This Plan'}
+                {shareLinkCopied ? t('calculator.linkCopied') : t('calculator.sharePlan')}
               </button>
               <p className="share-plan-note">Copies a link that opens with these exact inputs -- nothing is uploaded, the whole plan lives in the URL itself.</p>
 
               <div className="scenario-section">
                 <div className="scenario-header">
-                  <h3>Scenario Comparison</h3>
+                  <h3>{t('calculator.scenarioComparison')}</h3>
                   <div className="scenario-header-actions">
                     {scenarios.length > 0 && (
                       <button className="scenario-export-btn" onClick={exportScenariosCSV}>⬇️ Export CSV</button>
@@ -465,7 +475,7 @@ export default function App() {
                       onClick={saveScenario}
                       disabled={scenarios.length >= MAX_SCENARIOS}
                     >
-                      {scenarios.length >= MAX_SCENARIOS ? `Max ${MAX_SCENARIOS} scenarios` : '+ Save Current as Scenario'}
+                      {scenarios.length >= MAX_SCENARIOS ? `Max ${MAX_SCENARIOS} scenarios` : t('calculator.saveScenario')}
                     </button>
                   </div>
                 </div>
@@ -500,12 +510,12 @@ export default function App() {
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Year</th>
-                      <th>Balance</th>
-                      <th>Real Value</th>
-                      <th>Deposits</th>
-                      <th>Interest</th>
-                      <th>Tax Paid</th>
+                      <th>{t('calculator.tableYear')}</th>
+                      <th>{t('calculator.tableBalance')}</th>
+                      <th>{t('calculator.tableRealValue')}</th>
+                      <th>{t('calculator.tableDeposits')}</th>
+                      <th>{t('calculator.tableInterest')}</th>
+                      <th>{t('calculator.tableTaxPaid')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -548,6 +558,12 @@ export default function App() {
         {activeTab === 'Start Here' && (
           <div className="tab-pane active">
             <StartHere onNavigate={setActiveTab} />
+          </div>
+        )}
+
+        {activeTab === 'Dashboard' && canAccess('Pro') && (
+          <div className="tab-pane active">
+            <Dashboard country={country} onNavigate={setActiveTab} />
           </div>
         )}
 
@@ -654,8 +670,8 @@ export default function App() {
 
       <footer className="app-footer">
         <p>
-          WTS CompoundIQ · educational tool · indicative rates drift weekly · not financial advice
-          {' '}· <button className="footer-link-btn" onClick={() => setShowLegal(true)}>Privacy &amp; Terms</button>
+          WTS CompoundIQ · {t('footer.tagline')}
+          {' '}· <button className="footer-link-btn" onClick={() => setShowLegal(true)}>{t('footer.privacyTerms')}</button>
         </p>
         <DataBackup />
       </footer>

@@ -1,0 +1,132 @@
+/* src/components/Dashboard.css */
+.dashboard-header h2 {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  color: var(--text);
+}
+
+.dashboard-header p {
+  color: var(--mut);
+  margin-bottom: 22px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.dashboard-empty {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 22px;
+}
+
+.dashboard-empty p {
+  color: var(--mut);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.dashboard-card {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dashboard-card.empty {
+  justify-content: space-between;
+}
+
+.dashboard-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.dashboard-card h3 {
+  font-size: 0.92rem;
+  color: var(--text);
+  margin: 0;
+}
+
+.dashboard-card-meta {
+  font-size: 0.7rem;
+  color: var(--mut2);
+  white-space: nowrap;
+}
+
+.dashboard-card-value {
+  font-size: 1.4rem;
+  color: var(--text);
+}
+
+.dashboard-card-value.positive {
+  color: var(--accent-green);
+}
+
+.dashboard-card-value.negative {
+  color: var(--accent-red);
+}
+
+.dashboard-card-value.warn {
+  color: var(--accent-yellow);
+}
+
+.dashboard-card-sub {
+  font-size: 0.78rem;
+  color: var(--mut);
+  line-height: 1.4;
+}
+
+.dashboard-card.empty p {
+  font-size: 0.82rem;
+  color: var(--mut2);
+  margin: 0;
+}
+
+.dashboard-card-link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 8px;
+  text-align: left;
+  align-self: flex-start;
+}
+
+.dashboard-myplan-link {
+  display: block;
+  width: 100%;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: var(--accent);
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+.dashboard-note {
+  font-size: 0.78rem;
+  color: var(--mut2);
+  line-height: 1.5;
+}

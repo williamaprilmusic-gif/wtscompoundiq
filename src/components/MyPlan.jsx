@@ -14,6 +14,7 @@ const MyPlan = ({ country }) => {
   const [snapshot, setSnapshot] = useState(null);
   const [currentDebtBalance, setCurrentDebtBalance] = useState('');
   const [currentEfBalance, setCurrentEfBalance] = useState('');
+  const [currentLoanBalance, setCurrentLoanBalance] = useState('');
   const [reminderAt, setReminderAt] = useState(null);
   const [reminderDue, setReminderDue] = useState(false);
 
@@ -58,11 +59,12 @@ const MyPlan = ({ country }) => {
   };
 
   const clearPlan = () => {
-    if (!window.confirm("Clear your saved plan? This removes your saved Debt Payoff and Emergency Fund snapshot from My Plan -- it doesn't affect the Debt Payoff or Emergency Fund tabs themselves.")) return;
+    if (!window.confirm("Clear your saved plan? This removes your saved Debt Payoff, Emergency Fund, Loan/Bond, and FIRE snapshots from My Plan -- it doesn't affect those tabs themselves.")) return;
     localStorage.removeItem(STORAGE_KEY);
     setSnapshot(null);
     setCurrentDebtBalance('');
     setCurrentEfBalance('');
+    setCurrentLoanBalance('');
   };
 
 
@@ -89,7 +91,7 @@ const MyPlan = ({ country }) => {
       <div className="card my-plan">
         <div className="plan-header">
           <h2>📓 My Plan</h2>
-          <p>Nothing saved yet. This is a check-in tool, not a calculator -- save a snapshot from the Debt Payoff or Emergency Fund tabs (look for "Save This Plan"), then come back later to see if you're on track.</p>
+          <p>Nothing saved yet. This is a check-in tool, not a calculator -- save a snapshot from the Debt Payoff, Emergency Fund, Loan & Bond, or Power Tools (FIRE) tabs (look for "Save This Plan"), then come back later to see if you're on track.</p>
         </div>
         {reminderBlock}
         <p className="plan-note">
@@ -102,6 +104,8 @@ const MyPlan = ({ country }) => {
 
   const hasDebt = !!snapshot.debt;
   const hasEf = !!snapshot.emergencyFund;
+  const hasLoan = !!snapshot.loan;
+  const hasFire = !!snapshot.fire;
 
   let debtExpectedRemaining = null;
   let debtDrift = null;
@@ -125,6 +129,22 @@ const MyPlan = ({ country }) => {
     efExpectedSaved = Math.min(snapshot.emergencyFund.targetAmount, snapshot.emergencyFund.currentSavings + snapshot.emergencyFund.monthlyContribution * monthsElapsed);
     if (currentEfBalance !== '') {
       efDrift = Number(currentEfBalance) - efExpectedSaved;
+    }
+  }
+
+  let loanExpectedRemaining = null;
+  let loanDrift = null;
+  let loanDaysAgo = null;
+  if (hasLoan) {
+    loanDaysAgo = daysBetween(snapshot.loan.savedAt);
+    const monthsElapsed = monthsBetween(snapshot.loan.savedAt);
+    // Same simplification as the debt section above: a straight-line estimate over the
+    // saved payoff term, not a true (front-loaded-interest) amortization curve --
+    // consistent with the "assumes steady linear progress" disclaimer at the bottom.
+    const monthlyPayoffRate = snapshot.loan.payoffMonths > 0 ? snapshot.loan.principal / snapshot.loan.payoffMonths : 0;
+    loanExpectedRemaining = Math.max(0, snapshot.loan.principal - monthlyPayoffRate * monthsElapsed);
+    if (currentLoanBalance !== '') {
+      loanDrift = loanExpectedRemaining - Number(currentLoanBalance);
     }
   }
 
@@ -178,6 +198,41 @@ const MyPlan = ({ country }) => {
                 : `You're ${country.symbol} ${Math.round(-efDrift).toLocaleString()} behind where the plan expected. Worth revisiting the Emergency Fund tab.`}
             </p>
           )}
+        </div>
+      )}
+
+      {hasLoan && (
+        <div className="plan-section">
+          <h3>🏦 {snapshot.loan.loanTypeLabel || 'Loan'} <span className="plan-saved-label">saved {fmtDaysAgo(loanDaysAgo)}</span></h3>
+          <div className="plan-baseline">
+            When saved: {country.symbol} {Math.round(snapshot.loan.principal).toLocaleString()} borrowed at {snapshot.loan.annualRate}%
+            over {snapshot.loan.termYears} years, paying {country.symbol} {snapshot.loan.monthlyPayment.toLocaleString()}/mo.
+          </div>
+          <div className="plan-checkin">
+            <label>What's your loan/bond balance right now? ({country.symbol})</label>
+            <input type="number" min="0" value={currentLoanBalance} onChange={(e) => setCurrentLoanBalance(e.target.value)} placeholder={`Expected: ~${Math.round(loanExpectedRemaining).toLocaleString()}`} />
+          </div>
+          {loanDrift !== null && (
+            <p className={`plan-drift ${loanDrift >= 0 ? 'ahead' : 'behind'}`}>
+              {loanDrift >= 0
+                ? `You're ${country.symbol} ${Math.round(loanDrift).toLocaleString()} ahead of schedule -- nice.`
+                : `You're ${country.symbol} ${Math.round(-loanDrift).toLocaleString()} behind where the plan expected. Worth revisiting the Loan & Bond tab -- an extra payment there could close the gap.`}
+            </p>
+          )}
+        </div>
+      )}
+
+      {hasFire && (
+        <div className="plan-section">
+          <h3>🔥 FIRE Target <span className="plan-saved-label">saved {fmtDaysAgo(daysBetween(snapshot.fire.savedAt))}</span></h3>
+          <div className="plan-baseline">
+            When saved: {country.symbol} {Math.round(snapshot.fire.annualExpenses).toLocaleString()}/yr expenses at a {snapshot.fire.withdrawalRate}%
+            withdrawal rate puts your FIRE number at {country.symbol} {Math.round(snapshot.fire.fireNumber).toLocaleString()},{' '}
+            {snapshot.fire.yearsToFire === null ? 'not reachable within 60 years at that pace' : `about ${snapshot.fire.yearsToFire} years out at your saved pace`}.
+          </div>
+          <p className="plan-note-inline">
+            Revisit the Power Tools tab to see if you're still on pace -- FIRE progress depends on your investment balance, which isn't tracked here.
+          </p>
         </div>
       )}
 

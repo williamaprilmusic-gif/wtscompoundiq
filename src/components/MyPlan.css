@@ -144,3 +144,10 @@
   color: var(--mut2);
   line-height: 1.5;
 }
+
+.plan-note-inline {
+  font-size: 0.78rem;
+  color: var(--mut2);
+  line-height: 1.5;
+  margin: 0;
+}

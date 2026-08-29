@@ -58,12 +58,15 @@ const TYPE_TIPS = {
   ]
 };
 
+const PLAN_STORAGE_KEY = 'wts_compoundiq_plan_snapshot';
+
 const LoanCalculator = ({ country }) => {
   const [loanType, setLoanType] = useState('bond');
   const [principal, setPrincipal] = useState(0);
   const [annualRate, setAnnualRate] = useState(0);
   const [termYears, setTermYears] = useState(LOAN_TYPES[0].defaultTermYears);
   const [extraMonthly, setExtraMonthly] = useState(0);
+  const [saved, setSaved] = useState(false);
 
   const selectLoanType = (type) => {
     setLoanType(type.key);
@@ -88,6 +91,28 @@ const LoanCalculator = ({ country }) => {
     const header = ['Year', 'Interest Paid', 'Principal Paid', 'Total Paid To Date', 'Remaining Balance'];
     const rows = result.yearlyData.map(r => [r.year, r.interestPaid, r.principalPaid, r.totalPaidToDate, r.balance]);
     downloadCSV(`wts-compoundiq-${loanType}-amortization.csv`, [header, ...rows]);
+  };
+
+  const savePlan = () => {
+    let existing = {};
+    try { existing = JSON.parse(localStorage.getItem(PLAN_STORAGE_KEY) || '{}'); } catch { /* ignore corrupt snapshot, start fresh */ }
+    const updated = {
+      ...existing,
+      loan: {
+        savedAt: new Date().toISOString(),
+        loanType,
+        loanTypeLabel: activeType.label,
+        principal,
+        annualRate,
+        termYears,
+        monthlyPayment: result.monthlyPayment,
+        payoffMonths: result.payoffMonths,
+        totalInterest: result.totalInterest
+      }
+    };
+    localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(updated));
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   };
 
   return (
@@ -206,6 +231,10 @@ const LoanCalculator = ({ country }) => {
               </tbody>
             </table>
           </div>
+
+          <button className="loan-save-plan-btn" onClick={savePlan}>
+            {saved ? '✓ Saved to My Plan' : '💾 Save This Plan'}
+          </button>
         </>
       )}
 

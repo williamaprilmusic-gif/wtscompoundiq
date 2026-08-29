@@ -1,81 +1,15 @@
 // src/components/PowerTools.jsx
 import React, { useState } from 'react';
 import './PowerTools.css';
-import { calculateCompoundInterest } from '../engine';
 import Term from './Term';
+import { MAX_YEARS_TO_SEARCH, yearsToReachTarget, simulateDebtFirst, simulateInvestFirst, simulateDrawdown } from '../powerToolsEngine';
 
-const MAX_YEARS_TO_SEARCH = 60;
-
-const yearsToReachTarget = ({ initial, monthly, rate, inflation, taxRate, wrapper, target, compoundFrequency, annualWrapperLimit, lifetimeWrapperLimit, contributionIncreaseRate, lumpSums }) => {
-  if (initial >= target) return 0;
-  for (let y = 1; y <= MAX_YEARS_TO_SEARCH; y++) {
-    const { finalBalance } = calculateCompoundInterest({ initial, monthly, rate, years: y, inflation, taxRate, wrapper, compoundFrequency, annualWrapperLimit, lifetimeWrapperLimit, contributionIncreaseRate, lumpSums });
-    if (finalBalance >= target) return y;
-  }
-  return null; // not reachable within MAX_YEARS_TO_SEARCH
-};
-
-// Pay the debt off with extraMonthly first (simple monthly amortization); once it's
-// clear, whatever was going to the debt (extraMonthly, or the leftover the month it
-// clears) gets invested for the rest of the horizon.
-const simulateDebtFirst = ({ debtAmount, debtRate, extraMonthly, afterTaxReturn, months }) => {
-  let debt = debtAmount;
-  let investment = 0;
-  const debtMonthlyRate = debtRate / 100 / 12;
-  const investMonthlyRate = afterTaxReturn / 100 / 12;
-  let clearedAtMonth = debt <= 0 ? 0 : null;
-  for (let m = 0; m < months; m++) {
-    if (debt > 0) {
-      debt += debt * debtMonthlyRate;
-      const pay = Math.min(extraMonthly, debt);
-      debt -= pay;
-      const leftover = extraMonthly - pay; // the month debt clears, whatever's left over that month starts investing immediately
-      investment = investment * (1 + investMonthlyRate) + leftover;
-      if (debt <= 0.01) { debt = 0; if (clearedAtMonth === null) clearedAtMonth = m + 1; }
-    } else {
-      investment = investment * (1 + investMonthlyRate) + extraMonthly;
-    }
-  }
-  return { debtRemaining: debt, investment, clearedAtMonth };
-};
-
-// The other extreme: invest extraMonthly the whole time and leave the debt completely
-// untouched (no payments at all) -- the worst case for "invest instead," so the
-// comparison isn't quietly assuming the debt gets paid down some other way.
-const simulateInvestFirst = ({ debtAmount, debtRate, extraMonthly, afterTaxReturn, months }) => {
-  let debt = debtAmount;
-  let investment = 0;
-  const debtMonthlyRate = debtRate / 100 / 12;
-  const investMonthlyRate = afterTaxReturn / 100 / 12;
-  for (let m = 0; m < months; m++) {
-    debt += debt * debtMonthlyRate;
-    investment = investment * (1 + investMonthlyRate) + extraMonthly;
-  }
-  return { debtRemaining: debt, investment };
-};
-
-// Simple year-by-year retirement drawdown: withdraw (inflation-escalated) at the start
-// of each year, grow whatever's left at returnRate. Not a Monte Carlo -- a single
-// straight-line path, same spirit as the rest of the calculator.
-const simulateDrawdown = ({ startingBalance, annualWithdrawal, returnRate, inflation, years }) => {
-  let balance = startingBalance;
-  const path = [{ year: 0, balance }];
-  for (let y = 0; y < years; y++) {
-    const withdrawal = annualWithdrawal * Math.pow(1 + inflation / 100, y);
-    balance -= withdrawal;
-    if (balance <= 0) {
-      path.push({ year: y + 1, balance: 0 });
-      return { depleted: true, lastedYears: y + 1, endingBalance: 0, path };
-    }
-    balance *= (1 + returnRate / 100);
-    path.push({ year: y + 1, balance });
-  }
-  return { depleted: false, lastedYears: years, endingBalance: balance, path };
-};
+const PLAN_STORAGE_KEY = 'wts_compoundiq_plan_snapshot';
 
 const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [] }) => {
   const [annualExpenses, setAnnualExpenses] = useState(0);
   const [withdrawalRate, setWithdrawalRate] = useState(4);
+  const [fireSaved, setFireSaved] = useState(false);
 
   const [debtAmount, setDebtAmount] = useState(0);
   const [debtRate, setDebtRate] = useState(0);
@@ -113,6 +47,24 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   });
   const drawdownWithdrawalRate = drawdownBalance > 0 ? (drawdownWithdrawal / drawdownBalance) * 100 : 0;
 
+  const saveFirePlan = () => {
+    let existing = {};
+    try { existing = JSON.parse(localStorage.getItem(PLAN_STORAGE_KEY) || '{}'); } catch { /* ignore corrupt snapshot, start fresh */ }
+    const updated = {
+      ...existing,
+      fire: {
+        savedAt: new Date().toISOString(),
+        annualExpenses,
+        withdrawalRate,
+        fireNumber,
+        yearsToFire
+      }
+    };
+    localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(updated));
+    setFireSaved(true);
+    setTimeout(() => setFireSaved(false), 2000);
+  };
+
   return (
     <div className="card power-tools">
       <div className="power-header">
@@ -149,6 +101,11 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           Assumes your {rate}% return and {annualExpenses.toLocaleString()} expenses stay constant every year
           (no raises, no lifestyle inflation) -- treat this as a rough target, not a guarantee.
         </p>
+        {annualExpenses > 0 && (
+          <button className="power-save-plan-btn" onClick={saveFirePlan}>
+            {fireSaved ? '✓ Saved to My Plan' : '💾 Save This Plan'}
+          </button>
+        )}
       </div>
 
       <div className="power-tool-card">

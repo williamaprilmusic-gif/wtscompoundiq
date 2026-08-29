@@ -116,6 +116,28 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
           </section>
         )}
 
+        {plan?.loan && (
+          <section className="snapshot-section">
+            <h3>{plan.loan.loanTypeLabel || 'Loan'} (last saved)</h3>
+            <p>
+              {country.symbol} {Math.round(plan.loan.principal).toLocaleString()} borrowed at {plan.loan.annualRate}% over {plan.loan.termYears} years,
+              paying {country.symbol} {plan.loan.monthlyPayment.toLocaleString()}/month --
+              {' '}{country.symbol} {plan.loan.totalInterest.toLocaleString()} total interest over the full term.
+            </p>
+          </section>
+        )}
+
+        {plan?.fire && (
+          <section className="snapshot-section">
+            <h3>FIRE Target (last saved)</h3>
+            <p>
+              {country.symbol} {Math.round(plan.fire.annualExpenses).toLocaleString()}/year expenses at a {plan.fire.withdrawalRate}% withdrawal
+              rate puts the FIRE number at {country.symbol} {Math.round(plan.fire.fireNumber).toLocaleString()},{' '}
+              {plan.fire.yearsToFire === null ? 'not reachable within 60 years at that saved pace' : `about ${plan.fire.yearsToFire} years out at that saved pace`}.
+            </p>
+          </section>
+        )}
+
         <div className="snapshot-table-container">
         <table className="snapshot-table">
           <thead>
