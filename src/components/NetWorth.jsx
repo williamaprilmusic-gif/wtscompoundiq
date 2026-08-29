@@ -4,8 +4,10 @@ import './NetWorth.css';
 import Term from './Term';
 import { countriesData, convertAmount } from '../data/countries';
 import { parseCSV, downloadCSV } from '../utils/csv';
+import { usePersistedState } from '../utils/usePersistedState';
 
 const HISTORY_KEY = 'wts_compoundiq_networth_history';
+const ITEMS_KEY = 'wts_compoundiq_networth_items';
 
 const downloadTemplate = () => {
   downloadCSV('wts-compoundiq-networth-template.csv', [
@@ -17,7 +19,7 @@ const downloadTemplate = () => {
 };
 
 const NetWorth = ({ country }) => {
-  const [items, setItems] = useState([]);
+  const [items, setItems] = usePersistedState(ITEMS_KEY, []);
   const [history, setHistory] = useState([]);
   const [importError, setImportError] = useState(null);
 

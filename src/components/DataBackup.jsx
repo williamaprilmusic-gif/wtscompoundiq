@@ -10,7 +10,13 @@ const ALL_STORAGE_KEYS = [
   PLAN_STORAGE_KEY,
   'wts_compoundiq_reminder_at',
   'wts_compoundiq_reminder_notified_at',
-  'wts_compoundiq_networth_history'
+  'wts_compoundiq_networth_history',
+  // Working data auto-saved by usePersistedState (see src/utils/usePersistedState.js)
+  // -- the actual entered rows, not just the "Save This Plan" summaries above.
+  'wts_compoundiq_networth_items',
+  'wts_compoundiq_debtpayoff_debts',
+  'wts_compoundiq_debtpayoff_extra',
+  'wts_compoundiq_invest_goals'
 ];
 
 const exportData = () => {
@@ -56,7 +62,7 @@ const DataBackup = () => {
   const handleImportFile = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!window.confirm('Import this backup? It will overwrite your current tier, saved plans, and net worth history in this browser.')) {
+    if (!window.confirm('Import this backup? It will overwrite your current tier, saved plans, and any entered net worth items, debts, and investment goals in this browser.')) {
       e.target.value = '';
       return;
     }
@@ -74,7 +80,7 @@ const DataBackup = () => {
   return (
     <div className="data-backup">
       <span className="data-backup-text">
-        Your data (tier, saved plans, net worth history) lives only in this browser.
+        Your data (tier, saved plans, net worth/debts/goals) lives only in this browser.
       </span>
       <div className="data-backup-buttons">
         <button className="data-backup-btn" onClick={exportData}>⬇️ Export Backup</button>

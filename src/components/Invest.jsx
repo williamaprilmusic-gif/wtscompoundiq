@@ -1,7 +1,10 @@
 // src/components/Invest.jsx
-import React, { useState } from 'react';
+import React from 'react';
 import './Invest.css';
 import { calculateCompoundInterest } from '../engine';
+import { usePersistedState } from '../utils/usePersistedState';
+
+const GOALS_KEY = 'wts_compoundiq_invest_goals';
 
 const GOAL_PRESETS = [
   { label: 'Retirement', amount: 2000000, years: 25 },
@@ -43,7 +46,7 @@ const solveMonthlyForGoal = ({ startingAmount, rate, years, inflation, taxRate, 
 };
 
 const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0 }) => {
-  const [goals, setGoals] = useState([]);
+  const [goals, setGoals] = usePersistedState(GOALS_KEY, []);
 
   const addGoal = (preset) => {
     setGoals(prev => [...prev, {

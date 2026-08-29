@@ -4,12 +4,14 @@ import './DebtPayoff.css';
 import Term from './Term';
 import { simulatePayoff, avalancheOrder, snowballOrder } from '../debtPayoffEngine';
 import { savePlanSection } from '../utils/planStorage';
+import { usePersistedState } from '../utils/usePersistedState';
 
-const DEFAULT_DEBTS = [];
+const DEBTS_KEY = 'wts_compoundiq_debtpayoff_debts';
+const EXTRA_KEY = 'wts_compoundiq_debtpayoff_extra';
 
 const DebtPayoff = ({ country }) => {
-  const [debts, setDebts] = useState(DEFAULT_DEBTS);
-  const [extraMonthly, setExtraMonthly] = useState(0);
+  const [debts, setDebts] = usePersistedState(DEBTS_KEY, []);
+  const [extraMonthly, setExtraMonthly] = usePersistedState(EXTRA_KEY, 0);
 
   const updateDebt = (id, field, value) => {
     setDebts(prev => prev.map(d => d.id === id ? { ...d, [field]: Number(value) } : d));
