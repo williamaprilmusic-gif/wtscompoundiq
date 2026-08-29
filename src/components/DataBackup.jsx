@@ -4,6 +4,7 @@
 import React from 'react';
 import './DataBackup.css';
 import { PLAN_STORAGE_KEY } from '../utils/planStorage';
+import { FLUSH_EVENT } from '../utils/usePersistedState';
 
 const ALL_STORAGE_KEYS = [
   'wts_compoundiq_tier',
@@ -20,6 +21,10 @@ const ALL_STORAGE_KEYS = [
 ];
 
 const exportData = () => {
+  // usePersistedState debounces its localStorage writes, so a field edited moments ago
+  // may not have landed in localStorage yet. Force every mounted instance to flush its
+  // latest value synchronously before reading, or the export can silently miss it.
+  window.dispatchEvent(new Event(FLUSH_EVENT));
   const data = {};
   ALL_STORAGE_KEYS.forEach((key) => {
     const value = localStorage.getItem(key);

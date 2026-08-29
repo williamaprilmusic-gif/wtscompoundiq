@@ -7,6 +7,15 @@
 // three call sites don't each reimplement it slightly differently.
 import { useState, useEffect, useRef } from 'react';
 
+// Writes are debounced (see below), so anything that reads these keys straight out of
+// localStorage instead of through the hook -- DataBackup's export, notably -- can
+// otherwise read a stale value if it runs inside that debounce window (e.g. edit a
+// field, immediately click "Export Backup"). Such a reader dispatches this event first
+// to force every mounted usePersistedState to flush its latest value synchronously;
+// listeners run synchronously in dispatch order, so by the time dispatchEvent returns,
+// localStorage is caught up.
+export const FLUSH_EVENT = 'wts_compoundiq:flush-persisted-state';
+
 export function usePersistedState(key, defaultValue) {
   const [state, setState] = useState(() => {
     try {
@@ -20,7 +29,12 @@ export function usePersistedState(key, defaultValue) {
       // than handing callers a value that doesn't match defaultValue's shape; otherwise
       // the bad value gets written straight back out below and the app can't recover
       // even by reloading.
-      const wrongShape = Array.isArray(defaultValue) ? !Array.isArray(parsed) : typeof parsed !== typeof defaultValue;
+      // `typeof null === 'object'`, so for a non-array, non-null defaultValue a plain
+      // `typeof` comparison would let a stored `null` through as if it matched --
+      // guard that case explicitly rather than relying on typeof alone.
+      const wrongShape = Array.isArray(defaultValue)
+        ? !Array.isArray(parsed)
+        : parsed === null ? defaultValue !== null : typeof parsed !== typeof defaultValue;
       return wrongShape ? defaultValue : parsed;
     } catch {
       return defaultValue; // corrupt/foreign JSON in that key -- start fresh rather than crash
@@ -67,8 +81,10 @@ export function usePersistedState(key, defaultValue) {
       }
     };
     window.addEventListener('pagehide', flush);
+    window.addEventListener(FLUSH_EVENT, flush);
     return () => {
       window.removeEventListener('pagehide', flush);
+      window.removeEventListener(FLUSH_EVENT, flush);
       flush(); // component unmount (e.g. switching tabs within the app)
     };
   }, [key]);
