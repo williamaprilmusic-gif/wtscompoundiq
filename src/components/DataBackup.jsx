@@ -3,10 +3,11 @@
 // tier/plan if browser data is cleared, so it can't itself live behind a paywall.
 import React from 'react';
 import './DataBackup.css';
+import { PLAN_STORAGE_KEY } from '../utils/planStorage';
 
 const ALL_STORAGE_KEYS = [
   'wts_compoundiq_tier',
-  'wts_compoundiq_plan_snapshot',
+  PLAN_STORAGE_KEY,
   'wts_compoundiq_reminder_at',
   'wts_compoundiq_reminder_notified_at',
   'wts_compoundiq_networth_history'

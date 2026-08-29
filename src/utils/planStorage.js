@@ -38,5 +38,5 @@ export const loanEffectiveMonthlyPayment = (loan) =>
 // describe two different, contradictory payment scenarios in the same sentence.
 export const loanEffectiveTermLabel = (loan) =>
   loan.extraMonthly > 0 && loan.payoffMonths
-    ? `${(loan.payoffMonths / 12).toFixed(1)} years`
+    ? `${Math.round(loan.payoffMonths / 12 * 10) / 10} years`
     : `${loan.termYears} years`;
