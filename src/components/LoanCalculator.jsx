@@ -98,7 +98,7 @@ const LoanCalculator = ({ country }) => {
     // to reflect the faster, extra-adjusted schedule (result.extra), or it silently
     // reverts to the slower standard schedule and understates real progress.
     const effectivePayoffMonths = (extraMonthly > 0 && result.extra) ? result.extra.payoffMonths : result.payoffMonths;
-    const effectiveTotalInterest = (extraMonthly > 0 && result.extra) ? (result.totalInterest - result.extra.interestSaved) : result.totalInterest;
+    const effectiveTotalInterest = (extraMonthly > 0 && result.extra) ? result.extra.totalInterest : result.totalInterest;
     savePlanSection('loan', {
       savedAt: new Date().toISOString(),
       loanType,

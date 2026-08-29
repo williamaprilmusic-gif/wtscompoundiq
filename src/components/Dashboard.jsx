@@ -115,7 +115,10 @@ const Dashboard = ({ country, onNavigate }) => {
               <span className="dashboard-card-meta">saved {fmtDaysAgo(daysBetween(plan.loan.savedAt))}</span>
             </div>
             <strong className="dashboard-card-value warn">{country.symbol} {Math.round(plan.loan.principal).toLocaleString()}</strong>
-            <span className="dashboard-card-sub">{country.symbol} {plan.loan.monthlyPayment.toLocaleString()}/mo over {plan.loan.termYears} years</span>
+            {/* monthlyPayment is the required base installment; extraMonthly (if any) is what's
+                actually being paid each month to hit the accelerated payoffMonths/totalInterest
+                saved above -- show the real total so this doesn't understate the payment. */}
+            <span className="dashboard-card-sub">{country.symbol} {Math.round(plan.loan.monthlyPayment + (plan.loan.extraMonthly || 0)).toLocaleString()}/mo over {plan.loan.termYears} years</span>
             <button className="dashboard-card-link" onClick={() => onNavigate('Loan & Bond')}>Open Loan & Bond →</button>
           </div>
         ) : (

@@ -3,10 +3,9 @@ import React, { useState } from 'react';
 import './DebtPayoff.css';
 import Term from './Term';
 import { simulatePayoff, avalancheOrder, snowballOrder } from '../debtPayoffEngine';
+import { savePlanSection } from '../utils/planStorage';
 
 const DEFAULT_DEBTS = [];
-
-const PLAN_STORAGE_KEY = 'wts_compoundiq_plan_snapshot';
 
 const DebtPayoff = ({ country }) => {
   const [debts, setDebts] = useState(DEFAULT_DEBTS);
@@ -29,19 +28,13 @@ const DebtPayoff = ({ country }) => {
 
   const [saved, setSaved] = useState(false);
   const savePlan = () => {
-    let existing = {};
-    try { existing = JSON.parse(localStorage.getItem(PLAN_STORAGE_KEY) || '{}'); } catch { /* ignore corrupt snapshot, start fresh */ }
-    const updated = {
-      ...existing,
-      debt: {
-        savedAt: new Date().toISOString(),
-        totalBalance: validDebts.reduce((sum, d) => sum + d.balance, 0),
-        extraMonthly,
-        avalancheMonths: avalanche.months,
-        avalancheInterest: avalanche.totalInterest
-      }
-    };
-    localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(updated));
+    savePlanSection('debt', {
+      savedAt: new Date().toISOString(),
+      totalBalance: validDebts.reduce((sum, d) => sum + d.balance, 0),
+      extraMonthly,
+      avalancheMonths: avalanche.months,
+      avalancheInterest: avalanche.totalInterest
+    });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };

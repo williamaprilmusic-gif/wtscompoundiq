@@ -2,8 +2,7 @@
 import React, { useState } from 'react';
 import './EmergencyFund.css';
 import Term from './Term';
-
-const PLAN_STORAGE_KEY = 'wts_compoundiq_plan_snapshot';
+import { savePlanSection } from '../utils/planStorage';
 
 const EmergencyFund = ({ country }) => {
   const [monthlyExpenses, setMonthlyExpenses] = useState(0);
@@ -19,18 +18,12 @@ const EmergencyFund = ({ country }) => {
   const monthsToTarget = monthlyContribution > 0 ? Math.ceil(remaining / monthlyContribution) : null;
 
   const savePlan = () => {
-    let existing = {};
-    try { existing = JSON.parse(localStorage.getItem(PLAN_STORAGE_KEY) || '{}'); } catch { /* ignore corrupt snapshot, start fresh */ }
-    const updated = {
-      ...existing,
-      emergencyFund: {
-        savedAt: new Date().toISOString(),
-        targetAmount,
-        currentSavings,
-        monthlyContribution
-      }
-    };
-    localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(updated));
+    savePlanSection('emergencyFund', {
+      savedAt: new Date().toISOString(),
+      targetAmount,
+      currentSavings,
+      monthlyContribution
+    });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };

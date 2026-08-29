@@ -3,8 +3,7 @@ import React, { useState, useEffect } from 'react';
 import './Snapshot.css';
 import { calculateCompoundInterest } from '../engine';
 import GrowthChart from './GrowthChart';
-
-const PLAN_STORAGE_KEY = 'wts_compoundiq_plan_snapshot';
+import { readPlan } from '../utils/planStorage';
 
 const downloadCSV = (results, country) => {
   const header = ['Year', 'Balance', 'Real Value', 'Deposited', 'Interest', 'Tax Paid'];
@@ -25,10 +24,7 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
   const [plan, setPlan] = useState(null);
 
   useEffect(() => {
-    const raw = localStorage.getItem(PLAN_STORAGE_KEY);
-    if (raw) {
-      try { setPlan(JSON.parse(raw)); } catch { /* ignore corrupt snapshot */ }
-    }
+    setPlan(readPlan());
   }, []);
 
   const results = calculateCompoundInterest({
@@ -121,7 +117,7 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
             <h3>{plan.loan.loanTypeLabel || 'Loan'} (last saved)</h3>
             <p>
               {country.symbol} {Math.round(plan.loan.principal).toLocaleString()} borrowed at {plan.loan.annualRate}% over {plan.loan.termYears} years,
-              paying {country.symbol} {plan.loan.monthlyPayment.toLocaleString()}/month --
+              paying {country.symbol} {Math.round(plan.loan.monthlyPayment + (plan.loan.extraMonthly || 0)).toLocaleString()}/month --
               {' '}{country.symbol} {plan.loan.totalInterest.toLocaleString()} total interest over the full term.
             </p>
           </section>

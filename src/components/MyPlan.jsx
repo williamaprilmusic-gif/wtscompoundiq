@@ -199,7 +199,7 @@ const MyPlan = ({ country }) => {
           <h3>{snapshot.loan.loanTypeLabel || '🏦 Loan'} <span className="plan-saved-label">saved {fmtDaysAgo(loanDaysAgo)}</span></h3>
           <div className="plan-baseline">
             When saved: {country.symbol} {Math.round(snapshot.loan.principal).toLocaleString()} borrowed at {snapshot.loan.annualRate}%
-            over {snapshot.loan.termYears} years, paying {country.symbol} {snapshot.loan.monthlyPayment.toLocaleString()}/mo.
+            over {snapshot.loan.termYears} years, paying {country.symbol} {Math.round(snapshot.loan.monthlyPayment + (snapshot.loan.extraMonthly || 0)).toLocaleString()}/mo.
           </div>
           <div className="plan-checkin">
             <label>What's your loan/bond balance right now? ({country.symbol})</label>
