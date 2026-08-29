@@ -20,5 +20,7 @@ export const GLOSSARY = {
   volatility: "How much an investment's returns bounce around from year to year. Higher volatility means bigger swings, both up and down.",
   monteCarloSimulation: "Running the same plan through thousands of randomly-varied possible futures, to see a realistic range of outcomes instead of pretending returns are perfectly smooth every year.",
   fxConversion: "Turning an amount in one currency into another using an exchange rate, so figures in different currencies can be compared fairly.",
-  contributionIncrease: "How much your monthly contribution grows every year, e.g. to keep pace with a raise or cost-of-living increase. 0% means you contribute the same fixed amount every year."
+  contributionIncrease: "How much your monthly contribution grows every year, e.g. to keep pace with a raise or cost-of-living increase. 0% means you contribute the same fixed amount every year.",
+  bond: "South African term for a home loan/mortgage -- money a bank lends you to buy property, secured against the property itself, paid back in fixed installments over a long term (often 20-30 years).",
+  amortization: "The process of paying off a loan through regular fixed payments, where each payment covers that period's interest first and whatever's left over reduces the principal. Early payments are mostly interest; later payments are mostly principal."
 };

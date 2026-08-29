@@ -15,6 +15,7 @@ import MonteCarlo from './components/MonteCarlo';
 import wtsLogo from './assets/wts-logo.png';
 import StartHere from './components/StartHere';
 import DebtPayoff from './components/DebtPayoff';
+import LoanCalculator from './components/LoanCalculator';
 import EmergencyFund from './components/EmergencyFund';
 import MyPlan from './components/MyPlan';
 import Snapshot from './components/Snapshot';
@@ -217,6 +218,7 @@ export default function App() {
       tabs: [
         { name: 'Emergency Fund', tier: 'Pro' },
         { name: 'Debt Payoff', tier: 'Pro' },
+        { name: 'Loan & Bond', tier: 'Pro' },
         { name: 'My Plan', tier: 'Pro' },
         { name: 'Net Worth', tier: 'Pro' },
         { name: 'Snapshot', tier: 'Pro' },
@@ -558,6 +560,12 @@ export default function App() {
         {activeTab === 'Debt Payoff' && canAccess('Pro') && (
           <div className="tab-pane active">
             <DebtPayoff country={country} />
+          </div>
+        )}
+
+        {activeTab === 'Loan & Bond' && canAccess('Pro') && (
+          <div className="tab-pane active">
+            <LoanCalculator country={country} />
           </div>
         )}
 
