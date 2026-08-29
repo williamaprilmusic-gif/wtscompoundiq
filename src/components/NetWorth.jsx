@@ -5,6 +5,7 @@ import Term from './Term';
 import { countriesData, convertAmount } from '../data/countries';
 import { parseCSV, downloadCSV } from '../utils/csv';
 import { usePersistedState } from '../utils/usePersistedState';
+import NetWorthHistoryChart from './NetWorthHistoryChart';
 
 const HISTORY_KEY = 'wts_compoundiq_networth_history';
 const ITEMS_KEY = 'wts_compoundiq_networth_items';
@@ -41,7 +42,17 @@ const NetWorth = ({ country }) => {
     setItems(prev => prev.map(i => i.id === id ? { ...i, [field]: field === 'name' || field === 'currency' ? value : Number(value) } : i));
   };
 
-  const removeItem = (id) => setItems(prev => prev.filter(i => i.id !== id));
+  // Confirm before removing -- but only when there's actually something to lose. A
+  // freshly-added blank row (empty name, zero value) removed right away shouldn't
+  // nag; a row someone's typed real numbers into deserves a safety check, since
+  // there's no undo once it's gone.
+  const removeItem = (id) => {
+    const item = items.find(i => i.id === id);
+    if (item && (item.name.trim() || item.value > 0)) {
+      if (!window.confirm(`Remove "${item.name.trim() || 'this item'}"? This can't be undone.`)) return;
+    }
+    setItems(prev => prev.filter(i => i.id !== id));
+  };
 
   // Bulk-import assets/debts from a CSV (name, type, currency, value columns, any
   // order, case-insensitive headers). Rows that don't parse to a usable name+value are
@@ -151,11 +162,11 @@ const NetWorth = ({ country }) => {
           {items.filter(i => i.type === 'asset').length === 0 && <p className="nw-empty">No assets added yet.</p>}
           {items.filter(i => i.type === 'asset').map(i => (
             <div key={i.id} className="nw-item">
-              <input type="text" placeholder="e.g. Savings account" value={i.name} onChange={(e) => updateItem(i.id, 'name', e.target.value)} />
-              <select value={i.currency || country.code} onChange={(e) => updateItem(i.id, 'currency', e.target.value)}>
+              <input type="text" placeholder="e.g. Savings account" aria-label="Asset name" value={i.name} onChange={(e) => updateItem(i.id, 'name', e.target.value)} />
+              <select aria-label="Asset currency" value={i.currency || country.code} onChange={(e) => updateItem(i.id, 'currency', e.target.value)}>
                 {countriesData.map(c => <option key={c.code} value={c.code}>{c.currency}</option>)}
               </select>
-              <input type="number" min="0" value={i.value} onChange={(e) => updateItem(i.id, 'value', e.target.value)} />
+              <input type="number" min="0" aria-label="Asset value" value={i.value} onChange={(e) => updateItem(i.id, 'value', e.target.value)} />
               <button className="nw-remove" onClick={() => removeItem(i.id)} aria-label="Remove">&times;</button>
             </div>
           ))}
@@ -169,11 +180,11 @@ const NetWorth = ({ country }) => {
           {items.filter(i => i.type === 'debt').length === 0 && <p className="nw-empty">No debts added yet.</p>}
           {items.filter(i => i.type === 'debt').map(i => (
             <div key={i.id} className="nw-item">
-              <input type="text" placeholder="e.g. Credit card" value={i.name} onChange={(e) => updateItem(i.id, 'name', e.target.value)} />
-              <select value={i.currency || country.code} onChange={(e) => updateItem(i.id, 'currency', e.target.value)}>
+              <input type="text" placeholder="e.g. Credit card" aria-label="Debt name" value={i.name} onChange={(e) => updateItem(i.id, 'name', e.target.value)} />
+              <select aria-label="Debt currency" value={i.currency || country.code} onChange={(e) => updateItem(i.id, 'currency', e.target.value)}>
                 {countriesData.map(c => <option key={c.code} value={c.code}>{c.currency}</option>)}
               </select>
-              <input type="number" min="0" value={i.value} onChange={(e) => updateItem(i.id, 'value', e.target.value)} />
+              <input type="number" min="0" aria-label="Debt value" value={i.value} onChange={(e) => updateItem(i.id, 'value', e.target.value)} />
               <button className="nw-remove" onClick={() => removeItem(i.id)} aria-label="Remove">&times;</button>
             </div>
           ))}
@@ -208,6 +219,12 @@ const NetWorth = ({ country }) => {
             <h3>History ({history.length} snapshot{history.length === 1 ? '' : 's'})</h3>
             <button className="nw-clear-btn" onClick={clearHistory}>Clear history</button>
           </div>
+          {history.length > 1 && (
+            <NetWorthHistoryChart
+              history={history.map(h => ({ date: h.date, netWorth: convertAmount(h.netWorth, h.displayCurrency || country.code, country.code) }))}
+              symbol={country.symbol}
+            />
+          )}
           <div className="nw-history-list">
             {[...history].reverse().map((h, idx) => (
               <div key={idx} className="nw-history-row">

@@ -24,6 +24,7 @@ import NetWorth from './components/NetWorth';
 import DataBackup from './components/DataBackup';
 import LegalModal from './components/LegalModal';
 import LanguageSwitcher from './components/LanguageSwitcher';
+import OnboardingTour, { TOUR_SEEN_KEY } from './components/OnboardingTour';
 import { useLanguage } from './i18n/LanguageContext';
 import Term from './components/Term';
 import GrowthChart from './components/GrowthChart';
@@ -63,6 +64,15 @@ export default function App() {
   const [showPricing, setShowPricing] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [showLegal, setShowLegal] = useState(false);
+  // Auto-shows once per browser on first visit; the footer's "Take the Tour" link
+  // (see below) can always replay it on demand afterwards.
+  const [showTour, setShowTour] = useState(() => {
+    try { return localStorage.getItem(TOUR_SEEN_KEY) !== 'true'; } catch { return false; }
+  });
+  const closeTour = () => {
+    setShowTour(false);
+    try { localStorage.setItem(TOUR_SEEN_KEY, 'true'); } catch { /* ignore (private mode, storage full, etc.) */ }
+  };
   const [selectedUpgradeTier, setSelectedUpgradeTier] = useState(null);
   const [pendingTab, setPendingTab] = useState(null);
 
@@ -302,6 +312,8 @@ export default function App() {
                   <button
                     key={tab.name}
                     className={`tab-btn ${activeTab === tab.name ? 'active' : ''} ${locked ? 'locked' : ''}`}
+                    aria-current={activeTab === tab.name ? 'page' : undefined}
+                    title={locked ? `Requires ${tab.tier} or higher` : undefined}
                     onClick={() => {
                       if (!locked) {
                         setActiveTab(tab.name);
@@ -675,11 +687,13 @@ export default function App() {
         <p>
           WTS CompoundIQ · {t('footer.tagline')}
           {' '}· <button className="footer-link-btn" onClick={() => setShowLegal(true)}>{t('footer.privacyTerms')}</button>
+          {' '}· <button className="footer-link-btn" onClick={() => setShowTour(true)}>🧭 Take the Tour</button>
         </p>
         <DataBackup />
       </footer>
 
       {showLegal && <LegalModal onClose={() => setShowLegal(false)} />}
+      {showTour && <OnboardingTour onClose={closeTour} />}
     </div>
   );
 }

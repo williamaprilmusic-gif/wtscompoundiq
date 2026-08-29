@@ -86,19 +86,19 @@ export default function PaymentSection({ tier, price, country, onSuccess, onClos
         <div className="payment-form">
           {paymentMethod === 'card' || !bankRedirectAvailable ? (
             <div className="card-fields">
-              <input type="text" placeholder="Card Number (e.g. 4111 1111 1111 1111)" />
+              <input type="text" placeholder="Card Number (e.g. 4111 1111 1111 1111)" aria-label="Card number" />
               <div className="row">
-                <input type="text" placeholder="MM / YY" style={{width:'50%'}} />
-                <input type="text" placeholder="CVV" style={{width:'50%'}} />
+                <input type="text" placeholder="MM / YY" aria-label="Card expiry (MM / YY)" style={{width:'50%'}} />
+                <input type="text" placeholder="CVV" aria-label="Card CVV" style={{width:'50%'}} />
               </div>
-              <input type="text" placeholder="Card Holder Name" />
+              <input type="text" placeholder="Card Holder Name" aria-label="Card holder name" />
             </div>
           ) : (
             <div className="bank-fields">
-              <select>
+              <select aria-label="Bank">
                 {SA_BANKS.map((bank) => <option key={bank}>{bank}</option>)}
               </select>
-              <input type="text" placeholder="Account Number / Phone Number" />
+              <input type="text" placeholder="Account Number / Phone Number" aria-label="Account number or phone number" />
             </div>
           )}
 

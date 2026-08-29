@@ -59,7 +59,7 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
       control: (
         <div className="coach-slider-row">
           <label>+{boostPercent}% monthly contribution</label>
-          <input type="range" min="5" max="100" step="5" value={boostPercent} onChange={(e) => setBoostPercent(Number(e.target.value))} />
+          <input type="range" min="5" max="100" step="5" value={boostPercent} aria-label="Monthly contribution boost percentage" onChange={(e) => setBoostPercent(Number(e.target.value))} />
         </div>
       ),
       onApply: applyBoost,
@@ -75,7 +75,7 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
       control: (
         <div className="coach-slider-row">
           <label>+{extraYears} extra year{extraYears === 1 ? '' : 's'}</label>
-          <input type="range" min="1" max="20" step="1" value={extraYears} onChange={(e) => setExtraYears(Number(e.target.value))} />
+          <input type="range" min="1" max="20" step="1" value={extraYears} aria-label="Extra years to stay invested" onChange={(e) => setExtraYears(Number(e.target.value))} />
         </div>
       ),
       onApply: applyYears,

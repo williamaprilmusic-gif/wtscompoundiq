@@ -62,7 +62,16 @@ const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12, con
     setGoals(prev => prev.map(g => g.id === id ? { ...g, [field]: field === 'label' ? value : Number(value) } : g));
   };
 
-  const removeGoal = (id) => setGoals(prev => prev.filter(g => g.id !== id));
+  // See NetWorth.jsx's removeItem for why this only confirms once a goal actually
+  // has a real target entered -- a freshly-added preset removed right away doesn't
+  // need a safety check.
+  const removeGoal = (id) => {
+    const goal = goals.find(g => g.id === id);
+    if (goal && goal.goalAmount > 0) {
+      if (!window.confirm(`Remove "${goal.label.trim() || 'this goal'}"? This can't be undone.`)) return;
+    }
+    setGoals(prev => prev.filter(g => g.id !== id));
+  };
 
   const computed = goals.map(g => {
     // Guard against a transient 0/blank "years" value while the user is mid-edit
@@ -108,7 +117,7 @@ const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12, con
         {computed.map((g) => (
           <div key={g.id} className="goal-card">
             <div className="goal-card-header">
-              <input type="text" className="goal-label" value={g.label} onChange={(e) => updateGoal(g.id, 'label', e.target.value)} />
+              <input type="text" className="goal-label" aria-label="Goal name" value={g.label} onChange={(e) => updateGoal(g.id, 'label', e.target.value)} />
               <button className="goal-remove" onClick={() => removeGoal(g.id)} aria-label="Remove goal">&times;</button>
             </div>
 

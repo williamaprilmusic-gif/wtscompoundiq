@@ -1,0 +1,99 @@
+/* src/components/NetWorthHistoryChart.css */
+.nw-chart {
+  position: relative;
+  margin: 12px 0 20px;
+}
+
+.nw-chart-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.nw-chart-inner {
+  position: relative;
+  min-width: 420px;
+}
+
+.nw-chart-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  outline: none;
+  touch-action: none;
+}
+
+.nw-chart-svg:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+.nw-chart-gridline {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.nw-chart-zeroline {
+  stroke: var(--mut);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+
+.nw-chart-axis-label {
+  font-size: 9px;
+  fill: var(--mut);
+}
+
+.nw-chart-line {
+  stroke: var(--accent-green);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nw-chart-endpoint {
+  fill: var(--accent-green);
+  stroke: var(--chart-surface);
+  stroke-width: 1.5;
+}
+
+.nw-chart-endpoint.hover {
+  stroke-width: 2;
+}
+
+.nw-chart-crosshair {
+  stroke: var(--mut);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.nw-chart-tooltip {
+  position: absolute;
+  top: 4px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  pointer-events: none;
+  backdrop-filter: blur(6px);
+  min-width: 140px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.nw-chart-tooltip-date {
+  color: var(--mut);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.nw-chart-tooltip-row {
+  color: var(--mut);
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.nw-chart-tooltip-row strong {
+  color: var(--text);
+}

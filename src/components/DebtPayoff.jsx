@@ -21,7 +21,15 @@ const DebtPayoff = ({ country }) => {
     setDebts(prev => [...prev, { id: Date.now(), name: '', balance: 0, rate: 0, minPayment: 0 }]);
   };
 
-  const removeDebt = (id) => setDebts(prev => prev.filter(d => d.id !== id));
+  // See NetWorth.jsx's removeItem for why this only confirms when there's real data
+  // entered -- a blank row removed right away doesn't need a safety check.
+  const removeDebt = (id) => {
+    const debt = debts.find(d => d.id === id);
+    if (debt && (debt.name.trim() || debt.balance > 0)) {
+      if (!window.confirm(`Remove "${debt.name.trim() || 'this debt'}"? This can't be undone.`)) return;
+    }
+    setDebts(prev => prev.filter(d => d.id !== id));
+  };
 
   const validDebts = debts.filter(d => d.balance > 0);
   const avalanche = simulatePayoff(validDebts, extraMonthly, avalancheOrder);
@@ -54,7 +62,7 @@ const DebtPayoff = ({ country }) => {
         )}
         {debts.map((d) => (
           <div key={d.id} className="debt-row">
-            <input type="text" className="debt-name" placeholder="Debt name" value={d.name} onChange={(e) => setDebts(prev => prev.map(x => x.id === d.id ? { ...x, name: e.target.value } : x))} />
+            <input type="text" className="debt-name" placeholder="Debt name" aria-label="Debt name" value={d.name} onChange={(e) => setDebts(prev => prev.map(x => x.id === d.id ? { ...x, name: e.target.value } : x))} />
             <div className="debt-field">
               <label>Balance ({country.symbol})</label>
               <input type="number" min="0" value={d.balance} onChange={(e) => updateDebt(d.id, 'balance', e.target.value)} />
