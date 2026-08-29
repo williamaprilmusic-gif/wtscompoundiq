@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
 import { convertAmount } from '../data/countries';
 import { daysBetween, fmtDaysAgo } from '../utils/dateAgo';
-import { readPlan } from '../utils/planStorage';
+import { readPlan, loanEffectiveMonthlyPayment, loanEffectiveTermLabel } from '../utils/planStorage';
 
 const NETWORTH_HISTORY_KEY = 'wts_compoundiq_networth_history';
 
@@ -117,8 +117,9 @@ const Dashboard = ({ country, onNavigate }) => {
             <strong className="dashboard-card-value warn">{country.symbol} {Math.round(plan.loan.principal).toLocaleString()}</strong>
             {/* monthlyPayment is the required base installment; extraMonthly (if any) is what's
                 actually being paid each month to hit the accelerated payoffMonths/totalInterest
-                saved above -- show the real total so this doesn't understate the payment. */}
-            <span className="dashboard-card-sub">{country.symbol} {Math.round(plan.loan.monthlyPayment + (plan.loan.extraMonthly || 0)).toLocaleString()}/mo over {plan.loan.termYears} years</span>
+                saved above -- show the real total (and the real, shortened payoff horizon) so
+                this doesn't understate the payment or contradict itself with the nominal term. */}
+            <span className="dashboard-card-sub">{country.symbol} {loanEffectiveMonthlyPayment(plan.loan).toLocaleString()}/mo over {loanEffectiveTermLabel(plan.loan)}</span>
             <button className="dashboard-card-link" onClick={() => onNavigate('Loan & Bond')}>Open Loan & Bond →</button>
           </div>
         ) : (

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import './Snapshot.css';
 import { calculateCompoundInterest } from '../engine';
 import GrowthChart from './GrowthChart';
-import { readPlan } from '../utils/planStorage';
+import { readPlan, loanEffectiveMonthlyPayment, loanEffectiveTermLabel } from '../utils/planStorage';
 
 const downloadCSV = (results, country) => {
   const header = ['Year', 'Balance', 'Real Value', 'Deposited', 'Interest', 'Tax Paid'];
@@ -116,8 +116,8 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
           <section className="snapshot-section">
             <h3>{plan.loan.loanTypeLabel || 'Loan'} (last saved)</h3>
             <p>
-              {country.symbol} {Math.round(plan.loan.principal).toLocaleString()} borrowed at {plan.loan.annualRate}% over {plan.loan.termYears} years,
-              paying {country.symbol} {Math.round(plan.loan.monthlyPayment + (plan.loan.extraMonthly || 0)).toLocaleString()}/month --
+              {country.symbol} {Math.round(plan.loan.principal).toLocaleString()} borrowed at {plan.loan.annualRate}% over {loanEffectiveTermLabel(plan.loan)},
+              paying {country.symbol} {loanEffectiveMonthlyPayment(plan.loan).toLocaleString()}/month --
               {' '}{country.symbol} {plan.loan.totalInterest.toLocaleString()} total interest over the full term.
             </p>
           </section>

@@ -23,3 +23,20 @@ export const savePlanSection = (sectionKey, data) => {
   localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(updated));
   return updated;
 };
+
+// Given a saved 'loan' plan section, returns the true monthly payment actually being
+// made -- the required installment plus any extra overpayment. Shared so Dashboard/My
+// Plan/Snapshot can't drift out of sync on how this is derived (they all display it).
+export const loanEffectiveMonthlyPayment = (loan) =>
+  Math.round((loan.monthlyPayment || 0) + (loan.extraMonthly || 0));
+
+// Given a saved 'loan' plan section, returns a "N years" label for how long it'll
+// actually take to pay off at the saved pace. termYears is the loan's nominal
+// contractual term and doesn't shrink when there's an extra payment -- payoffMonths
+// (already accelerated by LoanCalculator's savePlan) is the real payoff horizon, so
+// pairing the effective monthly payment above with the unadjusted termYears would
+// describe two different, contradictory payment scenarios in the same sentence.
+export const loanEffectiveTermLabel = (loan) =>
+  loan.extraMonthly > 0 && loan.payoffMonths
+    ? `${(loan.payoffMonths / 12).toFixed(1)} years`
+    : `${loan.termYears} years`;

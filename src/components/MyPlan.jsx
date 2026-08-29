@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import './MyPlan.css';
 import { daysBetween, fmtDaysAgo } from '../utils/dateAgo';
+import { PLAN_STORAGE_KEY, readPlan, loanEffectiveMonthlyPayment, loanEffectiveTermLabel } from '../utils/planStorage';
 
-const STORAGE_KEY = 'wts_compoundiq_plan_snapshot';
 const REMINDER_KEY = 'wts_compoundiq_reminder_at';
 const REMINDER_NOTIFIED_KEY = 'wts_compoundiq_reminder_notified_at';
 const REMINDER_DAYS = 30;
@@ -19,10 +19,8 @@ const MyPlan = ({ country }) => {
   const [reminderDue, setReminderDue] = useState(false);
 
   useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try { setSnapshot(JSON.parse(raw)); } catch { /* ignore corrupt snapshot */ }
-    }
+    const plan = readPlan();
+    if (Object.keys(plan).length > 0) setSnapshot(plan);
 
     const storedReminder = localStorage.getItem(REMINDER_KEY);
     if (storedReminder) {
@@ -60,7 +58,7 @@ const MyPlan = ({ country }) => {
 
   const clearPlan = () => {
     if (!window.confirm("Clear your saved plan? This removes your saved Debt Payoff, Emergency Fund, Loan/Bond, and FIRE snapshots from My Plan -- it doesn't affect those tabs themselves.")) return;
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(PLAN_STORAGE_KEY);
     setSnapshot(null);
     setCurrentDebtBalance('');
     setCurrentEfBalance('');
@@ -199,7 +197,7 @@ const MyPlan = ({ country }) => {
           <h3>{snapshot.loan.loanTypeLabel || '🏦 Loan'} <span className="plan-saved-label">saved {fmtDaysAgo(loanDaysAgo)}</span></h3>
           <div className="plan-baseline">
             When saved: {country.symbol} {Math.round(snapshot.loan.principal).toLocaleString()} borrowed at {snapshot.loan.annualRate}%
-            over {snapshot.loan.termYears} years, paying {country.symbol} {Math.round(snapshot.loan.monthlyPayment + (snapshot.loan.extraMonthly || 0)).toLocaleString()}/mo.
+            over {loanEffectiveTermLabel(snapshot.loan)}, paying {country.symbol} {loanEffectiveMonthlyPayment(snapshot.loan).toLocaleString()}/mo.
           </div>
           <div className="plan-checkin">
             <label>What's your loan/bond balance right now? ({country.symbol})</label>
