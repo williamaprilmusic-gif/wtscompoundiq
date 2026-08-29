@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import './LoanCalculator.css';
 import { calculateLoanAmortization } from '../loanAmortization';
 import { downloadCSV } from '../utils/csv';
+import { savePlanSection } from '../utils/planStorage';
 import Term from './Term';
 
 // Term is a sensible starting default per type -- not a rate estimate (rates vary too
@@ -58,8 +59,6 @@ const TYPE_TIPS = {
   ]
 };
 
-const PLAN_STORAGE_KEY = 'wts_compoundiq_plan_snapshot';
-
 const LoanCalculator = ({ country }) => {
   const [loanType, setLoanType] = useState('bond');
   const [principal, setPrincipal] = useState(0);
@@ -94,23 +93,24 @@ const LoanCalculator = ({ country }) => {
   };
 
   const savePlan = () => {
-    let existing = {};
-    try { existing = JSON.parse(localStorage.getItem(PLAN_STORAGE_KEY) || '{}'); } catch { /* ignore corrupt snapshot, start fresh */ }
-    const updated = {
-      ...existing,
-      loan: {
-        savedAt: new Date().toISOString(),
-        loanType,
-        loanTypeLabel: activeType.label,
-        principal,
-        annualRate,
-        termYears,
-        monthlyPayment: result.monthlyPayment,
-        payoffMonths: result.payoffMonths,
-        totalInterest: result.totalInterest
-      }
-    };
-    localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(updated));
+    // My Plan's check-in math derives an expected-remaining-balance pace from
+    // principal / payoffMonths -- if there's an extra monthly payment, that pace has
+    // to reflect the faster, extra-adjusted schedule (result.extra), or it silently
+    // reverts to the slower standard schedule and understates real progress.
+    const effectivePayoffMonths = (extraMonthly > 0 && result.extra) ? result.extra.payoffMonths : result.payoffMonths;
+    const effectiveTotalInterest = (extraMonthly > 0 && result.extra) ? (result.totalInterest - result.extra.interestSaved) : result.totalInterest;
+    savePlanSection('loan', {
+      savedAt: new Date().toISOString(),
+      loanType,
+      loanTypeLabel: activeType.label,
+      principal,
+      annualRate,
+      termYears,
+      extraMonthly,
+      monthlyPayment: result.monthlyPayment,
+      payoffMonths: effectivePayoffMonths,
+      totalInterest: effectiveTotalInterest
+    });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };

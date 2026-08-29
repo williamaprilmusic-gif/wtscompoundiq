@@ -1,13 +1,13 @@
 // src/components/MyPlan.jsx
 import React, { useState, useEffect } from 'react';
 import './MyPlan.css';
+import { daysBetween, fmtDaysAgo } from '../utils/dateAgo';
 
 const STORAGE_KEY = 'wts_compoundiq_plan_snapshot';
 const REMINDER_KEY = 'wts_compoundiq_reminder_at';
 const REMINDER_NOTIFIED_KEY = 'wts_compoundiq_reminder_notified_at';
 const REMINDER_DAYS = 30;
 
-const daysBetween = (isoDate) => Math.max(0, Math.floor((Date.now() - new Date(isoDate).getTime()) / (1000 * 60 * 60 * 24)));
 const monthsBetween = (isoDate) => daysBetween(isoDate) / 30.44;
 
 const MyPlan = ({ country }) => {
@@ -107,18 +107,24 @@ const MyPlan = ({ country }) => {
   const hasLoan = !!snapshot.loan;
   const hasFire = !!snapshot.fire;
 
-  let debtExpectedRemaining = null;
-  let debtDrift = null;
-  let debtDaysAgo = null;
-  if (hasDebt) {
-    debtDaysAgo = daysBetween(snapshot.debt.savedAt);
-    const monthsElapsed = monthsBetween(snapshot.debt.savedAt);
-    const monthlyPayoffRate = snapshot.debt.avalancheMonths > 0 ? snapshot.debt.totalBalance / snapshot.debt.avalancheMonths : 0;
-    debtExpectedRemaining = Math.max(0, snapshot.debt.totalBalance - monthlyPayoffRate * monthsElapsed);
-    if (currentDebtBalance !== '') {
-      debtDrift = debtExpectedRemaining - Number(currentDebtBalance);
-    }
-  }
+  // Debt and loan check-ins share the exact same "straight-line paydown" shape --
+  // expected remaining = starting balance minus (balance / payoffMonths) * months
+  // elapsed since saving, floored at 0 -- so the calculation lives once here instead
+  // of being copy-pasted per section with only the field names changed. A straight-line
+  // estimate over the saved payoff term, not a true (front-loaded-interest) amortization
+  // curve -- consistent with the "assumes steady linear progress" disclaimer at the bottom.
+  const computeRemainingDrift = (startingBalance, payoffMonths, savedAt, currentBalanceInput) => {
+    const monthsElapsed = monthsBetween(savedAt);
+    const monthlyPayoffRate = payoffMonths > 0 ? startingBalance / payoffMonths : 0;
+    const expectedRemaining = Math.max(0, startingBalance - monthlyPayoffRate * monthsElapsed);
+    const drift = currentBalanceInput !== '' ? expectedRemaining - Number(currentBalanceInput) : null;
+    return { expectedRemaining, drift };
+  };
+
+  const debtDaysAgo = hasDebt ? daysBetween(snapshot.debt.savedAt) : null;
+  const { expectedRemaining: debtExpectedRemaining, drift: debtDrift } = hasDebt
+    ? computeRemainingDrift(snapshot.debt.totalBalance, snapshot.debt.avalancheMonths, snapshot.debt.savedAt, currentDebtBalance)
+    : { expectedRemaining: null, drift: null };
 
   let efExpectedSaved = null;
   let efDrift = null;
@@ -132,23 +138,10 @@ const MyPlan = ({ country }) => {
     }
   }
 
-  let loanExpectedRemaining = null;
-  let loanDrift = null;
-  let loanDaysAgo = null;
-  if (hasLoan) {
-    loanDaysAgo = daysBetween(snapshot.loan.savedAt);
-    const monthsElapsed = monthsBetween(snapshot.loan.savedAt);
-    // Same simplification as the debt section above: a straight-line estimate over the
-    // saved payoff term, not a true (front-loaded-interest) amortization curve --
-    // consistent with the "assumes steady linear progress" disclaimer at the bottom.
-    const monthlyPayoffRate = snapshot.loan.payoffMonths > 0 ? snapshot.loan.principal / snapshot.loan.payoffMonths : 0;
-    loanExpectedRemaining = Math.max(0, snapshot.loan.principal - monthlyPayoffRate * monthsElapsed);
-    if (currentLoanBalance !== '') {
-      loanDrift = loanExpectedRemaining - Number(currentLoanBalance);
-    }
-  }
-
-  const fmtDaysAgo = (d) => d === 0 ? 'today' : `${d} day${d === 1 ? '' : 's'} ago`;
+  const loanDaysAgo = hasLoan ? daysBetween(snapshot.loan.savedAt) : null;
+  const { expectedRemaining: loanExpectedRemaining, drift: loanDrift } = hasLoan
+    ? computeRemainingDrift(snapshot.loan.principal, snapshot.loan.payoffMonths, snapshot.loan.savedAt, currentLoanBalance)
+    : { expectedRemaining: null, drift: null };
 
   return (
     <div className="card my-plan">
@@ -203,7 +196,7 @@ const MyPlan = ({ country }) => {
 
       {hasLoan && (
         <div className="plan-section">
-          <h3>🏦 {snapshot.loan.loanTypeLabel || 'Loan'} <span className="plan-saved-label">saved {fmtDaysAgo(loanDaysAgo)}</span></h3>
+          <h3>{snapshot.loan.loanTypeLabel || '🏦 Loan'} <span className="plan-saved-label">saved {fmtDaysAgo(loanDaysAgo)}</span></h3>
           <div className="plan-baseline">
             When saved: {country.symbol} {Math.round(snapshot.loan.principal).toLocaleString()} borrowed at {snapshot.loan.annualRate}%
             over {snapshot.loan.termYears} years, paying {country.symbol} {snapshot.loan.monthlyPayment.toLocaleString()}/mo.

@@ -1,5 +1,5 @@
 // src/App.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './App.css';
 import TierPricing from './components/TierPricing';
 import PaymentSection from './components/PaymentSection';
@@ -213,7 +213,10 @@ export default function App() {
   // checks, and every onNavigate('Exact Name') call from StartHere/Dashboard/etc.
   // Never translate `name` itself; `i18nKey` is what gets displayed (falls back to
   // English automatically via t() if a language's translation is missing).
-  const tabGroups = [
+  // Memoized on `t` (which itself only changes when the active language changes) --
+  // App re-renders on every Calculator keystroke, and rebuilding this whole array plus
+  // re-running ~17 t() lookups had nothing to do with any of that unrelated state.
+  const tabGroups = useMemo(() => [
     {
       label: t('nav.groupFree'),
       tabs: [
@@ -245,7 +248,7 @@ export default function App() {
         { name: 'AI Advisor', i18nKey: 'nav.aiAdvisor', tier: 'Enterprise' }
       ]
     }
-  ];
+  ], [t]);
 
   const tabs = tabGroups.flatMap(g => g.tabs);
 

@@ -7,11 +7,13 @@ export const MAX_YEARS_TO_SEARCH = 60;
 
 export const yearsToReachTarget = ({ initial, monthly, rate, inflation, taxRate, wrapper, target, compoundFrequency, annualWrapperLimit, lifetimeWrapperLimit, contributionIncreaseRate, lumpSums }) => {
   if (initial >= target) return 0;
-  for (let y = 1; y <= MAX_YEARS_TO_SEARCH; y++) {
-    const { finalBalance } = calculateCompoundInterest({ initial, monthly, rate, years: y, inflation, taxRate, wrapper, compoundFrequency, annualWrapperLimit, lifetimeWrapperLimit, contributionIncreaseRate, lumpSums });
-    if (finalBalance >= target) return y;
-  }
-  return null; // not reachable within MAX_YEARS_TO_SEARCH
+  // One simulation out to the full search horizon, then scan its per-year balances --
+  // calculateCompoundInterest already returns yearlyData for every year along the way,
+  // so re-calling it once per candidate year (year 1, then 1..2, then 1..3, ...) redid
+  // all the earlier years' work on every iteration for no reason.
+  const { yearlyData } = calculateCompoundInterest({ initial, monthly, rate, years: MAX_YEARS_TO_SEARCH, inflation, taxRate, wrapper, compoundFrequency, annualWrapperLimit, lifetimeWrapperLimit, contributionIncreaseRate, lumpSums });
+  const hit = yearlyData.find(row => row.balance >= target);
+  return hit ? hit.year : null; // null = not reachable within MAX_YEARS_TO_SEARCH
 };
 
 // Pay the debt off with extraMonthly first (simple monthly amortization); once it's

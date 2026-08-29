@@ -3,8 +3,7 @@ import React, { useState } from 'react';
 import './PowerTools.css';
 import Term from './Term';
 import { MAX_YEARS_TO_SEARCH, yearsToReachTarget, simulateDebtFirst, simulateInvestFirst, simulateDrawdown } from '../powerToolsEngine';
-
-const PLAN_STORAGE_KEY = 'wts_compoundiq_plan_snapshot';
+import { savePlanSection } from '../utils/planStorage';
 
 const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [] }) => {
   const [annualExpenses, setAnnualExpenses] = useState(0);
@@ -48,19 +47,13 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const drawdownWithdrawalRate = drawdownBalance > 0 ? (drawdownWithdrawal / drawdownBalance) * 100 : 0;
 
   const saveFirePlan = () => {
-    let existing = {};
-    try { existing = JSON.parse(localStorage.getItem(PLAN_STORAGE_KEY) || '{}'); } catch { /* ignore corrupt snapshot, start fresh */ }
-    const updated = {
-      ...existing,
-      fire: {
-        savedAt: new Date().toISOString(),
-        annualExpenses,
-        withdrawalRate,
-        fireNumber,
-        yearsToFire
-      }
-    };
-    localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(updated));
+    savePlanSection('fire', {
+      savedAt: new Date().toISOString(),
+      annualExpenses,
+      withdrawalRate,
+      fireNumber,
+      yearsToFire
+    });
     setFireSaved(true);
     setTimeout(() => setFireSaved(false), 2000);
   };

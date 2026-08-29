@@ -5,22 +5,18 @@
 // Bond, and Power Tools -- it doesn't compute anything new.
 import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
+import { convertAmount } from '../data/countries';
+import { daysBetween, fmtDaysAgo } from '../utils/dateAgo';
+import { readPlan } from '../utils/planStorage';
 
-const PLAN_STORAGE_KEY = 'wts_compoundiq_plan_snapshot';
 const NETWORTH_HISTORY_KEY = 'wts_compoundiq_networth_history';
-
-const daysBetween = (isoDate) => Math.max(0, Math.floor((Date.now() - new Date(isoDate).getTime()) / (1000 * 60 * 60 * 24)));
-const fmtDaysAgo = (d) => d === 0 ? 'today' : `${d} day${d === 1 ? '' : 's'} ago`;
 
 const Dashboard = ({ country, onNavigate }) => {
   const [plan, setPlan] = useState(null);
   const [netWorthEntry, setNetWorthEntry] = useState(null);
 
   useEffect(() => {
-    try {
-      const rawPlan = localStorage.getItem(PLAN_STORAGE_KEY);
-      if (rawPlan) setPlan(JSON.parse(rawPlan));
-    } catch { /* ignore corrupt snapshot */ }
+    setPlan(readPlan());
     try {
       const rawHistory = localStorage.getItem(NETWORTH_HISTORY_KEY);
       if (rawHistory) {
@@ -52,11 +48,15 @@ const Dashboard = ({ country, onNavigate }) => {
               <h3>💰 Net Worth</h3>
               <span className="dashboard-card-meta">as of {fmtDaysAgo(daysBetween(netWorthEntry.date))}</span>
             </div>
+            {/* netWorthEntry was saved while a possibly-different country was active --
+                convert from its saved displayCurrency into the currently selected one,
+                same as NetWorth.jsx does for the identical stored history entries, so
+                switching country here doesn't relabel an unconverted figure. */}
             <strong className={`dashboard-card-value ${netWorthEntry.netWorth >= 0 ? 'positive' : 'negative'}`}>
-              {country.symbol} {Math.round(netWorthEntry.netWorth).toLocaleString()}
+              {country.symbol} {Math.round(convertAmount(netWorthEntry.netWorth, netWorthEntry.displayCurrency || country.code, country.code)).toLocaleString()}
             </strong>
             <span className="dashboard-card-sub">
-              {country.symbol} {Math.round(netWorthEntry.totalAssets).toLocaleString()} assets − {country.symbol} {Math.round(netWorthEntry.totalDebts).toLocaleString()} debts
+              {country.symbol} {Math.round(convertAmount(netWorthEntry.totalAssets, netWorthEntry.displayCurrency || country.code, country.code)).toLocaleString()} assets − {country.symbol} {Math.round(convertAmount(netWorthEntry.totalDebts, netWorthEntry.displayCurrency || country.code, country.code)).toLocaleString()} debts
             </span>
             <button className="dashboard-card-link" onClick={() => onNavigate('Net Worth')}>Open Net Worth →</button>
           </div>
@@ -111,7 +111,7 @@ const Dashboard = ({ country, onNavigate }) => {
         {plan?.loan ? (
           <div className="dashboard-card">
             <div className="dashboard-card-header">
-              <h3>🏦 {plan.loan.loanTypeLabel || 'Loan'}</h3>
+              <h3>{plan.loan.loanTypeLabel || '🏦 Loan'}</h3>
               <span className="dashboard-card-meta">saved {fmtDaysAgo(daysBetween(plan.loan.savedAt))}</span>
             </div>
             <strong className="dashboard-card-value warn">{country.symbol} {Math.round(plan.loan.principal).toLocaleString()}</strong>
