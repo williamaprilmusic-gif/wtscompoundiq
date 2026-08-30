@@ -9,10 +9,10 @@ import { convertAmount } from '../data/countries';
 import { daysBetween, fmtDaysAgo } from '../utils/dateAgo';
 import { readPlan, loanEffectiveMonthlyPayment, loanEffectiveTermLabel } from '../utils/planStorage';
 import SnapshotChart from './SnapshotChart';
+import { HISTORY_KEY as NETWORTH_HISTORY_KEY } from './NetWorth';
+import { HISTORY_KEY as DEBTPAYOFF_HISTORY_KEY } from './DebtPayoff';
+import { HISTORY_KEY as EMERGENCYFUND_HISTORY_KEY } from './EmergencyFund';
 
-const NETWORTH_HISTORY_KEY = 'wts_compoundiq_networth_history';
-const DEBTPAYOFF_HISTORY_KEY = 'wts_compoundiq_debtpayoff_history';
-const EMERGENCYFUND_HISTORY_KEY = 'wts_compoundiq_emergencyfund_history';
 const NETWORTH_SERIES = [{ key: 'assets', label: 'Assets' }, { key: 'debts', label: 'Debts' }, { key: 'net', label: 'Net Worth' }];
 const DEBT_SERIES = [{ key: 'total', label: 'Total Debt Balance' }];
 const EF_SERIES = [{ key: 'total', label: 'Emergency Fund Balance' }];
@@ -61,15 +61,19 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
     };
   }), [netWorthHistory, netWorthCountry.code]);
 
-  const debtPoints = useMemo(() => debtHistory.map(h => ({
-    date: h.date,
-    total: convertAmount(h.total, h.displayCurrency || country.code, country.code)
-  })), [debtHistory, country.code]);
+  // Filters out any entry with a non-numeric `total` (a hand-edited or partially-
+  // written localStorage value, an incompatible imported backup, etc.) rather than
+  // feeding it to convertAmount -- one NaN point would otherwise poison SnapshotChart's
+  // min/max scaling and break the whole chart, not just that one point.
+  const debtPoints = useMemo(() => debtHistory
+    .filter(h => Number.isFinite(h.total))
+    .map(h => ({ date: h.date, total: convertAmount(h.total, h.displayCurrency || country.code, country.code) })),
+  [debtHistory, country.code]);
 
-  const efPoints = useMemo(() => efHistory.map(h => ({
-    date: h.date,
-    total: convertAmount(h.total, h.displayCurrency || country.code, country.code)
-  })), [efHistory, country.code]);
+  const efPoints = useMemo(() => efHistory
+    .filter(h => Number.isFinite(h.total))
+    .map(h => ({ date: h.date, total: convertAmount(h.total, h.displayCurrency || country.code, country.code) })),
+  [efHistory, country.code]);
 
   const hasTrends = netWorthPoints.length > 1 || debtPoints.length > 1 || efPoints.length > 1;
 
@@ -102,7 +106,10 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
               {netWorthCountry.symbol} {Math.round(convertAmount(netWorthEntry.netWorth, netWorthEntry.displayCurrency || netWorthCountry.code, netWorthCountry.code)).toLocaleString()}
             </strong>
             <span className="dashboard-card-sub">
-              {netWorthCountry.symbol} {Math.round(convertAmount(netWorthEntry.totalAssets, netWorthEntry.displayCurrency || netWorthCountry.code, netWorthCountry.code)).toLocaleString()} assets − {netWorthCountry.symbol} {Math.round(convertAmount(netWorthEntry.totalDebts, netWorthEntry.displayCurrency || netWorthCountry.code, netWorthCountry.code)).toLocaleString()} debts
+              {/* A snapshot saved before totalAssets/totalDebts were tracked has neither
+                  -- same fallback as netWorthPoints above, so this card shows a sane
+                  figure instead of "NaN assets". */}
+              {netWorthCountry.symbol} {Math.round(convertAmount(netWorthEntry.totalAssets ?? netWorthEntry.netWorth, netWorthEntry.displayCurrency || netWorthCountry.code, netWorthCountry.code)).toLocaleString()} assets − {netWorthCountry.symbol} {Math.round(convertAmount(netWorthEntry.totalDebts ?? 0, netWorthEntry.displayCurrency || netWorthCountry.code, netWorthCountry.code)).toLocaleString()} debts
             </span>
             <button className="dashboard-card-link" onClick={() => onNavigate('Net Worth')}>Open Net Worth →</button>
           </div>

@@ -30,7 +30,7 @@ const CountrySelect = ({ countries, value, onChange, ariaLabel }) => {
   useEffect(() => {
     if (!open) return;
     const handleOutside = (e) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) { setOpen(false); setQuery(''); }
     };
     document.addEventListener('mousedown', handleOutside);
     return () => document.removeEventListener('mousedown', handleOutside);

@@ -9,7 +9,7 @@ import { downloadCSV } from '../utils/csv';
 import SnapshotChart from './SnapshotChart';
 
 const INPUTS_KEY = 'wts_compoundiq_emergencyfund_inputs';
-const HISTORY_KEY = 'wts_compoundiq_emergencyfund_history';
+export const HISTORY_KEY = 'wts_compoundiq_emergencyfund_history';
 const DEFAULT_INPUTS = { monthlyExpenses: 0, monthsCoverage: 3, currentSavings: 0, monthlyContribution: 0 };
 const HISTORY_SERIES = [{ key: 'total', label: 'Emergency Fund Balance' }];
 
@@ -145,7 +145,7 @@ const EmergencyFund = ({ country }) => {
           <div className="ef-history-header">
             <h3>Balance History ({history.length} snapshot{history.length === 1 ? '' : 's'})</h3>
             <div className="ef-history-header-actions">
-              <button className="ef-export-history-btn" onClick={exportHistoryCSV}>⬇️ Export CSV</button>
+              <button className="history-export-btn" onClick={exportHistoryCSV}>⬇️ Export CSV</button>
               <button className="ef-clear-history-btn" onClick={clearHistory}>Clear history</button>
             </div>
           </div>

@@ -318,6 +318,20 @@ body {
   align-items: center;
 }
 
+/* Shared by Net Worth/Debt Payoff/Emergency Fund's "Export CSV" button next to their
+   history's "Clear history" button -- identical styling was copy-pasted into each of
+   their own CSS files; one shared rule instead of three to keep in lockstep. */
+.history-export-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--mut);
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .tax-verification {
   display: inline-block;
   font-size: 0.75rem;

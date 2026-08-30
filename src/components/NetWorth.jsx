@@ -15,7 +15,7 @@ const HISTORY_SERIES = [
   { key: 'net', label: 'Net Worth' }
 ];
 
-const HISTORY_KEY = 'wts_compoundiq_networth_history';
+export const HISTORY_KEY = 'wts_compoundiq_networth_history';
 const ITEMS_KEY = 'wts_compoundiq_networth_items';
 
 // '' is the sentinel code for "follow whatever the Calculator tab's country is" --
@@ -52,7 +52,9 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
 
   // Each item carries its own currency so a mortgage in one currency and a brokerage
   // account in another can sit in the same list -- new items default to whatever
-  // currency the Calculator tab is currently set to.
+  // currency this tab is currently displaying in (`country` here is Net Worth's own
+  // reporting currency -- see the "Display currency" picker above, which can be pinned
+  // independently of the Calculator tab's country).
   const addItem = (type) => {
     setItems(prev => [...prev, { id: Date.now(), name: '', type, value: 0, currency: country.code }]);
   };
@@ -271,7 +273,7 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
           <div className="nw-history-header">
             <h3>History ({history.length} snapshot{history.length === 1 ? '' : 's'})</h3>
             <div className="nw-history-header-actions">
-              <button className="nw-export-history-btn" onClick={exportHistoryCSV}>⬇️ Export CSV</button>
+              <button className="history-export-btn" onClick={exportHistoryCSV}>⬇️ Export CSV</button>
               <button className="nw-clear-btn" onClick={clearHistory}>Clear history</button>
             </div>
           </div>

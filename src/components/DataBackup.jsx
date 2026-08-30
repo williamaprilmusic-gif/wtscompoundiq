@@ -5,15 +5,18 @@ import React from 'react';
 import './DataBackup.css';
 import { PLAN_STORAGE_KEY } from '../utils/planStorage';
 import { FLUSH_EVENT } from '../utils/usePersistedState';
+import { HISTORY_KEY as NETWORTH_HISTORY_KEY } from './NetWorth';
+import { HISTORY_KEY as DEBTPAYOFF_HISTORY_KEY } from './DebtPayoff';
+import { HISTORY_KEY as EMERGENCYFUND_HISTORY_KEY } from './EmergencyFund';
 
 const ALL_STORAGE_KEYS = [
   'wts_compoundiq_tier',
   PLAN_STORAGE_KEY,
   'wts_compoundiq_reminder_at',
   'wts_compoundiq_reminder_notified_at',
-  'wts_compoundiq_networth_history',
-  'wts_compoundiq_debtpayoff_history',
-  'wts_compoundiq_emergencyfund_history',
+  NETWORTH_HISTORY_KEY,
+  DEBTPAYOFF_HISTORY_KEY,
+  EMERGENCYFUND_HISTORY_KEY,
   // Working data auto-saved by usePersistedState (see src/utils/usePersistedState.js)
   // -- the actual entered rows, not just the "Save This Plan" summaries above.
   'wts_compoundiq_networth_items',

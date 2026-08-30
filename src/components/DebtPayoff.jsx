@@ -13,7 +13,7 @@ import SnapshotChart from './SnapshotChart';
 const DEBTS_KEY = 'wts_compoundiq_debtpayoff_debts';
 const EXTRA_KEY = 'wts_compoundiq_debtpayoff_extra';
 const LUMPSUMS_KEY = 'wts_compoundiq_debtpayoff_lumpsums';
-const HISTORY_KEY = 'wts_compoundiq_debtpayoff_history';
+export const HISTORY_KEY = 'wts_compoundiq_debtpayoff_history';
 
 const HISTORY_SERIES = [{ key: 'total', label: 'Total Debt Balance' }];
 
@@ -291,7 +291,7 @@ const DebtPayoff = ({ country }) => {
           <div className="debt-history-header">
             <h3>Balance History ({history.length} snapshot{history.length === 1 ? '' : 's'})</h3>
             <div className="debt-history-header-actions">
-              <button className="debt-export-history-btn" onClick={exportHistoryCSV}>⬇️ Export CSV</button>
+              <button className="history-export-btn" onClick={exportHistoryCSV}>⬇️ Export CSV</button>
               <button className="debt-clear-history-btn" onClick={clearHistory}>Clear history</button>
             </div>
           </div>
