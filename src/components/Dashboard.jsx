@@ -48,10 +48,15 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
 
   // Same non-numeric guard as debtPoints/efPoints below -- a hand-edited or partially-
   // written localStorage value (or an incompatible imported backup) could leave a
-  // history entry with a non-numeric `netWorth`, and that single entry would otherwise
-  // poison both the headline card (Math.round(NaN) -> "NaN") and the trend chart's
-  // min/max scaling (every point on the line, not just the bad one).
-  const validNetWorthHistory = useMemo(() => netWorthHistory.filter(h => Number.isFinite(h.netWorth)), [netWorthHistory]);
+  // history entry with a non-numeric `netWorth`, `totalAssets`, or `totalDebts`, and
+  // that single entry would otherwise poison both the headline card (Math.round(NaN)
+  // -> "NaN") and the trend chart's min/max scaling (every point on the line, not just
+  // the bad one). netWorth alone isn't enough to check -- totalAssets/totalDebts can be
+  // independently corrupt while netWorth stays valid, and the `?? h.netWorth` / `?? 0`
+  // fallbacks below only catch null/undefined, not NaN.
+  const validNetWorthHistory = useMemo(() => netWorthHistory.filter(h => Number.isFinite(h.netWorth)
+    && (h.totalAssets == null || Number.isFinite(h.totalAssets))
+    && (h.totalDebts == null || Number.isFinite(h.totalDebts))), [netWorthHistory]);
   const netWorthEntry = validNetWorthHistory.length > 0 ? validNetWorthHistory[validNetWorthHistory.length - 1] : null;
   const hasAnything = !!plan?.debt || !!plan?.emergencyFund || !!plan?.loan || !!plan?.fire || !!netWorthEntry;
 

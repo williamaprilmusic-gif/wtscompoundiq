@@ -146,8 +146,15 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
   // convertAmount -- one NaN point would otherwise poison SnapshotChart's min/max
   // scaling and break the whole chart (see Dashboard.jsx's identical guard on its own
   // net worth trend).
+  // Checking netWorth alone isn't enough to guarantee a NaN-free chart: totalAssets/
+  // totalDebts can be independently corrupt (hand-edited, partial write, incompatible
+  // import) while netWorth itself stays a valid number, and `??` below only catches
+  // null/undefined, not NaN -- so a bad totalAssets/totalDebts would still slip through
+  // and poison the chart's min/max scaling the same way a bad netWorth would.
   const convertedHistory = useMemo(() => history
-    .filter(h => Number.isFinite(h.netWorth))
+    .filter(h => Number.isFinite(h.netWorth)
+      && (h.totalAssets == null || Number.isFinite(h.totalAssets))
+      && (h.totalDebts == null || Number.isFinite(h.totalDebts)))
     .map(h => {
       const from = h.displayCurrency || country.code;
       return {
@@ -273,13 +280,17 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
       {history.length > 0 && (
         <div className="nw-history">
           <div className="nw-history-header">
-            <h3>History ({history.length} snapshot{history.length === 1 ? '' : 's'})</h3>
+            {/* convertedHistory.length, not history.length -- a corrupt/non-numeric entry is
+                filtered out of convertedHistory above but stays in raw history (so "Clear
+                history" below can still remove it), and this count should match what the
+                list/chart below actually display rather than what's stored. */}
+            <h3>History ({convertedHistory.length} snapshot{convertedHistory.length === 1 ? '' : 's'})</h3>
             <div className="nw-history-header-actions">
               <button className="history-export-btn" onClick={exportHistoryCSV}>⬇️ Export CSV</button>
               <button className="nw-clear-btn" onClick={clearHistory}>Clear history</button>
             </div>
           </div>
-          {history.length > 1 && (
+          {convertedHistory.length > 1 && (
             <SnapshotChart points={convertedHistory} series={HISTORY_SERIES} symbol={country.symbol} />
           )}
           <div className="nw-history-list">

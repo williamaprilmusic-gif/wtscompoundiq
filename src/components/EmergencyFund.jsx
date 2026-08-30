@@ -150,7 +150,11 @@ const EmergencyFund = ({ country }) => {
       {history.length > 0 && (
         <div className="ef-history">
           <div className="ef-history-header">
-            <h3>Balance History ({history.length} snapshot{history.length === 1 ? '' : 's'})</h3>
+            {/* convertedHistory.length, not history.length -- a corrupt/non-numeric entry is
+                filtered out of convertedHistory above but stays in raw history (so "Clear
+                history" below can still remove it), and this count should match what the
+                list/chart below actually display rather than what's stored. */}
+            <h3>Balance History ({convertedHistory.length} snapshot{convertedHistory.length === 1 ? '' : 's'})</h3>
             <div className="ef-history-header-actions">
               <button className="history-export-btn" onClick={exportHistoryCSV}>⬇️ Export CSV</button>
               <button className="ef-clear-history-btn" onClick={clearHistory}>Clear history</button>
