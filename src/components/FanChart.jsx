@@ -6,6 +6,7 @@
 // per the dataviz skill's area-fill spec.
 import React, { useState, useRef } from 'react';
 import './FanChart.css';
+import { niceCeil, formatCompact } from '../utils/chartFormat';
 
 const WIDTH = 640;
 const HEIGHT = 280;
@@ -13,26 +14,6 @@ const PAD_LEFT = 60;
 const PAD_RIGHT = 16;
 const PAD_TOP = 16;
 const PAD_BOTTOM = 30;
-
-const niceCeil = (value) => {
-  if (value <= 0) return 1;
-  const magnitude = Math.pow(10, Math.floor(Math.log10(value)));
-  const normalized = value / magnitude;
-  let n;
-  if (normalized <= 1) n = 1;
-  else if (normalized <= 2) n = 2;
-  else if (normalized <= 2.5) n = 2.5;
-  else if (normalized <= 5) n = 5;
-  else n = 10;
-  return n * magnitude;
-};
-
-const formatCompact = (value) => {
-  const abs = Math.abs(value);
-  if (abs >= 1000000) return (value / 1000000).toFixed(abs >= 10000000 ? 0 : 1) + 'M';
-  if (abs >= 1000) return (value / 1000).toFixed(abs >= 10000 ? 0 : 1) + 'K';
-  return Math.round(value).toString();
-};
 
 const FanChart = ({ yearlyPercentiles, symbol = '' }) => {
   const svgRef = useRef(null);
