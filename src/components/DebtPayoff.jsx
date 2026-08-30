@@ -5,6 +5,7 @@ import Term from './Term';
 import { simulatePayoff, avalancheOrder, snowballOrder } from '../debtPayoffEngine';
 import { savePlanSection } from '../utils/planStorage';
 import { usePersistedState } from '../utils/usePersistedState';
+import { confirmRemoval } from '../utils/confirmRemoval';
 
 const DEBTS_KEY = 'wts_compoundiq_debtpayoff_debts';
 const EXTRA_KEY = 'wts_compoundiq_debtpayoff_extra';
@@ -22,12 +23,14 @@ const DebtPayoff = ({ country }) => {
   };
 
   // See NetWorth.jsx's removeItem for why this only confirms when there's real data
-  // entered -- a blank row removed right away doesn't need a safety check.
+  // entered -- a blank row removed right away doesn't need a safety check. Checks all
+  // four editable fields (not just name/balance) -- a debt with a rate and min payment
+  // already filled in but a balance that's momentarily 0 (e.g. mid-retype) still counts
+  // as real data worth confirming before it's silently dropped.
   const removeDebt = (id) => {
     const debt = debts.find(d => d.id === id);
-    if (debt && (debt.name.trim() || debt.balance > 0)) {
-      if (!window.confirm(`Remove "${debt.name.trim() || 'this debt'}"? This can't be undone.`)) return;
-    }
+    const hasData = !!(debt && (debt.name.trim() || debt.balance > 0 || debt.rate > 0 || debt.minPayment > 0));
+    if (!confirmRemoval(hasData, `Remove "${debt?.name.trim() || 'this debt'}"? This can't be undone.`)) return;
     setDebts(prev => prev.filter(d => d.id !== id));
   };
 

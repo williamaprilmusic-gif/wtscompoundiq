@@ -3,6 +3,7 @@ import React from 'react';
 import './Invest.css';
 import { calculateCompoundInterest } from '../engine';
 import { usePersistedState } from '../utils/usePersistedState';
+import { confirmRemoval } from '../utils/confirmRemoval';
 
 const GOALS_KEY = 'wts_compoundiq_invest_goals';
 
@@ -75,9 +76,8 @@ const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12, con
   // as real data and still get a confirmation.
   const removeGoal = (id) => {
     const goal = goals.find(g => g.id === id);
-    if (goal && goal.touched !== false) {
-      if (!window.confirm(`Remove "${goal.label.trim() || 'this goal'}"? This can't be undone.`)) return;
-    }
+    const hasData = !!(goal && goal.touched !== false);
+    if (!confirmRemoval(hasData, `Remove "${goal?.label.trim() || 'this goal'}"? This can't be undone.`)) return;
     setGoals(prev => prev.filter(g => g.id !== id));
   };
 

@@ -1,10 +1,11 @@
 // src/components/NetWorth.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './NetWorth.css';
 import Term from './Term';
 import { countriesData, convertAmount } from '../data/countries';
 import { parseCSV, downloadCSV } from '../utils/csv';
 import { usePersistedState } from '../utils/usePersistedState';
+import { confirmRemoval } from '../utils/confirmRemoval';
 import NetWorthHistoryChart from './NetWorthHistoryChart';
 
 const HISTORY_KEY = 'wts_compoundiq_networth_history';
@@ -48,9 +49,8 @@ const NetWorth = ({ country }) => {
   // there's no undo once it's gone.
   const removeItem = (id) => {
     const item = items.find(i => i.id === id);
-    if (item && (item.name.trim() || item.value > 0)) {
-      if (!window.confirm(`Remove "${item.name.trim() || 'this item'}"? This can't be undone.`)) return;
-    }
+    const hasData = !!(item && (item.name.trim() || item.value > 0));
+    if (!confirmRemoval(hasData, `Remove "${item?.name.trim() || 'this item'}"? This can't be undone.`)) return;
     setItems(prev => prev.filter(i => i.id !== id));
   };
 
@@ -139,11 +139,14 @@ const NetWorth = ({ country }) => {
   };
 
   // Converted once and reused by both the chart and the list below instead of calling
-  // convertAmount twice per snapshot.
-  const convertedHistory = history.map(h => ({
+  // convertAmount twice per snapshot. Memoized on [history, country.code] so editing an
+  // unrelated field (an asset's value, say) doesn't hand the chart a new array reference
+  // every render -- NetWorthHistoryChart's own useMemo over this prop would otherwise
+  // recompute on every keystroke instead of only when the history actually changes.
+  const convertedHistory = useMemo(() => history.map(h => ({
     date: h.date,
     netWorth: convertAmount(h.netWorth, h.displayCurrency || country.code, country.code)
-  }));
+  })), [history, country.code]);
 
   return (
     <div className="card net-worth">

@@ -29,5 +29,8 @@ export const formatCompact = (value) => {
   const sign = value < 0 ? '-' : '';
   if (abs >= 1000000) return sign + (abs / 1000000).toFixed(abs >= 10000000 ? 0 : 1) + 'M';
   if (abs >= 1000) return sign + (abs / 1000).toFixed(abs >= 10000 ? 0 : 1) + 'K';
-  return sign + Math.round(abs).toString();
+  const rounded = Math.round(abs);
+  // A small negative value (e.g. -0.4) rounds to 0 -- don't print "-0" for it; only
+  // keep the sign once there's a nonzero rounded magnitude to attach it to.
+  return (rounded === 0 ? '' : sign) + rounded.toString();
 };
