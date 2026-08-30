@@ -134,15 +134,35 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
   const totalDebts = items.filter(i => i.type === 'debt').reduce((s, i) => s + valueIn(i), 0);
   const netWorth = totalAssets - totalDebts;
 
-  const lastSnapshot = history.length > 0 ? history[history.length - 1] : null;
-  // Older snapshots saved before per-snapshot currency tracking existed have no
-  // displayCurrency -- treat those as already being in the current display currency
-  // (the best available assumption, matching the app's previous behavior) rather than
-  // breaking the delta entirely.
-  const lastSnapshotNetWorth = lastSnapshot
-    ? convertAmount(lastSnapshot.netWorth, lastSnapshot.displayCurrency || country.code, country.code)
-    : null;
-  const delta = lastSnapshotNetWorth !== null ? netWorth - lastSnapshotNetWorth : null;
+  // Converted once and reused by the delta below, the chart, and the list further down
+  // instead of calling convertAmount three times per snapshot. Memoized on
+  // [history, country.code] so editing an unrelated field (an asset's value, say)
+  // doesn't hand the chart a new array reference every render -- SnapshotChart's own
+  // useMemo over this prop would otherwise recompute on every keystroke instead of only
+  // when history actually changes. Older snapshots saved before totalAssets/totalDebts
+  // were tracked have neither -- fall back to netWorth/0 so the Assets/Debts lines just
+  // render flat at a sane value instead of NaN for those points. A hand-edited/corrupt
+  // entry with a non-numeric `netWorth` itself is dropped outright rather than fed to
+  // convertAmount -- one NaN point would otherwise poison SnapshotChart's min/max
+  // scaling and break the whole chart (see Dashboard.jsx's identical guard on its own
+  // net worth trend).
+  const convertedHistory = useMemo(() => history
+    .filter(h => Number.isFinite(h.netWorth))
+    .map(h => {
+      const from = h.displayCurrency || country.code;
+      return {
+        date: h.date,
+        net: convertAmount(h.netWorth, from, country.code),
+        assets: convertAmount(h.totalAssets ?? h.netWorth, from, country.code),
+        debts: convertAmount(h.totalDebts ?? 0, from, country.code)
+      };
+    }), [history, country.code]);
+
+  // Derived from convertedHistory (not raw history) so a non-numeric netWorth in the
+  // latest entry -- already filtered out above -- can't turn this into a NaN delta,
+  // same pattern DebtPayoff.jsx/EmergencyFund.jsx use for their own deltas.
+  const lastSnapshot = convertedHistory.length > 0 ? convertedHistory[convertedHistory.length - 1] : null;
+  const delta = lastSnapshot ? netWorth - lastSnapshot.net : null;
 
   const saveSnapshot = () => {
     const entry = { date: new Date().toISOString(), netWorth, totalAssets, totalDebts, displayCurrency: country.code };
@@ -156,24 +176,6 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
     localStorage.removeItem(HISTORY_KEY);
     setHistory([]);
   };
-
-  // Converted once and reused by both the chart and the list below instead of calling
-  // convertAmount three times per snapshot. Memoized on [history, country.code] so
-  // editing an unrelated field (an asset's value, say) doesn't hand the chart a new
-  // array reference every render -- SnapshotChart's own useMemo over this prop would
-  // otherwise recompute on every keystroke instead of only when history actually changes.
-  // Older snapshots saved before totalAssets/totalDebts were tracked have neither --
-  // fall back to netWorth/0 so the Assets/Debts lines just render flat at a sane value
-  // instead of NaN for those points.
-  const convertedHistory = useMemo(() => history.map(h => {
-    const from = h.displayCurrency || country.code;
-    return {
-      date: h.date,
-      net: convertAmount(h.netWorth, from, country.code),
-      assets: convertAmount(h.totalAssets ?? h.netWorth, from, country.code),
-      debts: convertAmount(h.totalDebts ?? 0, from, country.code)
-    };
-  }), [history, country.code]);
 
   const exportHistoryCSV = () => {
     downloadCSV('wts-compoundiq-networth-history.csv', [

@@ -48,10 +48,17 @@ const EmergencyFund = ({ country }) => {
   // Same pattern as NetWorth.jsx/DebtPayoff.jsx: record which currency a snapshot was
   // saved in and convert through a memo before use, so switching the global country
   // selector after logging a balance doesn't mislabel an old total as the new currency.
-  const convertedHistory = useMemo(() => history.map(h => ({
-    date: h.date,
-    total: convertAmount(h.total, h.displayCurrency || country.code, country.code)
-  })), [history, country.code]);
+  // A hand-edited/corrupt entry with a non-numeric `total` (or an incompatible
+  // imported backup) is dropped outright rather than fed to convertAmount -- one NaN
+  // point would otherwise poison SnapshotChart's min/max scaling and break the whole
+  // chart, not just that one point (see Dashboard.jsx's identical guard on this same
+  // history key).
+  const convertedHistory = useMemo(() => history
+    .filter(h => Number.isFinite(h.total))
+    .map(h => ({
+      date: h.date,
+      total: convertAmount(h.total, h.displayCurrency || country.code, country.code)
+    })), [history, country.code]);
 
   const lastSnapshot = convertedHistory.length > 0 ? convertedHistory[convertedHistory.length - 1] : null;
   const delta = lastSnapshot ? currentSavings - lastSnapshot.total : null;

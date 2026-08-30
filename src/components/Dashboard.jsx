@@ -46,12 +46,18 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
     setEfHistory(readHistory(EMERGENCYFUND_HISTORY_KEY));
   }, []);
 
-  const netWorthEntry = netWorthHistory.length > 0 ? netWorthHistory[netWorthHistory.length - 1] : null;
+  // Same non-numeric guard as debtPoints/efPoints below -- a hand-edited or partially-
+  // written localStorage value (or an incompatible imported backup) could leave a
+  // history entry with a non-numeric `netWorth`, and that single entry would otherwise
+  // poison both the headline card (Math.round(NaN) -> "NaN") and the trend chart's
+  // min/max scaling (every point on the line, not just the bad one).
+  const validNetWorthHistory = useMemo(() => netWorthHistory.filter(h => Number.isFinite(h.netWorth)), [netWorthHistory]);
+  const netWorthEntry = validNetWorthHistory.length > 0 ? validNetWorthHistory[validNetWorthHistory.length - 1] : null;
   const hasAnything = !!plan?.debt || !!plan?.emergencyFund || !!plan?.loan || !!plan?.fire || !!netWorthEntry;
 
   // Same currency-conversion handling as each source tab's own convertedHistory --
   // a snapshot saved under a different currency gets converted, not relabeled.
-  const netWorthPoints = useMemo(() => netWorthHistory.map(h => {
+  const netWorthPoints = useMemo(() => validNetWorthHistory.map(h => {
     const from = h.displayCurrency || netWorthCountry.code;
     return {
       date: h.date,
@@ -59,7 +65,7 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
       assets: convertAmount(h.totalAssets ?? h.netWorth, from, netWorthCountry.code),
       debts: convertAmount(h.totalDebts ?? 0, from, netWorthCountry.code)
     };
-  }), [netWorthHistory, netWorthCountry.code]);
+  }), [validNetWorthHistory, netWorthCountry.code]);
 
   // Filters out any entry with a non-numeric `total` (a hand-edited or partially-
   // written localStorage value, an incompatible imported backup, etc.) rather than
