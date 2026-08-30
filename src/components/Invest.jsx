@@ -4,7 +4,7 @@ import './Invest.css';
 import { calculateCompoundInterest } from '../engine';
 import { usePersistedState } from '../utils/usePersistedState';
 import { confirmRemoval } from '../utils/confirmRemoval';
-import { parseCSV, downloadCSV } from '../utils/csv';
+import { parseCSV, downloadCSV, cleanCSVNumber } from '../utils/csv';
 
 const GOALS_KEY = 'wts_compoundiq_invest_goals';
 
@@ -110,16 +110,12 @@ const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12, con
           setImportError('CSV needs at least "label" and "goalAmount" columns -- download the template below for the expected format.');
           return;
         }
-        const cleanNumber = (raw) => {
-          const n = Number(String(raw || '0').replace(/[^0-9.-]/g, ''));
-          return Number.isFinite(n) ? Math.max(0, n) : 0;
-        };
         const imported = rows.slice(1).map((r, idx) => ({
           id: Date.now() + idx,
           label: (r[labelIdx] || '').trim().slice(0, 80),
-          startingAmount: startingIdx !== -1 ? cleanNumber(r[startingIdx]) : 0,
-          goalAmount: cleanNumber(r[goalIdx]),
-          goalYears: yearsIdx !== -1 ? Math.max(1, cleanNumber(r[yearsIdx]) || 1) : 1,
+          startingAmount: startingIdx !== -1 ? cleanCSVNumber(r[startingIdx]) : 0,
+          goalAmount: cleanCSVNumber(r[goalIdx]),
+          goalYears: yearsIdx !== -1 ? Math.max(1, cleanCSVNumber(r[yearsIdx]) || 1) : 1,
           touched: true
         })).filter(g => g.label && g.goalAmount > 0);
 

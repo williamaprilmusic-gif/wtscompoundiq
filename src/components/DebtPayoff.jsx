@@ -1,12 +1,13 @@
 // src/components/DebtPayoff.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './DebtPayoff.css';
 import Term from './Term';
 import { simulatePayoff, avalancheOrder, snowballOrder } from '../debtPayoffEngine';
 import { savePlanSection } from '../utils/planStorage';
 import { usePersistedState } from '../utils/usePersistedState';
 import { confirmRemoval } from '../utils/confirmRemoval';
-import { parseCSV, downloadCSV } from '../utils/csv';
+import { parseCSV, downloadCSV, cleanCSVNumber } from '../utils/csv';
+import { convertAmount } from '../data/countries';
 import SnapshotChart from './SnapshotChart';
 
 const DEBTS_KEY = 'wts_compoundiq_debtpayoff_debts';
@@ -76,16 +77,12 @@ const DebtPayoff = ({ country }) => {
           setImportError('CSV needs at least "name" and "balance" columns -- download the template below for the expected format.');
           return;
         }
-        const cleanNumber = (raw) => {
-          const n = Number(String(raw || '0').replace(/[^0-9.-]/g, ''));
-          return Number.isFinite(n) ? Math.max(0, n) : 0;
-        };
         const imported = rows.slice(1).map((r, idx) => ({
           id: Date.now() + idx,
           name: (r[nameIdx] || '').trim().slice(0, 80),
-          balance: cleanNumber(r[balanceIdx]),
-          rate: rateIdx !== -1 ? cleanNumber(r[rateIdx]) : 0,
-          minPayment: minPaymentIdx !== -1 ? cleanNumber(r[minPaymentIdx]) : 0
+          balance: cleanCSVNumber(r[balanceIdx]),
+          rate: rateIdx !== -1 ? cleanCSVNumber(r[rateIdx]) : 0,
+          minPayment: minPaymentIdx !== -1 ? cleanCSVNumber(r[minPaymentIdx]) : 0
         })).filter(d => d.name && d.balance > 0);
 
         if (imported.length === 0) {
@@ -114,9 +111,16 @@ const DebtPayoff = ({ country }) => {
   const updateLumpSum = (id, field, value) => setLumpSums(prev => prev.map(l => l.id === id ? { ...l, [field]: Number(value) } : l));
   const removeLumpSum = (id) => setLumpSums(prev => prev.filter(l => l.id !== id));
 
+  // Guard against a transient/blank "month" value while the user is mid-edit (clearing
+  // the field to retype it sends Number('') = 0 through here, same failure mode Invest.jsx's
+  // goalYears guard documents). simulatePayoff's month counter starts at 1, so an
+  // unclamped 0 would never match and the lump sum would silently never apply. Clamp
+  // only for the calculation, not the stored/displayed value.
+  const safeLumpSums = lumpSums.map(l => ({ ...l, month: l.month > 0 ? l.month : 1 }));
+
   const validDebts = debts.filter(d => d.balance > 0);
-  const avalanche = simulatePayoff(validDebts, extraMonthly, avalancheOrder, lumpSums);
-  const snowball = simulatePayoff(validDebts, extraMonthly, snowballOrder, lumpSums);
+  const avalanche = simulatePayoff(validDebts, extraMonthly, avalancheOrder, safeLumpSums);
+  const snowball = simulatePayoff(validDebts, extraMonthly, snowballOrder, safeLumpSums);
   const interestSaved = snowball.totalInterest - avalanche.totalInterest;
   const totalBalance = validDebts.reduce((sum, d) => sum + d.balance, 0);
 
@@ -133,11 +137,23 @@ const DebtPayoff = ({ country }) => {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const lastSnapshot = history.length > 0 ? history[history.length - 1] : null;
+  // Snapshots record which currency they were saved in (the country selector is
+  // global and can change between snapshots) and get converted to the currently
+  // selected currency before use here -- same fix NetWorth.jsx applies to its own
+  // history, so switching currency doesn't silently mislabel old totals as if they
+  // were already in the new currency. Older snapshots saved before this had no
+  // displayCurrency -- treat those as already being in the current display currency,
+  // matching this app's previous (single-currency) behavior.
+  const convertedHistory = useMemo(() => history.map(h => ({
+    date: h.date,
+    total: convertAmount(h.total, h.displayCurrency || country.code, country.code)
+  })), [history, country.code]);
+
+  const lastSnapshot = convertedHistory.length > 0 ? convertedHistory[convertedHistory.length - 1] : null;
   const delta = lastSnapshot ? totalBalance - lastSnapshot.total : null;
 
   const saveSnapshot = () => {
-    const entry = { date: new Date().toISOString(), total: totalBalance };
+    const entry = { date: new Date().toISOString(), total: totalBalance, displayCurrency: country.code };
     const updated = [...history, entry].slice(-24); // keep the most recent 24 snapshots
     localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
     setHistory(updated);
@@ -274,11 +290,11 @@ const DebtPayoff = ({ country }) => {
               {delta <= 0 ? '▼' : '▲'} {country.symbol} {Math.abs(Math.round(delta)).toLocaleString()} since last snapshot
             </div>
           )}
-          {history.length > 1 && (
-            <SnapshotChart points={history} series={HISTORY_SERIES} symbol={country.symbol} />
+          {convertedHistory.length > 1 && (
+            <SnapshotChart points={convertedHistory} series={HISTORY_SERIES} symbol={country.symbol} />
           )}
           <div className="debt-history-list">
-            {[...history].reverse().map((h, idx) => (
+            {[...convertedHistory].reverse().map((h, idx) => (
               <div key={idx} className="debt-history-row">
                 <span>{new Date(h.date).toLocaleDateString()}</span>
                 <strong>{country.symbol} {Math.round(h.total).toLocaleString()}</strong>

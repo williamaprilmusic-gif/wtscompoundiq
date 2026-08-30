@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import './NetWorth.css';
 import Term from './Term';
 import { countriesData, convertAmount } from '../data/countries';
-import { parseCSV, downloadCSV } from '../utils/csv';
+import { parseCSV, downloadCSV, cleanCSVNumber } from '../utils/csv';
 import { usePersistedState } from '../utils/usePersistedState';
 import { confirmRemoval } from '../utils/confirmRemoval';
 import SnapshotChart from './SnapshotChart';
@@ -83,13 +83,12 @@ const NetWorth = ({ country }) => {
           const rawCurrency = (currencyIdx !== -1 ? r[currencyIdx] || '' : '').trim().toLowerCase();
           // Accept either a country code ("za") or a currency code ("ZAR") -- whichever matches.
           const matchedCountry = countriesData.find(c => c.code === rawCurrency || c.currency.toLowerCase() === rawCurrency);
-          const cleanValue = Number(String(r[valueIdx] || '0').replace(/[^0-9.-]/g, ''));
           return {
             id: Date.now() + idx,
             name: (r[nameIdx] || '').trim().slice(0, 80),
             type: (typeIdx !== -1 && (r[typeIdx] || '').trim().toLowerCase() === 'debt') ? 'debt' : 'asset',
             currency: matchedCountry ? matchedCountry.code : country.code,
-            value: Number.isFinite(cleanValue) ? Math.max(0, cleanValue) : 0
+            value: cleanCSVNumber(r[valueIdx])
           };
         }).filter(item => item.name && item.value > 0);
 

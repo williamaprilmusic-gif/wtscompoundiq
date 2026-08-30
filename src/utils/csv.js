@@ -35,6 +35,15 @@ export const parseCSV = (text) => {
   return rows;
 };
 
+// Strips anything but digits/dot/minus from an imported CSV cell and clamps to a
+// non-negative finite number -- shared by every tab's CSV import (Net Worth, Debt
+// Payoff, Invest) so a stray currency symbol, thousands separator, or blank cell
+// parses the same way everywhere instead of each import re-implementing this.
+export const cleanCSVNumber = (raw) => {
+  const n = Number(String(raw || '0').replace(/[^0-9.-]/g, ''));
+  return Number.isFinite(n) ? Math.max(0, n) : 0;
+};
+
 // Quotes a field only when it needs it (contains a comma, quote, or newline).
 const escapeField = (value) => {
   const str = String(value ?? '');
