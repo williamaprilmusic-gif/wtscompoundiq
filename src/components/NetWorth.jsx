@@ -154,19 +154,8 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
   // useMemo over this prop would otherwise recompute on every keystroke instead of only
   // when history actually changes. Older snapshots saved before totalAssets/totalDebts
   // were tracked have neither -- fall back to netWorth/0 so the Assets/Debts lines just
-  // render flat at a sane value instead of NaN for those points. A hand-edited/corrupt
-  // entry with a non-numeric `netWorth` itself is dropped outright rather than fed to
-  // convertAmount -- one NaN point would otherwise poison SnapshotChart's min/max
-  // scaling and break the whole chart (see Dashboard.jsx's identical guard on its own
-  // net worth trend).
-  // Checking netWorth alone isn't enough to guarantee a NaN-free chart: totalAssets/
-  // totalDebts can be independently corrupt (hand-edited, partial write, incompatible
-  // import) while netWorth itself stays a valid number, and `??` below only catches
-  // null/undefined, not NaN -- so a bad totalAssets/totalDebts would still slip through
-  // and poison the chart's min/max scaling the same way a bad netWorth would. Exported
-  // (like HISTORY_KEY above) so Dashboard.jsx's own net worth trend/headline card --
-  // which reads this same history key -- can apply the identical guard instead of
-  // duplicating it.
+  // render flat at a sane value instead of NaN for those points. Non-numeric entries are
+  // dropped by isValidNetWorthEntry above before any of this runs -- see there for why.
   const convertedHistory = useMemo(() => history
     .filter(isValidNetWorthEntry)
     .map(h => {

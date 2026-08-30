@@ -13,6 +13,14 @@ export const HISTORY_KEY = 'wts_compoundiq_emergencyfund_history';
 const DEFAULT_INPUTS = { monthlyExpenses: 0, monthsCoverage: 3, currentSavings: 0, monthlyContribution: 0 };
 const HISTORY_SERIES = [{ key: 'total', label: 'Emergency Fund Balance' }];
 
+// A history entry is only safe to feed to convertAmount/SnapshotChart when `total` is a
+// real number -- a hand-edited or partially-written localStorage value (or an
+// incompatible imported backup) could leave it non-numeric, and that single entry would
+// otherwise poison SnapshotChart's min/max scaling. Exported (same pattern as
+// NetWorth.jsx's isValidNetWorthEntry) so Dashboard.jsx's own trend can apply the
+// identical guard instead of duplicating it.
+export const isValidEfHistoryEntry = (h) => Number.isFinite(h.total);
+
 const EmergencyFund = ({ country }) => {
   const [inputs, setInputs] = usePersistedState(INPUTS_KEY, DEFAULT_INPUTS);
   const { monthlyExpenses, monthsCoverage, currentSavings, monthlyContribution } = inputs;
@@ -49,12 +57,11 @@ const EmergencyFund = ({ country }) => {
   // saved in and convert through a memo before use, so switching the global country
   // selector after logging a balance doesn't mislabel an old total as the new currency.
   // A hand-edited/corrupt entry with a non-numeric `total` (or an incompatible
-  // imported backup) is dropped outright rather than fed to convertAmount -- one NaN
-  // point would otherwise poison SnapshotChart's min/max scaling and break the whole
-  // chart, not just that one point (see Dashboard.jsx's identical guard on this same
-  // history key).
+  // imported backup) is dropped outright rather than fed to convertAmount (see
+  // isValidEfHistoryEntry above for why -- also used by Dashboard.jsx's own trend on
+  // this same history key).
   const convertedHistory = useMemo(() => history
-    .filter(h => Number.isFinite(h.total))
+    .filter(isValidEfHistoryEntry)
     .map(h => ({
       date: h.date,
       total: convertAmount(h.total, h.displayCurrency || country.code, country.code)

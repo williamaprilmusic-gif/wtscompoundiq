@@ -10,8 +10,8 @@ import { daysBetween, fmtDaysAgo } from '../utils/dateAgo';
 import { readPlan, loanEffectiveMonthlyPayment, loanEffectiveTermLabel } from '../utils/planStorage';
 import SnapshotChart from './SnapshotChart';
 import { HISTORY_KEY as NETWORTH_HISTORY_KEY, isValidNetWorthEntry } from './NetWorth';
-import { HISTORY_KEY as DEBTPAYOFF_HISTORY_KEY } from './DebtPayoff';
-import { HISTORY_KEY as EMERGENCYFUND_HISTORY_KEY } from './EmergencyFund';
+import { HISTORY_KEY as DEBTPAYOFF_HISTORY_KEY, isValidDebtHistoryEntry } from './DebtPayoff';
+import { HISTORY_KEY as EMERGENCYFUND_HISTORY_KEY, isValidEfHistoryEntry } from './EmergencyFund';
 
 const NETWORTH_SERIES = [{ key: 'assets', label: 'Assets' }, { key: 'debts', label: 'Debts' }, { key: 'net', label: 'Net Worth' }];
 const DEBT_SERIES = [{ key: 'total', label: 'Total Debt Balance' }];
@@ -68,17 +68,17 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
     };
   }), [validNetWorthHistory, netWorthCountry.code]);
 
-  // Filters out any entry with a non-numeric `total` (a hand-edited or partially-
-  // written localStorage value, an incompatible imported backup, etc.) rather than
-  // feeding it to convertAmount -- one NaN point would otherwise poison SnapshotChart's
-  // min/max scaling and break the whole chart, not just that one point.
+  // Same non-numeric-`total` guard DebtPayoff.jsx/EmergencyFund.jsx apply to these same
+  // history keys (imported above as isValidDebtHistoryEntry/isValidEfHistoryEntry) --
+  // one bad point would otherwise poison SnapshotChart's min/max scaling and break the
+  // whole chart, not just that one point.
   const debtPoints = useMemo(() => debtHistory
-    .filter(h => Number.isFinite(h.total))
+    .filter(isValidDebtHistoryEntry)
     .map(h => ({ date: h.date, total: convertAmount(h.total, h.displayCurrency || country.code, country.code) })),
   [debtHistory, country.code]);
 
   const efPoints = useMemo(() => efHistory
-    .filter(h => Number.isFinite(h.total))
+    .filter(isValidEfHistoryEntry)
     .map(h => ({ date: h.date, total: convertAmount(h.total, h.displayCurrency || country.code, country.code) })),
   [efHistory, country.code]);
 
