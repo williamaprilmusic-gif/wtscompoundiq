@@ -19,17 +19,28 @@ const PAD_BOTTOM = 26;
 // Fixed hue order, assigned by what the series *means* (never cycled/generated) --
 // see the dataviz skill. "assets"/"net" read as growth/headline, "debts"/"total"
 // (a lone debt-balance series, e.g. Debt Payoff's history) read as the same
-// semantic red used for debt everywhere else in the app.
+// semantic red used for debt everywhere else in the app. "standard"/"plan" are Loan
+// Calculator's two-line balance-over-time comparison -- gray for the do-nothing
+// baseline, the same green used for a faster/better outcome everywhere else.
 const SERIES_COLOR_VAR = {
   assets: '--accent-green',
   net: '--accent',
   debts: '--accent-red',
-  total: '--accent-red'
+  total: '--accent-red',
+  standard: '--mut',
+  plan: '--accent-green'
 };
 
-// points: [{ date, [seriesKey]: number, ... }]
+const defaultFormatXAxis = (x) => new Date(x).toLocaleDateString(undefined, { month: 'short', year: '2-digit' });
+const defaultFormatXTooltip = (x) => new Date(x).toLocaleDateString();
+
+// points: [{ [xKey]: date|year, [seriesKey]: number, ... }]
 // series: [{ key, label }] -- key must match a field on each point and a color above
-const SnapshotChart = ({ points, series, symbol = '' }) => {
+// xKey: which field on each point is the x-axis value (default 'date', an ISO string).
+// formatXAxis/formatXTooltip: how to render that value on the axis vs. in the hover
+// tooltip -- default to date formatting; Loan Calculator's balance-over-time chart
+// passes xKey="year" with plain-number formatters instead.
+const SnapshotChart = ({ points, series, symbol = '', xKey = 'date', formatXAxis = defaultFormatXAxis, formatXTooltip = defaultFormatXTooltip }) => {
   const svgRef = useRef(null);
   const [hoverIdx, setHoverIdx] = useState(null);
 
@@ -121,8 +132,8 @@ const SnapshotChart = ({ points, series, symbol = '' }) => {
             {minVal < 0 && <line x1={PAD_LEFT} x2={WIDTH - PAD_RIGHT} y1={zeroY} y2={zeroY} className="snap-chart-zeroline" />}
 
             {xLabels.map((p) => (
-              <text key={p.date} x={xScale(p.i)} y={HEIGHT - PAD_BOTTOM + 16} className="snap-chart-axis-label" textAnchor="middle">
-                {new Date(p.date).toLocaleDateString(undefined, { month: 'short', year: '2-digit' })}
+              <text key={p[xKey]} x={xScale(p.i)} y={HEIGHT - PAD_BOTTOM + 16} className="snap-chart-axis-label" textAnchor="middle">
+                {formatXAxis(p[xKey])}
               </text>
             ))}
 
@@ -132,7 +143,7 @@ const SnapshotChart = ({ points, series, symbol = '' }) => {
 
             {series.map(s => safePoints.map((p, i) => (
               <circle
-                key={`${s.key}-${p.date}`}
+                key={`${s.key}-${p[xKey]}`}
                 cx={xScale(i)}
                 cy={yScale(p[s.key])}
                 r={i === safePoints.length - 1 ? 4 : 2.5}
@@ -166,7 +177,7 @@ const SnapshotChart = ({ points, series, symbol = '' }) => {
                 transform: tooltipFlip ? 'translateX(-100%)' : 'none'
               }}
             >
-              <div className="snap-chart-tooltip-date">{new Date(hover.date).toLocaleDateString()}</div>
+              <div className="snap-chart-tooltip-date">{formatXTooltip(hover[xKey])}</div>
               {series.map(s => (
                 <div key={s.key} className="snap-chart-tooltip-row">
                   <span className="snap-chart-key" style={{ background: `var(${SERIES_COLOR_VAR[s.key]})` }} />

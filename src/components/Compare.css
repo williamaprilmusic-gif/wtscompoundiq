@@ -18,18 +18,11 @@
   margin-bottom: 25px;
 }
 
-.compare-pickers select {
+.compare-pickers .country-select {
   flex: 1;
   min-width: 0; /* flex items don't shrink past their content's intrinsic width by
-    default -- a <select> with a long option ("South Africa") otherwise overflows a
-    narrow flex row instead of actually shrinking to fit it */
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 10px 12px;
-  border-radius: 8px;
-  font-size: 1rem;
-  outline: none;
+    default -- a country name ("South Africa") otherwise overflows a narrow flex row
+    instead of actually shrinking to fit it */
 }
 
 .compare-vs {

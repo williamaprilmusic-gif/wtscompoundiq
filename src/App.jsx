@@ -28,10 +28,12 @@ import OnboardingTour, { TOUR_SEEN_KEY } from './components/OnboardingTour';
 import { useLanguage } from './i18n/LanguageContext';
 import Term from './components/Term';
 import GrowthChart from './components/GrowthChart';
+import CountrySelect from './components/CountrySelect';
 import { buildShareUrl, parseShareParams, clearShareParamsFromUrl } from './utils/shareLink';
 import { downloadCSV } from './utils/csv';
 
 const THEME_KEY = 'wts_compoundiq_theme';
+const REPORTING_CURRENCY_KEY = 'wts_compoundiq_reporting_currency';
 // Generous enough for any realistic plan (a 20-year-old projecting to age 100+), but
 // bounded -- an unbounded "years" value feeds every per-year loop in the app (the
 // yearly table, the growth chart, and especially Monte Carlo's 1,000-path simulation),
@@ -61,6 +63,7 @@ export default function App() {
   }, [theme]);
 
   const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
+
   const [showPricing, setShowPricing] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [showLegal, setShowLegal] = useState(false);
@@ -81,6 +84,26 @@ export default function App() {
   // valid share params (see utils/shareLink.js), those seed these fields instead so a
   // link someone sends actually opens showing their plan.
   const [country, setCountry] = useState(() => shareParams?.countryCode ? getCountryByCode(shareParams.countryCode) : WTS_COUNTRIES[0]);
+
+  // Net Worth, Debt Payoff, and Emergency Fund each convert their saved history
+  // through the currently selected country's currency (see their own convertedHistory
+  // memos) -- but "currently selected country" used to mean the Calculator tab's
+  // scenario country specifically, so switching countries there to explore a different
+  // scenario would also silently change what currency your net worth/debt/emergency
+  // fund figures display in. This is a separate, independent "what currency do I want
+  // to SEE my saved figures in" choice -- '' means "follow the Calculator's country"
+  // (the original, still-default behavior), any other code pins it regardless of what
+  // the Calculator tab is set to. Loan Calculator/My Plan/Snapshot intentionally still
+  // use `country` directly, not this -- they show raw figures the user typed in a
+  // specific currency with no conversion pipeline behind them, so relabeling their
+  // symbol without converting the number would misrepresent the amount.
+  const [reportingCurrencyCode, setReportingCurrencyCode] = useState(() => {
+    try { return localStorage.getItem(REPORTING_CURRENCY_KEY) || ''; } catch { return ''; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(REPORTING_CURRENCY_KEY, reportingCurrencyCode); } catch { /* ignore (private mode, storage full, etc.) */ }
+  }, [reportingCurrencyCode]);
+  const reportingCountry = reportingCurrencyCode ? (getCountryByCode(reportingCurrencyCode) || country) : country;
   const [initial, setInitial] = useState(() => shareParams?.initial ?? 0);
   const [monthly, setMonthly] = useState(() => shareParams?.monthly ?? 0);
   const [rate, setRate] = useState(() => shareParams?.rate ?? 0);
@@ -342,9 +365,7 @@ export default function App() {
               <div className="form-grid">
                 <div className="form-group">
                   <label>{t('calculator.country')}</label>
-                  <select value={country.code} onChange={(e) => handleCountryChange(e.target.value)}>
-                    {WTS_COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
-                  </select>
+                  <CountrySelect countries={WTS_COUNTRIES} value={country.code} onChange={handleCountryChange} ariaLabel={t('calculator.country')} />
                 </div>
                 <div className="form-group">
                   <label>{t('calculator.initialAmount')} ({country.symbol})</label>
@@ -578,7 +599,7 @@ export default function App() {
 
         {activeTab === 'Dashboard' && canAccess('Pro') && (
           <div className="tab-pane active">
-            <Dashboard country={country} onNavigate={setActiveTab} />
+            <Dashboard country={country} reportingCountry={reportingCountry} onNavigate={setActiveTab} />
           </div>
         )}
 
@@ -608,7 +629,12 @@ export default function App() {
 
         {activeTab === 'Net Worth' && canAccess('Pro') && (
           <div className="tab-pane active">
-            <NetWorth country={country} />
+            <NetWorth
+              country={reportingCountry}
+              scenarioCountry={country}
+              reportingCurrencyCode={reportingCurrencyCode}
+              onReportingCurrencyChange={setReportingCurrencyCode}
+            />
           </div>
         )}
 

@@ -3,30 +3,75 @@
 // visit five separate tabs to piece it together. Purely a read-only view over what's
 // already saved in localStorage by Net Worth, Debt Payoff, Emergency Fund, Loan &
 // Bond, and Power Tools -- it doesn't compute anything new.
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './Dashboard.css';
 import { convertAmount } from '../data/countries';
 import { daysBetween, fmtDaysAgo } from '../utils/dateAgo';
 import { readPlan, loanEffectiveMonthlyPayment, loanEffectiveTermLabel } from '../utils/planStorage';
+import SnapshotChart from './SnapshotChart';
 
 const NETWORTH_HISTORY_KEY = 'wts_compoundiq_networth_history';
+const DEBTPAYOFF_HISTORY_KEY = 'wts_compoundiq_debtpayoff_history';
+const EMERGENCYFUND_HISTORY_KEY = 'wts_compoundiq_emergencyfund_history';
+const NETWORTH_SERIES = [{ key: 'assets', label: 'Assets' }, { key: 'debts', label: 'Debts' }, { key: 'net', label: 'Net Worth' }];
+const DEBT_SERIES = [{ key: 'total', label: 'Total Debt Balance' }];
+const EF_SERIES = [{ key: 'total', label: 'Emergency Fund Balance' }];
 
-const Dashboard = ({ country, onNavigate }) => {
+const readHistory = (key) => {
+  try {
+    const raw = localStorage.getItem(key);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch { return []; } // corrupt/foreign JSON in that key -- treat as no history rather than crash
+};
+
+// reportingCountry: the currency Net Worth's own tab currently displays in (see
+// App.jsx) -- independent of `country` (the Calculator scenario's country), since Net
+// Worth's saved figures already carry proper per-snapshot currency conversion and can
+// safely be shown in a different currency than whatever the Calculator is set to.
+// Debt/Emergency Fund/Loan/FIRE below intentionally still use `country` -- their saved
+// figures are raw numbers with no conversion pipeline behind them, so relabeling their
+// symbol without converting the number would misrepresent the amount.
+const Dashboard = ({ country, reportingCountry, onNavigate }) => {
+  const netWorthCountry = reportingCountry || country;
   const [plan, setPlan] = useState(null);
-  const [netWorthEntry, setNetWorthEntry] = useState(null);
+  const [netWorthHistory, setNetWorthHistory] = useState([]);
+  const [debtHistory, setDebtHistory] = useState([]);
+  const [efHistory, setEfHistory] = useState([]);
 
   useEffect(() => {
     setPlan(readPlan());
-    try {
-      const rawHistory = localStorage.getItem(NETWORTH_HISTORY_KEY);
-      if (rawHistory) {
-        const history = JSON.parse(rawHistory);
-        if (Array.isArray(history) && history.length > 0) setNetWorthEntry(history[history.length - 1]);
-      }
-    } catch { /* ignore corrupt history */ }
+    setNetWorthHistory(readHistory(NETWORTH_HISTORY_KEY));
+    setDebtHistory(readHistory(DEBTPAYOFF_HISTORY_KEY));
+    setEfHistory(readHistory(EMERGENCYFUND_HISTORY_KEY));
   }, []);
 
+  const netWorthEntry = netWorthHistory.length > 0 ? netWorthHistory[netWorthHistory.length - 1] : null;
   const hasAnything = !!plan?.debt || !!plan?.emergencyFund || !!plan?.loan || !!plan?.fire || !!netWorthEntry;
+
+  // Same currency-conversion handling as each source tab's own convertedHistory --
+  // a snapshot saved under a different currency gets converted, not relabeled.
+  const netWorthPoints = useMemo(() => netWorthHistory.map(h => {
+    const from = h.displayCurrency || netWorthCountry.code;
+    return {
+      date: h.date,
+      net: convertAmount(h.netWorth, from, netWorthCountry.code),
+      assets: convertAmount(h.totalAssets ?? h.netWorth, from, netWorthCountry.code),
+      debts: convertAmount(h.totalDebts ?? 0, from, netWorthCountry.code)
+    };
+  }), [netWorthHistory, netWorthCountry.code]);
+
+  const debtPoints = useMemo(() => debtHistory.map(h => ({
+    date: h.date,
+    total: convertAmount(h.total, h.displayCurrency || country.code, country.code)
+  })), [debtHistory, country.code]);
+
+  const efPoints = useMemo(() => efHistory.map(h => ({
+    date: h.date,
+    total: convertAmount(h.total, h.displayCurrency || country.code, country.code)
+  })), [efHistory, country.code]);
+
+  const hasTrends = netWorthPoints.length > 1 || debtPoints.length > 1 || efPoints.length > 1;
 
   return (
     <div className="card dashboard">
@@ -48,15 +93,16 @@ const Dashboard = ({ country, onNavigate }) => {
               <h3>💰 Net Worth</h3>
               <span className="dashboard-card-meta">as of {fmtDaysAgo(daysBetween(netWorthEntry.date))}</span>
             </div>
-            {/* netWorthEntry was saved while a possibly-different country was active --
-                convert from its saved displayCurrency into the currently selected one,
+            {/* netWorthEntry was saved while a possibly-different currency was active --
+                convert from its saved displayCurrency into netWorthCountry (Net Worth's
+                own tab's reporting currency, independent of the Calculator's country),
                 same as NetWorth.jsx does for the identical stored history entries, so
-                switching country here doesn't relabel an unconverted figure. */}
+                switching either doesn't relabel an unconverted figure. */}
             <strong className={`dashboard-card-value ${netWorthEntry.netWorth >= 0 ? 'positive' : 'negative'}`}>
-              {country.symbol} {Math.round(convertAmount(netWorthEntry.netWorth, netWorthEntry.displayCurrency || country.code, country.code)).toLocaleString()}
+              {netWorthCountry.symbol} {Math.round(convertAmount(netWorthEntry.netWorth, netWorthEntry.displayCurrency || netWorthCountry.code, netWorthCountry.code)).toLocaleString()}
             </strong>
             <span className="dashboard-card-sub">
-              {country.symbol} {Math.round(convertAmount(netWorthEntry.totalAssets, netWorthEntry.displayCurrency || country.code, country.code)).toLocaleString()} assets − {country.symbol} {Math.round(convertAmount(netWorthEntry.totalDebts, netWorthEntry.displayCurrency || country.code, country.code)).toLocaleString()} debts
+              {netWorthCountry.symbol} {Math.round(convertAmount(netWorthEntry.totalAssets, netWorthEntry.displayCurrency || netWorthCountry.code, netWorthCountry.code)).toLocaleString()} assets − {netWorthCountry.symbol} {Math.round(convertAmount(netWorthEntry.totalDebts, netWorthEntry.displayCurrency || netWorthCountry.code, netWorthCountry.code)).toLocaleString()} debts
             </span>
             <button className="dashboard-card-link" onClick={() => onNavigate('Net Worth')}>Open Net Worth →</button>
           </div>
@@ -150,6 +196,30 @@ const Dashboard = ({ country, onNavigate }) => {
           </div>
         )}
       </div>
+
+      {hasTrends && (
+        <div className="dashboard-trends">
+          <h3>Trends</h3>
+          {netWorthPoints.length > 1 && (
+            <div className="dashboard-trend-card">
+              <span className="dashboard-trend-label">💰 Net Worth</span>
+              <SnapshotChart points={netWorthPoints} series={NETWORTH_SERIES} symbol={netWorthCountry.symbol} />
+            </div>
+          )}
+          {debtPoints.length > 1 && (
+            <div className="dashboard-trend-card">
+              <span className="dashboard-trend-label">💳 Debt Payoff</span>
+              <SnapshotChart points={debtPoints} series={DEBT_SERIES} symbol={country.symbol} />
+            </div>
+          )}
+          {efPoints.length > 1 && (
+            <div className="dashboard-trend-card">
+              <span className="dashboard-trend-label">🛟 Emergency Fund</span>
+              <SnapshotChart points={efPoints} series={EF_SERIES} symbol={country.symbol} />
+            </div>
+          )}
+        </div>
+      )}
 
       {hasAnything && (
         <button className="dashboard-myplan-link" onClick={() => onNavigate('My Plan')}>

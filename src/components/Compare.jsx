@@ -5,6 +5,7 @@ import { countriesData, convertAmount } from '../data/countries';
 import { calculateCompoundInterest } from '../engine';
 import { downloadCSV } from '../utils/csv';
 import Term from './Term';
+import CountrySelect from './CountrySelect';
 
 const Compare = ({ country, initial, monthly, rate, years, inflation, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [] }) => {
   const otherDefault = countriesData.find(c => c.code !== country.code) || countriesData[0];
@@ -45,13 +46,9 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, compoundFr
       </div>
 
       <div className="compare-pickers">
-        <select value={codeA} onChange={(e) => setCodeA(e.target.value)}>
-          {countriesData.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
-        </select>
+        <CountrySelect countries={countriesData} value={codeA} onChange={setCodeA} ariaLabel="First country to compare" />
         <span className="compare-vs">vs</span>
-        <select value={codeB} onChange={(e) => setCodeB(e.target.value)}>
-          {countriesData.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
-        </select>
+        <CountrySelect countries={countriesData} value={codeB} onChange={setCodeB} ariaLabel="Second country to compare" />
       </div>
 
       <div className="compare-grid">

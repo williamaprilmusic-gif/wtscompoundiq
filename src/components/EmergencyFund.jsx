@@ -5,6 +5,7 @@ import Term from './Term';
 import { savePlanSection } from '../utils/planStorage';
 import { usePersistedState } from '../utils/usePersistedState';
 import { convertAmount } from '../data/countries';
+import { downloadCSV } from '../utils/csv';
 import SnapshotChart from './SnapshotChart';
 
 const INPUTS_KEY = 'wts_compoundiq_emergencyfund_inputs';
@@ -66,6 +67,13 @@ const EmergencyFund = ({ country }) => {
     if (!window.confirm(`Clear all ${history.length} saved emergency fund snapshot${history.length === 1 ? '' : 's'}? This can't be undone.`)) return;
     localStorage.removeItem(HISTORY_KEY);
     setHistory([]);
+  };
+
+  const exportHistoryCSV = () => {
+    downloadCSV('wts-compoundiq-emergencyfund-history.csv', [
+      ['Date', `Balance (${country.currency})`],
+      ...convertedHistory.map(h => [new Date(h.date).toLocaleDateString(), Math.round(h.total)])
+    ]);
   };
 
   return (
@@ -136,7 +144,10 @@ const EmergencyFund = ({ country }) => {
         <div className="ef-history">
           <div className="ef-history-header">
             <h3>Balance History ({history.length} snapshot{history.length === 1 ? '' : 's'})</h3>
-            <button className="ef-clear-history-btn" onClick={clearHistory}>Clear history</button>
+            <div className="ef-history-header-actions">
+              <button className="ef-export-history-btn" onClick={exportHistoryCSV}>⬇️ Export CSV</button>
+              <button className="ef-clear-history-btn" onClick={clearHistory}>Clear history</button>
+            </div>
           </div>
           {delta !== null && (
             <div className={`ef-history-delta ${delta >= 0 ? 'up' : 'down'}`}>

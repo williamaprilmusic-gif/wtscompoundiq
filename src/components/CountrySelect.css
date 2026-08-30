@@ -1,0 +1,76 @@
+/* src/components/CountrySelect.css */
+.country-select {
+  position: relative;
+  width: 100%;
+}
+
+.country-select-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.country-select-input:focus {
+  border-color: var(--accent);
+}
+
+.country-select-list {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px;
+  margin: 0;
+  list-style: none;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+}
+
+.country-select-empty {
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  color: var(--mut);
+}
+
+.country-select-option {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.country-select-option.highlighted {
+  background: var(--raise-1);
+}
+
+.country-select-option.selected {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.country-select-currency {
+  font-size: 0.75rem;
+  color: var(--mut2);
+  flex-shrink: 0;
+}

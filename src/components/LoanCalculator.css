@@ -278,6 +278,16 @@
   margin: 0;
 }
 
+.loan-chart-section {
+  margin-bottom: 24px;
+}
+
+.loan-chart-section h3 {
+  font-size: 1rem;
+  color: var(--text);
+  margin: 0 0 10px;
+}
+
 .loan-table-actions {
   display: flex;
   justify-content: space-between;

@@ -7,6 +7,7 @@ import { parseCSV, downloadCSV, cleanCSVNumber } from '../utils/csv';
 import { usePersistedState } from '../utils/usePersistedState';
 import { confirmRemoval } from '../utils/confirmRemoval';
 import SnapshotChart from './SnapshotChart';
+import CountrySelect from './CountrySelect';
 
 const HISTORY_SERIES = [
   { key: 'assets', label: 'Assets' },
@@ -17,6 +18,14 @@ const HISTORY_SERIES = [
 const HISTORY_KEY = 'wts_compoundiq_networth_history';
 const ITEMS_KEY = 'wts_compoundiq_networth_items';
 
+// '' is the sentinel code for "follow whatever the Calculator tab's country is" --
+// no real country uses an empty code, so it can't collide. Recomputed per-render
+// (cheap -- 37 entries) since the "follow" option's label depends on scenarioCountry.
+const REPORTING_CURRENCY_OPTIONS = (scenarioCountry) => [
+  { code: '', name: `Follow Calculator tab (${scenarioCountry?.name ?? '...'})`, currency: scenarioCountry?.currency ?? '' },
+  ...countriesData
+];
+
 const downloadTemplate = () => {
   downloadCSV('wts-compoundiq-networth-template.csv', [
     ['name', 'type', 'currency', 'value'],
@@ -26,7 +35,10 @@ const downloadTemplate = () => {
   ]);
 };
 
-const NetWorth = ({ country }) => {
+// scenarioCountry: the Calculator tab's own country -- distinct from `country` (which
+// App.jsx resolves to reportingCurrencyCode when set), used only to label the "follow
+// the Calculator tab" option below so it's clear what that option actually means.
+const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onReportingCurrencyChange }) => {
   const [items, setItems] = usePersistedState(ITEMS_KEY, []);
   const [history, setHistory] = useState([]);
   const [importError, setImportError] = useState(null);
@@ -161,11 +173,29 @@ const NetWorth = ({ country }) => {
     };
   }), [history, country.code]);
 
+  const exportHistoryCSV = () => {
+    downloadCSV('wts-compoundiq-networth-history.csv', [
+      ['Date', `Assets (${country.currency})`, `Debts (${country.currency})`, `Net Worth (${country.currency})`],
+      ...convertedHistory.map(h => [new Date(h.date).toLocaleDateString(), Math.round(h.assets), Math.round(h.debts), Math.round(h.net)])
+    ]);
+  };
+
   return (
     <div className="card net-worth">
       <div className="nw-header">
         <h2>💰 <Term k="netWorth">Net Worth</Term> Tracker</h2>
         <p>List everything you own (assets) and owe (debts) to see the full picture -- then save snapshots to track it over time. Each item can be in its own currency; totals convert to {country.name}'s {country.currency}.</p>
+        {onReportingCurrencyChange && (
+          <div className="nw-currency-row">
+            <span className="nw-currency-label">Display currency</span>
+            <CountrySelect
+              countries={REPORTING_CURRENCY_OPTIONS(scenarioCountry)}
+              value={reportingCurrencyCode}
+              onChange={onReportingCurrencyChange}
+              ariaLabel="Net Worth display currency"
+            />
+          </div>
+        )}
         <div className="nw-import-row">
           <label className="nw-import-btn">
             📥 Import CSV
@@ -240,7 +270,10 @@ const NetWorth = ({ country }) => {
         <div className="nw-history">
           <div className="nw-history-header">
             <h3>History ({history.length} snapshot{history.length === 1 ? '' : 's'})</h3>
-            <button className="nw-clear-btn" onClick={clearHistory}>Clear history</button>
+            <div className="nw-history-header-actions">
+              <button className="nw-export-history-btn" onClick={exportHistoryCSV}>⬇️ Export CSV</button>
+              <button className="nw-clear-btn" onClick={clearHistory}>Clear history</button>
+            </div>
           </div>
           {history.length > 1 && (
             <SnapshotChart points={convertedHistory} series={HISTORY_SERIES} symbol={country.symbol} />

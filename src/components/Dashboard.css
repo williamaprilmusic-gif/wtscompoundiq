@@ -110,6 +110,32 @@
   align-self: flex-start;
 }
 
+.dashboard-trends {
+  margin-bottom: 20px;
+}
+
+.dashboard-trends h3 {
+  font-size: 1rem;
+  color: var(--text);
+  margin: 0 0 12px;
+}
+
+.dashboard-trend-card {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+
+.dashboard-trend-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
 .dashboard-myplan-link {
   display: block;
   width: 100%;

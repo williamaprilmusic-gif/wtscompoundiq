@@ -165,6 +165,13 @@ const DebtPayoff = ({ country }) => {
     setHistory([]);
   };
 
+  const exportHistoryCSV = () => {
+    downloadCSV('wts-compoundiq-debtpayoff-history.csv', [
+      ['Date', `Total Debt Balance (${country.currency})`],
+      ...convertedHistory.map(h => [new Date(h.date).toLocaleDateString(), Math.round(h.total)])
+    ]);
+  };
+
   return (
     <div className="card debt-payoff">
       <div className="debt-header">
@@ -283,7 +290,10 @@ const DebtPayoff = ({ country }) => {
         <div className="debt-history">
           <div className="debt-history-header">
             <h3>Balance History ({history.length} snapshot{history.length === 1 ? '' : 's'})</h3>
-            <button className="debt-clear-history-btn" onClick={clearHistory}>Clear history</button>
+            <div className="debt-history-header-actions">
+              <button className="debt-export-history-btn" onClick={exportHistoryCSV}>⬇️ Export CSV</button>
+              <button className="debt-clear-history-btn" onClick={clearHistory}>Clear history</button>
+            </div>
           </div>
           {delta !== null && (
             <div className={`debt-history-delta ${delta <= 0 ? 'down' : 'up'}`}>

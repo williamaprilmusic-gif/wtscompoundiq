@@ -9,6 +9,12 @@ import { downloadCSV } from '../utils/csv';
 import { savePlanSection, monthsToYearsLabel } from '../utils/planStorage';
 import { usePersistedState } from '../utils/usePersistedState';
 import Term from './Term';
+import SnapshotChart from './SnapshotChart';
+
+const SINGLE_BALANCE_SERIES = [{ key: 'debts', label: 'Loan Balance' }];
+const COMPARISON_BALANCE_SERIES = [{ key: 'standard', label: 'Standard Payment' }, { key: 'plan', label: 'With Extra Payments' }];
+const formatYearAxis = (year) => `Yr ${year}`;
+const formatYearTooltip = (year) => `Year ${year}`;
 
 const INPUTS_KEY = 'wts_compoundiq_loancalc_inputs';
 const LUMPSUMS_KEY = 'wts_compoundiq_loancalc_lumpsums';
@@ -97,6 +103,27 @@ const LoanCalculator = ({ country }) => {
   const biweeklyResult = (principal > 0 && termYears > 0)
     ? calculateLoanAmortization({ principal, annualRate, termYears, extraMonthly: biweeklyExtra, lumpSums: safeLumpSums })
     : null;
+
+  // Visualizes the same standard-vs-extra comparison as the callout below it, in a
+  // chart instead of just the payoff-schedule table. Isolates extraMonthly's own
+  // effect the same way that callout does (both schedules include the same lumpSums),
+  // rather than a redundant single line when there's nothing to compare against.
+  const showComparisonChart = extraMonthly > 0 && !!result.extra;
+  const chartYears = showComparisonChart
+    ? Math.max(result.yearlyData.length, result.extra.yearlyData.length)
+    : result.yearlyData.length;
+  // year 0 = the full loan amount, before any payments -- so the line visibly starts
+  // at what was actually borrowed, same convention GrowthChart.jsx uses for a plan's
+  // starting deposit.
+  const balanceChartPoints = [
+    showComparisonChart ? { year: 0, standard: principal, plan: principal } : { year: 0, debts: principal },
+    ...Array.from({ length: chartYears }, (_, i) => {
+      const year = i + 1;
+      return showComparisonChart
+        ? { year, standard: result.yearlyData[i]?.balance ?? 0, plan: result.extra.yearlyData[i]?.balance ?? 0 }
+        : { year, debts: result.yearlyData[i]?.balance ?? 0 };
+    })
+  ];
 
   const exportCSV = () => {
     const header = ['Year', 'Interest Paid', 'Principal Paid', 'Total Paid To Date', 'Remaining Balance'];
@@ -237,6 +264,20 @@ const LoanCalculator = ({ country }) => {
               You do pay one extra instalment's worth per year in total -- but if you're paid weekly or bi-weekly yourself, it often lines up
               with your paycheck rhythm instead of feeling like a separate decision (confirm your lender actually applies bi-weekly payments
               this way before switching -- some just bank them and apply monthly anyway, which erases the benefit).
+            </div>
+          )}
+
+          {balanceChartPoints.length > 2 && (
+            <div className="loan-chart-section">
+              <h3>Balance Over Time</h3>
+              <SnapshotChart
+                points={balanceChartPoints}
+                series={showComparisonChart ? COMPARISON_BALANCE_SERIES : SINGLE_BALANCE_SERIES}
+                symbol={country.symbol}
+                xKey="year"
+                formatXAxis={formatYearAxis}
+                formatXTooltip={formatYearTooltip}
+              />
             </div>
           )}
 
