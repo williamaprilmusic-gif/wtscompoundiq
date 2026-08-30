@@ -7,7 +7,12 @@ import './LoanCalculator.css';
 import { calculateLoanAmortization } from '../loanAmortization';
 import { downloadCSV } from '../utils/csv';
 import { savePlanSection, monthsToYearsLabel } from '../utils/planStorage';
+import { usePersistedState } from '../utils/usePersistedState';
 import Term from './Term';
+
+const INPUTS_KEY = 'wts_compoundiq_loancalc_inputs';
+const LUMPSUMS_KEY = 'wts_compoundiq_loancalc_lumpsums';
+const DEFAULT_INPUTS = { loanType: 'bond', principal: 0, annualRate: 0, termYears: 20, extraMonthly: 0 };
 
 // Term is a sensible starting default per type -- not a rate estimate (rates vary too
 // much by lender, credit profile, and country to guess responsibly), just how long
@@ -60,19 +65,26 @@ const TYPE_TIPS = {
 };
 
 const LoanCalculator = ({ country }) => {
-  const [loanType, setLoanType] = useState('bond');
-  const [principal, setPrincipal] = useState(0);
-  const [annualRate, setAnnualRate] = useState(0);
-  const [termYears, setTermYears] = useState(LOAN_TYPES[0].defaultTermYears);
-  const [extraMonthly, setExtraMonthly] = useState(0);
+  const [inputs, setInputs] = usePersistedState(INPUTS_KEY, DEFAULT_INPUTS);
+  const { loanType, principal, annualRate, termYears, extraMonthly } = inputs;
+  const [lumpSums, setLumpSums] = usePersistedState(LUMPSUMS_KEY, []);
   const [saved, setSaved] = useState(false);
 
+  const updateInput = (field, value) => setInputs(prev => ({ ...prev, [field]: Number(value) }));
+
   const selectLoanType = (type) => {
-    setLoanType(type.key);
-    setTermYears(type.defaultTermYears);
+    setInputs(prev => ({ ...prev, loanType: type.key, termYears: type.defaultTermYears }));
   };
 
-  const result = calculateLoanAmortization({ principal, annualRate, termYears, extraMonthly });
+  const addLumpSum = () => setLumpSums(prev => [...prev, { id: Date.now(), month: 1, amount: 0 }]);
+  const updateLumpSum = (id, field, value) => setLumpSums(prev => prev.map(l => l.id === id ? { ...l, [field]: Number(value) } : l));
+  const removeLumpSum = (id) => setLumpSums(prev => prev.filter(l => l.id !== id));
+
+  // Guard against a transient/blank "month" value while the user is mid-edit -- same
+  // failure mode (and fix) as Debt Payoff's lump sums.
+  const safeLumpSums = lumpSums.map(l => ({ ...l, month: l.month > 0 ? l.month : 1 }));
+
+  const result = calculateLoanAmortization({ principal, annualRate, termYears, extraMonthly, lumpSums: safeLumpSums });
   const repaymentMultiple = principal > 0 ? result.totalRepayment / principal : 0;
   const activeType = LOAN_TYPES.find(t => t.key === loanType) || LOAN_TYPES[0];
 
@@ -83,7 +95,7 @@ const LoanCalculator = ({ country }) => {
   // year, reusing the exact same engine as the Extra Monthly Payment field above.
   const biweeklyExtra = result.monthlyPayment / 12;
   const biweeklyResult = (principal > 0 && termYears > 0)
-    ? calculateLoanAmortization({ principal, annualRate, termYears, extraMonthly: biweeklyExtra })
+    ? calculateLoanAmortization({ principal, annualRate, termYears, extraMonthly: biweeklyExtra, lumpSums: safeLumpSums })
     : null;
 
   const exportCSV = () => {
@@ -137,20 +149,46 @@ const LoanCalculator = ({ country }) => {
       <div className="loan-form">
         <div className="form-group">
           <label>Loan Amount ({country.symbol})</label>
-          <input type="number" min="0" step="10000" value={principal} onChange={(e) => setPrincipal(Number(e.target.value))} />
+          <input type="number" min="0" step="10000" value={principal} onChange={(e) => updateInput('principal', e.target.value)} />
         </div>
         <div className="form-group">
           <label>Interest Rate (% per year)</label>
-          <input type="number" min="0" step="0.1" value={annualRate} onChange={(e) => setAnnualRate(Number(e.target.value))} />
+          <input type="number" min="0" step="0.1" value={annualRate} onChange={(e) => updateInput('annualRate', e.target.value)} />
         </div>
         <div className="form-group">
           <label>Loan Term (years)</label>
-          <input type="number" min="1" max="50" value={termYears} onChange={(e) => setTermYears(Number(e.target.value))} />
+          <input type="number" min="1" max="50" value={termYears} onChange={(e) => updateInput('termYears', e.target.value)} />
         </div>
         <div className="form-group">
           <label>Extra Monthly Payment ({country.symbol}, optional)</label>
-          <input type="number" min="0" step="100" value={extraMonthly} onChange={(e) => setExtraMonthly(Number(e.target.value))} />
+          <input type="number" min="0" step="100" value={extraMonthly} onChange={(e) => updateInput('extraMonthly', e.target.value)} />
         </div>
+      </div>
+
+      <div className="loan-lumpsum-section">
+        <div className="loan-lumpsum-header">
+          <h3>One-Off Extra Payments</h3>
+          <button className="loan-lumpsum-add-btn" onClick={addLumpSum}>+ Add One-Off</button>
+        </div>
+        {lumpSums.length === 0 ? (
+          <p className="loan-lumpsum-empty">None added -- use this for a bonus, tax refund, or any extra payment landing in a specific month, on top of your regular payment above.</p>
+        ) : (
+          <div className="loan-lumpsum-list">
+            {lumpSums.map((l) => (
+              <div key={l.id} className="loan-lumpsum-row">
+                <div className="loan-lumpsum-field">
+                  <label>In month</label>
+                  <input type="number" min="1" value={l.month} onChange={(e) => updateLumpSum(l.id, 'month', e.target.value)} />
+                </div>
+                <div className="loan-lumpsum-field">
+                  <label>Amount ({country.symbol})</label>
+                  <input type="number" min="0" step="1000" value={l.amount} onChange={(e) => updateLumpSum(l.id, 'amount', e.target.value)} />
+                </div>
+                <button className="loan-lumpsum-remove" onClick={() => removeLumpSum(l.id)} aria-label="Remove one-off payment">&times;</button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {principal > 0 && termYears > 0 && (

@@ -76,6 +76,99 @@
   border-color: var(--accent);
 }
 
+.loan-lumpsum-section {
+  margin-bottom: 25px;
+}
+
+.loan-lumpsum-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.loan-lumpsum-header h3 {
+  font-size: 1rem;
+  color: var(--text);
+  margin: 0;
+}
+
+.loan-lumpsum-add-btn {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: var(--accent);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.loan-lumpsum-empty {
+  color: var(--mut);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.loan-lumpsum-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.loan-lumpsum-row {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.loan-lumpsum-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.loan-lumpsum-field label {
+  font-size: 0.72rem;
+  color: var(--mut);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.loan-lumpsum-field input {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  width: 130px;
+  outline: none;
+}
+
+.loan-lumpsum-field input:focus {
+  border-color: var(--accent);
+}
+
+.loan-lumpsum-remove {
+  background: rgba(248, 113, 113, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: var(--accent-red);
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 .loan-results {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

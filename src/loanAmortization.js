@@ -12,7 +12,11 @@ const safeNumber = (value, fallback, { min = -Infinity } = {}) =>
 // the totals and the amortization schedule reflect real rounding the same way the
 // rest of the app's engines do (rather than only trusting the closed-form formula,
 // which also can't model an overpayment scenario on its own).
-const simulateSchedule = ({ principal, monthlyRate, payment }) => {
+// lumpSums: optional one-off extra payments -- [{ month, amount }] -- e.g. a bonus or
+// tax refund applied straight to the balance in a specific month, on top of the
+// regular payment. Applied with no interest portion (it's paid immediately, not
+// amortized), same modeling choice as debtPayoffEngine.js's lump sums.
+const simulateSchedule = ({ principal, monthlyRate, payment, lumpSums = [] }) => {
   let balance = principal;
   let totalPaid = 0;
   let totalInterestPaid = 0;
@@ -34,6 +38,14 @@ const simulateSchedule = ({ principal, monthlyRate, payment }) => {
     yearInterest += interestPortion;
     yearPrincipal += principalPortion;
     monthsElapsed++;
+
+    const lump = lumpSums.filter(l => l.month === monthsElapsed).reduce((s, l) => s + l.amount, 0);
+    if (lump > 0 && balance > 0) {
+      const lumpApplied = Math.min(lump, balance);
+      balance -= lumpApplied;
+      totalPaid += lumpApplied;
+      yearPrincipal += lumpApplied;
+    }
 
     if (monthsElapsed % 12 === 0 || balance <= 0.01) {
       yearly.push({
@@ -61,7 +73,8 @@ export function calculateLoanAmortization({
   principal = 0,
   annualRate = 0, // %, e.g. 11.5
   termYears = 0,
-  extraMonthly = 0 // optional overpayment on top of the required installment, every month
+  extraMonthly = 0, // optional overpayment on top of the required installment, every month
+  lumpSums = [] // optional one-off overpayments -- [{ month, amount }]
 }) {
   principal = safeNumber(principal, 0, { min: 0 });
   annualRate = safeNumber(annualRate, 0, { min: 0 });
@@ -80,11 +93,14 @@ export function calculateLoanAmortization({
     ? principal / totalMonths
     : (principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -totalMonths));
 
-  const standard = simulateSchedule({ principal, monthlyRate, payment: monthlyPayment });
+  // Lump sums apply to the standard schedule too -- they're a real part of the payment
+  // plan regardless of whether an extra *monthly* amount is also set, same as the
+  // Calculator tab and Debt Payoff treat their own lump sums.
+  const standard = simulateSchedule({ principal, monthlyRate, payment: monthlyPayment, lumpSums });
 
   let extra = null;
   if (extraMonthly > 0) {
-    const withExtra = simulateSchedule({ principal, monthlyRate, payment: monthlyPayment + extraMonthly });
+    const withExtra = simulateSchedule({ principal, monthlyRate, payment: monthlyPayment + extraMonthly, lumpSums });
     extra = {
       payoffMonths: withExtra.monthsElapsed,
       totalRepayment: Math.round(withExtra.totalPaid),

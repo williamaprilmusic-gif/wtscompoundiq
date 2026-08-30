@@ -1,15 +1,31 @@
 // src/components/EmergencyFund.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './EmergencyFund.css';
 import Term from './Term';
 import { savePlanSection } from '../utils/planStorage';
+import { usePersistedState } from '../utils/usePersistedState';
+import { convertAmount } from '../data/countries';
+import SnapshotChart from './SnapshotChart';
+
+const INPUTS_KEY = 'wts_compoundiq_emergencyfund_inputs';
+const HISTORY_KEY = 'wts_compoundiq_emergencyfund_history';
+const DEFAULT_INPUTS = { monthlyExpenses: 0, monthsCoverage: 3, currentSavings: 0, monthlyContribution: 0 };
+const HISTORY_SERIES = [{ key: 'total', label: 'Emergency Fund Balance' }];
 
 const EmergencyFund = ({ country }) => {
-  const [monthlyExpenses, setMonthlyExpenses] = useState(0);
-  const [monthsCoverage, setMonthsCoverage] = useState(3);
-  const [currentSavings, setCurrentSavings] = useState(0);
-  const [monthlyContribution, setMonthlyContribution] = useState(0);
+  const [inputs, setInputs] = usePersistedState(INPUTS_KEY, DEFAULT_INPUTS);
+  const { monthlyExpenses, monthsCoverage, currentSavings, monthlyContribution } = inputs;
   const [saved, setSaved] = useState(false);
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    if (raw) {
+      try { setHistory(JSON.parse(raw)); } catch { /* ignore corrupt history */ }
+    }
+  }, []);
+
+  const updateInput = (field, value) => setInputs(prev => ({ ...prev, [field]: Number(value) }));
 
   const targetAmount = monthlyExpenses * monthsCoverage;
   const remaining = Math.max(0, targetAmount - currentSavings);
@@ -28,6 +44,30 @@ const EmergencyFund = ({ country }) => {
     setTimeout(() => setSaved(false), 2000);
   };
 
+  // Same pattern as NetWorth.jsx/DebtPayoff.jsx: record which currency a snapshot was
+  // saved in and convert through a memo before use, so switching the global country
+  // selector after logging a balance doesn't mislabel an old total as the new currency.
+  const convertedHistory = useMemo(() => history.map(h => ({
+    date: h.date,
+    total: convertAmount(h.total, h.displayCurrency || country.code, country.code)
+  })), [history, country.code]);
+
+  const lastSnapshot = convertedHistory.length > 0 ? convertedHistory[convertedHistory.length - 1] : null;
+  const delta = lastSnapshot ? currentSavings - lastSnapshot.total : null;
+
+  const saveSnapshot = () => {
+    const entry = { date: new Date().toISOString(), total: currentSavings, displayCurrency: country.code };
+    const updated = [...history, entry].slice(-24); // keep the most recent 24 snapshots
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+    setHistory(updated);
+  };
+
+  const clearHistory = () => {
+    if (!window.confirm(`Clear all ${history.length} saved emergency fund snapshot${history.length === 1 ? '' : 's'}? This can't be undone.`)) return;
+    localStorage.removeItem(HISTORY_KEY);
+    setHistory([]);
+  };
+
   return (
     <div className="card emergency-fund">
       <div className="ef-header">
@@ -38,11 +78,11 @@ const EmergencyFund = ({ country }) => {
       <div className="ef-form">
         <div className="form-group">
           <label>Monthly Essential Expenses ({country.symbol})</label>
-          <input type="number" min="0" value={monthlyExpenses} onChange={(e) => setMonthlyExpenses(Number(e.target.value))} />
+          <input type="number" min="0" value={monthlyExpenses} onChange={(e) => updateInput('monthlyExpenses', e.target.value)} />
         </div>
         <div className="form-group">
           <label>Months of Coverage</label>
-          <select value={monthsCoverage} onChange={(e) => setMonthsCoverage(Number(e.target.value))}>
+          <select value={monthsCoverage} onChange={(e) => updateInput('monthsCoverage', e.target.value)}>
             <option value="3">3 months (minimum)</option>
             <option value="6">6 months (standard)</option>
             <option value="9">9 months (cautious)</option>
@@ -51,11 +91,11 @@ const EmergencyFund = ({ country }) => {
         </div>
         <div className="form-group">
           <label>Current Emergency Savings ({country.symbol})</label>
-          <input type="number" min="0" value={currentSavings} onChange={(e) => setCurrentSavings(Number(e.target.value))} />
+          <input type="number" min="0" value={currentSavings} onChange={(e) => updateInput('currentSavings', e.target.value)} />
         </div>
         <div className="form-group">
           <label>Monthly Contribution ({country.symbol})</label>
-          <input type="number" min="0" value={monthlyContribution} onChange={(e) => setMonthlyContribution(Number(e.target.value))} />
+          <input type="number" min="0" value={monthlyContribution} onChange={(e) => updateInput('monthlyContribution', e.target.value)} />
         </div>
       </div>
 
@@ -85,9 +125,37 @@ const EmergencyFund = ({ country }) => {
         (not invested), so this doesn't assume any investment growth.
       </p>
 
-      <button className="ef-save-plan-btn" onClick={savePlan}>
-        {saved ? '✓ Saved to My Plan' : '💾 Save This Plan'}
-      </button>
+      <div className="ef-actions">
+        <button className="ef-save-plan-btn" onClick={savePlan}>
+          {saved ? '✓ Saved to My Plan' : '💾 Save This Plan'}
+        </button>
+        <button className="ef-save-snapshot-btn" onClick={saveSnapshot}>📸 Log Balance</button>
+      </div>
+
+      {history.length > 0 && (
+        <div className="ef-history">
+          <div className="ef-history-header">
+            <h3>Balance History ({history.length} snapshot{history.length === 1 ? '' : 's'})</h3>
+            <button className="ef-clear-history-btn" onClick={clearHistory}>Clear history</button>
+          </div>
+          {delta !== null && (
+            <div className={`ef-history-delta ${delta >= 0 ? 'up' : 'down'}`}>
+              {delta >= 0 ? '▲' : '▼'} {country.symbol} {Math.abs(Math.round(delta)).toLocaleString()} since last snapshot
+            </div>
+          )}
+          {convertedHistory.length > 1 && (
+            <SnapshotChart points={convertedHistory} series={HISTORY_SERIES} symbol={country.symbol} />
+          )}
+          <div className="ef-history-list">
+            {[...convertedHistory].reverse().map((h, idx) => (
+              <div key={idx} className="ef-history-row">
+                <span>{new Date(h.date).toLocaleDateString()}</span>
+                <strong>{country.symbol} {Math.round(h.total).toLocaleString()}</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

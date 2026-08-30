@@ -59,6 +59,37 @@ describe('calculateLoanAmortization -- overpayment', () => {
   });
 });
 
+describe('calculateLoanAmortization -- lump sums', () => {
+  it('a one-off lump sum shortens payoff and reduces total interest on the standard schedule', () => {
+    const without = calculateLoanAmortization({ principal: 500000, annualRate: 11, termYears: 20 });
+    const withLump = calculateLoanAmortization({ principal: 500000, annualRate: 11, termYears: 20, lumpSums: [{ month: 6, amount: 100000 }] });
+    expect(withLump.payoffMonths).toBeLessThan(without.payoffMonths);
+    expect(withLump.totalInterest).toBeLessThan(without.totalInterest);
+  });
+
+  it('a lump sum scheduled after the loan is already paid off has no effect', () => {
+    const r = calculateLoanAmortization({ principal: 100000, annualRate: 12, termYears: 1 });
+    const withLateLump = calculateLoanAmortization({ principal: 100000, annualRate: 12, termYears: 1, lumpSums: [{ month: r.payoffMonths + 12, amount: 5000 }] });
+    expect(withLateLump.payoffMonths).toBe(r.payoffMonths);
+    expect(withLateLump.totalInterest).toBe(r.totalInterest);
+  });
+
+  it('lump sums also apply to the extra-monthly-payment schedule, isolating extraMonthly\'s own effect', () => {
+    const r = calculateLoanAmortization({ principal: 500000, annualRate: 11, termYears: 20, extraMonthly: 1000, lumpSums: [{ month: 3, amount: 50000 }] });
+    expect(r.extra).not.toBeNull();
+    // extra.payoffMonths is measured against the (also lump-summed) standard schedule,
+    // so it should still be shorter -- extraMonthly's marginal effect isn't erased by
+    // lumpSums applying to both sides of the comparison.
+    expect(r.extra.payoffMonths).toBeLessThan(r.payoffMonths);
+  });
+
+  it('defaults lumpSums to empty and matches the no-lump-sum result exactly', () => {
+    const explicit = calculateLoanAmortization({ principal: 500000, annualRate: 11, termYears: 20, lumpSums: [] });
+    const implicit = calculateLoanAmortization({ principal: 500000, annualRate: 11, termYears: 20 });
+    expect(explicit).toEqual(implicit);
+  });
+});
+
 describe('calculateLoanAmortization -- malformed input hardening', () => {
   it('never throws and always returns finite numbers given garbage input', () => {
     const cases = [

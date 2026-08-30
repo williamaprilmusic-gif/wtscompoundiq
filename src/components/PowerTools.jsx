@@ -4,6 +4,7 @@ import './PowerTools.css';
 import Term from './Term';
 import { MAX_YEARS_TO_SEARCH, yearsToReachTarget, simulateDebtFirst, simulateInvestFirst, simulateDrawdown } from '../powerToolsEngine';
 import { savePlanSection } from '../utils/planStorage';
+import { calculateCompoundInterest } from '../engine';
 
 const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [] }) => {
   const [annualExpenses, setAnnualExpenses] = useState(0);
@@ -18,6 +19,15 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const [drawdownWithdrawal, setDrawdownWithdrawal] = useState(0);
   const [drawdownReturn, setDrawdownReturn] = useState(5);
   const [drawdownYears, setDrawdownYears] = useState(30);
+
+  // A lump-sum-only, no-monthly-contribution version of the same compounding engine
+  // the rest of the app uses -- the plain "how much interest will a savings account
+  // deposit earn" question, without the Calculator tab's country/wrapper/inflation/
+  // scenario machinery around it.
+  const [savingsDeposit, setSavingsDeposit] = useState(0);
+  const [savingsRate, setSavingsRate] = useState(0);
+  const [savingsYears, setSavingsYears] = useState(1);
+  const [savingsFrequency, setSavingsFrequency] = useState(12);
 
   const safeWithdrawalRate = withdrawalRate > 0 ? withdrawalRate : 0.01;
   const fireNumber = annualExpenses / (safeWithdrawalRate / 100);
@@ -45,6 +55,18 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
     inflation: inflation || 0, years: drawdownYears
   });
   const drawdownWithdrawalRate = drawdownBalance > 0 ? (drawdownWithdrawal / drawdownBalance) * 100 : 0;
+
+  // years=0 would make calculateCompoundInterest's loop never run -- clamp only for the
+  // calculation, same guard Invest.jsx/Coach.jsx use for the same failure mode.
+  const safeSavingsYears = savingsYears > 0 ? savingsYears : 1;
+  const savingsBeforeTax = calculateCompoundInterest({
+    initial: savingsDeposit, monthly: 0, rate: savingsRate, years: safeSavingsYears, inflation: 0,
+    taxRate: 0, wrapper: false, compoundFrequency: savingsFrequency
+  });
+  const savingsAfterTax = calculateCompoundInterest({
+    initial: savingsDeposit, monthly: 0, rate: savingsRate, years: safeSavingsYears, inflation: 0,
+    taxRate: country.taxRate, wrapper: false, compoundFrequency: savingsFrequency
+  });
 
   const saveFirePlan = () => {
     savePlanSection('fire', {
@@ -186,6 +208,57 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
             </p>
           </>
         )}
+      </div>
+
+      <div className="power-tool-card">
+        <h3>🏦 Savings Account Interest Calculator</h3>
+        <p className="power-tool-desc">How much interest will a lump sum sitting in a savings account actually earn -- no monthly deposits, just the deposit itself compounding.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Deposit Amount ({country.symbol})</label>
+            <input type="number" min="0" step="1000" value={savingsDeposit} onChange={(e) => setSavingsDeposit(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Annual Interest Rate (%)</label>
+            <input type="number" min="0" step="0.1" value={savingsRate} onChange={(e) => setSavingsRate(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Term (years)</label>
+            <input type="number" min="1" max="50" value={savingsYears} onChange={(e) => setSavingsYears(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label><Term k="compoundingFrequency">Compounding Frequency</Term></label>
+            <select value={savingsFrequency} onChange={(e) => setSavingsFrequency(Number(e.target.value))}>
+              <option value="1">Annually</option>
+              <option value="2">Semi-Annually</option>
+              <option value="4">Quarterly</option>
+              <option value="12">Monthly</option>
+              <option value="365">Daily</option>
+            </select>
+          </div>
+        </div>
+        {savingsDeposit > 0 && (
+          <div className="power-verdict-grid">
+            <div className="power-stat">
+              <span>Final Balance</span>
+              <strong className="positive">{country.symbol} {savingsAfterTax.finalBalance.toLocaleString()}</strong>
+            </div>
+            <div className="power-stat">
+              <span>Interest Earned (before tax)</span>
+              <strong>{country.symbol} {savingsBeforeTax.totalInterest.toLocaleString()}</strong>
+            </div>
+            <div className="power-stat">
+              <span>Interest Earned (after {country.name}'s {country.taxRate}% tax)</span>
+              <strong className="positive">{country.symbol} {savingsAfterTax.totalInterest.toLocaleString()}</strong>
+            </div>
+          </div>
+        )}
+        <p className="power-tool-note">
+          A single deposit compounding on its own, with no further contributions -- for a savings plan that also adds
+          money every month, use the Calculator tab instead. Assumes a constant {savingsRate}% rate with no volatility,
+          and taxes the interest at {country.name}'s flat {country.taxRate}% rate the same way the Calculator tab does
+          outside of a {country.wrapperLabel} -- most savings accounts aren't eligible for that shelter.
+        </p>
       </div>
     </div>
   );
