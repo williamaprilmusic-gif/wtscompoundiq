@@ -167,7 +167,10 @@ const DebtPayoff = ({ country }) => {
   };
 
   const clearHistory = () => {
-    if (!window.confirm(`Clear all ${history.length} saved debt balance snapshot${history.length === 1 ? '' : 's'}? This can't be undone.`)) return;
+    // No count in the message -- see NetWorth.jsx's clearHistory for why (the header
+    // above and this raw history.length can diverge when a corrupt entry is filtered
+    // out of what's displayed but still present in storage).
+    if (!window.confirm("Clear all saved debt balance snapshots? This can't be undone.")) return;
     localStorage.removeItem(HISTORY_KEY);
     setHistory([]);
   };

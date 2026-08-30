@@ -18,6 +18,19 @@ const HISTORY_SERIES = [
 export const HISTORY_KEY = 'wts_compoundiq_networth_history';
 const ITEMS_KEY = 'wts_compoundiq_networth_items';
 
+// A net worth history entry is only safe to feed to convertAmount/SnapshotChart when
+// netWorth, and (if present) totalAssets/totalDebts, are all real numbers -- a
+// hand-edited or partially-written localStorage value (or an incompatible imported
+// backup) could leave any of the three non-numeric, and totalAssets/totalDebts can be
+// independently corrupt while netWorth itself stays valid. One bad point would
+// otherwise poison SnapshotChart's min/max scaling (every point on the line, not just
+// the bad one) or show as "NaN" on a headline card. Exported so Dashboard.jsx's own
+// net worth trend/headline card -- which reads this same history key -- can apply the
+// identical guard instead of duplicating it.
+export const isValidNetWorthEntry = (h) => Number.isFinite(h.netWorth)
+  && (h.totalAssets == null || Number.isFinite(h.totalAssets))
+  && (h.totalDebts == null || Number.isFinite(h.totalDebts));
+
 // '' is the sentinel code for "follow whatever the Calculator tab's country is" --
 // no real country uses an empty code, so it can't collide. Recomputed per-render
 // (cheap -- 37 entries) since the "follow" option's label depends on scenarioCountry.
@@ -150,11 +163,12 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
   // totalDebts can be independently corrupt (hand-edited, partial write, incompatible
   // import) while netWorth itself stays a valid number, and `??` below only catches
   // null/undefined, not NaN -- so a bad totalAssets/totalDebts would still slip through
-  // and poison the chart's min/max scaling the same way a bad netWorth would.
+  // and poison the chart's min/max scaling the same way a bad netWorth would. Exported
+  // (like HISTORY_KEY above) so Dashboard.jsx's own net worth trend/headline card --
+  // which reads this same history key -- can apply the identical guard instead of
+  // duplicating it.
   const convertedHistory = useMemo(() => history
-    .filter(h => Number.isFinite(h.netWorth)
-      && (h.totalAssets == null || Number.isFinite(h.totalAssets))
-      && (h.totalDebts == null || Number.isFinite(h.totalDebts)))
+    .filter(isValidNetWorthEntry)
     .map(h => {
       const from = h.displayCurrency || country.code;
       return {
@@ -179,7 +193,11 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
   };
 
   const clearHistory = () => {
-    if (!window.confirm(`Clear all ${history.length} saved net worth snapshot${history.length === 1 ? '' : 's'}? This can't be undone.`)) return;
+    // No count in the message -- the header above shows convertedHistory.length (what's
+    // actually visible) while this clears the raw, unfiltered history.length (which can
+    // include a corrupt entry hidden from that count); stating a specific number here
+    // risked contradicting the header instead of just confirming the action.
+    if (!window.confirm("Clear all saved net worth snapshots? This can't be undone.")) return;
     localStorage.removeItem(HISTORY_KEY);
     setHistory([]);
   };

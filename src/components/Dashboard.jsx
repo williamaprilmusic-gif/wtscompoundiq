@@ -9,7 +9,7 @@ import { convertAmount } from '../data/countries';
 import { daysBetween, fmtDaysAgo } from '../utils/dateAgo';
 import { readPlan, loanEffectiveMonthlyPayment, loanEffectiveTermLabel } from '../utils/planStorage';
 import SnapshotChart from './SnapshotChart';
-import { HISTORY_KEY as NETWORTH_HISTORY_KEY } from './NetWorth';
+import { HISTORY_KEY as NETWORTH_HISTORY_KEY, isValidNetWorthEntry } from './NetWorth';
 import { HISTORY_KEY as DEBTPAYOFF_HISTORY_KEY } from './DebtPayoff';
 import { HISTORY_KEY as EMERGENCYFUND_HISTORY_KEY } from './EmergencyFund';
 
@@ -46,17 +46,13 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
     setEfHistory(readHistory(EMERGENCYFUND_HISTORY_KEY));
   }, []);
 
-  // Same non-numeric guard as debtPoints/efPoints below -- a hand-edited or partially-
-  // written localStorage value (or an incompatible imported backup) could leave a
-  // history entry with a non-numeric `netWorth`, `totalAssets`, or `totalDebts`, and
-  // that single entry would otherwise poison both the headline card (Math.round(NaN)
-  // -> "NaN") and the trend chart's min/max scaling (every point on the line, not just
-  // the bad one). netWorth alone isn't enough to check -- totalAssets/totalDebts can be
-  // independently corrupt while netWorth stays valid, and the `?? h.netWorth` / `?? 0`
-  // fallbacks below only catch null/undefined, not NaN.
-  const validNetWorthHistory = useMemo(() => netWorthHistory.filter(h => Number.isFinite(h.netWorth)
-    && (h.totalAssets == null || Number.isFinite(h.totalAssets))
-    && (h.totalDebts == null || Number.isFinite(h.totalDebts))), [netWorthHistory]);
+  // Same non-numeric guard NetWorth.jsx applies to this same history key (imported
+  // above as isValidNetWorthEntry) -- a hand-edited or partially-written localStorage
+  // value (or an incompatible imported backup) could leave a history entry with a
+  // non-numeric `netWorth`, `totalAssets`, or `totalDebts`, and that single entry would
+  // otherwise poison both the headline card (Math.round(NaN) -> "NaN") and the trend
+  // chart's min/max scaling (every point on the line, not just the bad one).
+  const validNetWorthHistory = useMemo(() => netWorthHistory.filter(isValidNetWorthEntry), [netWorthHistory]);
   const netWorthEntry = validNetWorthHistory.length > 0 ? validNetWorthHistory[validNetWorthHistory.length - 1] : null;
   const hasAnything = !!plan?.debt || !!plan?.emergencyFund || !!plan?.loan || !!plan?.fire || !!netWorthEntry;
 
