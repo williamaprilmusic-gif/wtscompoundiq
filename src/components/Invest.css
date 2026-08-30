@@ -11,6 +11,42 @@
   font-size: 0.95rem;
 }
 
+.invest-import-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: -8px;
+  margin-bottom: 14px;
+}
+
+.invest-import-btn {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: var(--accent);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.invest-template-btn {
+  background: none;
+  border: none;
+  color: var(--mut2);
+  font-size: 0.78rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.invest-import-error {
+  color: var(--accent-red);
+  font-size: 0.8rem;
+  margin-top: -6px;
+  margin-bottom: 14px;
+}
+
 .goal-presets {
   display: flex;
   flex-wrap: wrap;

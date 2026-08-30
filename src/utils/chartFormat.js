@@ -1,6 +1,6 @@
 // src/utils/chartFormat.js
 // Small pure formatting helpers shared by the app's dependency-free inline-SVG line
-// charts (GrowthChart.jsx, NetWorthHistoryChart.jsx) so axis-tick rounding and compact
+// charts (GrowthChart.jsx, FanChart.jsx, SnapshotChart.jsx) so axis-tick rounding and compact
 // number formatting stay identical everywhere instead of being copy-pasted per chart.
 
 // Round a value up to a "nice" number so axis ticks land on clean figures

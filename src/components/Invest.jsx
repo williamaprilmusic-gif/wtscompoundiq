@@ -1,9 +1,10 @@
 // src/components/Invest.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import './Invest.css';
 import { calculateCompoundInterest } from '../engine';
 import { usePersistedState } from '../utils/usePersistedState';
 import { confirmRemoval } from '../utils/confirmRemoval';
+import { parseCSV, downloadCSV } from '../utils/csv';
 
 const GOALS_KEY = 'wts_compoundiq_invest_goals';
 
@@ -13,6 +14,14 @@ const GOAL_PRESETS = [
   { label: 'Emergency Fund', amount: 60000, years: 2 },
   { label: 'Custom Goal', amount: 0, years: 1 }
 ];
+
+const downloadTemplate = () => {
+  downloadCSV('wts-compoundiq-goals-template.csv', [
+    ['label', 'startingAmount', 'goalAmount', 'goalYears'],
+    ['House Deposit', '20000', '300000', '5'],
+    ['Wedding Fund', '0', '80000', '2']
+  ]);
+};
 
 // Binary-search the monthly contribution needed to reach goalAmount by goalYears,
 // reusing the same engine the rest of the app uses so numbers stay consistent.
@@ -48,6 +57,7 @@ const solveMonthlyForGoal = ({ startingAmount, rate, years, inflation, taxRate, 
 
 const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0 }) => {
   const [goals, setGoals] = usePersistedState(GOALS_KEY, []);
+  const [importError, setImportError] = useState(null);
 
   const addGoal = (preset) => {
     setGoals(prev => [...prev, {
@@ -81,6 +91,57 @@ const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12, con
     setGoals(prev => prev.filter(g => g.id !== id));
   };
 
+  // Bulk-import goals from a CSV (label, startingAmount, goalAmount, goalYears
+  // columns, any order, case-insensitive headers) -- same tolerant parsing approach
+  // as Net Worth's/Debt Payoff's CSV import. Imported goals are marked touched --
+  // they carry real user data (from the file), not a preset default.
+  const importCSV = (file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const rows = parseCSV(String(e.target.result));
+        if (rows.length < 2) { setImportError('That CSV has no data rows -- see the template for the expected format.'); return; }
+        const header = rows[0].map(h => h.trim().toLowerCase());
+        const labelIdx = header.indexOf('label');
+        const startingIdx = header.indexOf('startingamount');
+        const goalIdx = header.indexOf('goalamount');
+        const yearsIdx = header.indexOf('goalyears');
+        if (labelIdx === -1 || goalIdx === -1) {
+          setImportError('CSV needs at least "label" and "goalAmount" columns -- download the template below for the expected format.');
+          return;
+        }
+        const cleanNumber = (raw) => {
+          const n = Number(String(raw || '0').replace(/[^0-9.-]/g, ''));
+          return Number.isFinite(n) ? Math.max(0, n) : 0;
+        };
+        const imported = rows.slice(1).map((r, idx) => ({
+          id: Date.now() + idx,
+          label: (r[labelIdx] || '').trim().slice(0, 80),
+          startingAmount: startingIdx !== -1 ? cleanNumber(r[startingIdx]) : 0,
+          goalAmount: cleanNumber(r[goalIdx]),
+          goalYears: yearsIdx !== -1 ? Math.max(1, cleanNumber(r[yearsIdx]) || 1) : 1,
+          touched: true
+        })).filter(g => g.label && g.goalAmount > 0);
+
+        if (imported.length === 0) {
+          setImportError('No usable rows found -- each row needs a label and a goalAmount greater than 0.');
+          return;
+        }
+        setGoals(prev => [...prev, ...imported]);
+        setImportError(null);
+      } catch {
+        setImportError("Could not read that file -- make sure it's a plain .csv export.");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleImportFile = (e) => {
+    const file = e.target.files?.[0];
+    if (file) importCSV(file);
+    e.target.value = ''; // allow re-selecting the same file later
+  };
+
   const computed = goals.map(g => {
     // Guard against a transient 0/blank "years" value while the user is mid-edit
     // (clearing the field to retype it sends Number('') = 0 through here). With
@@ -107,6 +168,14 @@ const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12, con
       <div className="invest-header">
         <h2>📈 Goal-Based Investment Planner</h2>
         <p>Track multiple goals at once -- each works backwards from its own target to find the monthly contribution it needs.</p>
+        <div className="invest-import-row">
+          <label className="invest-import-btn">
+            📥 Import CSV
+            <input type="file" accept=".csv,text/csv" onChange={handleImportFile} hidden />
+          </label>
+          <button className="invest-template-btn" onClick={downloadTemplate}>Download template</button>
+        </div>
+        {importError && <p className="invest-import-error">⚠️ {importError}</p>}
       </div>
 
       <div className="goal-presets">

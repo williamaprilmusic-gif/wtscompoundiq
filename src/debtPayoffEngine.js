@@ -7,7 +7,9 @@ export const MAX_MONTHS = 600; // 50-year safety cap
 // Simulates payoff month-by-month: minimums on every debt, extra cash goes to the
 // debt at the front of `order`; once a debt clears, its minimum payment rolls into
 // next month's extra (the "snowball"/"avalanche" effect), regardless of strategy.
-export const simulatePayoff = (debts, extraMonthly, orderFn) => {
+// lumpSums: optional one-off extra payments -- [{ month, amount }] -- e.g. a bonus or
+// tax refund thrown at the debt in a specific month, on top of the regular extra.
+export const simulatePayoff = (debts, extraMonthly, orderFn, lumpSums = []) => {
   let remaining = debts.map(d => ({ ...d }));
   let totalInterest = 0;
   let months = 0;
@@ -25,7 +27,8 @@ export const simulatePayoff = (debts, extraMonthly, orderFn) => {
     }
 
     const freedUpPayment = remaining.filter(d => d.balance <= 0).reduce((s, d) => s + d.minPayment, 0);
-    let extra = extraMonthly + freedUpPayment;
+    const lumpThisMonth = lumpSums.filter(l => l.month === months).reduce((s, l) => s + l.amount, 0);
+    let extra = extraMonthly + freedUpPayment + lumpThisMonth;
     for (const d of order) {
       if (extra <= 0) break;
       if (d.balance <= 0) continue;

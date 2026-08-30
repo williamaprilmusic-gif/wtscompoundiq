@@ -1,18 +1,42 @@
 // src/components/DebtPayoff.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './DebtPayoff.css';
 import Term from './Term';
 import { simulatePayoff, avalancheOrder, snowballOrder } from '../debtPayoffEngine';
 import { savePlanSection } from '../utils/planStorage';
 import { usePersistedState } from '../utils/usePersistedState';
 import { confirmRemoval } from '../utils/confirmRemoval';
+import { parseCSV, downloadCSV } from '../utils/csv';
+import SnapshotChart from './SnapshotChart';
 
 const DEBTS_KEY = 'wts_compoundiq_debtpayoff_debts';
 const EXTRA_KEY = 'wts_compoundiq_debtpayoff_extra';
+const LUMPSUMS_KEY = 'wts_compoundiq_debtpayoff_lumpsums';
+const HISTORY_KEY = 'wts_compoundiq_debtpayoff_history';
+
+const HISTORY_SERIES = [{ key: 'total', label: 'Total Debt Balance' }];
+
+const downloadTemplate = () => {
+  downloadCSV('wts-compoundiq-debts-template.csv', [
+    ['name', 'balance', 'rate', 'minPayment'],
+    ['Credit Card', '20000', '22', '500'],
+    ['Car Loan', '100000', '11', '2000']
+  ]);
+};
 
 const DebtPayoff = ({ country }) => {
   const [debts, setDebts] = usePersistedState(DEBTS_KEY, []);
   const [extraMonthly, setExtraMonthly] = usePersistedState(EXTRA_KEY, 0);
+  const [lumpSums, setLumpSums] = usePersistedState(LUMPSUMS_KEY, []);
+  const [history, setHistory] = useState([]);
+  const [importError, setImportError] = useState(null);
+
+  useEffect(() => {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    if (raw) {
+      try { setHistory(JSON.parse(raw)); } catch { /* ignore corrupt history */ }
+    }
+  }, []);
 
   const updateDebt = (id, field, value) => {
     setDebts(prev => prev.map(d => d.id === id ? { ...d, [field]: Number(value) } : d));
@@ -34,16 +58,73 @@ const DebtPayoff = ({ country }) => {
     setDebts(prev => prev.filter(d => d.id !== id));
   };
 
+  // Bulk-import debts from a CSV (name, balance, rate, minPayment columns, any order,
+  // case-insensitive headers) -- same tolerant parsing approach as Net Worth's CSV
+  // import (skip unusable rows rather than failing the whole file).
+  const importCSV = (file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const rows = parseCSV(String(e.target.result));
+        if (rows.length < 2) { setImportError('That CSV has no data rows -- see the template for the expected format.'); return; }
+        const header = rows[0].map(h => h.trim().toLowerCase());
+        const nameIdx = header.indexOf('name');
+        const balanceIdx = header.indexOf('balance');
+        const rateIdx = header.indexOf('rate');
+        const minPaymentIdx = header.indexOf('minpayment');
+        if (nameIdx === -1 || balanceIdx === -1) {
+          setImportError('CSV needs at least "name" and "balance" columns -- download the template below for the expected format.');
+          return;
+        }
+        const cleanNumber = (raw) => {
+          const n = Number(String(raw || '0').replace(/[^0-9.-]/g, ''));
+          return Number.isFinite(n) ? Math.max(0, n) : 0;
+        };
+        const imported = rows.slice(1).map((r, idx) => ({
+          id: Date.now() + idx,
+          name: (r[nameIdx] || '').trim().slice(0, 80),
+          balance: cleanNumber(r[balanceIdx]),
+          rate: rateIdx !== -1 ? cleanNumber(r[rateIdx]) : 0,
+          minPayment: minPaymentIdx !== -1 ? cleanNumber(r[minPaymentIdx]) : 0
+        })).filter(d => d.name && d.balance > 0);
+
+        if (imported.length === 0) {
+          setImportError('No usable rows found -- each row needs a name and a balance greater than 0.');
+          return;
+        }
+        setDebts(prev => [...prev, ...imported]);
+        setImportError(null);
+      } catch {
+        setImportError("Could not read that file -- make sure it's a plain .csv export.");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleImportFile = (e) => {
+    const file = e.target.files?.[0];
+    if (file) importCSV(file);
+    e.target.value = ''; // allow re-selecting the same file later
+  };
+
+  // One-off extra payments -- a bonus, tax refund, etc. thrown at the debt in a
+  // specific month, on top of the regular monthly extra (mirrors the Calculator
+  // tab's lump-sum contributions).
+  const addLumpSum = () => setLumpSums(prev => [...prev, { id: Date.now(), month: 1, amount: 0 }]);
+  const updateLumpSum = (id, field, value) => setLumpSums(prev => prev.map(l => l.id === id ? { ...l, [field]: Number(value) } : l));
+  const removeLumpSum = (id) => setLumpSums(prev => prev.filter(l => l.id !== id));
+
   const validDebts = debts.filter(d => d.balance > 0);
-  const avalanche = simulatePayoff(validDebts, extraMonthly, avalancheOrder);
-  const snowball = simulatePayoff(validDebts, extraMonthly, snowballOrder);
+  const avalanche = simulatePayoff(validDebts, extraMonthly, avalancheOrder, lumpSums);
+  const snowball = simulatePayoff(validDebts, extraMonthly, snowballOrder, lumpSums);
   const interestSaved = snowball.totalInterest - avalanche.totalInterest;
+  const totalBalance = validDebts.reduce((sum, d) => sum + d.balance, 0);
 
   const [saved, setSaved] = useState(false);
   const savePlan = () => {
     savePlanSection('debt', {
       savedAt: new Date().toISOString(),
-      totalBalance: validDebts.reduce((sum, d) => sum + d.balance, 0),
+      totalBalance,
       extraMonthly,
       avalancheMonths: avalanche.months,
       avalancheInterest: avalanche.totalInterest
@@ -52,11 +133,35 @@ const DebtPayoff = ({ country }) => {
     setTimeout(() => setSaved(false), 2000);
   };
 
+  const lastSnapshot = history.length > 0 ? history[history.length - 1] : null;
+  const delta = lastSnapshot ? totalBalance - lastSnapshot.total : null;
+
+  const saveSnapshot = () => {
+    const entry = { date: new Date().toISOString(), total: totalBalance };
+    const updated = [...history, entry].slice(-24); // keep the most recent 24 snapshots
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+    setHistory(updated);
+  };
+
+  const clearHistory = () => {
+    if (!window.confirm(`Clear all ${history.length} saved debt balance snapshot${history.length === 1 ? '' : 's'}? This can't be undone.`)) return;
+    localStorage.removeItem(HISTORY_KEY);
+    setHistory([]);
+  };
+
   return (
     <div className="card debt-payoff">
       <div className="debt-header">
         <h2>💳 Debt Payoff Planner</h2>
         <p>Compare the Avalanche (highest interest first -- mathematically fastest) and Snowball (smallest balance first -- most motivating) strategies.</p>
+        <div className="debt-import-row">
+          <label className="debt-import-btn">
+            📥 Import CSV
+            <input type="file" accept=".csv,text/csv" onChange={handleImportFile} hidden />
+          </label>
+          <button className="debt-template-btn" onClick={downloadTemplate}>Download template</button>
+        </div>
+        {importError && <p className="debt-import-error">⚠️ {importError}</p>}
       </div>
 
       <div className="debt-list">
@@ -87,6 +192,32 @@ const DebtPayoff = ({ country }) => {
       <div className="debt-extra">
         <label>Extra Monthly Payment ({country.symbol}, on top of all minimums)</label>
         <input type="number" min="0" value={extraMonthly} onChange={(e) => setExtraMonthly(Number(e.target.value))} />
+      </div>
+
+      <div className="debt-lumpsum-section">
+        <div className="debt-lumpsum-header">
+          <h3>One-Off Extra Payments</h3>
+          <button className="debt-lumpsum-add-btn" onClick={addLumpSum}>+ Add One-Off</button>
+        </div>
+        {lumpSums.length === 0 ? (
+          <p className="debt-lumpsum-empty">None added -- use this for a bonus, tax refund, or any extra payment landing in a specific month, on top of your regular extra above.</p>
+        ) : (
+          <div className="debt-lumpsum-list">
+            {lumpSums.map((l) => (
+              <div key={l.id} className="debt-lumpsum-row">
+                <div className="debt-lumpsum-field">
+                  <label>In month</label>
+                  <input type="number" min="1" value={l.month} onChange={(e) => updateLumpSum(l.id, 'month', e.target.value)} />
+                </div>
+                <div className="debt-lumpsum-field">
+                  <label>Amount ({country.symbol})</label>
+                  <input type="number" min="0" step="500" value={l.amount} onChange={(e) => updateLumpSum(l.id, 'amount', e.target.value)} />
+                </div>
+                <button className="debt-lumpsum-remove" onClick={() => removeLumpSum(l.id)} aria-label="Remove one-off payment">&times;</button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {validDebts.length > 0 && (
@@ -124,9 +255,41 @@ const DebtPayoff = ({ country }) => {
       )}
 
       {validDebts.length > 0 && (
-        <button className="debt-save-plan-btn" onClick={savePlan}>
-          {saved ? '✓ Saved to My Plan' : '💾 Save This Plan'}
-        </button>
+        <div className="debt-actions">
+          <button className="debt-save-plan-btn" onClick={savePlan}>
+            {saved ? '✓ Saved to My Plan' : '💾 Save This Plan'}
+          </button>
+          <button className="debt-save-snapshot-btn" onClick={saveSnapshot}>📸 Log Balance</button>
+        </div>
+      )}
+
+      {history.length > 0 && (
+        <div className="debt-history">
+          <div className="debt-history-header">
+            <h3>Balance History ({history.length} snapshot{history.length === 1 ? '' : 's'})</h3>
+            <button className="debt-clear-history-btn" onClick={clearHistory}>Clear history</button>
+          </div>
+          {delta !== null && (
+            <div className={`debt-history-delta ${delta <= 0 ? 'down' : 'up'}`}>
+              {delta <= 0 ? '▼' : '▲'} {country.symbol} {Math.abs(Math.round(delta)).toLocaleString()} since last snapshot
+            </div>
+          )}
+          {history.length > 1 && (
+            <SnapshotChart points={history} series={HISTORY_SERIES} symbol={country.symbol} />
+          )}
+          <div className="debt-history-list">
+            {[...history].reverse().map((h, idx) => (
+              <div key={idx} className="debt-history-row">
+                <span>{new Date(h.date).toLocaleDateString()}</span>
+                <strong>{country.symbol} {Math.round(h.total).toLocaleString()}</strong>
+              </div>
+            ))}
+          </div>
+          <p className="debt-history-note">
+            Logging your balance here just tracks it over time for your own reference -- it doesn't affect the
+            Avalanche/Snowball projections above, which are always calculated from the debts listed at the top.
+          </p>
+        </div>
       )}
     </div>
   );

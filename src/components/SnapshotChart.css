@@ -1,20 +1,42 @@
-/* src/components/NetWorthHistoryChart.css */
-.nw-chart {
+/* src/components/SnapshotChart.css */
+.snap-chart {
   position: relative;
   margin: 12px 0 20px;
 }
 
-.nw-chart-scroll {
+.snap-chart-legend {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.snap-chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--mut);
+}
+
+.snap-chart-swatch {
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.snap-chart-scroll {
   overflow-x: auto;
   overflow-y: hidden;
 }
 
-.nw-chart-inner {
+.snap-chart-inner {
   position: relative;
   min-width: 420px;
 }
 
-.nw-chart-svg {
+.snap-chart-svg {
   width: 100%;
   height: auto;
   display: block;
@@ -22,52 +44,50 @@
   touch-action: none;
 }
 
-.nw-chart-svg:focus-visible {
+.snap-chart-svg:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 4px;
   border-radius: 6px;
 }
 
-.nw-chart-gridline {
+.snap-chart-gridline {
   stroke: var(--border);
   stroke-width: 1;
 }
 
-.nw-chart-zeroline {
+.snap-chart-zeroline {
   stroke: var(--mut);
   stroke-width: 1;
   stroke-dasharray: 2 3;
 }
 
-.nw-chart-axis-label {
+.snap-chart-axis-label {
   font-size: 9px;
   fill: var(--mut);
 }
 
-.nw-chart-line {
-  stroke: var(--accent-green);
+.snap-chart-line {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.nw-chart-endpoint {
-  fill: var(--accent-green);
+.snap-chart-endpoint {
   stroke: var(--chart-surface);
   stroke-width: 1.5;
 }
 
-.nw-chart-endpoint.hover {
+.snap-chart-endpoint.hover {
   stroke-width: 2;
 }
 
-.nw-chart-crosshair {
+.snap-chart-crosshair {
   stroke: var(--mut);
   stroke-width: 1;
   stroke-dasharray: 3 3;
 }
 
-.nw-chart-tooltip {
+.snap-chart-tooltip {
   position: absolute;
   top: 4px;
   background: var(--card-bg);
@@ -77,23 +97,31 @@
   font-size: 0.78rem;
   pointer-events: none;
   backdrop-filter: blur(6px);
-  min-width: 140px;
+  min-width: 150px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
 }
 
-.nw-chart-tooltip-date {
+.snap-chart-tooltip-date {
   color: var(--mut);
   font-weight: 600;
   margin-bottom: 4px;
 }
 
-.nw-chart-tooltip-row {
-  color: var(--mut);
+.snap-chart-tooltip-row {
   display: flex;
-  justify-content: space-between;
-  gap: 10px;
+  align-items: center;
+  gap: 6px;
+  color: var(--mut);
 }
 
-.nw-chart-tooltip-row strong {
+.snap-chart-tooltip-row strong {
   color: var(--text);
+  margin-left: auto;
+}
+
+.snap-chart-key {
+  width: 10px;
+  height: 2px;
+  border-radius: 2px;
+  display: inline-block;
 }

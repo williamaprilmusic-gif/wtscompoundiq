@@ -71,4 +71,25 @@ describe('simulatePayoff', () => {
     const result = simulatePayoff(trap, 0, avalancheOrder);
     expect(result.reachable).toBe(false);
   });
+
+  it('a one-off lump sum clears debt in fewer months and for less interest than without it', () => {
+    const withoutLump = simulatePayoff(debts, 300, avalancheOrder);
+    const withLump = simulatePayoff(debts, 300, avalancheOrder, [{ month: 3, amount: 20000 }]);
+    expect(withLump.months).toBeLessThan(withoutLump.months);
+    expect(withLump.totalInterest).toBeLessThan(withoutLump.totalInterest);
+  });
+
+  it('a lump sum scheduled after the debt is already clear has no effect', () => {
+    const single = [{ id: 1, name: 'Loan', balance: 10000, rate: 12, minPayment: 500 }];
+    const withoutLump = simulatePayoff(single, 0, avalancheOrder);
+    const withLateLump = simulatePayoff(single, 0, avalancheOrder, [{ month: withoutLump.months + 12, amount: 5000 }]);
+    expect(withLateLump.months).toBe(withoutLump.months);
+    expect(withLateLump.totalInterest).toBe(withoutLump.totalInterest);
+  });
+
+  it('defaults lumpSums to empty and matches the no-lump-sum result exactly', () => {
+    const explicit = simulatePayoff(debts, 300, avalancheOrder, []);
+    const implicit = simulatePayoff(debts, 300, avalancheOrder);
+    expect(explicit).toEqual(implicit);
+  });
 });

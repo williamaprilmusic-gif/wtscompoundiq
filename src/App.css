@@ -606,6 +606,7 @@ body {
 .lumpsum-row {
   display: flex;
   align-items: flex-end;
+  flex-wrap: wrap;
   gap: 12px;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid var(--border);

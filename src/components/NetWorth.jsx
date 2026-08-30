@@ -6,7 +6,13 @@ import { countriesData, convertAmount } from '../data/countries';
 import { parseCSV, downloadCSV } from '../utils/csv';
 import { usePersistedState } from '../utils/usePersistedState';
 import { confirmRemoval } from '../utils/confirmRemoval';
-import NetWorthHistoryChart from './NetWorthHistoryChart';
+import SnapshotChart from './SnapshotChart';
+
+const HISTORY_SERIES = [
+  { key: 'assets', label: 'Assets' },
+  { key: 'debts', label: 'Debts' },
+  { key: 'net', label: 'Net Worth' }
+];
 
 const HISTORY_KEY = 'wts_compoundiq_networth_history';
 const ITEMS_KEY = 'wts_compoundiq_networth_items';
@@ -139,14 +145,22 @@ const NetWorth = ({ country }) => {
   };
 
   // Converted once and reused by both the chart and the list below instead of calling
-  // convertAmount twice per snapshot. Memoized on [history, country.code] so editing an
-  // unrelated field (an asset's value, say) doesn't hand the chart a new array reference
-  // every render -- NetWorthHistoryChart's own useMemo over this prop would otherwise
-  // recompute on every keystroke instead of only when the history actually changes.
-  const convertedHistory = useMemo(() => history.map(h => ({
-    date: h.date,
-    netWorth: convertAmount(h.netWorth, h.displayCurrency || country.code, country.code)
-  })), [history, country.code]);
+  // convertAmount three times per snapshot. Memoized on [history, country.code] so
+  // editing an unrelated field (an asset's value, say) doesn't hand the chart a new
+  // array reference every render -- SnapshotChart's own useMemo over this prop would
+  // otherwise recompute on every keystroke instead of only when history actually changes.
+  // Older snapshots saved before totalAssets/totalDebts were tracked have neither --
+  // fall back to netWorth/0 so the Assets/Debts lines just render flat at a sane value
+  // instead of NaN for those points.
+  const convertedHistory = useMemo(() => history.map(h => {
+    const from = h.displayCurrency || country.code;
+    return {
+      date: h.date,
+      net: convertAmount(h.netWorth, from, country.code),
+      assets: convertAmount(h.totalAssets ?? h.netWorth, from, country.code),
+      debts: convertAmount(h.totalDebts ?? 0, from, country.code)
+    };
+  }), [history, country.code]);
 
   return (
     <div className="card net-worth">
@@ -230,13 +244,13 @@ const NetWorth = ({ country }) => {
             <button className="nw-clear-btn" onClick={clearHistory}>Clear history</button>
           </div>
           {history.length > 1 && (
-            <NetWorthHistoryChart history={convertedHistory} symbol={country.symbol} />
+            <SnapshotChart points={convertedHistory} series={HISTORY_SERIES} symbol={country.symbol} />
           )}
           <div className="nw-history-list">
             {[...convertedHistory].reverse().map((h, idx) => (
               <div key={idx} className="nw-history-row">
                 <span>{new Date(h.date).toLocaleDateString()}</span>
-                <strong>{country.symbol} {Math.round(h.netWorth).toLocaleString()}</strong>
+                <strong>{country.symbol} {Math.round(h.net).toLocaleString()}</strong>
               </div>
             ))}
           </div>

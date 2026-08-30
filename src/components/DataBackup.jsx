@@ -12,11 +12,13 @@ const ALL_STORAGE_KEYS = [
   'wts_compoundiq_reminder_at',
   'wts_compoundiq_reminder_notified_at',
   'wts_compoundiq_networth_history',
+  'wts_compoundiq_debtpayoff_history',
   // Working data auto-saved by usePersistedState (see src/utils/usePersistedState.js)
   // -- the actual entered rows, not just the "Save This Plan" summaries above.
   'wts_compoundiq_networth_items',
   'wts_compoundiq_debtpayoff_debts',
   'wts_compoundiq_debtpayoff_extra',
+  'wts_compoundiq_debtpayoff_lumpsums',
   'wts_compoundiq_invest_goals'
 ];
 
