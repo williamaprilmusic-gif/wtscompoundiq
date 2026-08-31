@@ -386,6 +386,32 @@
   margin-left: 4px;
 }
 
+.nw-tab-empty {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.nw-tab-empty p {
+  color: var(--mut);
+  font-size: 0.88rem;
+  margin: 0 0 12px;
+}
+
+.nw-tab-empty button {
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: var(--accent);
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .nw-save-btn {
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-blue-deep) 100%);
   color: white;

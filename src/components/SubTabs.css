@@ -1,0 +1,31 @@
+/* src/components/SubTabs.css */
+.sub-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+
+.sub-tab-btn {
+  background: var(--raise-05);
+  border: 1px solid var(--raise-1);
+  color: var(--mut);
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 9px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.sub-tab-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.sub-tab-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}

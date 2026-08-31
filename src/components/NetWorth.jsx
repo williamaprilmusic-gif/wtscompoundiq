@@ -9,6 +9,7 @@ import { confirmRemoval } from '../utils/confirmRemoval';
 import SnapshotChart from './SnapshotChart';
 import CountrySelect from './CountrySelect';
 import AllocationChart from './AllocationChart';
+import SubTabs from './SubTabs';
 
 const HISTORY_SERIES = [
   { key: 'assets', label: 'Assets' },
@@ -75,7 +76,17 @@ const downloadTemplate = () => {
 // scenarioCountry: the Calculator tab's own country -- distinct from `country` (which
 // App.jsx resolves to reportingCurrencyCode when set), used only to label the "follow
 // the Calculator tab" option below so it's clear what that option actually means.
+// Fixed base set -- the FX Stress Test tab is appended conditionally below (only once
+// there's a foreign-currency item to stress-test), so it doesn't sit in the bar as a
+// permanently-empty option for a single-currency user.
+const BASE_SUB_TABS = [
+  { key: 'tracker', label: '💰 Tracker' },
+  { key: 'allocation', label: '📊 Allocation' },
+  { key: 'history', label: '📈 History & Forecast' }
+];
+
 const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onReportingCurrencyChange, canFxStressTest = false, onOpenPricing }) => {
+  const [activeSubTab, setActiveSubTab] = useState('tracker');
   const [items, setItems] = usePersistedState(ITEMS_KEY, []);
   const [history, setHistory] = useState([]);
   const [importError, setImportError] = useState(null);
@@ -313,6 +324,15 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
         {importError && <p className="nw-import-error">⚠️ {importError}</p>}
       </div>
 
+      <SubTabs
+        tabs={hasForeignCurrencyItems ? [...BASE_SUB_TABS, { key: 'fx', label: '💱 FX Stress Test' }] : BASE_SUB_TABS}
+        active={activeSubTab}
+        onChange={setActiveSubTab}
+        ariaLabel="Net Worth section"
+      />
+
+      {activeSubTab === 'tracker' && (
+      <>
       <div className="nw-columns">
         <div className="nw-column">
           <div className="nw-column-header">
@@ -377,24 +397,35 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
         )}
       </div>
 
-      {(totalAssets > 0 || totalDebts > 0) && (
-        <div className="nw-allocation">
-          {totalAssets > 0 && (
-            <div className="nw-allocation-card">
-              <h3>Asset Allocation</h3>
-              <AllocationChart segments={assetSegments} symbol={country.symbol} />
-            </div>
-          )}
-          {totalDebts > 0 && (
-            <div className="nw-allocation-card">
-              <h3>Debt Breakdown</h3>
-              <AllocationChart segments={debtSegments} symbol={country.symbol} />
-            </div>
-          )}
-        </div>
+      <button className="nw-save-btn" onClick={saveSnapshot}>📸 Save Snapshot</button>
+      </>
       )}
 
-      {hasForeignCurrencyItems && (
+      {activeSubTab === 'allocation' && (
+        (totalAssets > 0 || totalDebts > 0) ? (
+          <div className="nw-allocation">
+            {totalAssets > 0 && (
+              <div className="nw-allocation-card">
+                <h3>Asset Allocation</h3>
+                <AllocationChart segments={assetSegments} symbol={country.symbol} />
+              </div>
+            )}
+            {totalDebts > 0 && (
+              <div className="nw-allocation-card">
+                <h3>Debt Breakdown</h3>
+                <AllocationChart segments={debtSegments} symbol={country.symbol} />
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="nw-tab-empty">
+            <p>Add some assets or debts to see your allocation breakdown.</p>
+            <button type="button" onClick={() => setActiveSubTab('tracker')}>Go to Tracker →</button>
+          </div>
+        )
+      )}
+
+      {activeSubTab === 'fx' && hasForeignCurrencyItems && (
         canFxStressTest ? (
           <div className="nw-fx-stress">
             <h3>💱 FX Stress Test</h3>
@@ -443,9 +474,8 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
         )
       )}
 
-      <button className="nw-save-btn" onClick={saveSnapshot}>📸 Save Snapshot</button>
-
-      {history.length > 0 && (
+      {activeSubTab === 'history' && (
+        history.length > 0 ? (
         <div className="nw-history">
           <div className="nw-history-header">
             {/* convertedHistory.length, not history.length -- a corrupt/non-numeric entry is
@@ -497,6 +527,12 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
             ))}
           </div>
         </div>
+        ) : (
+          <div className="nw-tab-empty">
+            <p>No snapshots saved yet -- save one from the Tracker tab to start tracking your net worth over time.</p>
+            <button type="button" onClick={() => setActiveSubTab('tracker')}>Go to Tracker →</button>
+          </div>
+        )
       )}
 
       <p className="nw-note">

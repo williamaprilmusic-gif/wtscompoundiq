@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import './PowerTools.css';
 import Term from './Term';
+import SubTabs from './SubTabs';
 import { MAX_YEARS_TO_SEARCH, yearsToReachTarget, simulateDebtFirst, simulateInvestFirst, simulateDrawdown } from '../powerToolsEngine';
 import { savePlanSection } from '../utils/planStorage';
 import { calculateCompoundInterest } from '../engine';
@@ -15,7 +16,20 @@ import { convertAmount } from '../data/countries';
 import { DEBTS_KEY } from './DebtPayoff';
 import { HISTORY_KEY as NETWORTH_HISTORY_KEY, isValidNetWorthEntry } from './NetWorth';
 
+// Order here drives the sub-tab bar's order -- keep it matching the order the cards
+// appear in below so "next tab" reads the same as "next card" used to.
+const SUB_TABS = [
+  { key: 'fire', label: '🔥 FIRE Number' },
+  { key: 'debtVsInvest', label: '⚖️ Debt vs. Invest' },
+  { key: 'drawdown', label: '🏖️ Drawdown' },
+  { key: 'savings', label: '🏦 Savings Account' },
+  { key: 'education', label: '🎓 Education Savings' },
+  { key: 'affordability', label: '🏠 Home Affordability' },
+  { key: 'insurance', label: '🛡️ Insurance Needs' }
+];
+
 const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [] }) => {
+  const [activeSubTab, setActiveSubTab] = useState('fire');
   const [annualExpenses, setAnnualExpenses] = useState(0);
   const [withdrawalRate, setWithdrawalRate] = useState(4);
   const [fireSaved, setFireSaved] = useState(false);
@@ -182,6 +196,9 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
         <p>Quick-fire calculators that use your current calculator inputs as the baseline.</p>
       </div>
 
+      <SubTabs tabs={SUB_TABS} active={activeSubTab} onChange={setActiveSubTab} ariaLabel="Power Tools calculator" />
+
+      {activeSubTab === 'fire' && (
       <div className="power-tool-card">
         <h3>🔥 <Term k="fireNumber">FIRE Number</Term> Calculator</h3>
         <p className="power-tool-desc">Financial Independence, Retire Early -- how big a pot do you need, and how long until you get there?</p>
@@ -217,7 +234,9 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           </button>
         )}
       </div>
+      )}
 
+      {activeSubTab === 'debtVsInvest' && (
       <div className="power-tool-card">
         <h3>⚖️ Debt vs. Investment Showdown</h3>
         <p className="power-tool-desc">Extra cash available each month -- pay down debt, or invest it? Tax-aware verdict, plus a side-by-side {years}-year projection of both paths.</p>
@@ -262,7 +281,9 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           </>
         )}
       </div>
+      )}
 
+      {activeSubTab === 'drawdown' && (
       <div className="power-tool-card">
         <h3>🏖️ Retirement Drawdown Simulator</h3>
         <p className="power-tool-desc">Once you stop contributing and start withdrawing, does the pot actually last?</p>
@@ -304,7 +325,9 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           </>
         )}
       </div>
+      )}
 
+      {activeSubTab === 'savings' && (
       <div className="power-tool-card">
         <h3>🏦 Savings Account Interest Calculator</h3>
         <p className="power-tool-desc">How much interest will a lump sum sitting in a savings account actually earn -- no monthly deposits, just the deposit itself compounding.</p>
@@ -355,7 +378,9 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           outside of a {country.wrapperLabel} -- most savings accounts aren't eligible for that shelter.
         </p>
       </div>
+      )}
 
+      {activeSubTab === 'education' && (
       <div className="power-tool-card">
         <h3>🎓 Education Savings Goal Calculator</h3>
         <p className="power-tool-desc">Education costs typically rise faster than general inflation -- this projects a realistic future cost across every year of study, then works out what to save monthly to cover it.</p>
@@ -403,7 +428,9 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           </>
         )}
       </div>
+      )}
 
+      {activeSubTab === 'affordability' && (
       <div className="power-tool-card">
         <h3>🏠 Home/<Term k="bond">Bond</Term> Affordability Calculator</h3>
         <p className="power-tool-desc">Given your income and what you already pay toward other debt, how much home can you actually afford?</p>
@@ -472,7 +499,9 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           </>
         )}
       </div>
+      )}
 
+      {activeSubTab === 'insurance' && (
       <div className="power-tool-card">
         <h3>🛡️ Insurance Needs (<Term k="lifeCoverGap">Life Cover Gap</Term>) Calculator</h3>
         <p className="power-tool-desc">A needs-based estimate of how much life cover would actually be needed to protect dependents -- not a quote, just the math behind one.</p>
@@ -530,6 +559,7 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           </>
         )}
       </div>
+      )}
     </div>
   );
 };
