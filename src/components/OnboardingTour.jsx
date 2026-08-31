@@ -25,7 +25,7 @@ const STEPS = [
   {
     selector: '.language-switcher-compact',
     title: 'Your language',
-    body: 'Switch the app language here, or from the Start Here tab when you first land.'
+    body: 'Switch the app language here -- it stays visible from every tab, so you never need to hunt for it.'
   },
   {
     selector: '.data-backup',

@@ -83,7 +83,6 @@ export const translations = {
     startHere: {
       title: '👋 Start Here',
       subtitle: 'Three quick questions to find out what to focus on first -- in the order most financial guidance recommends.',
-      changeLanguage: 'Change language:',
       q1: 'Do you have any high-interest debt (roughly 15%+ APR, e.g. credit cards)?',
       q2: 'Do you have 3-6 months of essential expenses saved for emergencies?',
       q3: 'Are you already investing toward a specific goal every month?',
@@ -174,7 +173,6 @@ export const translations = {
     startHere: {
       title: '👋 Begin Hier',
       subtitle: 'Drie vinnige vrae om uit te vind waarop om eerste te fokus -- in die volgorde wat die meeste finansiële raad aanbeveel.',
-      changeLanguage: 'Verander taal:',
       q1: 'Het jy hoë-rente skuld (ongeveer 15%+ JKK, bv. kredietkaarte)?',
       q2: 'Het jy 3-6 maande se noodsaaklike uitgawes vir noodgevalle gespaar?',
       q3: 'Belê jy reeds elke maand na \'n spesifieke doelwit toe?',
@@ -265,7 +263,6 @@ export const translations = {
     startHere: {
       title: '👋 Empieza Aquí',
       subtitle: 'Tres preguntas rápidas para saber en qué enfocarte primero -- en el orden que recomienda la mayoría de las guías financieras.',
-      changeLanguage: 'Cambiar idioma:',
       q1: '¿Tienes deudas de alto interés (aproximadamente 15%+ TAE, p. ej. tarjetas de crédito)?',
       q2: '¿Tienes 3-6 meses de gastos esenciales ahorrados para emergencias?',
       q3: '¿Ya estás invirtiendo hacia una meta específica cada mes?',
@@ -356,7 +353,6 @@ export const translations = {
     startHere: {
       title: '👋 Commencer Ici',
       subtitle: "Trois questions rapides pour savoir sur quoi vous concentrer d'abord -- dans l'ordre recommandé par la plupart des conseils financiers.",
-      changeLanguage: 'Changer de langue :',
       q1: 'Avez-vous des dettes à taux élevé (environ 15%+ TAEG, ex. cartes de crédit) ?',
       q2: "Avez-vous 3 à 6 mois de dépenses essentielles épargnés pour les urgences ?",
       q3: 'Investissez-vous déjà chaque mois vers un objectif précis ?',
@@ -446,7 +442,6 @@ export const translations = {
     startHere: {
       title: '👋 Loslegen',
       subtitle: 'Drei kurze Fragen, um herauszufinden, worauf Sie sich zuerst konzentrieren sollten -- in der Reihenfolge, die die meisten Finanzratgeber empfehlen.',
-      changeLanguage: 'Sprache ändern:',
       q1: 'Haben Sie hochverzinsliche Schulden (ca. 15%+ effektiver Jahreszins, z. B. Kreditkarten)?',
       q2: 'Haben Sie 3-6 Monate der wichtigsten Ausgaben für Notfälle gespart?',
       q3: 'Investieren Sie bereits monatlich in ein bestimmtes Ziel?',
@@ -536,7 +531,6 @@ export const translations = {
     startHere: {
       title: '👋 Begin Hier',
       subtitle: 'Drie korte vragen om te ontdekken waar u zich eerst op moet richten -- in de volgorde die de meeste financiële adviezen aanbevelen.',
-      changeLanguage: 'Taal wijzigen:',
       q1: 'Heeft u dure schulden (ongeveer 15%+ rente, bijv. creditcards)?',
       q2: 'Heeft u 3-6 maanden essentiële uitgaven gespaard voor noodgevallen?',
       q3: 'Belegt u al maandelijks voor een specifiek doel?',
@@ -626,7 +620,6 @@ export const translations = {
     startHere: {
       title: '👋 Inizia Qui',
       subtitle: 'Tre semplici domande per scoprire su cosa concentrarsi per primo -- nell\'ordine consigliato dalla maggior parte delle guide finanziarie.',
-      changeLanguage: 'Cambia lingua:',
       q1: 'Hai debiti ad alto interesse (circa 15%+ TAEG, es. carte di credito)?',
       q2: 'Hai risparmiato 3-6 mesi di spese essenziali per le emergenze?',
       q3: 'Stai già investendo ogni mese verso un obiettivo specifico?',
@@ -716,7 +709,6 @@ export const translations = {
     startHere: {
       title: '👋 Comece Aqui',
       subtitle: 'Três perguntas rápidas para descobrir no que focar primeiro -- na ordem recomendada pela maioria das orientações financeiras.',
-      changeLanguage: 'Mudar idioma:',
       q1: 'Você tem alguma dívida de juros altos (aproximadamente 15%+ ao ano, ex. cartões de crédito)?',
       q2: 'Você tem 3-6 meses de despesas essenciais guardados para emergências?',
       q3: 'Você já está investindo mensalmente rumo a um objetivo específico?',
@@ -806,7 +798,6 @@ export const translations = {
     startHere: {
       title: '👋 Börja Här',
       subtitle: 'Tre snabba frågor för att ta reda på vad du bör fokusera på först -- i den ordning de flesta ekonomiska råd rekommenderar.',
-      changeLanguage: 'Byt språk:',
       q1: 'Har du några högräntelån (ungefär 15%+ effektiv ränta, t.ex. kreditkort)?',
       q2: 'Har du 3-6 månaders nödvändiga utgifter sparade för nödsituationer?',
       q3: 'Investerar du redan varje månad mot ett specifikt mål?',
@@ -896,7 +887,6 @@ export const translations = {
     startHere: {
       title: '👋 Start Her',
       subtitle: 'Tre raske spørsmål for å finne ut hva du bør fokusere på først -- i den rekkefølgen de fleste økonomiske råd anbefaler.',
-      changeLanguage: 'Endre språk:',
       q1: 'Har du høyrentegjeld (omtrent 15%+ effektiv rente, f.eks. kredittkort)?',
       q2: 'Har du 3-6 måneders nødvendige utgifter spart til nødsituasjoner?',
       q3: 'Investerer du allerede hver måned mot et bestemt mål?',
@@ -986,7 +976,6 @@ export const translations = {
     startHere: {
       title: '👋 Start Her',
       subtitle: 'Tre hurtige spørgsmål for at finde ud af, hvad du bør fokusere på først -- i den rækkefølge de fleste økonomiske råd anbefaler.',
-      changeLanguage: 'Skift sprog:',
       q1: 'Har du højrentegæld (ca. 15%+ ÅOP, f.eks. kreditkort)?',
       q2: 'Har du 3-6 måneders nødvendige udgifter sparet op til nødsituationer?',
       q3: 'Investerer du allerede hver måned mod et specifikt mål?',
@@ -1076,7 +1065,6 @@ export const translations = {
     startHere: {
       title: '👋 Zacznij Tutaj',
       subtitle: 'Trzy szybkie pytania, aby dowiedzieć się, na czym skupić się najpierw -- w kolejności zalecanej przez większość poradników finansowych.',
-      changeLanguage: 'Zmień język:',
       q1: 'Czy masz jakiekolwiek zadłużenie o wysokim oprocentowaniu (ok. 15%+ RRSO, np. karty kredytowe)?',
       q2: 'Czy masz zaoszczędzone 3-6 miesięcy niezbędnych wydatków na wypadek nagłych sytuacji?',
       q3: 'Czy już inwestujesz co miesiąc w konkretny cel?',
@@ -1166,7 +1154,6 @@ export const translations = {
     startHere: {
       title: '👋 Buradan Başlayın',
       subtitle: 'Önce neye odaklanmanız gerektiğini bulmak için üç hızlı soru -- çoğu finansal rehberin önerdiği sırayla.',
-      changeLanguage: 'Dili değiştir:',
       q1: 'Yüksek faizli borcunuz var mı (yaklaşık %15+ yıllık faiz, örn. kredi kartları)?',
       q2: 'Acil durumlar için 3-6 aylık temel giderinizi biriktirdiniz mi?',
       q3: 'Zaten her ay belirli bir hedefe yönelik yatırım yapıyor musunuz?',
@@ -1256,7 +1243,6 @@ export const translations = {
     startHere: {
       title: '👋 はじめに',
       subtitle: '最初に何に取り組むべきかを見つけるための3つの簡単な質問です -- ほとんどの資産形成ガイドが推奨する順序で。',
-      changeLanguage: '言語を変更:',
       q1: '高金利の借金がありますか(年率約15%以上、例:クレジットカード)?',
       q2: '緊急時のために生活必需費の3〜6か月分を貯蓄していますか?',
       q3: '毎月、具体的な目標に向けてすでに投資していますか?',
@@ -1346,7 +1332,6 @@ export const translations = {
     startHere: {
       title: '👋 从这里开始',
       subtitle: '三个简单问题,帮您找出应优先关注的事项 -- 按大多数理财指南推荐的顺序排列。',
-      changeLanguage: '更改语言:',
       q1: '您是否有高息债务(年利率约15%以上,例如信用卡)?',
       q2: '您是否已为紧急情况储蓄了3-6个月的基本开支?',
       q3: '您是否已经每月为某个具体目标进行投资?',
@@ -1436,7 +1421,6 @@ export const translations = {
     startHere: {
       title: '👋 시작하기',
       subtitle: '무엇을 먼저 해야 할지 알아보는 세 가지 간단한 질문입니다 -- 대부분의 재무 가이드가 권장하는 순서로 구성되어 있습니다.',
-      changeLanguage: '언어 변경:',
       q1: '고금리 부채가 있습니까(연 약 15% 이상, 예: 신용카드)?',
       q2: '비상시를 대비해 필수 생활비 3~6개월분을 저축해 두셨습니까?',
       q3: '이미 특정 목표를 위해 매월 투자하고 계십니까?',
@@ -1526,7 +1510,6 @@ export const translations = {
     startHere: {
       title: '👋 यहाँ से शुरू करें',
       subtitle: 'यह जानने के लिए तीन त्वरित प्रश्न कि पहले किस पर ध्यान देना चाहिए -- ज़्यादातर वित्तीय मार्गदर्शन द्वारा अनुशंसित क्रम में।',
-      changeLanguage: 'भाषा बदलें:',
       q1: 'क्या आप पर कोई उच्च-ब्याज ऋण है (लगभग 15%+ वार्षिक दर, जैसे क्रेडिट कार्ड)?',
       q2: 'क्या आपने आपात स्थिति के लिए 3-6 महीने के आवश्यक खर्च बचाकर रखे हैं?',
       q3: 'क्या आप पहले से ही किसी विशेष लक्ष्य के लिए हर महीने निवेश कर रहे हैं?',
@@ -1616,7 +1599,6 @@ export const translations = {
     startHere: {
       title: '👋 Bắt Đầu Tại Đây',
       subtitle: 'Ba câu hỏi nhanh để xác định điều cần ưu tiên trước -- theo thứ tự mà hầu hết các hướng dẫn tài chính khuyến nghị.',
-      changeLanguage: 'Đổi ngôn ngữ:',
       q1: 'Bạn có khoản nợ lãi suất cao nào không (khoảng 15%+ mỗi năm, ví dụ thẻ tín dụng)?',
       q2: 'Bạn đã tiết kiệm được 3-6 tháng chi phí thiết yếu cho trường hợp khẩn cấp chưa?',
       q3: 'Bạn đã đầu tư hàng tháng cho một mục tiêu cụ thể chưa?',
@@ -1706,7 +1688,6 @@ export const translations = {
     startHere: {
       title: '👋 Mulai Di Sini',
       subtitle: 'Tiga pertanyaan singkat untuk mengetahui apa yang harus difokuskan terlebih dahulu -- sesuai urutan yang direkomendasikan sebagian besar panduan keuangan.',
-      changeLanguage: 'Ubah bahasa:',
       q1: 'Apakah Anda memiliki utang berbunga tinggi (sekitar 15%+ per tahun, misalnya kartu kredit)?',
       q2: 'Apakah Anda telah menabung 3-6 bulan pengeluaran penting untuk keadaan darurat?',
       q3: 'Apakah Anda sudah berinvestasi setiap bulan untuk tujuan tertentu?',
@@ -1796,7 +1777,6 @@ export const translations = {
     startHere: {
       title: '👋 ابدأ هنا',
       subtitle: 'ثلاثة أسئلة سريعة لمعرفة ما يجب التركيز عليه أولاً -- بالترتيب الذي توصي به معظم الإرشادات المالية.',
-      changeLanguage: 'تغيير اللغة:',
       q1: 'هل لديك أي ديون بفائدة مرتفعة (حوالي 15%+ سنوياً، مثل بطاقات الائتمان)؟',
       q2: 'هل ادّخرت 3-6 أشهر من النفقات الأساسية للطوارئ؟',
       q3: 'هل تستثمر بالفعل شهرياً لتحقيق هدف معين؟',
@@ -1886,7 +1866,6 @@ export const translations = {
     startHere: {
       title: '👋 یہاں سے شروع کریں',
       subtitle: 'یہ جاننے کے لیے تین فوری سوالات کہ پہلے کس چیز پر توجہ دی جائے -- زیادہ تر مالیاتی رہنمائی کی تجویز کردہ ترتیب میں۔',
-      changeLanguage: 'زبان تبدیل کریں:',
       q1: 'کیا آپ پر کوئی زیادہ شرح سود والا قرض ہے (تقریباً 15%+ سالانہ، مثلاً کریڈٹ کارڈ)؟',
       q2: 'کیا آپ نے ہنگامی حالات کے لیے 3-6 ماہ کے ضروری اخراجات بچائے ہیں؟',
       q3: 'کیا آپ پہلے ہی کسی خاص مقصد کے لیے ہر ماہ سرمایہ کاری کر رہے ہیں؟',
@@ -1976,7 +1955,6 @@ export const translations = {
     startHere: {
       title: '👋 Anza Hapa',
       subtitle: 'Maswali matatu ya haraka ili kujua unachopaswa kuzingatia kwanza -- kwa mpangilio unaopendekezwa na mwongozo mwingi wa kifedha.',
-      changeLanguage: 'Badilisha lugha:',
       q1: 'Je, una deni lolote lenye riba kubwa (takriban 15%+ kwa mwaka, mfano kadi za mikopo)?',
       q2: 'Je, umehifadhi matumizi muhimu ya miezi 3-6 kwa dharura?',
       q3: 'Je, tayari unawekeza kila mwezi kuelekea lengo maalum?',
