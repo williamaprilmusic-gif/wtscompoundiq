@@ -34,6 +34,15 @@ import { downloadCSV } from './utils/csv';
 
 const THEME_KEY = 'wts_compoundiq_theme';
 const REPORTING_CURRENCY_KEY = 'wts_compoundiq_reporting_currency';
+// Mirrors the monthly/annual figures shown in TierPricing.jsx's tier cards -- kept as a
+// separate constant here (rather than imported) because PaymentSection only needs the
+// numbers, not the marketing copy, but the two must be updated together. Enterprise has
+// no fixed price (per-seat/firm licensing, quoted directly) so it's intentionally absent
+// and falls through to the 'Custom' string below.
+const UPGRADE_PRICES = {
+  Pro: { monthly: 199, annual: 1499 },
+  Ultra: { monthly: 299, annual: 2499 }
+};
 // Generous enough for any realistic plan (a 20-year-old projecting to age 100+), but
 // bounded -- an unbounded "years" value feeds every per-year loop in the app (the
 // yearly table, the growth chart, and especially Monte Carlo's 1,000-path simulation),
@@ -77,6 +86,11 @@ export default function App() {
     try { localStorage.setItem(TOUR_SEEN_KEY, 'true'); } catch { /* ignore (private mode, storage full, etc.) */ }
   };
   const [selectedUpgradeTier, setSelectedUpgradeTier] = useState(null);
+  // 'monthly' | 'annual' -- only Pro/Ultra offer an annual option (set via TierPricing's
+  // toggle); every other entry point into checkout (a locked-tab click) has no billing
+  // selector, so handleUpgradeClick below resets this to 'monthly' rather than carrying
+  // over a stale choice from an earlier abandoned pricing-modal visit.
+  const [selectedBillingPeriod, setSelectedBillingPeriod] = useState('monthly');
   const [pendingTab, setPendingTab] = useState(null);
 
   // Calculator state -- starts blank; every number here should come from the user, not
@@ -196,6 +210,7 @@ export default function App() {
   const handleUpgradeClick = (targetTier, targetTab = null) => {
     if (userTier === targetTier || targetTier === 'Basic') return;
     setSelectedUpgradeTier(targetTier);
+    setSelectedBillingPeriod('monthly'); // this entry point (a locked-tab click) has no billing toggle
     setPendingTab(targetTab);
     setShowPayment(true);
   };
@@ -276,9 +291,9 @@ export default function App() {
     {
       label: t('nav.groupAI'),
       tabs: [
-        { name: 'Coach', i18nKey: 'nav.coach', tier: 'Enterprise' },
+        { name: 'Coach', i18nKey: 'nav.coach', tier: 'Ultra' },
         { name: 'Monte Carlo', i18nKey: 'nav.monteCarlo', tier: 'Ultra' },
-        { name: 'AI Advisor', i18nKey: 'nav.aiAdvisor', tier: 'Enterprise' }
+        { name: 'AI Advisor', i18nKey: 'nav.aiAdvisor', tier: 'Ultra' }
       ]
     }
   ], [t]);
@@ -585,7 +600,7 @@ export default function App() {
           </div>
         )}
 
-        {activeTab === 'AI Advisor' && canAccess('Enterprise') && (
+        {activeTab === 'AI Advisor' && canAccess('Ultra') && (
           <div className="tab-pane active">
             <AIAdvisor country={country} profile={profile} onProfileUpdate={setProfile} />
           </div>
@@ -656,7 +671,7 @@ export default function App() {
           </div>
         )}
 
-        {activeTab === 'Coach' && canAccess('Enterprise') && (
+        {activeTab === 'Coach' && canAccess('Ultra') && (
           <div className="tab-pane active">
             <Coach country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} onSetWrapper={setWrapper} onSetMonthly={setMonthly} onSetYears={setYears} />
           </div>
@@ -684,10 +699,11 @@ export default function App() {
       {showPricing && (
         <TierPricing
           currentTier={userTier}
-          onUpgrade={(tier) => {
+          onUpgrade={(tier, period = 'monthly') => {
             if (tier === userTier) return;
             if (tier === 'Basic') { downgradeToBasic(); return; }
             setSelectedUpgradeTier(tier);
+            setSelectedBillingPeriod(period);
             // This path isn't tied to any specific locked tab, so don't let a stale
             // pendingTab from an earlier abandoned locked-tab click hijack navigation
             // once this payment succeeds.
@@ -702,7 +718,8 @@ export default function App() {
       {showPayment && selectedUpgradeTier && (
         <PaymentSection
           tier={selectedUpgradeTier}
-          price={selectedUpgradeTier === 'Pro' ? 199 : selectedUpgradeTier === 'Ultra' ? 399 : selectedUpgradeTier === 'Enterprise' ? 'Custom' : 99}
+          price={UPGRADE_PRICES[selectedUpgradeTier]?.[selectedBillingPeriod] ?? UPGRADE_PRICES[selectedUpgradeTier]?.monthly ?? 'Custom'}
+          period={selectedBillingPeriod}
           country={country}
           onSuccess={processSuccessfulPayment}
           onClose={() => { setShowPayment(false); setPendingTab(null); }}

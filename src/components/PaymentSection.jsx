@@ -18,10 +18,11 @@ const SA_BANKS = [
   'Mercantile Bank'
 ];
 
-export default function PaymentSection({ tier, price, country, onSuccess, onClose }) {
+export default function PaymentSection({ tier, price, period = 'monthly', country, onSuccess, onClose }) {
   const bankRedirectAvailable = country?.code === 'za';
   const [processing, setProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('card');
+  const periodLabel = period === 'annual' ? '/yr' : '/mo';
 
   const handlePaystackRedirect = () => {
     // Real Paystack Integration Key placeholder:
@@ -36,7 +37,7 @@ export default function PaymentSection({ tier, price, country, onSuccess, onClos
     const handler = window.Paystack.setup({
       key: 'pk_test_your_real_paystack_public_key_here', // Replace with your live key
       email: 'user@example.com',
-      amount: price * 100, // Paystack expects amount in cents (R199 = 19900 cents)
+      amount: price * 100, // Paystack expects amount in cents (R199 = 19900 cents); same formula for an annual price (e.g. R1,499 = 149900 cents)
       currency: 'ZAR',
       label: `Upgrade to ${tier}`,
       callback: function(response) {
@@ -64,7 +65,7 @@ export default function PaymentSection({ tier, price, country, onSuccess, onClos
       <div className="payment-card">
         <button className="close-btn" onClick={onClose} aria-label="Close">&times;</button>
         <h3>Demo Upgrade <span className="demo-badge">No Charge</span></h3>
-        <p className="payment-sub">You are previewing <strong>{tier}</strong> (normally <strong>{price}/mo</strong>). This is a demo checkout -- no card is charged and no payment is processed.</p>
+        <p className="payment-sub">You are previewing <strong>{tier}</strong> (normally <strong>{typeof price === 'number' ? `R${price.toLocaleString()}${periodLabel}` : price}</strong>). This is a demo checkout -- no card is charged and no payment is processed.</p>
 
         {bankRedirectAvailable && (
           <div className="payment-methods-toggle">
