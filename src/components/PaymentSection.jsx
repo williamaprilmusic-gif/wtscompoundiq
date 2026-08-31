@@ -22,6 +22,12 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
   const bankRedirectAvailable = country?.code === 'za';
   const [processing, setProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('card');
+  // The app has no account system (see Terms § "No Account, Local-First Data") -- this
+  // is the ONLY place anywhere in the app that ever asks for an email address, and only
+  // because Paystack requires one per transaction (for the receipt and to de-duplicate
+  // a returning customer). It's collected here, not stored by this app anywhere, and
+  // (per the Privacy Policy) only ever reaches the payment processor.
+  const [email, setEmail] = useState('');
   const periodLabel = period === 'annual' ? '/yr' : '/mo';
 
   const handlePaystackRedirect = () => {
@@ -36,7 +42,11 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
     }
     const handler = window.Paystack.setup({
       key: 'pk_test_your_real_paystack_public_key_here', // Replace with your live key
-      email: 'user@example.com',
+      // Was hardcoded to a fake placeholder address -- every live transaction would
+      // have sent Paystack the same literal 'user@example.com' instead of the actual
+      // payer's email, silently breaking receipts, refund lookups, and the Privacy
+      // Policy's own claim that "the email address you paid with" is what's collected.
+      email,
       amount: price * 100, // Paystack expects amount in cents (R199 = 19900 cents); same formula for an annual price (e.g. R1,499 = 149900 cents)
       currency: 'ZAR',
       label: `Upgrade to ${tier}`,
@@ -66,6 +76,15 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
         <button className="close-btn" onClick={onClose} aria-label="Close">&times;</button>
         <h3>Demo Upgrade <span className="demo-badge">No Charge</span></h3>
         <p className="payment-sub">You are previewing <strong>{tier}</strong> (normally <strong>{typeof price === 'number' ? `R${price.toLocaleString()}${periodLabel}` : price}</strong>). This is a demo checkout -- no card is charged and no payment is processed.</p>
+
+        <input
+          type="email"
+          className="payment-email-input"
+          placeholder="Email (for your receipt)"
+          aria-label="Email address"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
         {bankRedirectAvailable && (
           <div className="payment-methods-toggle">
@@ -108,7 +127,7 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
           <button
             className="btn-pay now"
             onClick={paymentMethod === 'bank' && bankRedirectAvailable ? handlePaystackRedirect : simulateLocalPayment}
-            disabled={processing}
+            disabled={processing || !email.trim()}
           >
             {processing ? 'Simulating Upgrade...' : `Simulate Upgrade (No Charge)`}
           </button>

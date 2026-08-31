@@ -101,6 +101,24 @@
   gap: 15px;
 }
 
+.payment-email-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--raise-1);
+  color: var(--text);
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 16px;
+  box-sizing: border-box;
+}
+
+.payment-email-input:focus {
+  border-color: var(--accent);
+}
+
 .card-fields, .bank-fields {
   display: flex;
   flex-direction: column;
