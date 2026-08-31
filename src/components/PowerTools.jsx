@@ -8,6 +8,8 @@ import { calculateCompoundInterest } from '../engine';
 import { calculateLoanAmortization } from '../loanAmortization';
 import { maxLoanForPayment, estimateZaTransferDuty } from '../homeAffordability';
 import { computeCoverGap } from '../insuranceNeeds';
+import { projectEducationCost } from '../educationSavings';
+import { solveMonthlyForGoal } from '../goalSolver';
 import { readJSONArray } from '../utils/storage';
 import { convertAmount } from '../data/countries';
 import { DEBTS_KEY } from './DebtPayoff';
@@ -52,6 +54,14 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const [coverFinalExpenses, setCoverFinalExpenses] = useState(0);
   const [coverExistingCover, setCoverExistingCover] = useState(0);
   const [coverExistingSavings, setCoverExistingSavings] = useState(0);
+
+  // Education costs have historically outpaced general CPI -- default a few points
+  // above this country's typicalInflation as a starting guess, editable afterward.
+  const [eduCurrentCost, setEduCurrentCost] = useState(0);
+  const [eduYearsUntil, setEduYearsUntil] = useState(10);
+  const [eduStudyYears, setEduStudyYears] = useState(4);
+  const [eduInflation, setEduInflation] = useState(Math.round((country.typicalInflation || 5) + 3));
+  const [eduAlreadySaved, setEduAlreadySaved] = useState(0);
 
   const safeWithdrawalRate = withdrawalRate > 0 ? withdrawalRate : 0.01;
   const fireNumber = annualExpenses / (safeWithdrawalRate / 100);
@@ -137,6 +147,21 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
     const assets = last.totalAssets ?? last.netWorth;
     setCoverExistingSavings(Math.round(convertAmount(assets, last.displayCurrency || country.code, country.code)));
   };
+
+  // Education Savings Goal: inflate the cost of each study year separately (fees due
+  // further out have longer to compound), sum to one lump-sum-by-enrollment target,
+  // then reuse the same monthly-contribution solver Invest.jsx's goals use. inflation
+  // is passed as 0 here (not this.inflation) since the target amount is already a
+  // nominal future figure -- goalSolver's own `inflation` param would double-count it.
+  const eduProjection = projectEducationCost({
+    currentAnnualCost: eduCurrentCost, yearsUntilEnrollment: eduYearsUntil, studyYears: eduStudyYears, educationInflationRate: eduInflation
+  });
+  const safeEduYearsUntil = eduYearsUntil > 0 ? eduYearsUntil : 1;
+  const eduRequiredMonthly = solveMonthlyForGoal({
+    startingAmount: eduAlreadySaved, rate, years: safeEduYearsUntil, inflation: 0, taxRate: country.taxRate, wrapper,
+    goalAmount: eduProjection.totalFutureCost, compoundFrequency,
+    annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit
+  });
 
   const saveFirePlan = () => {
     savePlanSection('fire', {
@@ -329,6 +354,54 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           and taxes the interest at {country.name}'s flat {country.taxRate}% rate the same way the Calculator tab does
           outside of a {country.wrapperLabel} -- most savings accounts aren't eligible for that shelter.
         </p>
+      </div>
+
+      <div className="power-tool-card">
+        <h3>🎓 Education Savings Goal Calculator</h3>
+        <p className="power-tool-desc">Education costs typically rise faster than general inflation -- this projects a realistic future cost across every year of study, then works out what to save monthly to cover it.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Current Annual Cost ({country.symbol}/yr, today's money)</label>
+            <input type="number" min="0" step="1000" value={eduCurrentCost} onChange={(e) => setEduCurrentCost(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Years Until Enrollment</label>
+            <input type="number" min="0" max="30" value={eduYearsUntil} onChange={(e) => setEduYearsUntil(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Years of Study</label>
+            <input type="number" min="1" max="10" value={eduStudyYears} onChange={(e) => setEduStudyYears(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Education <Term k="inflation">Inflation</Term> Rate (%/yr)</label>
+            <input type="number" min="0" step="0.1" value={eduInflation} onChange={(e) => setEduInflation(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Already Saved ({country.symbol})</label>
+            <input type="number" min="0" step="1000" value={eduAlreadySaved} onChange={(e) => setEduAlreadySaved(Number(e.target.value))} />
+          </div>
+        </div>
+        {eduCurrentCost > 0 && (
+          <>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Total Future Cost ({eduStudyYears}yr of study)</span>
+                <strong className="warn">{country.symbol} {Math.round(eduProjection.totalFutureCost).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>You Need to Save (per month)</span>
+                <strong className="positive">{country.symbol} {Math.round(eduRequiredMonthly).toLocaleString()}</strong>
+              </div>
+            </div>
+            <p className="power-tool-note">
+              Assumes fees rise {eduInflation}%/yr from today until each year of study is actually due (so later study
+              years cost more than the first), and that this amount compounds at your {rate}% return
+              {wrapper && hasWrapper ? ` inside a ${country.wrapperLabel}` : ` after ${country.name}'s ${country.taxRate}% tax on gains`} until enrollment. Once
+              studying starts, this doesn't model drawing down the pot across those {eduStudyYears} years -- treat the
+              total above as the lump sum that needs to be ready by day one.
+            </p>
+          </>
+        )}
       </div>
 
       <div className="power-tool-card">

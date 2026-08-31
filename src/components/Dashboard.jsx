@@ -14,6 +14,7 @@ import { HISTORY_KEY as NETWORTH_HISTORY_KEY, isValidNetWorthEntry } from './Net
 import { HISTORY_KEY as DEBTPAYOFF_HISTORY_KEY, isValidDebtHistoryEntry } from './DebtPayoff';
 import { HISTORY_KEY as EMERGENCYFUND_HISTORY_KEY, isValidEfHistoryEntry } from './EmergencyFund';
 import { scoreEmergencyFund, scoreDebtPayoff, scoreNetWorthTrend, scoreFireProgress, computeHealthScore } from '../financialHealthScore';
+import { detectNetWorthMilestones, detectDebtClearedMilestone, detectEfFundedMilestone, sortMilestones } from '../milestones';
 import { readJSONArray } from '../utils/storage';
 
 const NETWORTH_SERIES = [{ key: 'assets', label: 'Assets' }, { key: 'debts', label: 'Debts' }, { key: 'net', label: 'Net Worth' }];
@@ -97,6 +98,14 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
     { key: 'fire', label: '🔥 FIRE Progress', score: scoreFireProgress(plan?.fire?.yearsToFire) }
   ]), [efFundedPct, plan, netWorthPoints]);
 
+  // Milestones: pure pattern-matching over the same history/plan data above -- no new
+  // inputs, nothing computed that isn't already implied by what's been saved elsewhere.
+  const milestones = useMemo(() => sortMilestones([
+    ...detectNetWorthMilestones(netWorthPoints),
+    ...detectDebtClearedMilestone(debtPoints),
+    ...detectEfFundedMilestone(plan?.emergencyFund)
+  ]), [netWorthPoints, debtPoints, plan]);
+
   return (
     <div className="card dashboard">
       <div className="dashboard-header">
@@ -118,6 +127,23 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
             score or financial advice. Save a plan/snapshot in more tabs to bring the rest of it in.
           </p>
         </>
+      )}
+
+      {milestones.length > 0 && (
+        <div className="dashboard-milestones">
+          <h3>🏆 Milestones</h3>
+          <ul>
+            {milestones.map(m => (
+              <li key={m.key}>
+                <span className="dashboard-milestone-icon">{m.icon}</span>
+                <span className="dashboard-milestone-label">
+                  {m.label}{m.amount != null && ` ${netWorthCountry.symbol}${m.amount.toLocaleString()}`}
+                </span>
+                <span className="dashboard-milestone-date">{fmtDaysAgo(daysBetween(m.date))}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       <div className="dashboard-grid">

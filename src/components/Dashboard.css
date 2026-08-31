@@ -27,6 +27,53 @@
   margin: 0;
 }
 
+.dashboard-milestones {
+  margin-bottom: 22px;
+}
+
+.dashboard-milestones h3 {
+  font-size: 1rem;
+  color: var(--text);
+  margin: 0 0 10px;
+}
+
+.dashboard-milestones ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dashboard-milestones li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(74, 222, 128, 0.06);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+}
+
+.dashboard-milestone-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.dashboard-milestone-label {
+  color: var(--text);
+  font-weight: 600;
+  flex: 1;
+}
+
+.dashboard-milestone-date {
+  color: var(--mut);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

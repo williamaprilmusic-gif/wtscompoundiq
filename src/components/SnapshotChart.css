@@ -72,9 +72,29 @@
   stroke-linejoin: round;
 }
 
+.snap-chart-line-projected {
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 5 4;
+  opacity: 0.75;
+}
+
+.snap-chart-today-line {
+  stroke: var(--mut);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+
 .snap-chart-endpoint {
   stroke: var(--chart-surface);
   stroke-width: 1.5;
+}
+
+.snap-chart-endpoint-projected {
+  fill: none;
+  stroke-width: 2;
+  opacity: 0.85;
 }
 
 .snap-chart-endpoint.hover {
@@ -105,6 +125,11 @@
   color: var(--mut);
   font-weight: 600;
   margin-bottom: 4px;
+}
+
+.snap-chart-tooltip-projected-tag {
+  font-weight: 400;
+  font-style: italic;
 }
 
 .snap-chart-tooltip-row {

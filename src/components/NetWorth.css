@@ -115,7 +115,7 @@
 
 .nw-item {
   display: grid;
-  grid-template-columns: 1fr 74px 110px auto;
+  grid-template-columns: 1fr 110px 74px 110px auto;
   gap: 8px;
   margin-bottom: 8px;
 }
@@ -139,10 +139,11 @@
 @media (max-width: 520px) {
   .nw-item {
     grid-template-columns: 1fr auto;
-    grid-template-areas: "name remove" "currency value";
+    grid-template-areas: "name remove" "category currency" "value value";
   }
   .nw-item input[type="text"] { grid-area: name; }
-  .nw-item select { grid-area: currency; }
+  .nw-item select:nth-of-type(1) { grid-area: category; }
+  .nw-item select:nth-of-type(2) { grid-area: currency; }
   .nw-item input[type="number"] { grid-area: value; }
   .nw-item .nw-remove { grid-area: remove; }
 }
@@ -213,6 +214,71 @@
 
 .nw-delta.down {
   color: var(--accent-red);
+}
+
+.nw-allocation {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.nw-allocation-card {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+
+.nw-allocation-card h3 {
+  font-size: 0.95rem;
+  color: var(--text);
+  margin: 0 0 14px;
+}
+
+.nw-forecast-controls {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  font-size: 0.82rem;
+  color: var(--mut);
+}
+
+.nw-forecast-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.nw-forecast-controls label:not(.nw-forecast-toggle) {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nw-forecast-controls input[type="number"] {
+  width: 64px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--raise-1);
+  color: var(--text);
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.nw-forecast-controls input[type="number"]:focus {
+  border-color: var(--accent);
+}
+
+.nw-forecast-note {
+  font-size: 0.78rem;
+  color: var(--mut2);
+  line-height: 1.5;
+  margin: 6px 0 4px;
 }
 
 .nw-save-btn {

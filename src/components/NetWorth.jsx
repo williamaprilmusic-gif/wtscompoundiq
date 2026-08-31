@@ -8,12 +8,36 @@ import { usePersistedState } from '../utils/usePersistedState';
 import { confirmRemoval } from '../utils/confirmRemoval';
 import SnapshotChart from './SnapshotChart';
 import CountrySelect from './CountrySelect';
+import AllocationChart from './AllocationChart';
 
 const HISTORY_SERIES = [
   { key: 'assets', label: 'Assets' },
   { key: 'debts', label: 'Debts' },
   { key: 'net', label: 'Net Worth' }
 ];
+
+// Fixed category sets per item type -- 'Other' is the default for a new item and the
+// fallback for anything a CSV import can't match, so every item always has a usable
+// category rather than an empty/undefined one breaking the allocation chart below.
+const ASSET_CATEGORIES = ['Cash', 'Investments', 'Property', 'Retirement', 'Vehicle', 'Other'];
+const DEBT_CATEGORIES = ['Credit Card', 'Loan', 'Bond/Mortgage', 'Other'];
+
+// Fixed hue per category, assigned by identity (never cycled/generated) -- see the
+// dataviz skill. 'Other' reads as neutral/miscellaneous everywhere else in the app
+// (SnapshotChart's 'standard' series), so it gets --mut here too. Loan/Vehicle sharing
+// a hue is fine -- they never appear in the same chart (one's an asset category, the
+// other a debt category, and AllocationChart only ever renders one type's items).
+const CATEGORY_COLOR_VAR = {
+  Cash: '--accent',
+  Investments: '--accent-green',
+  Property: '--accent-purple',
+  Retirement: '--accent-blue-deep',
+  Vehicle: '--accent-yellow',
+  'Credit Card': '--accent-red',
+  Loan: '--accent-yellow',
+  'Bond/Mortgage': '--accent-purple',
+  Other: '--mut'
+};
 
 export const HISTORY_KEY = 'wts_compoundiq_networth_history';
 const ITEMS_KEY = 'wts_compoundiq_networth_items';
@@ -41,10 +65,10 @@ const REPORTING_CURRENCY_OPTIONS = (scenarioCountry) => [
 
 const downloadTemplate = () => {
   downloadCSV('wts-compoundiq-networth-template.csv', [
-    ['name', 'type', 'currency', 'value'],
-    ['Savings account', 'asset', 'ZAR', '50000'],
-    ['Brokerage account', 'asset', 'USD', '3000'],
-    ['Credit card', 'debt', 'ZAR', '8000']
+    ['name', 'type', 'category', 'currency', 'value'],
+    ['Savings account', 'asset', 'Cash', 'ZAR', '50000'],
+    ['Brokerage account', 'asset', 'Investments', 'USD', '3000'],
+    ['Credit card', 'debt', 'Credit Card', 'ZAR', '8000']
   ]);
 };
 
@@ -69,11 +93,12 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
   // reporting currency -- see the "Display currency" picker above, which can be pinned
   // independently of the Calculator tab's country).
   const addItem = (type) => {
-    setItems(prev => [...prev, { id: Date.now(), name: '', type, value: 0, currency: country.code }]);
+    setItems(prev => [...prev, { id: Date.now(), name: '', type, value: 0, currency: country.code, category: 'Other' }]);
   };
 
   const updateItem = (id, field, value) => {
-    setItems(prev => prev.map(i => i.id === id ? { ...i, [field]: field === 'name' || field === 'currency' ? value : Number(value) } : i));
+    const isTextField = field === 'name' || field === 'currency' || field === 'category';
+    setItems(prev => prev.map(i => i.id === id ? { ...i, [field]: isTextField ? value : Number(value) } : i));
   };
 
   // Confirm before removing -- but only when there's actually something to lose. A
@@ -100,6 +125,7 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
         const header = rows[0].map(h => h.trim().toLowerCase());
         const nameIdx = header.indexOf('name');
         const typeIdx = header.indexOf('type');
+        const categoryIdx = header.indexOf('category');
         const currencyIdx = header.indexOf('currency');
         const valueIdx = header.indexOf('value');
         if (nameIdx === -1 || valueIdx === -1) {
@@ -110,10 +136,15 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
           const rawCurrency = (currencyIdx !== -1 ? r[currencyIdx] || '' : '').trim().toLowerCase();
           // Accept either a country code ("za") or a currency code ("ZAR") -- whichever matches.
           const matchedCountry = countriesData.find(c => c.code === rawCurrency || c.currency.toLowerCase() === rawCurrency);
+          const type = (typeIdx !== -1 && (r[typeIdx] || '').trim().toLowerCase() === 'debt') ? 'debt' : 'asset';
+          const categoryOptions = type === 'debt' ? DEBT_CATEGORIES : ASSET_CATEGORIES;
+          const rawCategory = (categoryIdx !== -1 ? r[categoryIdx] || '' : '').trim().toLowerCase();
+          const matchedCategory = categoryOptions.find(c => c.toLowerCase() === rawCategory) || 'Other';
           return {
             id: Date.now() + idx,
             name: (r[nameIdx] || '').trim().slice(0, 80),
-            type: (typeIdx !== -1 && (r[typeIdx] || '').trim().toLowerCase() === 'debt') ? 'debt' : 'asset',
+            type,
+            category: matchedCategory,
             currency: matchedCountry ? matchedCountry.code : country.code,
             value: cleanCSVNumber(r[valueIdx])
           };
@@ -147,6 +178,23 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
   const totalDebts = items.filter(i => i.type === 'debt').reduce((s, i) => s + valueIn(i), 0);
   const netWorth = totalAssets - totalDebts;
 
+  // Category breakdown for the allocation donuts below -- every category always
+  // appears (even at value 0) so the color assignment stays stable as items move
+  // between categories; AllocationChart itself drops the zero-value ones before
+  // rendering a slice for them.
+  const assetSegments = ASSET_CATEGORIES.map(cat => ({
+    key: cat,
+    label: cat,
+    colorVar: CATEGORY_COLOR_VAR[cat],
+    value: items.filter(i => i.type === 'asset' && (i.category || 'Other') === cat).reduce((s, i) => s + valueIn(i), 0)
+  }));
+  const debtSegments = DEBT_CATEGORIES.map(cat => ({
+    key: cat,
+    label: cat,
+    colorVar: CATEGORY_COLOR_VAR[cat],
+    value: items.filter(i => i.type === 'debt' && (i.category || 'Other') === cat).reduce((s, i) => s + valueIn(i), 0)
+  }));
+
   // Converted once and reused by the delta below, the chart, and the list further down
   // instead of calling convertAmount three times per snapshot. Memoized on
   // [history, country.code] so editing an unrelated field (an asset's value, say)
@@ -173,6 +221,30 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
   // same pattern DebtPayoff.jsx/EmergencyFund.jsx use for their own deltas.
   const lastSnapshot = convertedHistory.length > 0 ? convertedHistory[convertedHistory.length - 1] : null;
   const delta = lastSnapshot ? netWorth - lastSnapshot.net : null;
+
+  // Forecast: extends the chart with a dashed continuation of the trend, via
+  // SnapshotChart's opt-in projectedPoints prop. Simplification, stated below in the
+  // note: assets compound at forecastRate/yr, debts are assumed to hold flat at their
+  // last known value (this doesn't know your Debt Payoff plan's payoff timeline), and
+  // net worth is just their difference each year. Needs 2+ real points -- a forecast
+  // needs a real trend to extrapolate from, same requirement SnapshotChart itself has.
+  const [forecastEnabled, setForecastEnabled] = useState(true);
+  const [forecastYears, setForecastYears] = useState(5);
+  const [forecastRate, setForecastRate] = useState(8);
+  const canForecast = convertedHistory.length > 1;
+  const projectedPoints = useMemo(() => {
+    if (!canForecast || !forecastEnabled || forecastYears <= 0) return [];
+    const last = convertedHistory[convertedHistory.length - 1];
+    const startDate = new Date(last.date);
+    const points = [];
+    for (let y = 1; y <= forecastYears; y++) {
+      const projectedAssets = last.assets * Math.pow(1 + forecastRate / 100, y);
+      const date = new Date(startDate);
+      date.setFullYear(date.getFullYear() + y);
+      points.push({ date: date.toISOString(), assets: projectedAssets, debts: last.debts, net: projectedAssets - last.debts });
+    }
+    return points;
+  }, [canForecast, forecastEnabled, forecastYears, forecastRate, convertedHistory]);
 
   const saveSnapshot = () => {
     const entry = { date: new Date().toISOString(), netWorth, totalAssets, totalDebts, displayCurrency: country.code };
@@ -234,6 +306,9 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
           {items.filter(i => i.type === 'asset').map(i => (
             <div key={i.id} className="nw-item">
               <input type="text" placeholder="e.g. Savings account" aria-label="Asset name" value={i.name} onChange={(e) => updateItem(i.id, 'name', e.target.value)} />
+              <select aria-label="Asset category" value={i.category || 'Other'} onChange={(e) => updateItem(i.id, 'category', e.target.value)}>
+                {ASSET_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
               <select aria-label="Asset currency" value={i.currency || country.code} onChange={(e) => updateItem(i.id, 'currency', e.target.value)}>
                 {countriesData.map(c => <option key={c.code} value={c.code}>{c.currency}</option>)}
               </select>
@@ -252,6 +327,9 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
           {items.filter(i => i.type === 'debt').map(i => (
             <div key={i.id} className="nw-item">
               <input type="text" placeholder="e.g. Credit card" aria-label="Debt name" value={i.name} onChange={(e) => updateItem(i.id, 'name', e.target.value)} />
+              <select aria-label="Debt category" value={i.category || 'Other'} onChange={(e) => updateItem(i.id, 'category', e.target.value)}>
+                {DEBT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
               <select aria-label="Debt currency" value={i.currency || country.code} onChange={(e) => updateItem(i.id, 'currency', e.target.value)}>
                 {countriesData.map(c => <option key={c.code} value={c.code}>{c.currency}</option>)}
               </select>
@@ -282,6 +360,23 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
         )}
       </div>
 
+      {(totalAssets > 0 || totalDebts > 0) && (
+        <div className="nw-allocation">
+          {totalAssets > 0 && (
+            <div className="nw-allocation-card">
+              <h3>Asset Allocation</h3>
+              <AllocationChart segments={assetSegments} symbol={country.symbol} />
+            </div>
+          )}
+          {totalDebts > 0 && (
+            <div className="nw-allocation-card">
+              <h3>Debt Breakdown</h3>
+              <AllocationChart segments={debtSegments} symbol={country.symbol} />
+            </div>
+          )}
+        </div>
+      )}
+
       <button className="nw-save-btn" onClick={saveSnapshot}>📸 Save Snapshot</button>
 
       {history.length > 0 && (
@@ -297,8 +392,35 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
               <button className="nw-clear-btn" onClick={clearHistory}>Clear history</button>
             </div>
           </div>
+          {canForecast && (
+            <div className="nw-forecast-controls">
+              <label className="nw-forecast-toggle">
+                <input type="checkbox" checked={forecastEnabled} onChange={(e) => setForecastEnabled(e.target.checked)} />
+                Show forecast
+              </label>
+              {forecastEnabled && (
+                <>
+                  <label>
+                    <span>Years</span>
+                    <input type="number" min="1" max="30" value={forecastYears} onChange={(e) => setForecastYears(Number(e.target.value))} />
+                  </label>
+                  <label>
+                    <span>Assumed annual growth (%)</span>
+                    <input type="number" step="0.5" value={forecastRate} onChange={(e) => setForecastRate(Number(e.target.value))} />
+                  </label>
+                </>
+              )}
+            </div>
+          )}
           {convertedHistory.length > 1 && (
-            <SnapshotChart points={convertedHistory} series={HISTORY_SERIES} symbol={country.symbol} />
+            <SnapshotChart points={convertedHistory} series={HISTORY_SERIES} symbol={country.symbol} projectedPoints={projectedPoints} />
+          )}
+          {projectedPoints.length > 0 && (
+            <p className="nw-forecast-note">
+              Dashed line: assumes your assets keep compounding at {forecastRate}%/yr and your debts stay flat at their
+              current total (this doesn't know your Debt Payoff plan's payoff timeline) -- a simple illustration, not a
+              prediction.
+            </p>
           )}
           <div className="nw-history-list">
             {[...convertedHistory].reverse().map((h, idx) => (

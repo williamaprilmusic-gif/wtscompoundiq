@@ -685,7 +685,7 @@ export default function App() {
 
         {activeTab === 'Compare' && canAccess('Pro') && (
           <div className="tab-pane active">
-            <Compare country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} />
+            <Compare country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} />
           </div>
         )}
 
