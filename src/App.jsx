@@ -325,7 +325,7 @@ export default function App() {
           <div className="tier-badge">
             {t('header.currentPlan')} <strong style={{ color: userTier === 'Basic' ? 'var(--accent-yellow)' : 'var(--accent-green)' }}>{userTier}</strong>
           </div>
-          <LanguageSwitcher compact />
+          <LanguageSwitcher />
           <button
             className="theme-toggle-btn"
             onClick={toggleTheme}

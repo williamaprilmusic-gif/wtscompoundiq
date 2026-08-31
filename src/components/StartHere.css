@@ -11,22 +11,6 @@
   font-size: 0.95rem;
 }
 
-.start-language {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 25px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--border);
-}
-
-.start-language-label {
-  font-size: 0.85rem;
-  color: var(--mut);
-  font-weight: 500;
-}
-
 .start-questions {
   display: flex;
   flex-direction: column;

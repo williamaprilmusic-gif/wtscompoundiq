@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import './StartHere.css';
 import { useLanguage } from '../i18n/LanguageContext';
-import LanguageSwitcher from './LanguageSwitcher';
 
 const StartHere = ({ onNavigate }) => {
   const { t } = useLanguage();
@@ -36,11 +35,6 @@ const StartHere = ({ onNavigate }) => {
       <div className="start-header">
         <h2>{t('startHere.title')}</h2>
         <p>{t('startHere.subtitle')}</p>
-      </div>
-
-      <div className="start-language">
-        <span className="start-language-label">{t('startHere.changeLanguage')}</span>
-        <LanguageSwitcher />
       </div>
 
       <div className="start-questions">

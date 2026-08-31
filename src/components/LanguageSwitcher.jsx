@@ -1,41 +1,27 @@
 // src/components/LanguageSwitcher.jsx
-// One reusable switcher, used both compact (header, any tab) and full-size (Start Here,
-// so a new visitor can find it immediately without hunting through the header).
+// Lives in the persistent app header (App.jsx), visible on every tab -- previously
+// also duplicated as a larger button-grid variant on Start Here specifically, removed
+// since the header switcher already covers "find it immediately" without needing a
+// second copy that could drift out of sync with the header one.
 import React from 'react';
 import './LanguageSwitcher.css';
 import { useLanguage } from '../i18n/LanguageContext';
 
-const LanguageSwitcher = ({ compact = false }) => {
+const LanguageSwitcher = () => {
   const { language, setLanguage, languages, t } = useLanguage();
 
-  if (compact) {
-    return (
-      <select
-        className="language-switcher-compact"
-        value={language}
-        onChange={(e) => setLanguage(e.target.value)}
-        aria-label={t('header.language')}
-        title={t('header.language')}
-      >
-        {languages.map((l) => (
-          <option key={l.code} value={l.code}>{l.flag} {l.label}</option>
-        ))}
-      </select>
-    );
-  }
-
   return (
-    <div className="language-switcher-full">
+    <select
+      className="language-switcher-compact"
+      value={language}
+      onChange={(e) => setLanguage(e.target.value)}
+      aria-label={t('header.language')}
+      title={t('header.language')}
+    >
       {languages.map((l) => (
-        <button
-          key={l.code}
-          className={`language-switcher-btn ${language === l.code ? 'active' : ''}`}
-          onClick={() => setLanguage(l.code)}
-        >
-          {l.flag} {l.label}
-        </button>
+        <option key={l.code} value={l.code}>{l.flag} {l.label}</option>
       ))}
-    </div>
+    </select>
   );
 };
 
