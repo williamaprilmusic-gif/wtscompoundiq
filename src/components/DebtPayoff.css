@@ -155,6 +155,10 @@
   border-color: rgba(139, 92, 246, 0.3);
 }
 
+.debt-result-card.consolidate {
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
 .debt-result-card h3 {
   margin: 0 0 8px;
   font-size: 1.05rem;
@@ -244,6 +248,38 @@
 
 .debt-lumpsum-section {
   margin-bottom: 25px;
+}
+
+.debt-consolidate-section {
+  margin-top: 25px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+
+.debt-consolidate-section h3 {
+  font-size: 1rem;
+  color: var(--text);
+  margin: 0 0 6px;
+}
+
+.debt-consolidate-desc {
+  color: var(--mut);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.debt-consolidate-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 18px;
+  max-width: 460px;
+}
+
+.debt-consolidate-inputs .debt-field {
+  flex: 1;
+  min-width: 180px;
 }
 
 .debt-lumpsum-header {

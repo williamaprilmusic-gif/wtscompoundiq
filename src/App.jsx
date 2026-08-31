@@ -655,7 +655,7 @@ export default function App() {
 
         {activeTab === 'Snapshot' && canAccess('Pro') && (
           <div className="tab-pane active">
-            <Snapshot country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} />
+            <Snapshot country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} userTier={userTier} onOpenPricing={() => setShowPricing(true)} />
           </div>
         )}
 

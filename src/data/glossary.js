@@ -22,5 +22,7 @@ export const GLOSSARY = {
   fxConversion: "Turning an amount in one currency into another using an exchange rate, so figures in different currencies can be compared fairly.",
   contributionIncrease: "How much your monthly contribution grows every year, e.g. to keep pace with a raise or cost-of-living increase. 0% means you contribute the same fixed amount every year.",
   bond: "South African term for a home loan/mortgage -- money a bank lends you to buy property, secured against the property itself, paid back in fixed installments over a long term (often 20-30 years).",
-  amortization: "The process of paying off a loan through regular fixed payments, where each payment covers that period's interest first and whatever's left over reduces the principal. Early payments are mostly interest; later payments are mostly principal."
+  amortization: "The process of paying off a loan through regular fixed payments, where each payment covers that period's interest first and whatever's left over reduces the principal. Early payments are mostly interest; later payments are mostly principal.",
+  transferDuty: "A one-off tax paid by the buyer when property changes hands (South Africa) -- separate from the bond itself, calculated on the purchase price using a bracketed scale.",
+  lifeCoverGap: "The difference between how much life insurance cover a family would need to stay financially secure if the insured person died, and how much cover (plus savings) is already in place."
 };

@@ -9,21 +9,16 @@ import { convertAmount } from '../data/countries';
 import { daysBetween, fmtDaysAgo } from '../utils/dateAgo';
 import { readPlan, loanEffectiveMonthlyPayment, loanEffectiveTermLabel } from '../utils/planStorage';
 import SnapshotChart from './SnapshotChart';
+import HealthScoreGauge from './HealthScoreGauge';
 import { HISTORY_KEY as NETWORTH_HISTORY_KEY, isValidNetWorthEntry } from './NetWorth';
 import { HISTORY_KEY as DEBTPAYOFF_HISTORY_KEY, isValidDebtHistoryEntry } from './DebtPayoff';
 import { HISTORY_KEY as EMERGENCYFUND_HISTORY_KEY, isValidEfHistoryEntry } from './EmergencyFund';
+import { scoreEmergencyFund, scoreDebtPayoff, scoreNetWorthTrend, scoreFireProgress, computeHealthScore } from '../financialHealthScore';
+import { readJSONArray } from '../utils/storage';
 
 const NETWORTH_SERIES = [{ key: 'assets', label: 'Assets' }, { key: 'debts', label: 'Debts' }, { key: 'net', label: 'Net Worth' }];
 const DEBT_SERIES = [{ key: 'total', label: 'Total Debt Balance' }];
 const EF_SERIES = [{ key: 'total', label: 'Emergency Fund Balance' }];
-
-const readHistory = (key) => {
-  try {
-    const raw = localStorage.getItem(key);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch { return []; } // corrupt/foreign JSON in that key -- treat as no history rather than crash
-};
 
 // reportingCountry: the currency Net Worth's own tab currently displays in (see
 // App.jsx) -- independent of `country` (the Calculator scenario's country), since Net
@@ -41,9 +36,9 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
 
   useEffect(() => {
     setPlan(readPlan());
-    setNetWorthHistory(readHistory(NETWORTH_HISTORY_KEY));
-    setDebtHistory(readHistory(DEBTPAYOFF_HISTORY_KEY));
-    setEfHistory(readHistory(EMERGENCYFUND_HISTORY_KEY));
+    setNetWorthHistory(readJSONArray(NETWORTH_HISTORY_KEY));
+    setDebtHistory(readJSONArray(DEBTPAYOFF_HISTORY_KEY));
+    setEfHistory(readJSONArray(EMERGENCYFUND_HISTORY_KEY));
   }, []);
 
   // Same non-numeric guard NetWorth.jsx applies to this same history key (imported
@@ -84,6 +79,24 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
 
   const hasTrends = netWorthPoints.length > 1 || debtPoints.length > 1 || efPoints.length > 1;
 
+  // Financial Health Score: one composite number built from whatever's already saved
+  // above -- see financialHealthScore.js for why each component is optional (null when
+  // that tool's never been used) rather than scored as a failing 0. Net worth trend
+  // needs at least two points to mean anything; a single snapshot has no trend to score.
+  const efFundedPct = plan?.emergencyFund
+    ? (plan.emergencyFund.targetAmount > 0 ? (plan.emergencyFund.currentSavings / plan.emergencyFund.targetAmount) * 100 : 0)
+    : null;
+  const healthScore = useMemo(() => computeHealthScore([
+    { key: 'ef', label: '🛟 Emergency Fund', score: scoreEmergencyFund(efFundedPct) },
+    { key: 'debt', label: '💳 Debt Payoff', score: scoreDebtPayoff(plan?.debt?.totalBalance, plan?.debt?.avalancheMonths) },
+    {
+      key: 'netWorth',
+      label: '💰 Net Worth Trend',
+      score: netWorthPoints.length > 1 ? scoreNetWorthTrend(netWorthPoints[0].net, netWorthPoints[netWorthPoints.length - 1].net) : null
+    },
+    { key: 'fire', label: '🔥 FIRE Progress', score: scoreFireProgress(plan?.fire?.yearsToFire) }
+  ]), [efFundedPct, plan, netWorthPoints]);
+
   return (
     <div className="card dashboard">
       <div className="dashboard-header">
@@ -95,6 +108,16 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
         <div className="dashboard-empty">
           <p>Nothing saved yet. Visit Net Worth, Debt Payoff, Emergency Fund, Loan & Bond, or Power Tools and look for "Save Snapshot" / "Save This Plan" -- come back here afterward to see it all in one place.</p>
         </div>
+      )}
+
+      {healthScore && (
+        <>
+          <HealthScoreGauge score={healthScore.score} grade={healthScore.grade} label={healthScore.label} components={healthScore.components} />
+          <p className="dashboard-note dashboard-health-note">
+            A rough composite of what you've saved above ({healthScore.components.length} of 4 possible areas) -- not a credit
+            score or financial advice. Save a plan/snapshot in more tabs to bring the rest of it in.
+          </p>
+        </>
       )}
 
       <div className="dashboard-grid">

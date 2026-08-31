@@ -4,6 +4,15 @@ import './Snapshot.css';
 import { calculateCompoundInterest } from '../engine';
 import GrowthChart from './GrowthChart';
 import { readPlan, loanEffectiveMonthlyPayment, loanEffectiveTermLabel } from '../utils/planStorage';
+import { usePersistedState } from '../utils/usePersistedState';
+
+const BRANDING_KEY = 'wts_compoundiq_report_branding';
+const DEFAULT_BRANDING = { firmName: '', advisorName: '', clientName: '', logoDataUrl: '' };
+// Keeps a data-URL logo (base64-encoded in localStorage alongside everything else this
+// app persists) from silently eating a meaningful chunk of the shared ~5-10MB
+// localStorage quota -- a compressed PNG/JPG a firm would actually use for a report
+// masthead comfortably fits well under this.
+const MAX_LOGO_BYTES = 500 * 1024;
 
 const downloadCSV = (results, country) => {
   const header = ['Year', 'Balance', 'Real Value', 'Deposited', 'Interest', 'Tax Paid'];
@@ -20,12 +29,34 @@ const downloadCSV = (results, country) => {
   URL.revokeObjectURL(url);
 };
 
-const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, compoundFrequency, contributionIncrease = 0, lumpSums = [] }) => {
+const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, compoundFrequency, contributionIncrease = 0, lumpSums = [], userTier, onOpenPricing }) => {
   const [plan, setPlan] = useState(null);
+  const [branding, setBranding] = usePersistedState(BRANDING_KEY, DEFAULT_BRANDING);
+  const [brandingError, setBrandingError] = useState(null);
 
   useEffect(() => {
     setPlan(readPlan());
   }, []);
+
+  // White-label branding (firm/advisor/client name, logo) is an Enterprise perk -- see
+  // TierPricing.jsx. A lower tier's already-saved branding (e.g. from a past Enterprise
+  // trial) is kept in storage but not applied to the report, so downgrading doesn't
+  // silently delete it -- re-upgrading brings it straight back.
+  const canWhiteLabel = userTier === 'Enterprise';
+
+  const updateBranding = (field, value) => setBranding(prev => ({ ...prev, [field]: value }));
+
+  const handleLogoUpload = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file later
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { setBrandingError('Please choose an image file (PNG, JPG, SVG, etc.).'); return; }
+    if (file.size > MAX_LOGO_BYTES) { setBrandingError(`That logo is ${Math.round(file.size / 1024)}KB -- please use an image under ${MAX_LOGO_BYTES / 1024}KB.`); return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => { updateBranding('logoDataUrl', String(ev.target.result)); setBrandingError(null); };
+    reader.onerror = () => setBrandingError('Could not read that image file.');
+    reader.readAsDataURL(file);
+  };
 
   const results = calculateCompoundInterest({
     initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper, compoundFrequency,
@@ -57,10 +88,57 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
         </div>
       </div>
 
+      {canWhiteLabel ? (
+        <div className="snapshot-branding no-print">
+          <h3>🏷️ Client Report Branding</h3>
+          <p className="snapshot-branding-desc">Enterprise perk -- add your firm's details below and they'll appear on the report header instead of WTS CompoundIQ's own, ready to hand to a client.</p>
+          <div className="snapshot-branding-form">
+            <div className="form-group">
+              <label>Firm Name</label>
+              <input type="text" value={branding.firmName} onChange={(e) => updateBranding('firmName', e.target.value)} placeholder="e.g. Acme Financial Advisory" />
+            </div>
+            <div className="form-group">
+              <label>Advisor Name</label>
+              <input type="text" value={branding.advisorName} onChange={(e) => updateBranding('advisorName', e.target.value)} placeholder="e.g. Jane Smith, CFP" />
+            </div>
+            <div className="form-group">
+              <label>Client Name</label>
+              <input type="text" value={branding.clientName} onChange={(e) => updateBranding('clientName', e.target.value)} placeholder="e.g. John Doe" />
+            </div>
+          </div>
+          <div className="snapshot-branding-logo-row">
+            {branding.logoDataUrl && <img src={branding.logoDataUrl} alt="Firm logo preview" className="snapshot-branding-logo-preview" />}
+            <label className="snapshot-branding-logo-btn">
+              🖼️ {branding.logoDataUrl ? 'Replace Logo' : 'Upload Logo'}
+              <input type="file" accept="image/*" onChange={handleLogoUpload} hidden />
+            </label>
+            {branding.logoDataUrl && (
+              <button type="button" className="snapshot-branding-logo-remove" onClick={() => updateBranding('logoDataUrl', '')}>Remove logo</button>
+            )}
+          </div>
+          {brandingError && <p className="snapshot-branding-error">⚠️ {brandingError}</p>}
+        </div>
+      ) : (
+        <div className="snapshot-branding-upsell no-print">
+          <p>
+            🏷️ <strong>White-label this report</strong> -- add your firm's name, logo, and client details to the header
+            instead of WTS CompoundIQ's own. Included on Enterprise.{' '}
+            {onOpenPricing && <button type="button" className="snapshot-branding-upsell-btn" onClick={onOpenPricing}>View Pricing</button>}
+          </p>
+        </div>
+      )}
+
       <div className="snapshot-print-area">
         <div className="snapshot-report-header">
-          <h1>WTS CompoundIQ -- Financial Snapshot</h1>
-          <p>{country.name} · Generated {today}</p>
+          {canWhiteLabel && branding.logoDataUrl && (
+            <img src={branding.logoDataUrl} alt={`${branding.firmName || 'Firm'} logo`} className="snapshot-report-logo" />
+          )}
+          <h1>{canWhiteLabel && branding.firmName ? branding.firmName : 'WTS CompoundIQ'} -- Financial Snapshot</h1>
+          <p>
+            {country.name} · Generated {today}
+            {canWhiteLabel && branding.advisorName && ` · Prepared by ${branding.advisorName}`}
+            {canWhiteLabel && branding.clientName && ` · Prepared for ${branding.clientName}`}
+          </p>
         </div>
 
         <section className="snapshot-section">

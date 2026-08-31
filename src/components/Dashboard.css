@@ -156,3 +156,8 @@
   color: var(--mut2);
   line-height: 1.5;
 }
+
+.dashboard-health-note {
+  margin-top: -12px;
+  margin-bottom: 22px;
+}

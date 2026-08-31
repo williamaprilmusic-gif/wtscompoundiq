@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import './DebtPayoff.css';
 import Term from './Term';
 import { simulatePayoff, avalancheOrder, snowballOrder } from '../debtPayoffEngine';
+import { calculateLoanAmortization } from '../loanAmortization';
 import { savePlanSection } from '../utils/planStorage';
 import { usePersistedState } from '../utils/usePersistedState';
 import { confirmRemoval } from '../utils/confirmRemoval';
@@ -10,7 +11,10 @@ import { parseCSV, downloadCSV, cleanCSVNumber } from '../utils/csv';
 import { convertAmount } from '../data/countries';
 import SnapshotChart from './SnapshotChart';
 
-const DEBTS_KEY = 'wts_compoundiq_debtpayoff_debts';
+// Exported so PowerTools.jsx's Home Affordability / Insurance Needs calculators can
+// offer a "pull from Debt Payoff" shortcut without redeclaring this string (same
+// export-and-reuse pattern as HISTORY_KEY below).
+export const DEBTS_KEY = 'wts_compoundiq_debtpayoff_debts';
 const EXTRA_KEY = 'wts_compoundiq_debtpayoff_extra';
 const LUMPSUMS_KEY = 'wts_compoundiq_debtpayoff_lumpsums';
 export const HISTORY_KEY = 'wts_compoundiq_debtpayoff_history';
@@ -131,6 +135,16 @@ const DebtPayoff = ({ country }) => {
   const snowball = simulatePayoff(validDebts, extraMonthly, snowballOrder, safeLumpSums);
   const interestSaved = snowball.totalInterest - avalanche.totalInterest;
   const totalBalance = validDebts.reduce((sum, d) => sum + d.balance, 0);
+
+  // Debt Consolidation Analyzer: rolls totalBalance into one new fixed-rate loan at a
+  // user-entered rate/term (reusing loanAmortization.js's amortization math -- the same
+  // shape of calculation LoanCalculator uses for a real bond/personal loan) and compares
+  // it against the Avalanche plan above -- the best of the two existing strategies, and
+  // the fairer baseline to consolidate against than Snowball.
+  const [consolidateRate, setConsolidateRate] = useState(0);
+  const [consolidateTermYears, setConsolidateTermYears] = useState(5);
+  const consolidateAmort = calculateLoanAmortization({ principal: totalBalance, annualRate: consolidateRate, termYears: consolidateTermYears });
+  const currentCombinedMonthly = validDebts.reduce((sum, d) => sum + d.minPayment, 0) + extraMonthly;
 
   const [saved, setSaved] = useState(false);
   const savePlan = () => {
@@ -292,6 +306,57 @@ const DebtPayoff = ({ country }) => {
           but Snowball clears your first debt faster, which many people find easier to stick with. Pick whichever you'll
           actually follow through on.
         </p>
+      )}
+
+      {validDebts.length > 0 && (
+        <div className="debt-consolidate-section">
+          <h3>🔗 Debt Consolidation Analyzer</h3>
+          <p className="debt-consolidate-desc">
+            Curious whether rolling everything above into one new loan would actually help? Enter the rate and term a
+            consolidation loan would offer, and compare it against your Avalanche plan.
+          </p>
+          <div className="debt-consolidate-inputs">
+            <div className="debt-field">
+              <label>Consolidation Loan Rate (%)</label>
+              <input type="number" min="0" step="0.1" value={consolidateRate} onChange={(e) => setConsolidateRate(Number(e.target.value))} />
+            </div>
+            <div className="debt-field">
+              <label>Consolidation Loan Term (years)</label>
+              <input type="number" min="1" max="30" value={consolidateTermYears} onChange={(e) => setConsolidateTermYears(Number(e.target.value))} />
+            </div>
+          </div>
+          {consolidateRate > 0 && (
+            <>
+              <div className="debt-results">
+                <div className="debt-result-card avalanche">
+                  <h3>Keep Paying Separately (Avalanche)</h3>
+                  <span className="debt-result-label">Debt-free in</span>
+                  <strong>{avalanche.reachable ? `${avalanche.months} months` : '50+ years'}</strong>
+                  <span className="debt-result-label">Total interest paid</span>
+                  <strong className="interest-figure">{country.symbol} {Math.round(avalanche.totalInterest).toLocaleString()}</strong>
+                  <span className="debt-result-label">Monthly payment</span>
+                  <strong>{country.symbol} {Math.round(currentCombinedMonthly).toLocaleString()}</strong>
+                </div>
+                <div className="debt-result-card consolidate">
+                  <h3>Consolidated Loan</h3>
+                  <span className="debt-result-label">Debt-free in</span>
+                  <strong>{consolidateAmort.reachable ? `${consolidateAmort.payoffMonths} months` : '60+ years'}</strong>
+                  <span className="debt-result-label">Total interest paid</span>
+                  <strong className="interest-figure">{country.symbol} {consolidateAmort.totalInterest.toLocaleString()}</strong>
+                  <span className="debt-result-label">Monthly payment</span>
+                  <strong>{country.symbol} {consolidateAmort.monthlyPayment.toLocaleString()}</strong>
+                </div>
+              </div>
+              <p className="debt-verdict">
+                {consolidateAmort.totalInterest < avalanche.totalInterest && consolidateAmort.payoffMonths <= avalanche.months
+                  ? 'Consolidating looks better here -- less total interest, and no slower than your current Avalanche pace.'
+                  : consolidateAmort.monthlyPayment < currentCombinedMonthly
+                    ? `Consolidating lowers the monthly payment to ${country.symbol} ${consolidateAmort.monthlyPayment.toLocaleString()} (from ${country.symbol} ${Math.round(currentCombinedMonthly).toLocaleString()}), but stretches the term and costs more in total interest -- a classic tradeoff: better for cash flow, worse for total cost.`
+                    : "Keeping these separate and following Avalanche looks better here -- consolidating at this rate/term wouldn't actually save interest or time."}
+              </p>
+            </>
+          )}
+        </div>
       )}
 
       {validDebts.length > 0 && (

@@ -47,6 +47,138 @@
   transform: translateY(-2px);
 }
 
+.snapshot-branding {
+  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 12px;
+  padding: 20px 22px;
+  margin-bottom: 20px;
+}
+
+.snapshot-branding h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.snapshot-branding-desc {
+  color: var(--mut);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.snapshot-branding-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.snapshot-branding-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.snapshot-branding-form label {
+  font-size: 0.78rem;
+  color: var(--mut);
+  font-weight: 500;
+}
+
+.snapshot-branding-form input {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.snapshot-branding-form input:focus {
+  border-color: var(--accent);
+}
+
+.snapshot-branding-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.snapshot-branding-logo-preview {
+  height: 40px;
+  max-width: 140px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 4px;
+}
+
+.snapshot-branding-logo-btn {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: var(--accent);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.snapshot-branding-logo-remove {
+  background: none;
+  border: none;
+  color: var(--accent-red);
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.snapshot-branding-error {
+  margin-top: 10px;
+  color: var(--accent-red);
+  font-size: 0.82rem;
+}
+
+.snapshot-branding-upsell {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+}
+
+.snapshot-branding-upsell p {
+  color: var(--mut);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.snapshot-branding-upsell-btn {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: var(--accent);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+.snapshot-report-logo {
+  display: block;
+  max-height: 48px;
+  max-width: 220px;
+  object-fit: contain;
+  margin-bottom: 10px;
+}
+
 .snapshot-print-area {
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid var(--border);
