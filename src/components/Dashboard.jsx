@@ -101,10 +101,10 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
   // Milestones: pure pattern-matching over the same history/plan data above -- no new
   // inputs, nothing computed that isn't already implied by what's been saved elsewhere.
   const milestones = useMemo(() => sortMilestones([
-    ...detectNetWorthMilestones(netWorthPoints),
+    ...detectNetWorthMilestones(netWorthPoints, netWorthCountry.code),
     ...detectDebtClearedMilestone(debtPoints),
     ...detectEfFundedMilestone(plan?.emergencyFund)
-  ]), [netWorthPoints, debtPoints, plan]);
+  ]), [netWorthPoints, netWorthCountry.code, debtPoints, plan]);
 
   const today = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -149,7 +149,7 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
               <li key={m.key}>
                 <span className="dashboard-milestone-icon">{m.icon}</span>
                 <span className="dashboard-milestone-label">
-                  {m.label}{m.amount != null && ` ${netWorthCountry.symbol}${m.amount.toLocaleString()}`}
+                  {m.label}{m.amount != null && ` ${netWorthCountry.symbol}${Math.round(m.amount).toLocaleString()}`}
                 </span>
                 <span className="dashboard-milestone-date">{fmtDaysAgo(daysBetween(m.date))}</span>
               </li>

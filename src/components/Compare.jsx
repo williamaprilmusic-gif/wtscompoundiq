@@ -34,6 +34,14 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
   const toggleScenarioWrapper = (setScenario) => setScenario(prev => ({ ...prev, wrapper: !prev.wrapper }));
   const syncScenarioWithCalculator = (setScenario) => setScenario(prev => ({ ...prev, initial, monthly, rate, years, inflation, wrapper: !!wrapper }));
 
+  // Both scenarios seed from the live Calculator inputs on first use (see
+  // usePersistedState's default above) -- if a brand-new user opens this tab before
+  // ever touching the Calculator tab, that seed is all zeros, and gets persisted as
+  // such (usePersistedState debounces/flushes its write regardless of whether the
+  // value is "real"). Flagged here so the empty-looking result comes with an
+  // explanation instead of just showing R0 with no context.
+  const bothScenariosEmpty = scenarioA.initial === 0 && scenarioA.monthly === 0 && scenarioB.initial === 0 && scenarioB.monthly === 0;
+
   const scenarioBase = { taxRate: country.taxRate, compoundFrequency, contributionIncreaseRate: contributionIncrease, annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit };
   const resultsScenarioA = calculateCompoundInterest({ ...scenarioBase, initial: scenarioA.initial, monthly: scenarioA.monthly, rate: scenarioA.rate, years: scenarioA.years, inflation: scenarioA.inflation, wrapper: scenarioA.wrapper });
   const resultsScenarioB = calculateCompoundInterest({ ...scenarioBase, initial: scenarioB.initial, monthly: scenarioB.monthly, rate: scenarioB.rate, years: scenarioB.years, inflation: scenarioB.inflation, wrapper: scenarioB.wrapper });
@@ -138,6 +146,13 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
         </>
       ) : (
         <>
+          {bothScenariosEmpty && (
+            <p className="compare-scenario-empty-hint">
+              Both plans start at {country.symbol}0 -- this tab seeds itself from the Calculator tab's inputs the first
+              time you open it, so if you haven't entered anything there yet, edit the fields below directly, or fill in
+              the Calculator tab first and click "Sync with Calculator" on either plan.
+            </p>
+          )}
           <div className="compare-grid">
             {[['A', scenarioA, setScenarioA, resultsScenarioA], ['B', scenarioB, setScenarioB, resultsScenarioB]].map(([label, scenario, setScenario, results]) => (
               <div key={label} className={`compare-card ${scenarioWinner === label ? 'winner' : ''}`}>

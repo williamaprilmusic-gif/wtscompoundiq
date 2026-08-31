@@ -8,6 +8,7 @@ import { calculateLoanAmortization } from '../loanAmortization';
 import { downloadCSV } from '../utils/csv';
 import { savePlanSection, monthsToYearsLabel } from '../utils/planStorage';
 import { usePersistedState } from '../utils/usePersistedState';
+import { uniqueId } from '../utils/uniqueId';
 import Term from './Term';
 import SnapshotChart from './SnapshotChart';
 
@@ -82,7 +83,7 @@ const LoanCalculator = ({ country }) => {
     setInputs(prev => ({ ...prev, loanType: type.key, termYears: type.defaultTermYears }));
   };
 
-  const addLumpSum = () => setLumpSums(prev => [...prev, { id: Date.now(), month: 1, amount: 0 }]);
+  const addLumpSum = () => setLumpSums(prev => [...prev, { id: uniqueId(), month: 1, amount: 0 }]);
   const updateLumpSum = (id, field, value) => setLumpSums(prev => prev.map(l => l.id === id ? { ...l, [field]: Number(value) } : l));
   const removeLumpSum = (id) => setLumpSums(prev => prev.filter(l => l.id !== id));
 

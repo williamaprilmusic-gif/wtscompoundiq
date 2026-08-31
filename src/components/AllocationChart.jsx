@@ -6,6 +6,7 @@
 // (colorVar on each segment), never cycled -- see the dataviz skill.
 import React, { useState } from 'react';
 import './AllocationChart.css';
+import { formatCompact } from '../utils/chartFormat';
 
 const SIZE = 160;
 const STROKE = 28;
@@ -66,7 +67,7 @@ const AllocationChart = ({ segments, symbol = '' }) => {
             </>
           ) : (
             <>
-              <strong>{symbol}{total >= 1000000 ? `${(total / 1000000).toFixed(1)}M` : Math.round(total).toLocaleString()}</strong>
+              <strong>{symbol}{formatCompact(total)}</strong>
               <span>Total</span>
             </>
           )}

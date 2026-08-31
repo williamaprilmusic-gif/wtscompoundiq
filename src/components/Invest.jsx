@@ -6,6 +6,7 @@ import { solveMonthlyForGoal } from '../goalSolver';
 import { usePersistedState } from '../utils/usePersistedState';
 import { confirmRemoval } from '../utils/confirmRemoval';
 import { parseCSV, downloadCSV, cleanCSVNumber } from '../utils/csv';
+import { uniqueId } from '../utils/uniqueId';
 
 const GOALS_KEY = 'wts_compoundiq_invest_goals';
 
@@ -30,7 +31,7 @@ const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12, con
 
   const addGoal = (preset) => {
     setGoals(prev => [...prev, {
-      id: Date.now(),
+      id: uniqueId(),
       label: preset?.label ?? 'New Goal',
       startingAmount: 0,
       goalAmount: preset?.amount ?? 0,
@@ -56,7 +57,7 @@ const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12, con
   const removeGoal = (id) => {
     const goal = goals.find(g => g.id === id);
     const hasData = !!(goal && goal.touched !== false);
-    if (!confirmRemoval(hasData, `Remove "${goal?.label.trim() || 'this goal'}"? This can't be undone.`)) return;
+    if (!confirmRemoval(hasData, `Remove "${(goal?.label || '').trim() || 'this goal'}"? This can't be undone.`)) return;
     setGoals(prev => prev.filter(g => g.id !== id));
   };
 
@@ -79,8 +80,8 @@ const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12, con
           setImportError('CSV needs at least "label" and "goalAmount" columns -- download the template below for the expected format.');
           return;
         }
-        const imported = rows.slice(1).map((r, idx) => ({
-          id: Date.now() + idx,
+        const imported = rows.slice(1).map((r) => ({
+          id: uniqueId(),
           label: (r[labelIdx] || '').trim().slice(0, 80),
           startingAmount: startingIdx !== -1 ? cleanCSVNumber(r[startingIdx]) : 0,
           goalAmount: cleanCSVNumber(r[goalIdx]),

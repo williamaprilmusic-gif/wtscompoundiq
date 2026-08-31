@@ -1,7 +1,7 @@
 // src/App.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import './App.css';
-import TierPricing from './components/TierPricing';
+import TierPricing, { UPGRADE_PRICES } from './components/TierPricing';
 import PaymentSection from './components/PaymentSection';
 import { calculateCompoundInterest } from './engine';
 import { countriesData as WTS_COUNTRIES, getCountryByCode, getVerificationInfo } from './data/countries';
@@ -35,15 +35,6 @@ import { downloadCSV } from './utils/csv';
 
 const THEME_KEY = 'wts_compoundiq_theme';
 const REPORTING_CURRENCY_KEY = 'wts_compoundiq_reporting_currency';
-// Mirrors the monthly/annual figures shown in TierPricing.jsx's tier cards -- kept as a
-// separate constant here (rather than imported) because PaymentSection only needs the
-// numbers, not the marketing copy, but the two must be updated together. Enterprise has
-// no fixed price (per-seat/firm licensing, quoted directly) so it's intentionally absent
-// and falls through to the 'Custom' string below.
-const UPGRADE_PRICES = {
-  Pro: { monthly: 199, annual: 1499 },
-  Ultra: { monthly: 299, annual: 2499 }
-};
 // Generous enough for any realistic plan (a 20-year-old projecting to age 100+), but
 // bounded -- an unbounded "years" value feeds every per-year loop in the app (the
 // yearly table, the growth chart, and especially Monte Carlo's 1,000-path simulation),

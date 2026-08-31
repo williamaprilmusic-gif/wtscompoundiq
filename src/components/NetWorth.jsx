@@ -6,6 +6,7 @@ import { countriesData, convertAmount } from '../data/countries';
 import { parseCSV, downloadCSV, cleanCSVNumber } from '../utils/csv';
 import { usePersistedState } from '../utils/usePersistedState';
 import { confirmRemoval } from '../utils/confirmRemoval';
+import { uniqueId } from '../utils/uniqueId';
 import SnapshotChart from './SnapshotChart';
 import CountrySelect from './CountrySelect';
 import AllocationChart from './AllocationChart';
@@ -104,7 +105,7 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
   // reporting currency -- see the "Display currency" picker above, which can be pinned
   // independently of the Calculator tab's country).
   const addItem = (type) => {
-    setItems(prev => [...prev, { id: Date.now(), name: '', type, value: 0, currency: country.code, category: 'Other' }]);
+    setItems(prev => [...prev, { id: uniqueId(), name: '', type, value: 0, currency: country.code, category: 'Other' }]);
   };
 
   const updateItem = (id, field, value) => {
@@ -115,11 +116,12 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
   // Confirm before removing -- but only when there's actually something to lose. A
   // freshly-added blank row (empty name, zero value) removed right away shouldn't
   // nag; a row someone's typed real numbers into deserves a safety check, since
-  // there's no undo once it's gone.
+  // there's no undo once it's gone. `(item.name || '')` guards an imported/hand-edited
+  // item missing `name` entirely -- `.trim()` on `undefined` would otherwise throw.
   const removeItem = (id) => {
     const item = items.find(i => i.id === id);
-    const hasData = !!(item && (item.name.trim() || item.value > 0));
-    if (!confirmRemoval(hasData, `Remove "${item?.name.trim() || 'this item'}"? This can't be undone.`)) return;
+    const hasData = !!(item && ((item.name || '').trim() || item.value > 0));
+    if (!confirmRemoval(hasData, `Remove "${(item?.name || '').trim() || 'this item'}"? This can't be undone.`)) return;
     setItems(prev => prev.filter(i => i.id !== id));
   };
 
@@ -143,7 +145,7 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
           setImportError('CSV needs at least "name" and "value" columns -- download the template below for the expected format.');
           return;
         }
-        const imported = rows.slice(1).map((r, idx) => {
+        const imported = rows.slice(1).map((r) => {
           const rawCurrency = (currencyIdx !== -1 ? r[currencyIdx] || '' : '').trim().toLowerCase();
           // Accept either a country code ("za") or a currency code ("ZAR") -- whichever matches.
           const matchedCountry = countriesData.find(c => c.code === rawCurrency || c.currency.toLowerCase() === rawCurrency);
@@ -152,7 +154,7 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
           const rawCategory = (categoryIdx !== -1 ? r[categoryIdx] || '' : '').trim().toLowerCase();
           const matchedCategory = categoryOptions.find(c => c.toLowerCase() === rawCategory) || 'Other';
           return {
-            id: Date.now() + idx,
+            id: uniqueId(),
             name: (r[nameIdx] || '').trim().slice(0, 80),
             type,
             category: matchedCategory,
@@ -193,18 +195,14 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
   // appears (even at value 0) so the color assignment stays stable as items move
   // between categories; AllocationChart itself drops the zero-value ones before
   // rendering a slice for them.
-  const assetSegments = ASSET_CATEGORIES.map(cat => ({
+  const buildSegments = (categories, type) => categories.map(cat => ({
     key: cat,
     label: cat,
     colorVar: CATEGORY_COLOR_VAR[cat],
-    value: items.filter(i => i.type === 'asset' && (i.category || 'Other') === cat).reduce((s, i) => s + valueIn(i), 0)
+    value: items.filter(i => i.type === type && (i.category || 'Other') === cat).reduce((s, i) => s + valueIn(i), 0)
   }));
-  const debtSegments = DEBT_CATEGORIES.map(cat => ({
-    key: cat,
-    label: cat,
-    colorVar: CATEGORY_COLOR_VAR[cat],
-    value: items.filter(i => i.type === 'debt' && (i.category || 'Other') === cat).reduce((s, i) => s + valueIn(i), 0)
-  }));
+  const assetSegments = buildSegments(ASSET_CATEGORIES, 'asset');
+  const debtSegments = buildSegments(DEBT_CATEGORIES, 'debt');
 
   // FX Stress Test (Ultra): only meaningful when at least one item is actually in a
   // different currency from the display currency -- a same-currency-only list has
@@ -425,8 +423,19 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
         )
       )}
 
-      {activeSubTab === 'fx' && hasForeignCurrencyItems && (
-        canFxStressTest ? (
+      {activeSubTab === 'fx' && (
+        !hasForeignCurrencyItems ? (
+          // The FX tab itself only appears in the SubTabs bar while there's a foreign-
+          // currency item (see the tabs={...} prop above) -- but if the user removes
+          // the last one, or edits its currency to match the display currency, while
+          // already sitting on this tab, activeSubTab stays 'fx' with no button left to
+          // click away from it. Same empty-state pattern as Allocation/History above,
+          // rather than a blank pane below the tab bar.
+          <div className="nw-tab-empty">
+            <p>Add an item in a different currency to see an FX stress test.</p>
+            <button type="button" onClick={() => setActiveSubTab('tracker')}>Go to Tracker →</button>
+          </div>
+        ) : canFxStressTest ? (
           <div className="nw-fx-stress">
             <h3>💱 FX Stress Test</h3>
             <p className="nw-fx-stress-desc">

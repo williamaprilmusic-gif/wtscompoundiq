@@ -9,6 +9,7 @@ import { usePersistedState } from '../utils/usePersistedState';
 import { confirmRemoval } from '../utils/confirmRemoval';
 import { parseCSV, downloadCSV, cleanCSVNumber } from '../utils/csv';
 import { convertAmount } from '../data/countries';
+import { uniqueId } from '../utils/uniqueId';
 import SnapshotChart from './SnapshotChart';
 
 // Exported so PowerTools.jsx's Home Affordability / Insurance Needs calculators can
@@ -59,18 +60,19 @@ const DebtPayoff = ({ country }) => {
   };
 
   const addDebt = () => {
-    setDebts(prev => [...prev, { id: Date.now(), name: '', balance: 0, rate: 0, minPayment: 0 }]);
+    setDebts(prev => [...prev, { id: uniqueId(), name: '', balance: 0, rate: 0, minPayment: 0 }]);
   };
 
   // See NetWorth.jsx's removeItem for why this only confirms when there's real data
   // entered -- a blank row removed right away doesn't need a safety check. Checks all
   // four editable fields (not just name/balance) -- a debt with a rate and min payment
   // already filled in but a balance that's momentarily 0 (e.g. mid-retype) still counts
-  // as real data worth confirming before it's silently dropped.
+  // as real data worth confirming before it's silently dropped. `(debt.name || '')`
+  // guards an imported/hand-edited debt missing `name` entirely.
   const removeDebt = (id) => {
     const debt = debts.find(d => d.id === id);
-    const hasData = !!(debt && (debt.name.trim() || debt.balance > 0 || debt.rate > 0 || debt.minPayment > 0));
-    if (!confirmRemoval(hasData, `Remove "${debt?.name.trim() || 'this debt'}"? This can't be undone.`)) return;
+    const hasData = !!(debt && ((debt.name || '').trim() || debt.balance > 0 || debt.rate > 0 || debt.minPayment > 0));
+    if (!confirmRemoval(hasData, `Remove "${(debt?.name || '').trim() || 'this debt'}"? This can't be undone.`)) return;
     setDebts(prev => prev.filter(d => d.id !== id));
   };
 
@@ -92,8 +94,8 @@ const DebtPayoff = ({ country }) => {
           setImportError('CSV needs at least "name" and "balance" columns -- download the template below for the expected format.');
           return;
         }
-        const imported = rows.slice(1).map((r, idx) => ({
-          id: Date.now() + idx,
+        const imported = rows.slice(1).map((r) => ({
+          id: uniqueId(),
           name: (r[nameIdx] || '').trim().slice(0, 80),
           balance: cleanCSVNumber(r[balanceIdx]),
           rate: rateIdx !== -1 ? cleanCSVNumber(r[rateIdx]) : 0,
@@ -122,7 +124,7 @@ const DebtPayoff = ({ country }) => {
   // One-off extra payments -- a bonus, tax refund, etc. thrown at the debt in a
   // specific month, on top of the regular monthly extra (mirrors the Calculator
   // tab's lump-sum contributions).
-  const addLumpSum = () => setLumpSums(prev => [...prev, { id: Date.now(), month: 1, amount: 0 }]);
+  const addLumpSum = () => setLumpSums(prev => [...prev, { id: uniqueId(), month: 1, amount: 0 }]);
   const updateLumpSum = (id, field, value) => setLumpSums(prev => prev.map(l => l.id === id ? { ...l, [field]: Number(value) } : l));
   const removeLumpSum = (id) => setLumpSums(prev => prev.filter(l => l.id !== id));
 
