@@ -1,13 +1,22 @@
 // src/components/TaxOptimizer.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import './TaxOptimizer.css';
 import { calculateCompoundInterest } from '../engine';
+import { compareRetirementVehicle } from '../retirementComparison';
 import { getVerificationInfo } from '../data/countries';
 import Term from './Term';
 
 const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [], taxBrackets = null, otherTaxableIncome = 0 }) => {
   const hasWrapper = country.wrapperLabel && country.wrapperLabel !== 'N/A';
   const verification = getVerificationInfo(country.code);
+
+  // Defaults: the country's own flat tax rate as the contribution-deduction refund
+  // rate (a rough marginal-rate stand-in, same simplification the rest of the app uses
+  // for `country.taxRate`), and half of it for the withdrawal tax -- retirement
+  // withdrawal tax tables are typically more generous than working-life income tax in
+  // most systems this models, but this is a starting guess, not a real table. Both editable.
+  const [contributionTaxRate, setContributionTaxRate] = useState(country.taxRate);
+  const [withdrawalTaxRate, setWithdrawalTaxRate] = useState(Math.round(country.taxRate / 2));
 
   const taxableResults = calculateCompoundInterest({
     initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper: false, compoundFrequency,
@@ -21,6 +30,11 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
 
   const totalTaxPaid = taxableResults.yearlyData.reduce((sum, row) => sum + row.taxPaid, 0);
   const wrapperBenefit = wrapperResults.finalBalance - taxableResults.finalBalance;
+
+  const retirementResults = compareRetirementVehicle({
+    initial, monthly, rate, years, inflation, compoundFrequency, contributionIncreaseRate: contributionIncrease, lumpSums,
+    contributionTaxRate, withdrawalTaxRate
+  });
 
   return (
     <div className="card tax-optimizer">
@@ -93,6 +107,50 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
             <li>Favor low-turnover, tax-efficient index funds in taxable accounts</li>
           </ul>
         </div>
+      </div>
+
+      <div className="retirement-comparison">
+        <h3>🏦 <Term k="retirementFund">Retirement Fund</Term> Comparison</h3>
+        <p className="retirement-comparison-desc">
+          A retirement fund (e.g. South Africa's RA/pension/provident funds, or a traditional-style pension elsewhere)
+          works differently from the {hasWrapper ? country.wrapperLabel : 'tax-free wrapper'} above: contributions get an
+          upfront tax deduction (a refund at your rate today), growth compounds tax-free, and it's the withdrawal that
+          gets taxed -- once, years from now.
+        </p>
+        <div className="retirement-comparison-form">
+          <div className="form-group">
+            <label>Contribution Tax Refund Rate (%)</label>
+            <input type="number" min="0" max="60" step="1" value={contributionTaxRate} onChange={(e) => setContributionTaxRate(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Withdrawal Tax Rate (%)</label>
+            <input type="number" min="0" max="60" step="1" value={withdrawalTaxRate} onChange={(e) => setWithdrawalTaxRate(Number(e.target.value))} />
+          </div>
+        </div>
+        <div className="retirement-comparison-grid">
+          <div className="retirement-stat">
+            <span>Net Cost of Contributions (after refund)</span>
+            <strong>{country.symbol} {Math.round(retirementResults.netContributionCost).toLocaleString()}</strong>
+          </div>
+          <div className="retirement-stat">
+            <span>Tax Refunds Received Along the Way</span>
+            <strong className="positive">{country.symbol} {Math.round(retirementResults.contributionTaxRefund).toLocaleString()}</strong>
+          </div>
+          <div className="retirement-stat">
+            <span>Balance Before Withdrawal Tax</span>
+            <strong>{country.symbol} {retirementResults.finalBalance.toLocaleString()}</strong>
+          </div>
+          <div className="retirement-stat">
+            <span>Net After Withdrawal Tax</span>
+            <strong className="positive">{country.symbol} {Math.round(retirementResults.netAfterWithdrawalTax).toLocaleString()}</strong>
+          </div>
+        </div>
+        <p className="retirement-comparison-note">
+          Illustrative, not tax advice -- real retirement contribution-deduction limits and withdrawal tax tables vary
+          by country (and often by age/withdrawal size) and aren't modeled here; both rates above are a flat starting
+          guess, editable to match your own situation. The refund isn't compounded back into the balance above -- it's
+          shown as a separate amount you'd actually receive along the way, not part of the retirement pot itself.
+        </p>
       </div>
     </div>
   );

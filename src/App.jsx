@@ -21,6 +21,7 @@ import EmergencyFund from './components/EmergencyFund';
 import MyPlan from './components/MyPlan';
 import Snapshot from './components/Snapshot';
 import NetWorth from './components/NetWorth';
+import Budget from './components/Budget';
 import DataBackup from './components/DataBackup';
 import LegalModal from './components/LegalModal';
 import LanguageSwitcher from './components/LanguageSwitcher';
@@ -276,6 +277,7 @@ export default function App() {
       label: t('nav.groupPlanning'),
       tabs: [
         { name: 'Dashboard', i18nKey: 'nav.dashboard', tier: 'Pro' },
+        { name: 'Budget', i18nKey: 'nav.budget', tier: 'Pro' },
         { name: 'Emergency Fund', i18nKey: 'nav.emergencyFund', tier: 'Pro' },
         { name: 'Debt Payoff', i18nKey: 'nav.debtPayoff', tier: 'Pro' },
         { name: 'Loan & Bond', i18nKey: 'nav.loanBond', tier: 'Pro' },
@@ -618,6 +620,12 @@ export default function App() {
           </div>
         )}
 
+        {activeTab === 'Budget' && canAccess('Pro') && (
+          <div className="tab-pane active">
+            <Budget country={country} />
+          </div>
+        )}
+
         {activeTab === 'Emergency Fund' && canAccess('Pro') && (
           <div className="tab-pane active">
             <EmergencyFund country={country} />
@@ -649,6 +657,8 @@ export default function App() {
               scenarioCountry={country}
               reportingCurrencyCode={reportingCurrencyCode}
               onReportingCurrencyChange={setReportingCurrencyCode}
+              canFxStressTest={canAccess('Ultra')}
+              onOpenPricing={() => setShowPricing(true)}
             />
           </div>
         )}

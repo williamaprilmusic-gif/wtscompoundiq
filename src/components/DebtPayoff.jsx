@@ -15,7 +15,10 @@ import SnapshotChart from './SnapshotChart';
 // offer a "pull from Debt Payoff" shortcut without redeclaring this string (same
 // export-and-reuse pattern as HISTORY_KEY below).
 export const DEBTS_KEY = 'wts_compoundiq_debtpayoff_debts';
-const EXTRA_KEY = 'wts_compoundiq_debtpayoff_extra';
+// Exported so Budget.jsx can push a computed surplus straight into this field (same
+// export-and-reuse pattern as DEBTS_KEY/HISTORY_KEY above) without Budget needing to
+// know DebtPayoff's internal storage layout beyond this one key.
+export const EXTRA_KEY = 'wts_compoundiq_debtpayoff_extra';
 const LUMPSUMS_KEY = 'wts_compoundiq_debtpayoff_lumpsums';
 export const HISTORY_KEY = 'wts_compoundiq_debtpayoff_history';
 

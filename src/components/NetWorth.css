@@ -281,6 +281,111 @@
   margin: 6px 0 4px;
 }
 
+.nw-fx-stress {
+  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 12px;
+  padding: 20px 22px;
+  margin-bottom: 20px;
+}
+
+.nw-fx-stress h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.nw-fx-stress-desc {
+  color: var(--mut);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.nw-fx-stress-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.nw-fx-stress-slider-row input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent);
+}
+
+.nw-fx-stress-pct {
+  font-weight: 700;
+  color: var(--text);
+  min-width: 48px;
+  text-align: right;
+}
+
+.nw-fx-stress-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.nw-fx-stress-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nw-fx-stress-stat span {
+  font-size: 0.72rem;
+  color: var(--mut);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.nw-fx-stress-stat strong {
+  font-size: 1.15rem;
+}
+
+.nw-fx-stress-stat strong.positive {
+  color: var(--accent-green);
+}
+
+.nw-fx-stress-stat strong.negative {
+  color: var(--accent-red);
+}
+
+.nw-fx-stress-note {
+  font-size: 0.78rem;
+  color: var(--mut2);
+  line-height: 1.5;
+}
+
+.nw-fx-stress-upsell {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+}
+
+.nw-fx-stress-upsell p {
+  color: var(--mut);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.nw-fx-stress-upsell-btn {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: var(--accent);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
 .nw-save-btn {
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-blue-deep) 100%);
   color: white;

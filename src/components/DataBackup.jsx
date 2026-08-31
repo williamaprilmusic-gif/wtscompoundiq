@@ -6,27 +6,37 @@ import './DataBackup.css';
 import { PLAN_STORAGE_KEY } from '../utils/planStorage';
 import { FLUSH_EVENT } from '../utils/usePersistedState';
 import { HISTORY_KEY as NETWORTH_HISTORY_KEY } from './NetWorth';
-import { HISTORY_KEY as DEBTPAYOFF_HISTORY_KEY } from './DebtPayoff';
+import { HISTORY_KEY as DEBTPAYOFF_HISTORY_KEY, EXTRA_KEY as DEBTPAYOFF_EXTRA_KEY } from './DebtPayoff';
 import { HISTORY_KEY as EMERGENCYFUND_HISTORY_KEY } from './EmergencyFund';
+import { BUDGET_ITEMS_KEY } from '../budgetEngine';
 
 const ALL_STORAGE_KEYS = [
   'wts_compoundiq_tier',
   PLAN_STORAGE_KEY,
   'wts_compoundiq_reminder_at',
   'wts_compoundiq_reminder_notified_at',
+  'wts_compoundiq_reporting_currency',
   NETWORTH_HISTORY_KEY,
   DEBTPAYOFF_HISTORY_KEY,
   EMERGENCYFUND_HISTORY_KEY,
   // Working data auto-saved by usePersistedState (see src/utils/usePersistedState.js)
   // -- the actual entered rows, not just the "Save This Plan" summaries above.
   'wts_compoundiq_networth_items',
+  DEBTPAYOFF_EXTRA_KEY,
   'wts_compoundiq_debtpayoff_debts',
-  'wts_compoundiq_debtpayoff_extra',
   'wts_compoundiq_debtpayoff_lumpsums',
   'wts_compoundiq_invest_goals',
   'wts_compoundiq_emergencyfund_inputs',
   'wts_compoundiq_loancalc_inputs',
-  'wts_compoundiq_loancalc_lumpsums'
+  'wts_compoundiq_loancalc_lumpsums',
+  BUDGET_ITEMS_KEY,
+  // Compare tab's "Compare My Plans" scenarios, and Snapshot's Enterprise report
+  // branding -- both added after this list was first written; included here for the
+  // same reason as everything else on it (an export/restore cycle shouldn't silently
+  // drop them).
+  'wts_compoundiq_scenario_a',
+  'wts_compoundiq_scenario_b',
+  'wts_compoundiq_report_branding'
 ];
 
 const exportData = () => {

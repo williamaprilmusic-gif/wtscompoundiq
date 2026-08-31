@@ -24,5 +24,6 @@ export const GLOSSARY = {
   bond: "South African term for a home loan/mortgage -- money a bank lends you to buy property, secured against the property itself, paid back in fixed installments over a long term (often 20-30 years).",
   amortization: "The process of paying off a loan through regular fixed payments, where each payment covers that period's interest first and whatever's left over reduces the principal. Early payments are mostly interest; later payments are mostly principal.",
   transferDuty: "A one-off tax paid by the buyer when property changes hands (South Africa) -- separate from the bond itself, calculated on the purchase price using a bracketed scale.",
-  lifeCoverGap: "The difference between how much life insurance cover a family would need to stay financially secure if the insured person died, and how much cover (plus savings) is already in place."
+  lifeCoverGap: "The difference between how much life insurance cover a family would need to stay financially secure if the insured person died, and how much cover (plus savings) is already in place.",
+  retirementFund: "A retirement-specific account (like South Africa's RA/pension/provident funds) that works differently from a tax-free wrapper: contributions get an upfront tax deduction, growth compounds tax-free, and only the eventual withdrawal is taxed -- once, years later."
 };

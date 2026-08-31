@@ -156,3 +156,95 @@
   padding: 10px 12px;
   line-height: 1.4;
 }
+
+.retirement-comparison {
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+
+.retirement-comparison h3 {
+  font-size: 1.05rem;
+  color: var(--text);
+  margin: 0 0 8px;
+}
+
+.retirement-comparison-desc {
+  color: var(--mut);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.retirement-comparison-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+  max-width: 420px;
+}
+
+.retirement-comparison-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.retirement-comparison-form label {
+  font-size: 0.82rem;
+  color: var(--mut);
+  font-weight: 500;
+}
+
+.retirement-comparison-form input {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+}
+
+.retirement-comparison-form input:focus {
+  border-color: var(--accent);
+}
+
+.retirement-comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.retirement-stat {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.retirement-stat span {
+  font-size: 0.75rem;
+  color: var(--mut);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.retirement-stat strong {
+  font-size: 1.2rem;
+  color: var(--text);
+}
+
+.retirement-stat strong.positive {
+  color: var(--accent-green);
+}
+
+.retirement-comparison-note {
+  font-size: 0.78rem;
+  color: var(--mut2);
+  line-height: 1.5;
+}

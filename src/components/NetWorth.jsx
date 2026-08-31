@@ -75,7 +75,7 @@ const downloadTemplate = () => {
 // scenarioCountry: the Calculator tab's own country -- distinct from `country` (which
 // App.jsx resolves to reportingCurrencyCode when set), used only to label the "follow
 // the Calculator tab" option below so it's clear what that option actually means.
-const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onReportingCurrencyChange }) => {
+const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onReportingCurrencyChange, canFxStressTest = false, onOpenPricing }) => {
   const [items, setItems] = usePersistedState(ITEMS_KEY, []);
   const [history, setHistory] = useState([]);
   const [importError, setImportError] = useState(null);
@@ -194,6 +194,23 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
     colorVar: CATEGORY_COLOR_VAR[cat],
     value: items.filter(i => i.type === 'debt' && (i.category || 'Other') === cat).reduce((s, i) => s + valueIn(i), 0)
   }));
+
+  // FX Stress Test (Ultra): only meaningful when at least one item is actually in a
+  // different currency from the display currency -- a same-currency-only list has
+  // nothing for a shock to move. Applies uniformly to every foreign-currency item, as
+  // if the display currency itself weakened/strengthened by fxShockPct against
+  // everything else at once (the realistic scenario for a SA user with offshore
+  // holdings: "if the Rand weakens 15%, what happens to my net worth?") rather than
+  // shocking one currency pair at a time.
+  const hasForeignCurrencyItems = items.some(i => (i.currency || country.code) !== country.code);
+  const [fxShockPct, setFxShockPct] = useState(0);
+  const valueInShocked = (item) => {
+    const base = valueIn(item);
+    return (item.currency || country.code) === country.code ? base : base * (1 + fxShockPct / 100);
+  };
+  const shockedTotalAssets = items.filter(i => i.type === 'asset').reduce((s, i) => s + valueInShocked(i), 0);
+  const shockedTotalDebts = items.filter(i => i.type === 'debt').reduce((s, i) => s + valueInShocked(i), 0);
+  const shockedNetWorth = shockedTotalAssets - shockedTotalDebts;
 
   // Converted once and reused by the delta below, the chart, and the list further down
   // instead of calling convertAmount three times per snapshot. Memoized on
@@ -375,6 +392,55 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
             </div>
           )}
         </div>
+      )}
+
+      {hasForeignCurrencyItems && (
+        canFxStressTest ? (
+          <div className="nw-fx-stress">
+            <h3>💱 FX Stress Test</h3>
+            <p className="nw-fx-stress-desc">
+              See how much your net worth actually moves if {country.currency} shifts against everything you hold in a
+              different currency -- realistic for anyone with offshore holdings.
+            </p>
+            <div className="nw-fx-stress-slider-row">
+              <input
+                type="range"
+                min="-40"
+                max="40"
+                step="1"
+                value={fxShockPct}
+                onChange={(e) => setFxShockPct(Number(e.target.value))}
+                aria-label={`${country.currency} shock percentage`}
+              />
+              <span className="nw-fx-stress-pct">{fxShockPct > 0 ? '+' : ''}{fxShockPct}%</span>
+            </div>
+            <div className="nw-fx-stress-grid">
+              <div className="nw-fx-stress-stat">
+                <span>Net Worth at {fxShockPct > 0 ? '+' : ''}{fxShockPct}%</span>
+                <strong className={shockedNetWorth >= 0 ? 'positive' : 'negative'}>{country.symbol} {Math.round(shockedNetWorth).toLocaleString()}</strong>
+              </div>
+              <div className="nw-fx-stress-stat">
+                <span>Change from Today</span>
+                <strong className={shockedNetWorth - netWorth >= 0 ? 'positive' : 'negative'}>
+                  {shockedNetWorth - netWorth >= 0 ? '+' : '-'}{country.symbol} {Math.abs(Math.round(shockedNetWorth - netWorth)).toLocaleString()}
+                </strong>
+              </div>
+            </div>
+            <p className="nw-fx-stress-note">
+              Assumes every foreign-currency item moves by the same {fxShockPct}% at once (a simplification -- real
+              currencies don't move in lockstep) and uses this app's illustrative, approximate exchange rate table, not
+              live rates.
+            </p>
+          </div>
+        ) : (
+          <div className="nw-fx-stress-upsell">
+            <p>
+              💱 <strong>FX Stress Test</strong> -- see how much your net worth actually moves if {country.currency} shifts
+              against your offshore holdings. Included on Ultra.{' '}
+              {onOpenPricing && <button type="button" className="nw-fx-stress-upsell-btn" onClick={onOpenPricing}>View Pricing</button>}
+            </p>
+          </div>
+        )
       )}
 
       <button className="nw-save-btn" onClick={saveSnapshot}>📸 Save Snapshot</button>

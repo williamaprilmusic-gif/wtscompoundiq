@@ -1,0 +1,192 @@
+/* src/components/Budget.css */
+.budget-header h2 {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  color: var(--text);
+}
+
+.budget-header p {
+  color: var(--mut);
+  margin-bottom: 22px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.budget-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 22px;
+}
+
+@media (max-width: 640px) {
+  .budget-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.budget-column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.budget-column-header h3 {
+  font-size: 1.05rem;
+  color: var(--text);
+  margin: 0;
+}
+
+.budget-add-btn {
+  border: 1px dashed;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: none;
+}
+
+.budget-add-btn.income {
+  border-color: rgba(74, 222, 128, 0.4);
+  color: var(--accent-green);
+}
+
+.budget-add-btn.expense {
+  border-color: rgba(248, 113, 113, 0.4);
+  color: var(--accent-red);
+}
+
+.budget-empty {
+  color: var(--mut2);
+  font-size: 0.82rem;
+}
+
+.budget-item {
+  display: grid;
+  grid-template-columns: 1fr 110px auto;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.budget-item-expense {
+  grid-template-columns: 1fr 130px 110px auto;
+}
+
+.budget-item input,
+.budget-item select {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--raise-1);
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  outline: none;
+}
+
+.budget-item input:focus,
+.budget-item select:focus {
+  border-color: var(--accent);
+}
+
+@media (max-width: 480px) {
+  .budget-item,
+  .budget-item-expense {
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "name remove" "category category" "amount amount";
+  }
+  .budget-item input[type="text"] { grid-area: name; }
+  .budget-item select { grid-area: category; }
+  .budget-item input[type="number"] { grid-area: amount; }
+  .budget-item .budget-remove { grid-area: remove; }
+}
+
+.budget-remove {
+  background: rgba(248, 113, 113, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: var(--accent-red);
+  width: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.budget-result {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 22px;
+  margin-bottom: 16px;
+}
+
+.budget-result.positive {
+  border-color: rgba(74, 222, 128, 0.35);
+}
+
+.budget-result.negative {
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.budget-result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 6px 0;
+}
+
+.budget-result-row strong {
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.budget-result-row.main {
+  border-top: 1px solid var(--border);
+  margin-top: 6px;
+  padding-top: 12px;
+}
+
+.budget-result-row.main strong {
+  font-size: 1.4rem;
+}
+
+.budget-result.positive .budget-result-row.main strong {
+  color: var(--accent-green);
+}
+
+.budget-result.negative .budget-result-row.main strong {
+  color: var(--accent-red);
+}
+
+.budget-push-btn {
+  display: block;
+  width: 100%;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: var(--accent);
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.budget-allocation {
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+  margin-bottom: 16px;
+}
+
+.budget-allocation h3 {
+  font-size: 0.95rem;
+  color: var(--text);
+  margin: 0 0 14px;
+}
+
+.budget-note {
+  font-size: 0.78rem;
+  color: var(--mut2);
+  line-height: 1.5;
+}

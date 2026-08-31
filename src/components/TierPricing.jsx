@@ -29,14 +29,17 @@ const tiers = [
     description: 'The full planning toolkit, beyond the calculator.',
     features: [
       'Everything in Basic, plus:',
+      'Budget / Cash Flow tracker',
       'Emergency Fund tracker',
-      'Debt Payoff planner (Avalanche & Snowball)',
+      'Debt Payoff planner (Avalanche & Snowball, plus a consolidation analyzer)',
       'My Plan (save a snapshot, check in on progress later, with reminders)',
       'Goal-based Invest planner (multiple goals at once)',
-      'Tax Optimizer',
-      'Power Tools (FIRE number + Debt vs. Invest)',
+      'Tax Optimizer, including a retirement fund comparison',
+      'Power Tools (FIRE number, Debt vs. Invest, Home Affordability, Education Savings, Insurance Needs, and more)',
+      'Net Worth tracker with asset allocation & forecast',
+      'Dashboard with Financial Health Score, milestones & PDF export',
       'Financial Snapshot export (print / PDF / CSV)',
-      'Side-by-side country comparison tool',
+      'Side-by-side country comparison tool, plus compare your own plans',
       'Priority support'
     ],
     cta: 'Upgrade to Pro',
@@ -53,6 +56,7 @@ const tiers = [
     features: [
       'Everything in Pro, plus:',
       'Monte Carlo simulation (1,000-path outcome range)',
+      'FX stress test for Net Worth (offshore holdings)',
       'AI Wealth Coach (Step 1-3 planner)',
       'AI Investment Advisor (personalized recommendations)'
     ],

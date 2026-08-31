@@ -106,11 +106,23 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
     ...detectEfFundedMilestone(plan?.emergencyFund)
   ]), [netWorthPoints, debtPoints, plan]);
 
+  const today = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+
   return (
     <div className="card dashboard">
+      <div className="dashboard-print-masthead">
+        <h1>WTS CompoundIQ -- Financial Dashboard</h1>
+        <p>{netWorthCountry.name} · Generated {today}</p>
+      </div>
+
       <div className="dashboard-header">
-        <h2>📊 Dashboard</h2>
-        <p>Everything you've saved elsewhere in the app, at a glance -- this is a read-only summary, not a new calculator. Save a plan from any tab below to see it show up here.</p>
+        <div className="dashboard-header-text">
+          <h2>📊 Dashboard</h2>
+          <p>Everything you've saved elsewhere in the app, at a glance -- this is a read-only summary, not a new calculator. Save a plan from any tab below to see it show up here.</p>
+        </div>
+        {hasAnything && (
+          <button className="dashboard-print-btn no-print" onClick={() => window.print()}>🖨️ Print / Save as PDF</button>
+        )}
       </div>
 
       {!hasAnything && (
