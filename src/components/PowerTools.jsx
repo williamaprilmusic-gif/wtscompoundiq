@@ -27,6 +27,10 @@ import { sinkingFundPlan } from '../sinkingFund';
 import { emergencyRunway } from '../emergencyRunway';
 import { compareCompoundingFrequencies } from '../compoundingComparison';
 import { budgetRuleCheck } from '../budgetRule';
+import { allocateWindfall } from '../windfallAllocator';
+import { marginalTaxAnalysis } from '../marginalTax';
+import { rateSensitivity } from '../rateSensitivity';
+import { raiseForInflation } from '../raiseForInflation';
 import { readJSONArray } from '../utils/storage';
 import { convertAmount, countriesData } from '../data/countries';
 import { DEBTS_KEY } from './DebtPayoff';
@@ -58,7 +62,11 @@ const SUB_TABS = [
   { key: 'sinkingFund', label: '🎯 Sinking Fund' },
   { key: 'efRunway', label: '🛟 Fund Runway' },
   { key: 'freqCompare', label: '🔁 Compounding Frequency' },
-  { key: 'budgetRule', label: '⚖️ 50/30/20 Check' }
+  { key: 'budgetRule', label: '⚖️ 50/30/20 Check' },
+  { key: 'windfall', label: '🎁 Windfall Split' },
+  { key: 'marginalTax', label: '🧮 Marginal Tax Rate' },
+  { key: 'raiseInflation', label: '🏃 Beat Inflation' },
+  { key: 'rateShock', label: '📉 Rate Shock' }
 ];
 
 // Groups the 24 pills above into labelled categories so the bar stays scannable. Every
@@ -67,9 +75,9 @@ const SUB_TABS = [
 const SUB_TAB_GROUPS = [
   { label: 'Retire & Financial Independence', keys: ['fire', 'coastFire', 'savingsRate', 'drawdown', 'pretaxRA', 'dividend'] },
   { label: 'Debt & Credit', keys: ['debtVsInvest', 'dti', 'cardTrap'] },
-  { label: 'Property & Big Purchases', keys: ['affordability', 'rentVsBuy', 'carCost'] },
-  { label: 'Saving for a Goal', keys: ['savings', 'education', 'sinkingFund', 'efRunway', 'insurance'] },
-  { label: 'Income & Tax', keys: ['salary', 'raiseValue', 'budgetRule'] },
+  { label: 'Property & Big Purchases', keys: ['affordability', 'rentVsBuy', 'carCost', 'rateShock'] },
+  { label: 'Saving for a Goal', keys: ['savings', 'education', 'sinkingFund', 'efRunway', 'insurance', 'windfall'] },
+  { label: 'Income & Tax', keys: ['salary', 'raiseValue', 'budgetRule', 'marginalTax', 'raiseInflation'] },
   { label: 'Money Basics', keys: ['futureCost', 'fxConvert', 'rule72', 'freqCompare'] }
 ];
 
@@ -207,6 +215,23 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const [brNeeds, setBrNeeds] = useState(0);
   const [brWants, setBrWants] = useState(0);
   const [brSavings, setBrSavings] = useState(0);
+
+  const [wfAmount, setWfAmount] = useState(0);
+  const [wfEfShortfall, setWfEfShortfall] = useState(0);
+  const [wfHighDebt, setWfHighDebt] = useState(0);
+  const [wfWrapperRoom, setWfWrapperRoom] = useState(0);
+
+  const [mtIncome, setMtIncome] = useState(0);
+  const [mtProgressive, setMtProgressive] = useState(false);
+  const [mtDeduction, setMtDeduction] = useState(0);
+
+  const [riInflation, setRiInflation] = useState(Math.round(country.typicalInflation || 5));
+  const [riSalary, setRiSalary] = useState(0);
+  const [riOffered, setRiOffered] = useState(0);
+
+  const [rsBalance, setRsBalance] = useState(0);
+  const [rsRate, setRsRate] = useState(country.typicalBankRate || 11);
+  const [rsYearsLeft, setRsYearsLeft] = useState(20);
 
   const safeWithdrawalRate = withdrawalRate > 0 ? withdrawalRate : 0.01;
   const fireNumber = annualExpenses / (safeWithdrawalRate / 100);
@@ -379,6 +404,18 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const efRunway = emergencyRunway({ savings: efrSavings, monthlyExpenses: efrExpenses, annualSavingsRate: efrRate });
   const freqRows = compareCompoundingFrequencies({ principal: fcPrincipal, annualRate: fcRate, years: fcYears });
   const budgetRule = budgetRuleCheck({ takeHomeIncome: brIncome, needs: brNeeds, wants: brWants, savings: brSavings });
+
+  const windfall = allocateWindfall({ amount: wfAmount, emergencyShortfall: wfEfShortfall, highInterestDebt: wfHighDebt, wrapperRoom: wfWrapperRoom });
+
+  const marginalTax = marginalTaxAnalysis({
+    income: mtIncome, taxRate: country.taxRate,
+    taxBrackets: (mtProgressive && country.taxBrackets) ? country.taxBrackets : null,
+    deltaEarned: 1000, deductionAmount: mtDeduction
+  });
+
+  const raiseInflation = raiseForInflation({ currentSalary: riSalary, inflationRate: riInflation, offeredRaisePercent: riOffered });
+
+  const rateShock = rateSensitivity({ balance: rsBalance, currentRate: rsRate, yearsRemaining: rsYearsLeft });
 
   const saveFirePlan = () => {
     savePlanSection('fire', {
@@ -1558,6 +1595,189 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
             <p className="power-tool-note">
               A starting framework, not a law — high-cost-of-living areas often can't get needs under 50%, and someone
               chasing FIRE deliberately pushes saving well past 20%. For a full line-item budget, use the Budget tab.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'windfall' && (
+      <div className="power-tool-card">
+        <h3>🎁 Windfall / Bonus Split</h3>
+        <p className="power-tool-desc">A lump sum — bonus, tax refund, inheritance — split down the conventional priority order: emergency fund, then expensive debt, then tax-advantaged room, then the rest invested.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Windfall Amount ({country.symbol})</label>
+            <input type="number" min="0" step="5000" value={wfAmount} onChange={(e) => setWfAmount(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Emergency Fund Shortfall ({country.symbol})</label>
+            <input type="number" min="0" step="1000" value={wfEfShortfall} onChange={(e) => setWfEfShortfall(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Debt Above Your Investment Return ({country.symbol})</label>
+            <input type="number" min="0" step="1000" value={wfHighDebt} onChange={(e) => setWfHighDebt(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Unused Tax-Advantaged Room This Year ({country.symbol})</label>
+            <input type="number" min="0" step="1000" value={wfWrapperRoom} onChange={(e) => setWfWrapperRoom(Number(e.target.value))} />
+          </div>
+        </div>
+        {wfAmount > 0 && (
+          <>
+            <div className="power-verdict invest">Suggested split of {country.symbol} {Math.round(wfAmount).toLocaleString()}:</div>
+            <div className="power-verdict-grid">
+              {windfall.steps.map((s, i) => (
+                <div className="power-stat" key={i}>
+                  <span>{s.label}</span>
+                  <strong className={s.label.startsWith('Invest') ? 'positive' : ''}>{country.symbol} {Math.round(s.amount).toLocaleString()}</strong>
+                </div>
+              ))}
+            </div>
+            <p className="power-tool-note">
+              Rule-based, deterministic priority order — the same logic the Coach uses, not personalised advice. "Debt
+              above your investment return" means anything costing more than what investing is expected to keep after
+              tax; clearing that first is a guaranteed return. Adjust the inputs to match your own situation.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'marginalTax' && (
+      <div className="power-tool-card">
+        <h3>🧮 Marginal Tax Rate & Deduction Value</h3>
+        <p className="power-tool-desc">What the next rand you earn actually keeps — and what a deductible contribution (retirement annuity, donation) saves you this year.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Annual Taxable Income ({country.symbol})</label>
+            <input type="number" min="0" step="10000" value={mtIncome} onChange={(e) => setMtIncome(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Deductible Contribution to Test ({country.symbol})</label>
+            <input type="number" min="0" step="5000" value={mtDeduction} onChange={(e) => setMtDeduction(Number(e.target.value))} />
+          </div>
+          {country.taxBrackets && (
+            <div className="form-group checkbox-group">
+              <label>
+                <input type="checkbox" checked={mtProgressive} onChange={(e) => setMtProgressive(e.target.checked)} />
+                {' '}Use {country.name}'s progressive tax brackets
+              </label>
+            </div>
+          )}
+        </div>
+        {mtIncome > 0 && (
+          <>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Marginal Tax Rate</span>
+                <strong className="warn">{marginalTax.marginalRate.toFixed(1)}%</strong>
+              </div>
+              <div className="power-stat">
+                <span>Next {country.symbol}1,000 Earned Keeps</span>
+                <strong className="positive">{country.symbol} {Math.round(marginalTax.keepsFromNext).toLocaleString()}</strong>
+              </div>
+              {mtDeduction > 0 && (
+                <div className="power-stat">
+                  <span>{country.symbol}{Math.round(mtDeduction).toLocaleString()} Deduction Saves</span>
+                  <strong className="positive">{country.symbol} {Math.round(marginalTax.deductionTaxSaved).toLocaleString()}</strong>
+                </div>
+              )}
+              {mtDeduction > 0 && (
+                <div className="power-stat">
+                  <span>Real Cost of That Contribution</span>
+                  <strong>{country.symbol} {Math.round(marginalTax.deductionNetCost).toLocaleString()}</strong>
+                </div>
+              )}
+            </div>
+            <p className="power-tool-note">
+              {mtProgressive && country.taxBrackets
+                ? (country.taxBracketsNote || `${country.name}'s progressive bracket schedule -- illustrative only.`)
+                : `Flat ${country.taxRate}% assumed, so that's also the marginal rate.`} Ignores rebates, thresholds,
+              and contribution caps (e.g. a country's limit on deductible retirement contributions). Not tax advice.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'raiseInflation' && (
+      <div className="power-tool-card">
+        <h3>🏃 Raise Needed to Beat Inflation</h3>
+        <p className="power-tool-desc">A pay rise below the inflation rate is a pay cut in real terms. See the break-even raise, and what an offer is actually worth.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Current Salary ({country.symbol}/yr)</label>
+            <input type="number" min="0" step="10000" value={riSalary} onChange={(e) => setRiSalary(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label><Term k="inflation">Inflation</Term> Rate (%)</label>
+            <input type="number" step="0.1" value={riInflation} onChange={(e) => setRiInflation(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Raise You're Offered (%)</label>
+            <input type="number" step="0.1" value={riOffered} onChange={(e) => setRiOffered(Number(e.target.value))} />
+          </div>
+        </div>
+        {riSalary > 0 && (
+          <>
+            <div className={`power-verdict ${riOffered > 0 ? (raiseInflation.beatsInflation ? 'invest' : 'debt') : 'debt'}`}>
+              You need a {raiseInflation.breakEvenRaisePercent.toFixed(1)}% raise ({country.symbol} {Math.round(raiseInflation.breakEvenRaiseAmount).toLocaleString()}) just to hold your ground at {riInflation}% inflation.
+              {riOffered > 0 && (raiseInflation.beatsInflation
+                ? ` The ${riOffered}% offered is a real gain of about ${raiseInflation.realChangePercent.toFixed(1)}%.`
+                : ` The ${riOffered}% offered is a real cut of about ${Math.abs(raiseInflation.realChangePercent).toFixed(1)}%.`)}
+            </div>
+            <p className="power-tool-note">
+              "Real" here means after dividing the new salary back by {riInflation}% inflation — its purchasing power
+              next year in today's money. Doesn't model bracket creep (a raise can push part of your income into a
+              higher tax band). See the Marginal Tax Rate tool for that.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'rateShock' && (
+      <div className="power-tool-card">
+        <h3>📉 Interest-Rate Shock on a Bond</h3>
+        <p className="power-tool-desc">What your bond repayment does if the rate moves. The Loan &amp; Bond tab models one fixed rate — this is the "what if the central bank hikes" view.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Outstanding Balance ({country.symbol})</label>
+            <input type="number" min="0" step="50000" value={rsBalance} onChange={(e) => setRsBalance(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Current Rate (%)</label>
+            <input type="number" min="0" step="0.1" value={rsRate} onChange={(e) => setRsRate(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Years Left on the Loan</label>
+            <input type="number" min="1" max="30" value={rsYearsLeft} onChange={(e) => setRsYearsLeft(Number(e.target.value))} />
+          </div>
+        </div>
+        {rsBalance > 0 && (
+          <>
+            <div className="tbl-wrap">
+              <table className="power-freq-table">
+                <thead>
+                  <tr><th>Rate Move</th><th>New Rate</th><th>Monthly Repayment</th><th>vs. Now</th></tr>
+                </thead>
+                <tbody>
+                  {rateShock.map(r => (
+                    <tr key={r.shift}>
+                      <td>{r.shift > 0 ? `+${r.shift}%` : r.shift < 0 ? `${r.shift}%` : 'no change'}</td>
+                      <td>{r.rate.toFixed(2)}%</td>
+                      <td>{country.symbol} {Math.round(r.payment).toLocaleString()}</td>
+                      <td>{r.shift === 0 ? '—' : `${r.deltaVsNow >= 0 ? '+' : '−'}${country.symbol} ${Math.round(Math.abs(r.deltaVsNow)).toLocaleString()}/mo`}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="power-tool-note">
+              Reprices the standard installment on the balance over the years left at each rate — it doesn't shorten
+              or extend the term. A +3% move on a large balance is a meaningful monthly jump; stress-test your budget
+              against the top row, not the bottom.
             </p>
           </>
         )}
