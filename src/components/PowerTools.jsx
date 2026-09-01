@@ -15,8 +15,12 @@ import { calculateTakeHomePay } from '../salaryCalculator';
 import { calculateDTI } from '../debtToIncome';
 import { compareRentVsBuy } from '../rentVsBuy';
 import { projectFutureCost, projectPurchasingPower } from '../futureCost';
+import { computeCoastFire } from '../coastFire';
+import { yearsToFinancialIndependence } from '../savingsRate';
+import { analyzeCreditCard } from '../creditCardTrap';
+import { ruleOf72 } from '../ruleOf72';
 import { readJSONArray } from '../utils/storage';
-import { convertAmount } from '../data/countries';
+import { convertAmount, countriesData } from '../data/countries';
 import { DEBTS_KEY } from './DebtPayoff';
 import { HISTORY_KEY as NETWORTH_HISTORY_KEY, isValidNetWorthEntry } from './NetWorth';
 
@@ -33,7 +37,12 @@ const SUB_TABS = [
   { key: 'salary', label: '💰 Take-Home Pay' },
   { key: 'dti', label: '📊 Debt-to-Income' },
   { key: 'rentVsBuy', label: '🏘️ Rent vs. Buy' },
-  { key: 'futureCost', label: '📈 Future Cost' }
+  { key: 'futureCost', label: '📈 Future Cost' },
+  { key: 'coastFire', label: '🌴 Coast FIRE' },
+  { key: 'savingsRate', label: '⏱️ Savings Rate' },
+  { key: 'cardTrap', label: '🪤 Card Min. Trap' },
+  { key: 'fxConvert', label: '💱 Currency Convert' },
+  { key: 'rule72', label: '⏳ Rule of 72' }
 ];
 
 const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [] }) => {
@@ -106,6 +115,28 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const [futureCostAmount, setFutureCostAmount] = useState(0);
   const [futureCostYears, setFutureCostYears] = useState(10);
   const [futureCostInflation, setFutureCostInflation] = useState(Math.round(country.typicalInflation || 5));
+
+  const [coastPot, setCoastPot] = useState(0);
+  const [coastReturn, setCoastReturn] = useState(rate || 7);
+  const [coastYears, setCoastYears] = useState(30);
+  const [coastTarget, setCoastTarget] = useState(0); // 0 = fall back to the FIRE Number tab's figure
+
+  const [srIncome, setSrIncome] = useState(0);
+  const [srSpending, setSrSpending] = useState(0);
+  const [srReturn, setSrReturn] = useState(5);
+
+  const [cardBalance, setCardBalance] = useState(0);
+  const [cardApr, setCardApr] = useState(0);
+  const [cardMinPercent, setCardMinPercent] = useState(2.5);
+  const [cardMinFloor, setCardMinFloor] = useState(0);
+  const [cardFixedPayment, setCardFixedPayment] = useState(0);
+
+  const [fxAmount, setFxAmount] = useState(0);
+  const [fxFrom, setFxFrom] = useState(country.code);
+  const [fxTo, setFxTo] = useState(country.code === 'us' ? 'gb' : 'us');
+
+  const [r72Rate, setR72Rate] = useState(rate || 7);
+  const [r72Years, setR72Years] = useState(20);
 
   const safeWithdrawalRate = withdrawalRate > 0 ? withdrawalRate : 0.01;
   const fireNumber = annualExpenses / (safeWithdrawalRate / 100);
@@ -236,6 +267,26 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
   const futureCost = projectFutureCost({ currentCost: futureCostAmount, years: futureCostYears, inflationRate: futureCostInflation });
   const purchasingPower = projectPurchasingPower({ currentAmount: futureCostAmount, years: futureCostYears, inflationRate: futureCostInflation });
+
+  // Coast FIRE: target defaults to the FIRE Number tab's figure above unless the user
+  // types their own, so filling in that tab first carries straight over here.
+  const coastTargetEffective = coastTarget > 0 ? coastTarget : fireNumber;
+  const coast = computeCoastFire({
+    currentPortfolio: coastPot, annualReturn: coastReturn, yearsToRetirement: coastYears, fireNumber: coastTargetEffective
+  });
+
+  const savingsRateResult = yearsToFinancialIndependence({ takeHomeIncome: srIncome, annualSpending: srSpending, realReturn: srReturn });
+
+  const cardResult = analyzeCreditCard({
+    balance: cardBalance, apr: cardApr, minPercent: cardMinPercent, minFloor: cardMinFloor,
+    fixedPayment: cardFixedPayment > 0 ? cardFixedPayment : undefined
+  });
+
+  const fxConverted = convertAmount(fxAmount, fxFrom, fxTo);
+  const fxSymbol = (code) => (countriesData.find(c => c.code === code) || country).symbol;
+  const fxCurrency = (code) => (countriesData.find(c => c.code === code) || country).currency;
+
+  const r72 = ruleOf72({ annualRate: r72Rate, years: r72Years });
 
   const saveFirePlan = () => {
     savePlanSection('fire', {
@@ -819,6 +870,231 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
               {country.symbol}{futureCostAmount.toLocaleString()} would be worth if it just sat still, in today's
               purchasing power. Same math the Calculator tab's "Real Value" column already applies to your
               investment balance.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'coastFire' && (
+      <div className="power-tool-card">
+        <h3>🌴 Coast FIRE Calculator</h3>
+        <p className="power-tool-desc">Have you already saved enough that you could stop contributing entirely and still hit your retirement number from growth alone?</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Current Invested Portfolio ({country.symbol})</label>
+            <input type="number" min="0" step="10000" value={coastPot} onChange={(e) => setCoastPot(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Expected Annual Return (%)</label>
+            <input type="number" step="0.1" value={coastReturn} onChange={(e) => setCoastReturn(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Years Until Retirement</label>
+            <input type="number" min="0" max="60" value={coastYears} onChange={(e) => setCoastYears(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Retirement Target ({country.symbol}){coastTarget === 0 && fireNumber > 0 ? ' — using your FIRE Number' : ''}</label>
+            <input type="number" min="0" step="100000" value={coastTarget} onChange={(e) => setCoastTarget(Number(e.target.value))} placeholder={fireNumber > 0 ? Math.round(fireNumber).toLocaleString() : '0'} />
+          </div>
+        </div>
+        {coastPot > 0 && coastTargetEffective > 0 && (
+          <>
+            <div className={`power-verdict ${coast.hasCoasted ? 'invest' : 'debt'}`}>
+              {coast.hasCoasted
+                ? `You've hit Coast FIRE. Left untouched at ${coastReturn}%, today's ${country.symbol} ${Math.round(coastPot).toLocaleString()} grows to ${country.symbol} ${Math.round(coast.projectedAtRetirement).toLocaleString()} in ${coastYears} years — ${country.symbol} ${Math.round(coast.surplusAtRetirement).toLocaleString()} past your ${country.symbol} ${Math.round(coastTargetEffective).toLocaleString()} target. Further saving is optional.`
+                : `Not there yet. Today's ${country.symbol} ${Math.round(coastPot).toLocaleString()} grows to ${country.symbol} ${Math.round(coast.projectedAtRetirement).toLocaleString()} in ${coastYears} years — you'd need ${country.symbol} ${Math.round(coast.coastNumber).toLocaleString()} invested today to coast, a ${country.symbol} ${Math.round(coast.shortfallToday).toLocaleString()} gap.`}
+            </div>
+            <p className="power-tool-note">
+              Assumes a flat {coastReturn}% return every year with zero further contributions and no tax drag on the way
+              — a milestone marker, not a plan to actually stop saving. "Retirement Target" defaults to your FIRE Number
+              tab figure; type a number to override it.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'savingsRate' && (
+      <div className="power-tool-card">
+        <h3>⏱️ Savings Rate → Years to Financial Independence</h3>
+        <p className="power-tool-desc">The "shockingly simple math": how many years to FI depends far more on what fraction of your pay you keep than on how much you earn.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Annual Take-Home Income ({country.symbol})</label>
+            <input type="number" min="0" step="10000" value={srIncome} onChange={(e) => setSrIncome(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Annual Spending ({country.symbol})</label>
+            <input type="number" min="0" step="10000" value={srSpending} onChange={(e) => setSrSpending(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Real (after-inflation) Return (%)</label>
+            <input type="number" step="0.1" value={srReturn} onChange={(e) => setSrReturn(Number(e.target.value))} />
+          </div>
+        </div>
+        {srIncome > 0 && srSpending > 0 && (
+          <>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Savings Rate</span>
+                <strong className={savingsRateResult.savingsRate >= 20 ? 'positive' : 'warn'}>{savingsRateResult.savingsRate.toFixed(0)}%</strong>
+              </div>
+              <div className="power-stat">
+                <span>Years to Financial Independence</span>
+                <strong className={savingsRateResult.years === null ? 'warn' : 'positive'}>
+                  {savingsRateResult.years === null ? 'Never at this rate' : `${savingsRateResult.years} years`}
+                </strong>
+              </div>
+              <div className="power-stat">
+                <span>FI Number (25× spending)</span>
+                <strong>{country.symbol} {Math.round(savingsRateResult.fiNumber).toLocaleString()}</strong>
+              </div>
+            </div>
+            <p className="power-tool-note">
+              Starts from zero invested, contributes the {country.symbol} {Math.round(savingsRateResult.annualSaving).toLocaleString()}/yr
+              surplus at the end of each year, grows it at {srReturn}% real, and stops when the pot hits 25× your spending
+              (the 4% rule). Ignores any portfolio you already have, taxes, and future spending changes — the point is the
+              shape of the curve, not a dated forecast.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'cardTrap' && (
+      <div className="power-tool-card">
+        <h3>🪤 Credit Card Minimum-Payment Trap</h3>
+        <p className="power-tool-desc">Paying only the minimum on one card — because the required amount shrinks with the balance — can stretch payoff over decades. See how much, and what a fixed payment does instead.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Card Balance ({country.symbol})</label>
+            <input type="number" min="0" step="1000" value={cardBalance} onChange={(e) => setCardBalance(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Annual Interest Rate / APR (%)</label>
+            <input type="number" min="0" step="0.1" value={cardApr} onChange={(e) => setCardApr(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Minimum Payment (% of balance)</label>
+            <input type="number" min="0.1" step="0.5" value={cardMinPercent} onChange={(e) => setCardMinPercent(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Minimum Payment Floor ({country.symbol})</label>
+            <input type="number" min="0" step="50" value={cardMinFloor} onChange={(e) => setCardMinFloor(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Compare: Fixed Payment ({country.symbol}/mo, optional)</label>
+            <input type="number" min="0" step="100" value={cardFixedPayment} onChange={(e) => setCardFixedPayment(Number(e.target.value))} />
+          </div>
+        </div>
+        {cardBalance > 0 && cardApr > 0 && (
+          <>
+            <div className={`power-verdict ${cardResult.minimumOnly?.neverPaysOff ? 'danger' : 'debt'}`}>
+              {cardResult.minimumOnly?.neverPaysOff
+                ? `At ${cardApr}% APR, the minimum payment here never even covers the monthly interest — the balance grows forever. This is the trap in its worst form.`
+                : `Paying only the minimum clears this in ${cardResult.minimumOnly.months} months (${Math.round(cardResult.minimumOnly.months / 12)} years) and costs ${country.symbol} ${Math.round(cardResult.minimumOnly.totalInterest).toLocaleString()} in interest — ${country.symbol} ${Math.round(cardResult.minimumOnly.totalPaid).toLocaleString()} paid on a ${country.symbol} ${Math.round(cardBalance).toLocaleString()} balance.`}
+            </div>
+            {cardResult.fixed && !cardResult.fixed.neverPaysOff && (
+              <div className="power-verdict-grid">
+                <div className="power-stat">
+                  <span>Fixed {country.symbol}{Math.round(cardFixedPayment).toLocaleString()}/mo — payoff</span>
+                  <strong className="positive">{cardResult.fixed.months} months</strong>
+                </div>
+                <div className="power-stat">
+                  <span>Fixed payment — total interest</span>
+                  <strong className="positive">{country.symbol} {Math.round(cardResult.fixed.totalInterest).toLocaleString()}</strong>
+                </div>
+                <div className="power-stat">
+                  <span>Interest saved vs. minimum</span>
+                  <strong className="positive">{country.symbol} {Math.round(Math.max(0, cardResult.minimumOnly.totalInterest - cardResult.fixed.totalInterest)).toLocaleString()}</strong>
+                </div>
+              </div>
+            )}
+            {cardResult.fixed?.neverPaysOff && (
+              <p className="power-tool-note">The fixed payment entered doesn't cover the monthly interest either — raise it above {country.symbol} {Math.round(cardBalance * cardApr / 100 / 12).toLocaleString()}/mo to make any progress.</p>
+            )}
+            <p className="power-tool-note">
+              The minimum is modeled as the greater of {cardMinPercent}% of the current balance and the {country.symbol}{Math.round(cardMinFloor).toLocaleString()} floor,
+              recalculated every month as the balance falls. Real card terms vary (some add a fixed fee, some a flat
+              1% + interest) — check your statement. For juggling several debts at once, use the Debt Payoff tab.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'fxConvert' && (
+      <div className="power-tool-card">
+        <h3>💱 Currency Converter</h3>
+        <p className="power-tool-desc">A quick conversion between any two of the {countriesData.length} currencies this app models — using the same indicative rate table the Net Worth FX tools use.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Amount</label>
+            <input type="number" min="0" step="100" value={fxAmount} onChange={(e) => setFxAmount(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>From</label>
+            <select value={fxFrom} onChange={(e) => setFxFrom(e.target.value)}>
+              {countriesData.map(c => <option key={c.code} value={c.code}>{c.currency} — {c.name}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label>To</label>
+            <select value={fxTo} onChange={(e) => setFxTo(e.target.value)}>
+              {countriesData.map(c => <option key={c.code} value={c.code}>{c.currency} — {c.name}</option>)}
+            </select>
+          </div>
+        </div>
+        {fxAmount > 0 && (
+          <>
+            <div className="power-verdict invest">
+              {fxSymbol(fxFrom)}{Math.round(fxAmount).toLocaleString()} {fxCurrency(fxFrom)} ≈ {fxSymbol(fxTo)}{Math.round(fxConverted).toLocaleString()} {fxCurrency(fxTo)}
+            </div>
+            <p className="power-tool-note">
+              Indicative only. The exchange-rate table in this app is spot-checked periodically, not live — FX moves
+              constantly, so treat this as an order-of-magnitude comparison, never a dealing rate. Banks and money
+              transfer services also add a spread and fees this doesn't model.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'rule72' && (
+      <div className="power-tool-card">
+        <h3>⏳ Rule of 72 — Doubling Time</h3>
+        <p className="power-tool-desc">The mental-math shortcut: divide 72 by your return to estimate how many years an amount takes to double. Shown here against the exact figure.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Annual Return (%)</label>
+            <input type="number" step="0.1" value={r72Rate} onChange={(e) => setR72Rate(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Over How Many Years</label>
+            <input type="number" min="0" max="80" value={r72Years} onChange={(e) => setR72Years(Number(e.target.value))} />
+          </div>
+        </div>
+        {r72Rate > 0 && (
+          <>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Rule of 72 estimate</span>
+                <strong>{r72.approxDoublingYears.toFixed(1)} years to double</strong>
+              </div>
+              <div className="power-stat">
+                <span>Exact doubling time</span>
+                <strong className="positive">{r72.exactDoublingYears.toFixed(1)} years</strong>
+              </div>
+              <div className="power-stat">
+                <span>Growth over {r72Years} years</span>
+                <strong className="positive">{r72.growthMultiple.toFixed(1)}× (≈{r72.doublingsOverPeriod.toFixed(1)} doublings)</strong>
+              </div>
+            </div>
+            <p className="power-tool-note">
+              The "72" trick is a rough approximation that's closest around 6–10% — the exact answer is
+              ln(2) ÷ ln(1 + rate). Growth multiple assumes the return compounds every year with nothing added or
+              withdrawn. Nominal figures: at a real (after-inflation) return, the doubling is in purchasing power.
             </p>
           </>
         )}
