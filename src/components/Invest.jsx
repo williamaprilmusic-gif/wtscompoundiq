@@ -7,6 +7,7 @@ import { usePersistedState } from '../utils/usePersistedState';
 import { confirmRemoval } from '../utils/confirmRemoval';
 import { parseCSV, downloadCSV, cleanCSVNumber } from '../utils/csv';
 import { uniqueId } from '../utils/uniqueId';
+import { safeTrim } from '../utils/safeTrim';
 
 const GOALS_KEY = 'wts_compoundiq_invest_goals';
 
@@ -57,7 +58,7 @@ const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12, con
   const removeGoal = (id) => {
     const goal = goals.find(g => g.id === id);
     const hasData = !!(goal && goal.touched !== false);
-    if (!confirmRemoval(hasData, `Remove "${(goal?.label || '').trim() || 'this goal'}"? This can't be undone.`)) return;
+    if (!confirmRemoval(hasData, `Remove "${safeTrim(goal?.label) || 'this goal'}"? This can't be undone.`)) return;
     setGoals(prev => prev.filter(g => g.id !== id));
   };
 

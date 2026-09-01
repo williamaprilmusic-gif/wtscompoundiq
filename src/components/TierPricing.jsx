@@ -3,14 +3,16 @@ import React, { useState } from 'react';
 import './TierPricing.css';
 import FAQHelper from './FAQHelper';
 
-// Parses a display price string like 'R199' or 'R1,499' into a plain number (199,
-// 1499). Used below to derive the numeric checkout price App.jsx/PaymentSection need
-// from these exact same figures, instead of a second hardcoded copy of the prices
-// that could silently drift from what's actually shown on the cards.
-const parsePrice = (display) => {
-  const n = Number(display.replace(/[^\d.]/g, ''));
-  return Number.isFinite(n) && display.replace(/[^\d.]/g, '') !== '' ? n : null;
-};
+// Renders a tier's `price`/`priceAnnual` field for display -- a plain ZAR number
+// (199, 1499) for any priced tier, formatted here; Basic and Enterprise instead carry
+// the literal display string ('Free', 'Custom') straight through, since neither has a
+// real numeric checkout price. The number is the source of truth (see UPGRADE_PRICES
+// below, exported straight from these same fields) -- previously it was the other way
+// around: a display string like 'R1,499' got parsed back into a number with a regex,
+// which meant a purely cosmetic copy change (a different currency symbol placement, an
+// unexpected separator) could silently compute the wrong checkout price, or drop a
+// tier's price entirely by returning null.
+const formatTierPrice = (value) => typeof value === 'number' ? `R${value.toLocaleString()}` : value;
 
 const tiers = [
   {
@@ -30,10 +32,10 @@ const tiers = [
   },
   {
     name: 'Pro',
-    price: 'R199',
+    price: 199,
     billing: '/ month',
     // Annual = ~24% off the R199 x 12 = R2,388 monthly run rate.
-    priceAnnual: 'R1,499',
+    priceAnnual: 1499,
     billingAnnual: '/ year (~R125/mo)',
     description: 'The full planning toolkit, beyond the calculator.',
     features: [
@@ -56,10 +58,10 @@ const tiers = [
   },
   {
     name: 'Ultra',
-    price: 'R299',
+    price: 299,
     billing: '/ month',
     // Annual = ~30% off the R299 x 12 = R3,588 monthly run rate.
-    priceAnnual: 'R2,499',
+    priceAnnual: 2499,
     billingAnnual: '/ year (~R208/mo)',
     description: 'Every scenario tool, plus AI-powered guidance -- on top of Pro.',
     features: [
@@ -90,17 +92,16 @@ const tiers = [
   }
 ];
 
-// Derived from the same `tiers` array the cards above render -- the single source of
-// truth for checkout pricing, imported by App.jsx for PaymentSection instead of a
-// second hardcoded copy of these figures (see App.jsx's own note on why that mattered:
-// a price changed here and forgotten there would advertise one number and charge
-// another). Basic ('Free') and Enterprise ('Custom') have no parseable numeric price
-// and are intentionally absent -- App.jsx's own fallback covers both.
+// Derived directly from the same numeric `price`/`priceAnnual` fields the cards above
+// format for display -- the single source of truth for checkout pricing, imported by
+// App.jsx for PaymentSection instead of a second hardcoded copy of these figures (see
+// App.jsx's own note on why that mattered: a price changed here and forgotten there
+// would advertise one number and charge another). Basic ('Free') and Enterprise
+// ('Custom') carry a string, not a number, and are intentionally absent -- App.jsx's
+// own fallback covers both.
 export const UPGRADE_PRICES = tiers.reduce((acc, tier) => {
-  const monthly = parsePrice(tier.price);
-  if (monthly == null) return acc;
-  const annual = tier.priceAnnual ? parsePrice(tier.priceAnnual) : null;
-  acc[tier.name] = annual != null ? { monthly, annual } : { monthly };
+  if (typeof tier.price !== 'number') return acc;
+  acc[tier.name] = typeof tier.priceAnnual === 'number' ? { monthly: tier.price, annual: tier.priceAnnual } : { monthly: tier.price };
   return acc;
 }, {});
 
@@ -146,7 +147,7 @@ export default function TierPricing({ currentTier, onUpgrade, onClose }) {
                 {tier.highlighted && <div className="badge">MOST POPULAR</div>}
                 <h3 className="tier-name">{tier.name}</h3>
                 <div className="tier-price">
-                  <span className="currency">{showAnnual ? tier.priceAnnual : tier.price}</span>
+                  <span className="currency">{formatTierPrice(showAnnual ? tier.priceAnnual : tier.price)}</span>
                   <span className="billing">{showAnnual ? tier.billingAnnual : tier.billing}</span>
                 </div>
                 <p className="tier-desc">{tier.description}</p>

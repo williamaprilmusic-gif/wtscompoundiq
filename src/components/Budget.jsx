@@ -7,6 +7,7 @@ import { BUDGET_ITEMS_KEY, EXPENSE_CATEGORIES, computeBudgetSummary } from '../b
 import { EXTRA_KEY as DEBT_EXTRA_KEY } from './DebtPayoff';
 import AllocationChart from './AllocationChart';
 import { uniqueId } from '../utils/uniqueId';
+import { safeTrim } from '../utils/safeTrim';
 
 // Fixed hue per expense category, assigned by identity -- same convention as
 // NetWorth.jsx's CATEGORY_COLOR_VAR. 'Other' reads as neutral everywhere else in the
@@ -33,13 +34,13 @@ const Budget = ({ country }) => {
   };
 
   // Same "only confirm when there's real data" pattern as NetWorth.jsx's removeItem.
-  // `(item.name || '')` guards a hand-edited/imported backup item that's missing a
-  // `name` field entirely -- `.trim()` on a bare `undefined` throws and crashes the
-  // remove action instead of just falling back to the "this line item" label.
+  // safeTrim guards a hand-edited/imported backup item that's missing a `name` field
+  // entirely -- `.trim()` on a bare `undefined` throws and crashes the remove action
+  // instead of just falling back to the "this line item" label.
   const removeItem = (id) => {
     const item = items.find(i => i.id === id);
-    const hasData = !!(item && ((item.name || '').trim() || item.amount > 0));
-    if (!confirmRemoval(hasData, `Remove "${(item?.name || '').trim() || 'this line item'}"? This can't be undone.`)) return;
+    const hasData = !!(item && (safeTrim(item.name) || item.amount > 0));
+    if (!confirmRemoval(hasData, `Remove "${safeTrim(item?.name) || 'this line item'}"? This can't be undone.`)) return;
     setItems(prev => prev.filter(i => i.id !== id));
   };
 

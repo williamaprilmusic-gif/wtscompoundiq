@@ -10,6 +10,7 @@ import { confirmRemoval } from '../utils/confirmRemoval';
 import { parseCSV, downloadCSV, cleanCSVNumber } from '../utils/csv';
 import { convertAmount } from '../data/countries';
 import { uniqueId } from '../utils/uniqueId';
+import { safeTrim } from '../utils/safeTrim';
 import SnapshotChart from './SnapshotChart';
 
 // Exported so PowerTools.jsx's Home Affordability / Insurance Needs calculators can
@@ -67,12 +68,12 @@ const DebtPayoff = ({ country }) => {
   // entered -- a blank row removed right away doesn't need a safety check. Checks all
   // four editable fields (not just name/balance) -- a debt with a rate and min payment
   // already filled in but a balance that's momentarily 0 (e.g. mid-retype) still counts
-  // as real data worth confirming before it's silently dropped. `(debt.name || '')`
-  // guards an imported/hand-edited debt missing `name` entirely.
+  // as real data worth confirming before it's silently dropped. safeTrim guards an
+  // imported/hand-edited debt missing `name` entirely.
   const removeDebt = (id) => {
     const debt = debts.find(d => d.id === id);
-    const hasData = !!(debt && ((debt.name || '').trim() || debt.balance > 0 || debt.rate > 0 || debt.minPayment > 0));
-    if (!confirmRemoval(hasData, `Remove "${(debt?.name || '').trim() || 'this debt'}"? This can't be undone.`)) return;
+    const hasData = !!(debt && (safeTrim(debt.name) || debt.balance > 0 || debt.rate > 0 || debt.minPayment > 0));
+    if (!confirmRemoval(hasData, `Remove "${safeTrim(debt?.name) || 'this debt'}"? This can't be undone.`)) return;
     setDebts(prev => prev.filter(d => d.id !== id));
   };
 

@@ -7,6 +7,7 @@ import { parseCSV, downloadCSV, cleanCSVNumber } from '../utils/csv';
 import { usePersistedState } from '../utils/usePersistedState';
 import { confirmRemoval } from '../utils/confirmRemoval';
 import { uniqueId } from '../utils/uniqueId';
+import { safeTrim } from '../utils/safeTrim';
 import SnapshotChart from './SnapshotChart';
 import CountrySelect from './CountrySelect';
 import AllocationChart from './AllocationChart';
@@ -86,6 +87,18 @@ const BASE_SUB_TABS = [
   { key: 'history', label: '📈 History & Forecast' }
 ];
 
+// Shared empty-state for a sub-tab with nothing to show yet -- Allocation, History, and
+// FX Stress Test all follow the same "explain why, offer a jump back to Tracker" shape
+// (the FX case additionally covers landing here after the tab itself has disappeared
+// from the bar -- see its call site below). Factored out so the three near-identical
+// blocks this used to be can't drift out of sync with each other.
+const NwTabEmpty = ({ message, onGoToTracker }) => (
+  <div className="nw-tab-empty">
+    <p>{message}</p>
+    <button type="button" onClick={onGoToTracker}>Go to Tracker →</button>
+  </div>
+);
+
 const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onReportingCurrencyChange, canFxStressTest = false, onOpenPricing }) => {
   const [activeSubTab, setActiveSubTab] = useState('tracker');
   const [items, setItems] = usePersistedState(ITEMS_KEY, []);
@@ -116,12 +129,12 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
   // Confirm before removing -- but only when there's actually something to lose. A
   // freshly-added blank row (empty name, zero value) removed right away shouldn't
   // nag; a row someone's typed real numbers into deserves a safety check, since
-  // there's no undo once it's gone. `(item.name || '')` guards an imported/hand-edited
-  // item missing `name` entirely -- `.trim()` on `undefined` would otherwise throw.
+  // there's no undo once it's gone. safeTrim guards an imported/hand-edited item
+  // missing `name` entirely -- `.trim()` on `undefined` would otherwise throw.
   const removeItem = (id) => {
     const item = items.find(i => i.id === id);
-    const hasData = !!(item && ((item.name || '').trim() || item.value > 0));
-    if (!confirmRemoval(hasData, `Remove "${(item?.name || '').trim() || 'this item'}"? This can't be undone.`)) return;
+    const hasData = !!(item && (safeTrim(item.name) || item.value > 0));
+    if (!confirmRemoval(hasData, `Remove "${safeTrim(item?.name) || 'this item'}"? This can't be undone.`)) return;
     setItems(prev => prev.filter(i => i.id !== id));
   };
 
@@ -416,10 +429,7 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
             )}
           </div>
         ) : (
-          <div className="nw-tab-empty">
-            <p>Add some assets or debts to see your allocation breakdown.</p>
-            <button type="button" onClick={() => setActiveSubTab('tracker')}>Go to Tracker →</button>
-          </div>
+          <NwTabEmpty message="Add some assets or debts to see your allocation breakdown." onGoToTracker={() => setActiveSubTab('tracker')} />
         )
       )}
 
@@ -431,10 +441,7 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
           // already sitting on this tab, activeSubTab stays 'fx' with no button left to
           // click away from it. Same empty-state pattern as Allocation/History above,
           // rather than a blank pane below the tab bar.
-          <div className="nw-tab-empty">
-            <p>Add an item in a different currency to see an FX stress test.</p>
-            <button type="button" onClick={() => setActiveSubTab('tracker')}>Go to Tracker →</button>
-          </div>
+          <NwTabEmpty message="Add an item in a different currency to see an FX stress test." onGoToTracker={() => setActiveSubTab('tracker')} />
         ) : canFxStressTest ? (
           <div className="nw-fx-stress">
             <h3>💱 FX Stress Test</h3>
@@ -537,10 +544,7 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
           </div>
         </div>
         ) : (
-          <div className="nw-tab-empty">
-            <p>No snapshots saved yet -- save one from the Tracker tab to start tracking your net worth over time.</p>
-            <button type="button" onClick={() => setActiveSubTab('tracker')}>Go to Tracker →</button>
-          </div>
+          <NwTabEmpty message="No snapshots saved yet -- save one from the Tracker tab to start tracking your net worth over time." onGoToTracker={() => setActiveSubTab('tracker')} />
         )
       )}
 

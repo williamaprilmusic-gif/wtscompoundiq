@@ -32,6 +32,7 @@ import GrowthChart from './components/GrowthChart';
 import CountrySelect from './components/CountrySelect';
 import { buildShareUrl, parseShareParams, clearShareParamsFromUrl } from './utils/shareLink';
 import { downloadCSV } from './utils/csv';
+import { uniqueId } from './utils/uniqueId';
 
 const THEME_KEY = 'wts_compoundiq_theme';
 const REPORTING_CURRENCY_KEY = 'wts_compoundiq_reporting_currency';
@@ -157,7 +158,7 @@ export default function App() {
     setInflation(c.typicalInflation ?? 0);
   };
 
-  const addLumpSum = () => setLumpSums(prev => [...prev, { id: Date.now(), year: 1, amount: 0 }]);
+  const addLumpSum = () => setLumpSums(prev => [...prev, { id: uniqueId(), year: 1, amount: 0 }]);
   const updateLumpSum = (id, field, value) => setLumpSums(prev => prev.map(l => l.id === id ? { ...l, [field]: Number(value) } : l));
   const removeLumpSum = (id) => setLumpSums(prev => prev.filter(l => l.id !== id));
 
@@ -171,7 +172,7 @@ export default function App() {
   const saveScenario = () => {
     if (scenarios.length >= MAX_SCENARIOS) return;
     setScenarios(prev => [...prev, {
-      id: Date.now(),
+      id: uniqueId(),
       label: `Scenario ${prev.length + 1}`,
       countryName: country.name,
       symbol: country.symbol,

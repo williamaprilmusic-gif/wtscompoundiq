@@ -3,6 +3,7 @@
 // can be shared as a link instead of only saved locally. Short keys keep the URL
 // reasonably compact; every value is validated and clamped on the way back in, since
 // a URL is untrusted input (hand-edited, or from an old/different app version).
+import { uniqueId } from './uniqueId';
 
 const PARAM_KEYS = {
   country: 'cc',
@@ -25,9 +26,9 @@ const encodeLumpSums = (lumpSums) =>
 
 const decodeLumpSums = (raw) => {
   if (!raw) return [];
-  return raw.split(',').map((pair, idx) => {
+  return raw.split(',').map((pair) => {
     const [year, amount] = pair.split(':').map(Number);
-    return { id: Date.now() + idx, year: Number.isFinite(year) ? year : 1, amount: Number.isFinite(amount) ? amount : 0 };
+    return { id: uniqueId(), year: Number.isFinite(year) ? year : 1, amount: Number.isFinite(amount) ? amount : 0 };
   }).filter(l => l.amount > 0 && l.year > 0);
 };
 

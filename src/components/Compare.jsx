@@ -27,12 +27,19 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
   // default is a one-time initializer) -- same "seed from current context at mount"
   // pattern as PowerTools' affordRate. Plan B starts as a copy of Plan A so both cards
   // read identically until the user changes something, rather than defaulting to zeros.
-  const [scenarioA, setScenarioA] = usePersistedState(SCENARIO_A_KEY, { name: 'Plan A', initial, monthly, rate, years, inflation, wrapper: !!wrapper });
-  const [scenarioB, setScenarioB] = usePersistedState(SCENARIO_B_KEY, { name: 'Plan B', initial, monthly, rate, years, inflation, wrapper: !!wrapper });
+  // `touched` follows Invest.jsx's own goal-tracking convention (false until the user
+  // edits *anything*, `!== false` rather than `=== true` so a scenario saved before
+  // this field existed still reads as touched) -- tracked explicitly rather than
+  // inferred from initial/monthly being 0, since a deliberately-zeroed plan (comparing
+  // pure rate/timeframe/wrapper effects with no starting capital or contribution) is a
+  // real, intentional scenario that value-based inference can't tell apart from one
+  // nobody's touched yet.
+  const [scenarioA, setScenarioA] = usePersistedState(SCENARIO_A_KEY, { name: 'Plan A', initial, monthly, rate, years, inflation, wrapper: !!wrapper, touched: false });
+  const [scenarioB, setScenarioB] = usePersistedState(SCENARIO_B_KEY, { name: 'Plan B', initial, monthly, rate, years, inflation, wrapper: !!wrapper, touched: false });
 
-  const updateScenario = (setScenario, field, value) => setScenario(prev => ({ ...prev, [field]: field === 'name' ? value : Number(value) }));
-  const toggleScenarioWrapper = (setScenario) => setScenario(prev => ({ ...prev, wrapper: !prev.wrapper }));
-  const syncScenarioWithCalculator = (setScenario) => setScenario(prev => ({ ...prev, initial, monthly, rate, years, inflation, wrapper: !!wrapper }));
+  const updateScenario = (setScenario, field, value) => setScenario(prev => ({ ...prev, [field]: field === 'name' ? value : Number(value), touched: true }));
+  const toggleScenarioWrapper = (setScenario) => setScenario(prev => ({ ...prev, wrapper: !prev.wrapper, touched: true }));
+  const syncScenarioWithCalculator = (setScenario) => setScenario(prev => ({ ...prev, initial, monthly, rate, years, inflation, wrapper: !!wrapper, touched: true }));
 
   // Both scenarios seed from the live Calculator inputs on first use (see
   // usePersistedState's default above) -- if a brand-new user opens this tab before
@@ -40,7 +47,7 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
   // such (usePersistedState debounces/flushes its write regardless of whether the
   // value is "real"). Flagged here so the empty-looking result comes with an
   // explanation instead of just showing R0 with no context.
-  const bothScenariosEmpty = scenarioA.initial === 0 && scenarioA.monthly === 0 && scenarioB.initial === 0 && scenarioB.monthly === 0;
+  const bothScenariosEmpty = scenarioA.touched === false && scenarioB.touched === false;
 
   const scenarioBase = { taxRate: country.taxRate, compoundFrequency, contributionIncreaseRate: contributionIncrease, annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit };
   const resultsScenarioA = calculateCompoundInterest({ ...scenarioBase, initial: scenarioA.initial, monthly: scenarioA.monthly, rate: scenarioA.rate, years: scenarioA.years, inflation: scenarioA.inflation, wrapper: scenarioA.wrapper });

@@ -6,12 +6,20 @@
 // (colorVar on each segment), never cycled -- see the dataviz skill.
 import React, { useState } from 'react';
 import './AllocationChart.css';
-import { formatCompact } from '../utils/chartFormat';
 
 const SIZE = 160;
 const STROKE = 28;
 const RADIUS = (SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+// Deliberately not chartFormat.js's shared formatCompact -- that helper is built for
+// axis-tick labels, where abbreviating anything over 1,000 to "2.5K" is the point.
+// This is a headline "your total" figure sitting right above a legend that shows every
+// segment's amount exactly (Math.round(arc.value).toLocaleString()) -- abbreviating
+// only the summary line to "2.5K" while the parts below it read "2,500" is confusing,
+// not consistent. Only very large totals (7+ digits) get shortened, purely so the
+// number doesn't overflow this component's small fixed-size ring.
+const formatCenterTotal = (value) => value >= 1000000 ? `${(value / 1000000).toFixed(1)}M` : Math.round(value).toLocaleString();
 
 // segments: [{ key, label, value, colorVar }] -- value must be >= 0; segments with a
 // value of 0 are dropped before rendering (an empty slice has nothing to show or hover).
@@ -67,7 +75,7 @@ const AllocationChart = ({ segments, symbol = '' }) => {
             </>
           ) : (
             <>
-              <strong>{symbol}{formatCompact(total)}</strong>
+              <strong>{symbol}{formatCenterTotal(total)}</strong>
               <span>Total</span>
             </>
           )}
