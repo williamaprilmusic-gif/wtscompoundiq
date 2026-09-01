@@ -158,6 +158,13 @@ export default function App() {
     setInflation(c.typicalInflation ?? 0);
   };
 
+  // Single clamp for every path that can set `years`. The Calculator input below and the
+  // AI Coach's "Set timeframe to N years" button both route through setYearsClamped, so
+  // neither can push `years` past MAX_YEARS -- an unbounded value freezes every per-year
+  // loop and Monte Carlo (see MAX_YEARS above). Number(...) || 1 keeps a cleared field at 1.
+  const clampYears = (value) => Math.min(MAX_YEARS, Math.max(1, Number(value) || 1));
+  const setYearsClamped = (value) => setYears(clampYears(value));
+
   const addLumpSum = () => setLumpSums(prev => [...prev, { id: uniqueId(), year: 1, amount: 0 }]);
   const updateLumpSum = (id, field, value) => setLumpSums(prev => prev.map(l => l.id === id ? { ...l, [field]: Number(value) } : l));
   const removeLumpSum = (id) => setLumpSums(prev => prev.filter(l => l.id !== id));
@@ -390,7 +397,7 @@ export default function App() {
                 </div>
                 <div className="form-group">
                   <label>{t('calculator.yearsToGrow')} (max {MAX_YEARS})</label>
-                  <input type="number" min="1" max={MAX_YEARS} value={years} onChange={(e) => setYears(Math.min(MAX_YEARS, Math.max(1, Number(e.target.value) || 1)))} />
+                  <input type="number" min="1" max={MAX_YEARS} value={years} onChange={(e) => setYearsClamped(e.target.value)} />
                 </div>
                 <div className="form-group">
                   <label><Term k="inflation">{t('calculator.inflation')}</Term> (%/yr)</label>
@@ -675,7 +682,7 @@ export default function App() {
 
         {activeTab === 'Coach' && canAccess('Ultra') && (
           <div className="tab-pane active">
-            <Coach country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} onSetWrapper={setWrapper} onSetMonthly={setMonthly} onSetYears={setYears} />
+            <Coach country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} maxYears={MAX_YEARS} onSetWrapper={setWrapper} onSetMonthly={setMonthly} onSetYears={setYearsClamped} />
           </div>
         )}
 

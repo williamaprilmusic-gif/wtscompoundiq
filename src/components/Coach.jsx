@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import './Coach.css';
 import { calculateCompoundInterest } from '../engine';
 
-const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [], onSetWrapper, onSetMonthly, onSetYears }) => {
+const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [], maxYears = Infinity, onSetWrapper, onSetMonthly, onSetYears }) => {
   const base = { initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper, compoundFrequency, annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit, contributionIncreaseRate: contributionIncrease, lumpSums };
   const baseline = calculateCompoundInterest(base);
 
@@ -19,7 +19,9 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
   const boosted = calculateCompoundInterest({ ...base, monthly: boostedMonthly });
   const boostGain = boosted.finalBalance - baseline.finalBalance;
 
-  const extendedYears = years + extraYears;
+  // Cap at the Calculator's own MAX_YEARS (passed in) so "extend your timeframe" can't
+  // propose -- or apply -- a horizon the Calculator input itself would reject.
+  const extendedYears = Math.min(maxYears, years + extraYears);
   const extended = calculateCompoundInterest({ ...base, years: extendedYears });
   const extendGain = extended.finalBalance - baseline.finalBalance;
 

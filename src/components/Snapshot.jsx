@@ -5,6 +5,7 @@ import { calculateCompoundInterest } from '../engine';
 import GrowthChart from './GrowthChart';
 import { readPlan, loanEffectiveMonthlyPayment, loanEffectiveTermLabel } from '../utils/planStorage';
 import { usePersistedState } from '../utils/usePersistedState';
+import { downloadCSV } from '../utils/csv';
 
 const BRANDING_KEY = 'wts_compoundiq_report_branding';
 const DEFAULT_BRANDING = { firmName: '', advisorName: '', clientName: '', logoDataUrl: '' };
@@ -14,20 +15,13 @@ const DEFAULT_BRANDING = { firmName: '', advisorName: '', clientName: '', logoDa
 // masthead comfortably fits well under this.
 const MAX_LOGO_BYTES = 500 * 1024;
 
-const downloadCSV = (results, country) => {
-  const header = ['Year', 'Balance', 'Real Value', 'Deposited', 'Interest', 'Tax Paid'];
-  const rows = results.yearlyData.map(r => [r.year, r.balance, r.realValue, r.deposited, r.interest, r.taxPaid]);
-  const csv = [header, ...rows].map(row => row.join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `wts-compoundiq-${country.code}-projection.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-};
+const exportProjectionCSV = (results, country) => downloadCSV(
+  `wts-compoundiq-${country.code}-projection.csv`,
+  [
+    ['Year', 'Balance', 'Real Value', 'Deposited', 'Interest', 'Tax Paid'],
+    ...results.yearlyData.map(r => [r.year, r.balance, r.realValue, r.deposited, r.interest, r.taxPaid])
+  ]
+);
 
 const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, compoundFrequency, contributionIncrease = 0, lumpSums = [], userTier, onOpenPricing }) => {
   const [plan, setPlan] = useState(null);
@@ -84,7 +78,7 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
         </div>
         <div className="snapshot-buttons">
           <button className="snapshot-btn" onClick={() => window.print()}>🖨️ Print / Save as PDF</button>
-          <button className="snapshot-btn secondary" onClick={() => downloadCSV(results, country)}>⬇️ Download CSV</button>
+          <button className="snapshot-btn secondary" onClick={() => exportProjectionCSV(results, country)}>⬇️ Download CSV</button>
         </div>
       </div>
 
@@ -184,8 +178,10 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
             <h3>Debt Payoff (last saved)</h3>
             <p>
               {country.symbol} {Math.round(plan.debt.totalBalance).toLocaleString()} total debt,
-              paying {country.symbol} {plan.debt.extraMonthly.toLocaleString()}/month extra,
-              on pace to be debt-free in {plan.debt.avalancheMonths} months.
+              paying {country.symbol} {plan.debt.extraMonthly.toLocaleString()}/month extra,{' '}
+              {plan.debt.avalancheReachable === false
+                ? 'not clearing within 50 years at that pace.'
+                : `on pace to be debt-free in ${plan.debt.avalancheMonths} months.`}
             </p>
           </section>
         )}

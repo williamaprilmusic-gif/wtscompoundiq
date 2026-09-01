@@ -76,5 +76,8 @@ export const computeHealthScore = (components) => {
   const available = components.filter(c => c.score != null);
   if (available.length < MIN_COMPONENTS) return null;
   const score = Math.round(available.reduce((sum, c) => sum + c.score, 0) / available.length);
-  return { score, ...gradeForScore(score), components: available };
+  // Pick out only grade/label -- gradeForScore returns the GRADES row, which also carries
+  // its `min` threshold; spreading the whole row leaked a stray `min` into the result.
+  const { grade, label } = gradeForScore(score);
+  return { score, grade, label, components: available };
 };

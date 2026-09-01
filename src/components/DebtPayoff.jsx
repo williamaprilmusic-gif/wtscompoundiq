@@ -157,6 +157,9 @@ const DebtPayoff = ({ country }) => {
       totalBalance,
       extraMonthly,
       avalancheMonths: avalanche.months,
+      // Persisted so Dashboard/Snapshot can render the unreachable case the same way this
+      // tab does ("50+ years") instead of quoting the MAX_MONTHS cap as a real horizon.
+      avalancheReachable: avalanche.reachable,
       avalancheInterest: avalanche.totalInterest
     });
     setSaved(true);

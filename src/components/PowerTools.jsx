@@ -174,7 +174,10 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const eduRequiredMonthly = solveMonthlyForGoal({
     startingAmount: eduAlreadySaved, rate, years: safeEduYearsUntil, inflation: 0, taxRate: country.taxRate, wrapper,
     goalAmount: eduProjection.totalFutureCost, compoundFrequency,
-    annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit
+    annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit,
+    // Match Invest.jsx's goal solve -- both "monthly needed for a goal" surfaces should
+    // honour the Calculator's annual contribution-increase setting the same way.
+    contributionIncreaseRate: contributionIncrease
   });
 
   const saveFirePlan = () => {

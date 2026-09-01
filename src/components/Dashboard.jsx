@@ -221,7 +221,7 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
               <span className="dashboard-card-meta">saved {fmtDaysAgo(daysBetween(plan.debt.savedAt))}</span>
             </div>
             <strong className="dashboard-card-value warn">{country.symbol} {Math.round(plan.debt.totalBalance).toLocaleString()}</strong>
-            <span className="dashboard-card-sub">debt-free in {plan.debt.avalancheMonths} months at this pace</span>
+            <span className="dashboard-card-sub">{plan.debt.avalancheReachable === false ? 'not debt-free within 50 years at this pace' : `debt-free in ${plan.debt.avalancheMonths} months at this pace`}</span>
             <button className="dashboard-card-link" onClick={() => onNavigate('Debt Payoff')}>Open Debt Payoff →</button>
           </div>
         ) : (
