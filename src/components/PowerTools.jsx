@@ -19,6 +19,10 @@ import { computeCoastFire } from '../coastFire';
 import { yearsToFinancialIndependence } from '../savingsRate';
 import { analyzeCreditCard } from '../creditCardTrap';
 import { ruleOf72 } from '../ruleOf72';
+import { dividendIncome } from '../dividendIncome';
+import { carOwnershipCost } from '../carCost';
+import { lifetimeRaiseValue } from '../raiseValue';
+import { pretaxRetirementBoost } from '../pretaxRetirement';
 import { readJSONArray } from '../utils/storage';
 import { convertAmount, countriesData } from '../data/countries';
 import { DEBTS_KEY } from './DebtPayoff';
@@ -42,7 +46,11 @@ const SUB_TABS = [
   { key: 'savingsRate', label: '⏱️ Savings Rate' },
   { key: 'cardTrap', label: '🪤 Card Min. Trap' },
   { key: 'fxConvert', label: '💱 Currency Convert' },
-  { key: 'rule72', label: '⏳ Rule of 72' }
+  { key: 'rule72', label: '⏳ Rule of 72' },
+  { key: 'dividend', label: '💵 Dividend Income' },
+  { key: 'carCost', label: '🚗 Cost of a Car' },
+  { key: 'raiseValue', label: '💹 Value of a Raise' },
+  { key: 'pretaxRA', label: '🧾 Pre-Tax Retirement' }
 ];
 
 const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [] }) => {
@@ -137,6 +145,30 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
   const [r72Rate, setR72Rate] = useState(rate || 7);
   const [r72Years, setR72Years] = useState(20);
+
+  const [divTargetIncome, setDivTargetIncome] = useState(0);
+  const [divPortfolio, setDivPortfolio] = useState(0);
+  const [divYield, setDivYield] = useState(4);
+
+  const [carPrice, setCarPrice] = useState(0);
+  const [carDeposit, setCarDeposit] = useState(0);
+  const [carFinanceRate, setCarFinanceRate] = useState(country.typicalBankRate ? Math.round(country.typicalBankRate + 2) : 12);
+  const [carFinanceTerm, setCarFinanceTerm] = useState(6);
+  const [carYearsOwned, setCarYearsOwned] = useState(5);
+  const [carDepreciation, setCarDepreciation] = useState(15);
+  const [carInsurance, setCarInsurance] = useState(0);
+  const [carFuel, setCarFuel] = useState(0);
+  const [carMaintenance, setCarMaintenance] = useState(0);
+
+  const [raiseAmount, setRaiseAmount] = useState(0);
+  const [raiseAnnualPercent, setRaiseAnnualPercent] = useState(5);
+  const [raiseYearsLeft, setRaiseYearsLeft] = useState(25);
+  const [raiseTaxRate, setRaiseTaxRate] = useState(country.taxRate);
+
+  const [praContribution, setPraContribution] = useState(0);
+  const [praMarginalRate, setPraMarginalRate] = useState(country.taxRate);
+  const [praYears, setPraYears] = useState(25);
+  const [praReturn, setPraReturn] = useState(rate || 8);
 
   const safeWithdrawalRate = withdrawalRate > 0 ? withdrawalRate : 0.01;
   const fireNumber = annualExpenses / (safeWithdrawalRate / 100);
@@ -287,6 +319,23 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const fxCurrency = (code) => (countriesData.find(c => c.code === code) || country).currency;
 
   const r72 = ruleOf72({ annualRate: r72Rate, years: r72Years });
+
+  const dividend = dividendIncome({ targetMonthlyIncome: divTargetIncome, currentPortfolio: divPortfolio, annualYield: divYield });
+
+  const carCost = carOwnershipCost({
+    purchasePrice: carPrice, deposit: carDeposit, financeRate: carFinanceRate, financeTermYears: carFinanceTerm,
+    yearsOwned: carYearsOwned, annualDepreciationRate: carDepreciation,
+    monthlyInsurance: carInsurance, monthlyFuel: carFuel, monthlyMaintenance: carMaintenance
+  });
+
+  const raise = lifetimeRaiseValue({
+    raiseAmount, annualRaisePercent: raiseAnnualPercent, yearsRemaining: raiseYearsLeft,
+    marginalTaxRate: raiseTaxRate, investReturn: rate
+  });
+
+  const pra = pretaxRetirementBoost({
+    monthlyContribution: praContribution, marginalTaxRate: praMarginalRate, years: praYears, returnRate: praReturn
+  });
 
   const saveFirePlan = () => {
     savePlanSection('fire', {
@@ -1095,6 +1144,204 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
               The "72" trick is a rough approximation that's closest around 6–10% — the exact answer is
               ln(2) ÷ ln(1 + rate). Growth multiple assumes the return compounds every year with nothing added or
               withdrawn. Nominal figures: at a real (after-inflation) return, the doubling is in purchasing power.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'dividend' && (
+      <div className="power-tool-card">
+        <h3>💵 Dividend / Passive Income Calculator</h3>
+        <p className="power-tool-desc">How big a portfolio it takes to live off the yield without ever selling the capital — and what your current holdings already pay.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Target Monthly Income ({country.symbol})</label>
+            <input type="number" min="0" step="1000" value={divTargetIncome} onChange={(e) => setDivTargetIncome(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Portfolio You Already Have ({country.symbol})</label>
+            <input type="number" min="0" step="10000" value={divPortfolio} onChange={(e) => setDivPortfolio(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Expected Dividend / Interest Yield (%/yr)</label>
+            <input type="number" min="0" step="0.1" value={divYield} onChange={(e) => setDivYield(Number(e.target.value))} />
+          </div>
+        </div>
+        {(divTargetIncome > 0 || divPortfolio > 0) && (
+          <>
+            <div className="power-verdict-grid">
+              {divTargetIncome > 0 && (
+                <div className="power-stat">
+                  <span>Capital Needed at {divYield}% Yield</span>
+                  <strong className="warn">{dividend.capitalNeeded == null ? '—' : `${country.symbol} ${Math.round(dividend.capitalNeeded).toLocaleString()}`}</strong>
+                </div>
+              )}
+              {divPortfolio > 0 && (
+                <div className="power-stat">
+                  <span>Your Portfolio Pays (monthly)</span>
+                  <strong className="positive">{country.symbol} {Math.round(dividend.monthlyFromPortfolio).toLocaleString()}</strong>
+                </div>
+              )}
+              {divTargetIncome > 0 && dividend.shortfallCapital != null && (
+                <div className="power-stat">
+                  <span>Still to Invest</span>
+                  <strong className={dividend.shortfallCapital > 0 ? 'warn' : 'positive'}>{country.symbol} {Math.round(dividend.shortfallCapital).toLocaleString()}</strong>
+                </div>
+              )}
+            </div>
+            <p className="power-tool-note">
+              A yield-only view: the capital stays intact and you spend what it distributes, unlike the FIRE tool's
+              4%-rule drawdown which sells units over time. Real dividend yields move, aren't guaranteed, and may be
+              taxed — {country.name}'s indicative rate on investment income is {country.taxRate}% outside a
+              {country.wrapperLabel && country.wrapperLabel !== 'N/A' ? ` ${country.wrapperLabel}` : ' tax-free wrapper'}.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'carCost' && (
+      <div className="power-tool-card">
+        <h3>🚗 True Cost of Car Ownership</h3>
+        <p className="power-tool-desc">The sticker price is the smallest part. Depreciation, finance interest, and running costs over the years you keep it are the real number.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Purchase Price ({country.symbol})</label>
+            <input type="number" min="0" step="10000" value={carPrice} onChange={(e) => setCarPrice(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Deposit / Cash Down ({country.symbol})</label>
+            <input type="number" min="0" step="5000" value={carDeposit} onChange={(e) => setCarDeposit(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Finance Rate (%)</label>
+            <input type="number" min="0" step="0.1" value={carFinanceRate} onChange={(e) => setCarFinanceRate(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Finance Term (years, 0 = cash)</label>
+            <input type="number" min="0" max="10" value={carFinanceTerm} onChange={(e) => setCarFinanceTerm(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Years You'll Keep It</label>
+            <input type="number" min="1" max="30" value={carYearsOwned} onChange={(e) => setCarYearsOwned(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Depreciation (%/yr of value)</label>
+            <input type="number" min="0" max="50" step="0.5" value={carDepreciation} onChange={(e) => setCarDepreciation(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Insurance ({country.symbol}/mo)</label>
+            <input type="number" min="0" step="100" value={carInsurance} onChange={(e) => setCarInsurance(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Fuel / Charging ({country.symbol}/mo)</label>
+            <input type="number" min="0" step="100" value={carFuel} onChange={(e) => setCarFuel(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Maintenance + Licensing ({country.symbol}/mo)</label>
+            <input type="number" min="0" step="100" value={carMaintenance} onChange={(e) => setCarMaintenance(Number(e.target.value))} />
+          </div>
+        </div>
+        {carPrice > 0 && (
+          <>
+            <div className="power-verdict debt">
+              Owning this car for {carYearsOwned} years costs about {country.symbol} {Math.round(carCost.totalCost).toLocaleString()} all-in — roughly {country.symbol} {Math.round(carCost.costPerMonth).toLocaleString()}/month. It's worth about {country.symbol} {Math.round(carCost.residualValue).toLocaleString()} at the end.
+            </div>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Lost to Depreciation</span>
+                <strong className="warn">{country.symbol} {Math.round(carCost.depreciation).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Finance Interest</span>
+                <strong className="warn">{country.symbol} {Math.round(carCost.financeInterest).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Running Costs ({carYearsOwned}yr)</span>
+                <strong className="warn">{country.symbol} {Math.round(carCost.runningTotal).toLocaleString()}</strong>
+              </div>
+            </div>
+            <p className="power-tool-note">
+              Depreciation compounds at {carDepreciation}%/yr off the declining value (steepest early). Finance
+              interest is the real interest paid over the years held, from the same amortization math the Loan &amp; Bond
+              tab uses. Doesn't model insurance/fuel inflation, tyres and big repairs beyond the monthly figure, or
+              resale-vs-trade-in differences.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'raiseValue' && (
+      <div className="power-tool-card">
+        <h3>💹 Lifetime Value of a Pay Rise</h3>
+        <p className="power-tool-desc">A raise now isn't worth "the amount × years left" — every future percentage raise stacks on the higher base, and the after-tax difference can be invested.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Annual Raise Amount ({country.symbol}/yr)</label>
+            <input type="number" min="0" step="5000" value={raiseAmount} onChange={(e) => setRaiseAmount(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Future Raises (%/yr on the new base)</label>
+            <input type="number" min="0" step="0.5" value={raiseAnnualPercent} onChange={(e) => setRaiseAnnualPercent(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Working Years Remaining</label>
+            <input type="number" min="0" max="50" value={raiseYearsLeft} onChange={(e) => setRaiseYearsLeft(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Marginal Tax Rate (%)</label>
+            <input type="number" min="0" max="100" step="1" value={raiseTaxRate} onChange={(e) => setRaiseTaxRate(Number(e.target.value))} />
+          </div>
+        </div>
+        {raiseAmount > 0 && raiseYearsLeft > 0 && (
+          <>
+            <div className="power-verdict invest">
+              Over {raiseYearsLeft} years this raise is worth about {country.symbol} {Math.round(raise.cumulativeGross).toLocaleString()} gross ({country.symbol} {Math.round(raise.cumulativeAfterTax).toLocaleString()} after {raiseTaxRate}% tax). Invested at your {rate}% Calculator rate, the after-tax difference grows to {country.symbol} {Math.round(raise.investedValue).toLocaleString()}.
+            </div>
+            <p className="power-tool-note">
+              Assumes each future raise is {raiseAnnualPercent}% of the then-current bump, and that you invest the
+              full after-tax difference at the end of every year. A negotiation-context figure, not a promise — raises
+              aren't guaranteed and tax brackets shift.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'pretaxRA' && (
+      <div className="power-tool-card">
+        <h3>🧾 Pre-Tax Retirement Contribution</h3>
+        <p className="power-tool-desc">Money into a pre-tax retirement account costs less out of pocket (you get your marginal rate back) and the whole amount compounds — not just the after-tax slice.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Monthly Contribution ({country.symbol})</label>
+            <input type="number" min="0" step="500" value={praContribution} onChange={(e) => setPraContribution(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Your Marginal Tax Rate (%)</label>
+            <input type="number" min="0" max="100" step="1" value={praMarginalRate} onChange={(e) => setPraMarginalRate(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Years to Retirement</label>
+            <input type="number" min="1" max="60" value={praYears} onChange={(e) => setPraYears(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Expected Return (%)</label>
+            <input type="number" step="0.1" value={praReturn} onChange={(e) => setPraReturn(Number(e.target.value))} />
+          </div>
+        </div>
+        {praContribution > 0 && (
+          <>
+            <div className="power-verdict invest">
+              A {country.symbol}{Math.round(praContribution).toLocaleString()}/mo pre-tax contribution costs about {country.symbol} {Math.round(pra.netCost).toLocaleString()}/mo out of pocket after a {country.symbol} {Math.round(pra.annualRefund).toLocaleString()}/yr tax refund, and grows to {country.symbol} {Math.round(pra.pretaxPot).toLocaleString()} in {praYears} years — vs {country.symbol} {Math.round(pra.taxablePot).toLocaleString()} if the same net cost went into a taxable account. Difference: {country.symbol} {Math.round(pra.advantage).toLocaleString()}.
+            </div>
+            <p className="power-tool-note">
+              Doesn't model tax on the pre-tax pot when you eventually draw it down in retirement — most systems tax
+              those withdrawals, often at a lower effective rate than working-life income. The figure above is the
+              deferral-plus-full-compounding advantage before that, and assumes {country.name}'s {country.taxRate}%
+              rate as the taxable account's drag on gains. Not tax advice.
             </p>
           </>
         )}
