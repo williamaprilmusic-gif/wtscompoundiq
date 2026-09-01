@@ -24,11 +24,23 @@ const encodeLumpSums = (lumpSums) =>
     .map(l => `${Math.round(l.year)}:${Math.round(l.amount)}`)
     .join(',');
 
+// year/amount are clamped the same way every other share-param field is (see
+// parseShareParams' own header note) -- a crafted `?ls=1:9e307` was previously only
+// checked with Number.isFinite, which a huge-but-finite value like 9e307 still passes,
+// letting an untrusted link hand the compounding engine an amount that pushes the
+// running balance past Number.MAX_VALUE (engine.test.js's own "never returns a
+// non-finite finalBalance" invariant). clampNumber is defined further down this file
+// but already initialized by the time this runs, since decodeLumpSums is only ever
+// called from parseShareParams() below, well after module evaluation completes.
 const decodeLumpSums = (raw) => {
   if (!raw) return [];
   return raw.split(',').map((pair) => {
     const [year, amount] = pair.split(':').map(Number);
-    return { id: uniqueId(), year: Number.isFinite(year) ? year : 1, amount: Number.isFinite(amount) ? amount : 0 };
+    return {
+      id: uniqueId(),
+      year: clampNumber(year, 1, { min: 1, max: 100 }),
+      amount: clampNumber(amount, 0, { min: 0, max: 1e12 })
+    };
   }).filter(l => l.amount > 0 && l.year > 0);
 };
 

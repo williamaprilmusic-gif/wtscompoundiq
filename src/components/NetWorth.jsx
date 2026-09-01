@@ -8,6 +8,7 @@ import { usePersistedState } from '../utils/usePersistedState';
 import { confirmRemoval } from '../utils/confirmRemoval';
 import { uniqueId } from '../utils/uniqueId';
 import { safeTrim } from '../utils/safeTrim';
+import { readJSONArray } from '../utils/storage';
 import SnapshotChart from './SnapshotChart';
 import CountrySelect from './CountrySelect';
 import AllocationChart from './AllocationChart';
@@ -106,10 +107,7 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
   const [importError, setImportError] = useState(null);
 
   useEffect(() => {
-    const raw = localStorage.getItem(HISTORY_KEY);
-    if (raw) {
-      try { setHistory(JSON.parse(raw)); } catch { /* ignore corrupt history */ }
-    }
+    setHistory(readJSONArray(HISTORY_KEY));
   }, []);
 
   // Each item carries its own currency so a mortgage in one currency and a brokerage

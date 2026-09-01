@@ -11,6 +11,7 @@ import { parseCSV, downloadCSV, cleanCSVNumber } from '../utils/csv';
 import { convertAmount } from '../data/countries';
 import { uniqueId } from '../utils/uniqueId';
 import { safeTrim } from '../utils/safeTrim';
+import { readJSONArray } from '../utils/storage';
 import SnapshotChart from './SnapshotChart';
 
 // Exported so PowerTools.jsx's Home Affordability / Insurance Needs calculators can
@@ -50,10 +51,7 @@ const DebtPayoff = ({ country }) => {
   const [importError, setImportError] = useState(null);
 
   useEffect(() => {
-    const raw = localStorage.getItem(HISTORY_KEY);
-    if (raw) {
-      try { setHistory(JSON.parse(raw)); } catch { /* ignore corrupt history */ }
-    }
+    setHistory(readJSONArray(HISTORY_KEY));
   }, []);
 
   const updateDebt = (id, field, value) => {

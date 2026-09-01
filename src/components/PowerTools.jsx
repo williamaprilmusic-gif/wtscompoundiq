@@ -414,8 +414,15 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
                 <strong className="warn">{country.symbol} {Math.round(eduProjection.totalFutureCost).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>You Need to Save (per month)</span>
-                <strong className="positive">{country.symbol} {Math.round(eduRequiredMonthly).toLocaleString()}</strong>
+                {/* When enrollment is this year (eduYearsUntil === 0), there's no runway left to
+                    save monthly -- solveMonthlyForGoal still needs a >0 "years" to converge (see
+                    safeEduYearsUntil above), but showing that fudged monthly figure here would
+                    understate what's actually needed and imply a full year still exists. Show the
+                    honest lump-sum-needed-now figure instead in that case. */}
+                <span>{eduYearsUntil > 0 ? 'You Need to Save (per month)' : 'Needed Now (enrollment is this year)'}</span>
+                <strong className="positive">
+                  {country.symbol} {Math.round(eduYearsUntil > 0 ? eduRequiredMonthly : Math.max(0, eduProjection.totalFutureCost - eduAlreadySaved)).toLocaleString()}
+                </strong>
               </div>
             </div>
             <p className="power-tool-note">

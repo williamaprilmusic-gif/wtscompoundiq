@@ -76,6 +76,15 @@ const CountrySelect = ({ countries, value, onChange, ariaLabel }) => {
         onFocus={openList}
         onChange={(e) => { setQuery(e.target.value); setOpen(true); setHighlightIdx(0); }}
         onKeyDown={handleKeyDown}
+        // Safe alongside the mousedown-outside handler above rather than redundant with
+        // it: a mouse click on an option calls e.preventDefault() in its own onMouseDown
+        // (below), which blocks the browser's default blur-on-mousedown, so this only
+        // ever fires there via selectCountry's own explicit .blur() call, after state is
+        // already correct. For a keyboard user who Tabs away with no click at all, no
+        // mousedown ever fires (so the effect above never runs) -- this is the only
+        // thing that closes the list and reverts the input to showing the selected
+        // country's name instead of leaving the stale typed filter query on screen.
+        onBlur={() => { setOpen(false); setQuery(''); }}
       />
       {open && (
         <ul className="country-select-list" role="listbox" id={listboxId}>

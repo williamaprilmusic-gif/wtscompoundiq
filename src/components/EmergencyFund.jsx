@@ -6,12 +6,17 @@ import { savePlanSection } from '../utils/planStorage';
 import { usePersistedState } from '../utils/usePersistedState';
 import { convertAmount } from '../data/countries';
 import { downloadCSV } from '../utils/csv';
+import { readJSONArray } from '../utils/storage';
 import SnapshotChart from './SnapshotChart';
 
 const INPUTS_KEY = 'wts_compoundiq_emergencyfund_inputs';
 export const HISTORY_KEY = 'wts_compoundiq_emergencyfund_history';
 const DEFAULT_INPUTS = { monthlyExpenses: 0, monthsCoverage: 3, currentSavings: 0, monthlyContribution: 0 };
-const HISTORY_SERIES = [{ key: 'total', label: 'Emergency Fund Balance' }];
+// colorKey: 'total' is also Debt Payoff's field name for a debt balance (colored
+// --accent-red), but a growing EF balance is the opposite semantic -- see
+// SnapshotChart.jsx's SERIES_COLOR_VAR note for why this needs its own colorKey
+// rather than sharing Debt Payoff's `total` color entry.
+const HISTORY_SERIES = [{ key: 'total', label: 'Emergency Fund Balance', colorKey: 'efBalance' }];
 
 // A history entry is only safe to feed to convertAmount/SnapshotChart when `total` is a
 // real number -- a hand-edited or partially-written localStorage value (or an
@@ -28,10 +33,7 @@ const EmergencyFund = ({ country }) => {
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    const raw = localStorage.getItem(HISTORY_KEY);
-    if (raw) {
-      try { setHistory(JSON.parse(raw)); } catch { /* ignore corrupt history */ }
-    }
+    setHistory(readJSONArray(HISTORY_KEY));
   }, []);
 
   const updateInput = (field, value) => setInputs(prev => ({ ...prev, [field]: Number(value) }));
@@ -39,7 +41,12 @@ const EmergencyFund = ({ country }) => {
   const targetAmount = monthlyExpenses * monthsCoverage;
   const remaining = Math.max(0, targetAmount - currentSavings);
   const progressPct = targetAmount > 0 ? Math.min(100, (currentSavings / targetAmount) * 100) : 100;
-  const isFunded = currentSavings >= targetAmount;
+  // Guarded the same way as progressPct just above: with no target set yet (a brand-new
+  // user, monthlyExpenses still 0), currentSavings (0) >= targetAmount (0) was true,
+  // showing "fully funded" styling before any real data was entered. Requires an actual
+  // positive target before "funded" can be true, matching milestones.js's
+  // detectEfFundedMilestone and Dashboard.jsx's efFundedPct, which both already guard this.
+  const isFunded = targetAmount > 0 && currentSavings >= targetAmount;
   const monthsToTarget = monthlyContribution > 0 ? Math.ceil(remaining / monthlyContribution) : null;
 
   const savePlan = () => {

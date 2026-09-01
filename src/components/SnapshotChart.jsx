@@ -22,20 +22,30 @@ const PAD_BOTTOM = 26;
 // semantic red used for debt everywhere else in the app. "standard"/"plan" are Loan
 // Calculator's two-line balance-over-time comparison -- gray for the do-nothing
 // baseline, the same green used for a faster/better outcome everywhere else.
+// "efBalance" is Emergency Fund's own history -- its stored data field is also
+// literally named `total` (same as Debt Payoff's), but a *growing* EF balance is the
+// opposite semantic of a growing debt balance, so it can't share Debt Payoff's
+// `total: --accent-red` entry. See each series' optional `colorKey` below for how a
+// series keeps reading its value off the shared `total` field while still getting
+// its own color.
 const SERIES_COLOR_VAR = {
   assets: '--accent-green',
   net: '--accent',
   debts: '--accent-red',
   total: '--accent-red',
   standard: '--mut',
-  plan: '--accent-green'
+  plan: '--accent-green',
+  efBalance: '--accent-green'
 };
 
 const defaultFormatXAxis = (x) => new Date(x).toLocaleDateString(undefined, { month: 'short', year: '2-digit' });
 const defaultFormatXTooltip = (x) => new Date(x).toLocaleDateString();
 
 // points: [{ [xKey]: date|year, [seriesKey]: number, ... }]
-// series: [{ key, label }] -- key must match a field on each point and a color above
+// series: [{ key, label, colorKey? }] -- key must match a field on each point; colorKey
+// (optional, defaults to key) is looked up in SERIES_COLOR_VAR instead, for a series
+// whose data field name is shared with an unrelated series that needs a different color
+// (see "efBalance" above).
 // xKey: which field on each point is the x-axis value (default 'date', an ISO string).
 // formatXAxis/formatXTooltip: how to render that value on the axis vs. in the hover
 // tooltip -- default to date formatting; Loan Calculator's balance-over-time chart
@@ -117,7 +127,7 @@ const SnapshotChart = ({ points, series, symbol = '', xKey = 'date', formatXAxis
         <div className="snap-chart-legend">
           {series.map(s => (
             <span key={s.key} className="snap-chart-legend-item">
-              <span className="snap-chart-swatch" style={{ background: `var(${SERIES_COLOR_VAR[s.key]})` }} />
+              <span className="snap-chart-swatch" style={{ background: `var(${SERIES_COLOR_VAR[s.colorKey || s.key]})` }} />
               {s.label}
             </span>
           ))}
@@ -163,11 +173,11 @@ const SnapshotChart = ({ points, series, symbol = '', xKey = 'date', formatXAxis
             ))}
 
             {series.map(s => (
-              <path key={s.key} d={linePath(s.key)} className="snap-chart-line" style={{ stroke: `var(${SERIES_COLOR_VAR[s.key]})` }} fill="none" />
+              <path key={s.key} d={linePath(s.key)} className="snap-chart-line" style={{ stroke: `var(${SERIES_COLOR_VAR[s.colorKey || s.key]})` }} fill="none" />
             ))}
 
             {hasProjection && series.map(s => (
-              <path key={`projected-${s.key}`} d={projectedLinePath(s.key)} className="snap-chart-line-projected" style={{ stroke: `var(${SERIES_COLOR_VAR[s.key]})` }} fill="none" />
+              <path key={`projected-${s.key}`} d={projectedLinePath(s.key)} className="snap-chart-line-projected" style={{ stroke: `var(${SERIES_COLOR_VAR[s.colorKey || s.key]})` }} fill="none" />
             ))}
 
             {hasProjection && series.map(s => (
@@ -177,7 +187,7 @@ const SnapshotChart = ({ points, series, symbol = '', xKey = 'date', formatXAxis
                 cy={yScale(safeProjected[safeProjected.length - 1][s.key])}
                 r="3.5"
                 className="snap-chart-endpoint-projected"
-                style={{ stroke: `var(${SERIES_COLOR_VAR[s.key]})` }}
+                style={{ stroke: `var(${SERIES_COLOR_VAR[s.colorKey || s.key]})` }}
               />
             ))}
 
@@ -188,7 +198,7 @@ const SnapshotChart = ({ points, series, symbol = '', xKey = 'date', formatXAxis
                 cy={yScale(p[s.key])}
                 r={i === safePoints.length - 1 ? 4 : 2.5}
                 className="snap-chart-endpoint"
-                style={{ fill: `var(${SERIES_COLOR_VAR[s.key]})` }}
+                style={{ fill: `var(${SERIES_COLOR_VAR[s.colorKey || s.key]})` }}
               />
             )))}
 
@@ -202,7 +212,7 @@ const SnapshotChart = ({ points, series, symbol = '', xKey = 'date', formatXAxis
                     cy={yScale(hover[s.key])}
                     r="4"
                     className="snap-chart-endpoint hover"
-                    style={{ fill: `var(${SERIES_COLOR_VAR[s.key]})` }}
+                    style={{ fill: `var(${SERIES_COLOR_VAR[s.colorKey || s.key]})` }}
                   />
                 ))}
               </g>
@@ -223,7 +233,7 @@ const SnapshotChart = ({ points, series, symbol = '', xKey = 'date', formatXAxis
               </div>
               {series.map(s => (
                 <div key={s.key} className="snap-chart-tooltip-row">
-                  <span className="snap-chart-key" style={{ background: `var(${SERIES_COLOR_VAR[s.key]})` }} />
+                  <span className="snap-chart-key" style={{ background: `var(${SERIES_COLOR_VAR[s.colorKey || s.key]})` }} />
                   {s.label} <strong>{symbol}{Math.round(hover[s.key]).toLocaleString()}</strong>
                 </div>
               ))}

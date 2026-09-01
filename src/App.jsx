@@ -390,7 +390,7 @@ export default function App() {
                 </div>
                 <div className="form-group">
                   <label>{t('calculator.yearsToGrow')} (max {MAX_YEARS})</label>
-                  <input type="number" min="1" max={MAX_YEARS} value={years} onChange={(e) => setYears(Math.min(MAX_YEARS, Number(e.target.value)))} />
+                  <input type="number" min="1" max={MAX_YEARS} value={years} onChange={(e) => setYears(Math.min(MAX_YEARS, Math.max(1, Number(e.target.value) || 1)))} />
                 </div>
                 <div className="form-group">
                   <label><Term k="inflation">{t('calculator.inflation')}</Term> (%/yr)</label>

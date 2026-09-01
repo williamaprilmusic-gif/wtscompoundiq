@@ -17,10 +17,19 @@ export const readPlan = () => {
 };
 
 // Merges `data` into the plan under `sectionKey` (e.g. 'loan', 'fire') and persists it.
+// Every "Save This Plan" button across the app calls this directly from an onClick, with
+// no try/catch of its own -- wrapped here (same pattern as readPlan above and every
+// localStorage write in usePersistedState.js) so Safari private-browsing or a full quota
+// (setItem throws in both cases) degrades to "this save didn't persist" instead of
+// throwing out of the click handler and breaking that button's whole interaction.
 export const savePlanSection = (sectionKey, data) => {
   const existing = readPlan();
   const updated = { ...existing, [sectionKey]: data };
-  localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(updated));
+  try {
+    localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(updated));
+  } catch {
+    /* ignore (private mode, storage full, etc.) -- caller's own "Saved!" UI is optimistic */
+  }
   return updated;
 };
 

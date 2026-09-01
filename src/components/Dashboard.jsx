@@ -19,7 +19,10 @@ import { readJSONArray } from '../utils/storage';
 
 const NETWORTH_SERIES = [{ key: 'assets', label: 'Assets' }, { key: 'debts', label: 'Debts' }, { key: 'net', label: 'Net Worth' }];
 const DEBT_SERIES = [{ key: 'total', label: 'Total Debt Balance' }];
-const EF_SERIES = [{ key: 'total', label: 'Emergency Fund Balance' }];
+// colorKey: see SnapshotChart.jsx's SERIES_COLOR_VAR note -- 'total' is also Debt
+// Payoff's field name (colored debt-red), but a growing EF balance is the opposite
+// semantic, so this needs its own colorKey rather than inheriting that color.
+const EF_SERIES = [{ key: 'total', label: 'Emergency Fund Balance', colorKey: 'efBalance' }];
 
 // reportingCountry: the currency Net Worth's own tab currently displays in (see
 // App.jsx) -- independent of `country` (the Calculator scenario's country), since Net

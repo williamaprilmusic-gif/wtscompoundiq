@@ -59,9 +59,15 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
 
   const exportScenarioCSV = () => {
     const header = ['Year', `${scenarioA.name} Balance (${country.currency})`, `${scenarioA.name} Interest`, `${scenarioB.name} Balance (${country.currency})`, `${scenarioB.name} Interest`];
-    const rows = resultsScenarioA.yearlyData.map((rowA, i) => {
+    // Scenario A and B each have their own independently-set Years, so one yearlyData
+    // array can be longer than the other -- iterate the longer of the two (not just A's)
+    // so a shorter scenario's early rollover-to-empty doesn't silently truncate the
+    // longer scenario's remaining years out of the export.
+    const rowCount = Math.max(resultsScenarioA.yearlyData.length, resultsScenarioB.yearlyData.length);
+    const rows = Array.from({ length: rowCount }, (_, i) => {
+      const rowA = resultsScenarioA.yearlyData[i] || {};
       const rowB = resultsScenarioB.yearlyData[i] || {};
-      return [rowA.year, rowA.balance, rowA.interest, rowB.balance ?? '', rowB.interest ?? ''];
+      return [rowA.year ?? rowB.year ?? i, rowA.balance ?? '', rowA.interest ?? '', rowB.balance ?? '', rowB.interest ?? ''];
     });
     downloadCSV(`wts-compoundiq-compare-${scenarioA.name || 'plan-a'}-vs-${scenarioB.name || 'plan-b'}.csv`.toLowerCase().replace(/\s+/g, '-'), [header, ...rows]);
   };
