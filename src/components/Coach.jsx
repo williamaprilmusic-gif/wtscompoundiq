@@ -19,9 +19,13 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
   const boosted = calculateCompoundInterest({ ...base, monthly: boostedMonthly });
   const boostGain = boosted.finalBalance - baseline.finalBalance;
 
-  // Cap at the Calculator's own MAX_YEARS (passed in) so "extend your timeframe" can't
-  // propose -- or apply -- a horizon the Calculator input itself would reject.
-  const extendedYears = Math.min(maxYears, years + extraYears);
+  // Room left below the Calculator's own MAX_YEARS (passed in). When years is already at
+  // the ceiling this is 0 and step 3 has nothing to offer (marked done below); otherwise
+  // it caps both the slider and the value actually applied, so the "+N years" label can't
+  // advertise more runway than the Calculator input would accept.
+  const maxExtraYears = Math.max(0, maxYears - years);
+  const effectiveExtraYears = Math.min(extraYears, maxExtraYears);
+  const extendedYears = years + effectiveExtraYears;
   const extended = calculateCompoundInterest({ ...base, years: extendedYears });
   const extendGain = extended.finalBalance - baseline.finalBalance;
 
@@ -71,15 +75,17 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
       key: 'years',
       number: 3,
       title: 'Stay The Course',
-      done: false,
-      body: `Staying invested for ${extendedYears} years instead of ${years} adds ${country.symbol} ${Math.round(extendGain).toLocaleString()} to your final balance -- compounding rewards patience more than almost anything else.`,
-      interactive: true,
-      control: (
+      done: maxExtraYears === 0,
+      body: maxExtraYears === 0
+        ? `Your timeframe is already at the ${maxYears}-year maximum -- there's no more runway to add here.`
+        : `Staying invested for ${extendedYears} years instead of ${years} adds ${country.symbol} ${Math.round(extendGain).toLocaleString()} to your final balance -- compounding rewards patience more than almost anything else.`,
+      interactive: maxExtraYears > 0,
+      control: maxExtraYears > 0 ? (
         <div className="coach-slider-row">
-          <label>+{extraYears} extra year{extraYears === 1 ? '' : 's'}</label>
-          <input type="range" min="1" max="20" step="1" value={extraYears} aria-label="Extra years to stay invested" onChange={(e) => setExtraYears(Number(e.target.value))} />
+          <label>+{effectiveExtraYears} extra year{effectiveExtraYears === 1 ? '' : 's'}</label>
+          <input type="range" min="1" max={Math.min(20, maxExtraYears)} step="1" value={effectiveExtraYears} aria-label="Extra years to stay invested" onChange={(e) => setExtraYears(Number(e.target.value))} />
         </div>
-      ),
+      ) : null,
       onApply: applyYears,
       applyLabel: `Set timeframe to ${extendedYears} years`
     }

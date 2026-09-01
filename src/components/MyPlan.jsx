@@ -120,7 +120,13 @@ const MyPlan = ({ country }) => {
   };
 
   const debtDaysAgo = hasDebt ? daysBetween(snapshot.debt.savedAt) : null;
-  const { expectedRemaining: debtExpectedRemaining, drift: debtDrift } = hasDebt
+  // A saved plan whose payoff never completes inside simulatePayoff's MAX_MONTHS cap
+  // stores avalancheReachable === false and avalancheMonths pinned at 600. Feeding 600
+  // into computeRemainingDrift as a real term invents a straight-line paydown rate for
+  // a debt that's actually growing, so every check-in would read "behind schedule".
+  // Same gate Dashboard/Snapshot use; older snapshots (no flag) stay reachable.
+  const debtReachable = !hasDebt || snapshot.debt.avalancheReachable !== false;
+  const { expectedRemaining: debtExpectedRemaining, drift: debtDrift } = (hasDebt && debtReachable)
     ? computeRemainingDrift(snapshot.debt.totalBalance, snapshot.debt.avalancheMonths, snapshot.debt.savedAt, currentDebtBalance)
     : { expectedRemaining: null, drift: null };
 
@@ -153,19 +159,27 @@ const MyPlan = ({ country }) => {
           <h3>💳 Debt Payoff <span className="plan-saved-label">saved {fmtDaysAgo(debtDaysAgo)}</span></h3>
           <div className="plan-baseline">
             When saved: {country.symbol} {Math.round(snapshot.debt.totalBalance).toLocaleString()} total debt,
-            paying {country.symbol} {snapshot.debt.extraMonthly.toLocaleString()}/mo extra,
-            on pace to be debt-free in {snapshot.debt.avalancheMonths} months.
+            paying {country.symbol} {snapshot.debt.extraMonthly.toLocaleString()}/mo extra,{' '}
+            {debtReachable
+              ? `on pace to be debt-free in ${snapshot.debt.avalancheMonths} months.`
+              : 'not on track to clear within 50 years at that pace.'}
           </div>
-          <div className="plan-checkin">
-            <label>What's your total debt balance right now? ({country.symbol})</label>
-            <input type="number" min="0" value={currentDebtBalance} onChange={(e) => setCurrentDebtBalance(e.target.value)} placeholder={`Expected: ~${Math.round(debtExpectedRemaining).toLocaleString()}`} />
-          </div>
-          {debtDrift !== null && (
-            <p className={`plan-drift ${debtDrift >= 0 ? 'ahead' : 'behind'}`}>
-              {debtDrift >= 0
-                ? `You're ${country.symbol} ${Math.round(debtDrift).toLocaleString()} ahead of schedule -- nice.`
-                : `You're ${country.symbol} ${Math.round(-debtDrift).toLocaleString()} behind where the plan expected. Worth revisiting the Debt Payoff tab.`}
-            </p>
+          {debtReachable ? (
+            <>
+              <div className="plan-checkin">
+                <label>What's your total debt balance right now? ({country.symbol})</label>
+                <input type="number" min="0" value={currentDebtBalance} onChange={(e) => setCurrentDebtBalance(e.target.value)} placeholder={`Expected: ~${Math.round(debtExpectedRemaining).toLocaleString()}`} />
+              </div>
+              {debtDrift !== null && (
+                <p className={`plan-drift ${debtDrift >= 0 ? 'ahead' : 'behind'}`}>
+                  {debtDrift >= 0
+                    ? `You're ${country.symbol} ${Math.round(debtDrift).toLocaleString()} ahead of schedule -- nice.`
+                    : `You're ${country.symbol} ${Math.round(-debtDrift).toLocaleString()} behind where the plan expected. Worth revisiting the Debt Payoff tab.`}
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="plan-drift behind">This plan doesn't clear the debt at the saved pace -- raise the extra monthly payment on the Debt Payoff tab before tracking progress here.</p>
           )}
         </div>
       )}
