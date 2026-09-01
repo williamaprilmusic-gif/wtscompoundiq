@@ -23,6 +23,10 @@ import { dividendIncome } from '../dividendIncome';
 import { carOwnershipCost } from '../carCost';
 import { lifetimeRaiseValue } from '../raiseValue';
 import { pretaxRetirementBoost } from '../pretaxRetirement';
+import { sinkingFundPlan } from '../sinkingFund';
+import { emergencyRunway } from '../emergencyRunway';
+import { compareCompoundingFrequencies } from '../compoundingComparison';
+import { budgetRuleCheck } from '../budgetRule';
 import { readJSONArray } from '../utils/storage';
 import { convertAmount, countriesData } from '../data/countries';
 import { DEBTS_KEY } from './DebtPayoff';
@@ -50,7 +54,23 @@ const SUB_TABS = [
   { key: 'dividend', label: '💵 Dividend Income' },
   { key: 'carCost', label: '🚗 Cost of a Car' },
   { key: 'raiseValue', label: '💹 Value of a Raise' },
-  { key: 'pretaxRA', label: '🧾 Pre-Tax Retirement' }
+  { key: 'pretaxRA', label: '🧾 Pre-Tax Retirement' },
+  { key: 'sinkingFund', label: '🎯 Sinking Fund' },
+  { key: 'efRunway', label: '🛟 Fund Runway' },
+  { key: 'freqCompare', label: '🔁 Compounding Frequency' },
+  { key: 'budgetRule', label: '⚖️ 50/30/20 Check' }
+];
+
+// Groups the 24 pills above into labelled categories so the bar stays scannable. Every
+// key must appear exactly once; any that's missed drops into a "More" catch-all in
+// SubTabs rather than vanishing.
+const SUB_TAB_GROUPS = [
+  { label: 'Retire & Financial Independence', keys: ['fire', 'coastFire', 'savingsRate', 'drawdown', 'pretaxRA', 'dividend'] },
+  { label: 'Debt & Credit', keys: ['debtVsInvest', 'dti', 'cardTrap'] },
+  { label: 'Property & Big Purchases', keys: ['affordability', 'rentVsBuy', 'carCost'] },
+  { label: 'Saving for a Goal', keys: ['savings', 'education', 'sinkingFund', 'efRunway', 'insurance'] },
+  { label: 'Income & Tax', keys: ['salary', 'raiseValue', 'budgetRule'] },
+  { label: 'Money Basics', keys: ['futureCost', 'fxConvert', 'rule72', 'freqCompare'] }
 ];
 
 const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [] }) => {
@@ -169,6 +189,24 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const [praMarginalRate, setPraMarginalRate] = useState(country.taxRate);
   const [praYears, setPraYears] = useState(25);
   const [praReturn, setPraReturn] = useState(rate || 8);
+
+  const [sfTarget, setSfTarget] = useState(0);
+  const [sfSaved, setSfSaved] = useState(0);
+  const [sfMonths, setSfMonths] = useState(12);
+  const [sfRate, setSfRate] = useState(Math.round(country.typicalBankRate || 5));
+
+  const [efrSavings, setEfrSavings] = useState(0);
+  const [efrExpenses, setEfrExpenses] = useState(0);
+  const [efrRate, setEfrRate] = useState(Math.round(country.typicalBankRate || 5));
+
+  const [fcPrincipal, setFcPrincipal] = useState(0);
+  const [fcRate, setFcRate] = useState(rate || 7);
+  const [fcYears, setFcYears] = useState(20);
+
+  const [brIncome, setBrIncome] = useState(0);
+  const [brNeeds, setBrNeeds] = useState(0);
+  const [brWants, setBrWants] = useState(0);
+  const [brSavings, setBrSavings] = useState(0);
 
   const safeWithdrawalRate = withdrawalRate > 0 ? withdrawalRate : 0.01;
   const fireNumber = annualExpenses / (safeWithdrawalRate / 100);
@@ -337,6 +375,11 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
     monthlyContribution: praContribution, marginalTaxRate: praMarginalRate, years: praYears, returnRate: praReturn
   });
 
+  const sinkingFund = sinkingFundPlan({ targetAmount: sfTarget, alreadySaved: sfSaved, months: sfMonths, annualSavingsRate: sfRate });
+  const efRunway = emergencyRunway({ savings: efrSavings, monthlyExpenses: efrExpenses, annualSavingsRate: efrRate });
+  const freqRows = compareCompoundingFrequencies({ principal: fcPrincipal, annualRate: fcRate, years: fcYears });
+  const budgetRule = budgetRuleCheck({ takeHomeIncome: brIncome, needs: brNeeds, wants: brWants, savings: brSavings });
+
   const saveFirePlan = () => {
     savePlanSection('fire', {
       savedAt: new Date().toISOString(),
@@ -356,7 +399,7 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
         <p>Quick-fire calculators that use your current calculator inputs as the baseline.</p>
       </div>
 
-      <SubTabs tabs={SUB_TABS} active={activeSubTab} onChange={setActiveSubTab} ariaLabel="Power Tools calculator" />
+      <SubTabs tabs={SUB_TABS} groups={SUB_TAB_GROUPS} active={activeSubTab} onChange={setActiveSubTab} ariaLabel="Power Tools calculator" />
 
       {activeSubTab === 'fire' && (
       <div className="power-tool-card">
@@ -1342,6 +1385,179 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
               those withdrawals, often at a lower effective rate than working-life income. The figure above is the
               deferral-plus-full-compounding advantage before that, and assumes {country.name}'s {country.taxRate}%
               rate as the taxable account's drag on gains. Not tax advice.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'sinkingFund' && (
+      <div className="power-tool-card">
+        <h3>🎯 Sinking Fund Planner</h3>
+        <p className="power-tool-desc">A known expense on a known date — a car, a wedding, next year's school fees. How much a month to have it ready, saving at a modest rate rather than investing.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Amount Needed ({country.symbol})</label>
+            <input type="number" min="0" step="5000" value={sfTarget} onChange={(e) => setSfTarget(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Already Set Aside ({country.symbol})</label>
+            <input type="number" min="0" step="1000" value={sfSaved} onChange={(e) => setSfSaved(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Months Until You Need It</label>
+            <input type="number" min="0" max="120" value={sfMonths} onChange={(e) => setSfMonths(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Savings Account Rate (%/yr)</label>
+            <input type="number" min="0" step="0.1" value={sfRate} onChange={(e) => setSfRate(Number(e.target.value))} />
+          </div>
+        </div>
+        {sfTarget > 0 && (
+          <>
+            <div className="power-verdict invest">
+              Set aside about {country.symbol} {Math.round(sinkingFund.monthlyAmount).toLocaleString()}/month for {sfMonths || 0} months to have {country.symbol} {Math.round(sfTarget).toLocaleString()} ready{sfSaved > 0 ? `, on top of the ${country.symbol} ${Math.round(sfSaved).toLocaleString()} you've already saved` : ''}.
+            </div>
+            <p className="power-tool-note">
+              Assumes the balance earns {sfRate}% in a savings account ({country.symbol} {Math.round(sinkingFund.interestEarned).toLocaleString()} of the total over the term), not a market return —
+              for a goal years out where you're willing to take investment risk, use the Invest tab's goal planner instead.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'efRunway' && (
+      <div className="power-tool-card">
+        <h3>🛟 Emergency Fund Runway</h3>
+        <p className="power-tool-desc">If your income stopped today, how many full months would what you've already saved actually cover?</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Emergency Savings ({country.symbol})</label>
+            <input type="number" min="0" step="5000" value={efrSavings} onChange={(e) => setEfrSavings(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Essential Monthly Expenses ({country.symbol})</label>
+            <input type="number" min="0" step="1000" value={efrExpenses} onChange={(e) => setEfrExpenses(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Interest While It Sits (%/yr)</label>
+            <input type="number" min="0" step="0.1" value={efrRate} onChange={(e) => setEfrRate(Number(e.target.value))} />
+          </div>
+        </div>
+        {efrSavings > 0 && efrExpenses > 0 && (
+          <>
+            <div className={`power-verdict ${efRunway.lastsIndefinitely || efRunway.fullMonths >= 6 ? 'invest' : efRunway.fullMonths >= 3 ? 'debt' : 'danger'}`}>
+              {efRunway.lastsIndefinitely
+                ? `At ${efrRate}%, the interest alone covers your ${country.symbol}${Math.round(efrExpenses).toLocaleString()}/mo — this fund lasts indefinitely with no income.`
+                : `This covers about ${efRunway.fullMonths} full month${efRunway.fullMonths === 1 ? '' : 's'} of essential expenses with no income coming in. ${efRunway.fullMonths >= 6 ? 'A solid buffer.' : efRunway.fullMonths >= 3 ? 'A reasonable minimum — aim for 3–6 months.' : 'Below the usual 3-month floor — worth building up.'}`}
+            </div>
+            <p className="power-tool-note">
+              Burns the balance down by {country.symbol}{Math.round(efrExpenses).toLocaleString()}/month while the rest earns {efrRate}%. "Essential"
+              means rent/bond, food, utilities, transport, insurance, minimum debt payments — not discretionary spending
+              you'd cut in a real crunch. For building the fund up in the first place, use the Emergency Fund tab.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'freqCompare' && (
+      <div className="power-tool-card">
+        <h3>🔁 Compounding Frequency Comparison</h3>
+        <p className="power-tool-desc">Same money, same rate, same term — how much does it matter whether interest is credited once a year or every day?</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Amount ({country.symbol})</label>
+            <input type="number" min="0" step="10000" value={fcPrincipal} onChange={(e) => setFcPrincipal(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Annual Rate (%)</label>
+            <input type="number" step="0.1" value={fcRate} onChange={(e) => setFcRate(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Years</label>
+            <input type="number" min="1" max="60" value={fcYears} onChange={(e) => setFcYears(Number(e.target.value))} />
+          </div>
+        </div>
+        {fcPrincipal > 0 && (
+          <>
+            <div className="tbl-wrap">
+              <table className="power-freq-table">
+                <thead>
+                  <tr><th>Credited</th><th>Final Balance</th><th>vs. Annually</th></tr>
+                </thead>
+                <tbody>
+                  {freqRows.map(r => (
+                    <tr key={r.key}>
+                      <td>{r.label}</td>
+                      <td>{country.symbol} {Math.round(r.finalBalance).toLocaleString()}</td>
+                      <td>{r.extraVsAnnual > 0 ? `+${country.symbol} ${Math.round(r.extraVsAnnual).toLocaleString()}` : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="power-tool-note">
+              More frequent compounding always wins, but the gap between monthly and daily is usually tiny — the
+              headline rate and the time invested matter far more. Same engine as the Calculator tab's frequency
+              selector, so these match that tab exactly.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'budgetRule' && (
+      <div className="power-tool-card">
+        <h3>⚖️ 50/30/20 Budget Check</h3>
+        <p className="power-tool-desc">The rule of thumb: about half of take-home to needs, a third to wants, a fifth to saving and extra debt paydown. See how your split compares.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Monthly Take-Home Income ({country.symbol})</label>
+            <input type="number" min="0" step="1000" value={brIncome} onChange={(e) => setBrIncome(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Needs — rent, food, utilities, transport ({country.symbol})</label>
+            <input type="number" min="0" step="500" value={brNeeds} onChange={(e) => setBrNeeds(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Wants — dining out, subscriptions, travel ({country.symbol})</label>
+            <input type="number" min="0" step="500" value={brWants} onChange={(e) => setBrWants(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Saving + extra debt paydown ({country.symbol})</label>
+            <input type="number" min="0" step="500" value={brSavings} onChange={(e) => setBrSavings(Number(e.target.value))} />
+          </div>
+        </div>
+        {brIncome > 0 && (
+          <>
+            <div className={`power-verdict ${budgetRule.onTrack ? 'invest' : 'debt'}`}>
+              {budgetRule.onTrack
+                ? `Roughly on the rule: needs ${budgetRule.actualPct.needs.toFixed(0)}%, wants ${budgetRule.actualPct.wants.toFixed(0)}%, saving ${budgetRule.actualPct.savings.toFixed(0)}%.`
+                : `Off the rule: needs ${budgetRule.actualPct.needs.toFixed(0)}% (target ≤50%), wants ${budgetRule.actualPct.wants.toFixed(0)}% (target ~30%), saving ${budgetRule.actualPct.savings.toFixed(0)}% (target ≥20%).`}
+            </div>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Needs target (50%)</span>
+                <strong>{country.symbol} {Math.round(budgetRule.targets.needs).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Wants target (30%)</span>
+                <strong>{country.symbol} {Math.round(budgetRule.targets.wants).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Saving target (20%)</span>
+                <strong>{country.symbol} {Math.round(budgetRule.targets.savings).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Unallocated</span>
+                <strong className={Math.abs(budgetRule.unallocated) < 1 ? '' : budgetRule.unallocated > 0 ? 'positive' : 'warn'}>{country.symbol} {Math.round(budgetRule.unallocated).toLocaleString()}</strong>
+              </div>
+            </div>
+            <p className="power-tool-note">
+              A starting framework, not a law — high-cost-of-living areas often can't get needs under 50%, and someone
+              chasing FIRE deliberately pushes saving well past 20%. For a full line-item budget, use the Budget tab.
             </p>
           </>
         )}

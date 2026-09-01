@@ -6,6 +6,28 @@
   margin-bottom: 22px;
 }
 
+.sub-tabs-grouped {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.sub-tabs-grouped .sub-tabs {
+  margin-bottom: 0;
+}
+.sub-tab-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sub-tab-group-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mut2);
+}
+
 .sub-tab-btn {
   background: var(--raise-05);
   border: 1px solid var(--raise-1);
