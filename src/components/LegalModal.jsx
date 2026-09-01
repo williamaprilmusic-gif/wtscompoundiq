@@ -1,56 +1,64 @@
 // src/components/LegalModal.jsx
-// A short, honest Privacy Policy + Terms of Use. Kept accurate to what the app
-// actually does (no backend, nothing transmitted) rather than generic boilerplate --
-// see DataBackup.jsx and every localStorage-only component this describes.
-import React from 'react';
+// The app's legal centre: Terms & Conditions, Privacy Policy, and Refund & Cancellation
+// Policy in one modal with a document switcher. Content lives in legalDocs.jsx; this file
+// is just the shell -- section numbers come from array position so the prose's
+// "Section N" cross-references are the only thing to keep in sync by hand.
+import React, { useState } from 'react';
 import './LegalModal.css';
+import { LEGAL_DOCS } from './legalDocs';
 
-export default function LegalModal({ onClose }) {
+export default function LegalModal({ onClose, initialDoc = 'terms' }) {
+  const [activeId, setActiveId] = useState(initialDoc);
+  const doc = LEGAL_DOCS.find(d => d.id === activeId) || LEGAL_DOCS[0];
+
   return (
     <div className="legal-overlay" onClick={onClose}>
-      <div className="legal-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="legal-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Legal documents">
         <button className="close-btn" onClick={onClose} aria-label="Close">&times;</button>
-        <h2>Privacy &amp; Terms</h2>
-        <p className="legal-updated">Last updated 2026-08-28</p>
 
-        <section>
-          <h3>Privacy</h3>
-          <ul>
-            <li><strong>No account, no signup.</strong> Nothing you enter is tied to an identity.</li>
-            <li><strong>Nothing is transmitted anywhere.</strong> This app has no backend server and no
-              database -- every number you enter, every saved plan, snapshot, and tier selection lives
-              only in your own browser's local storage. Closing the tab doesn't lose it, but clearing
-              your browser's site data, using a different browser, or switching devices does (use
-              "Export Backup" in the footer to save a copy first).</li>
-            <li><strong>No analytics, no trackers, no cookies, no third-party scripts.</strong> This is a
-              deliberate, verifiable claim, not a legal disclaimer -- the only network request this app's
-              own code makes is its own service worker caching its own files for offline use.</li>
-            <li><strong>Backup files</strong> you export or import are plain JSON files that go directly
-              between your browser and your own filesystem -- they never pass through any server.</li>
-          </ul>
-        </section>
+        <div className="legal-doc-switch" role="tablist" aria-label="Choose a document">
+          {LEGAL_DOCS.map((d, i) => (
+            <button
+              key={d.id}
+              role="tab"
+              aria-selected={d.id === activeId}
+              className={d.id === activeId ? 'active' : ''}
+              onClick={() => { setActiveId(d.id); }}
+            >
+              {d.tab}
+              <span className="n">{String(i + 1).padStart(2, '0')}</span>
+            </button>
+          ))}
+        </div>
 
-        <section>
-          <h3>Terms of Use</h3>
-          <ul>
-            <li><strong>Educational tool, not financial advice.</strong> Every projection, tax figure,
-              exchange rate, and recommendation in this app is illustrative and simplified. Tax rules,
-              contribution limits, and rates drift and vary by individual circumstance -- verify anything
-              you intend to act on with a qualified professional and the relevant authority (SARS, IRS,
-              HMRC, etc.) before making financial decisions.</li>
-            <li><strong>No warranty.</strong> Figures are provided "as is," may contain errors, and may
-              not reflect current law. Nothing here is guaranteed accurate, complete, or up to date.</li>
-            <li><strong>The "Upgrade" / payment flow is a demo.</strong> No real payment processor is
-              connected. No card details are collected, validated, or stored. "Upgrading" only changes a
-              value in your own browser's local storage and unlocks tabs in this preview -- it is not a
-              real purchase or subscription.</li>
-            <li><strong>Use at your own risk.</strong> The maintainers of WTS CompoundIQ accept no
-              liability for decisions made based on this app's output.</li>
-          </ul>
-        </section>
+        <div className="legal-doc-body" key={doc.id}>
+          <p className="legal-eyebrow">{doc.docLabel}</p>
+          <h2>{doc.title}</h2>
+          <p className="legal-updated">
+            Effective {doc.effective} · Last updated {doc.updated}
+          </p>
 
-        <p className="legal-footer-note">Questions about a specific figure? Every country's tax and wrapper data
-          shows its own "last verified" date in the Calculator and Tax Optimizer tabs.</p>
+          {doc.callout && (
+            <div className="legal-callout">
+              <span className="legal-callout-tag">{doc.callout.tag}</span>
+              {doc.callout.body}
+            </div>
+          )}
+
+          {doc.sections.map((s, i) => (
+            <section className="legal-clause" key={i}>
+              <h3><span className="legal-num">{i + 1}</span>{s.heading}</h3>
+              {s.body}
+            </section>
+          ))}
+
+          <p className="legal-footer-note">
+            This is a substantive review against POPIA, the CPA, ECTA, GDPR, and PAIA — not a
+            formal legal opinion from a practicing attorney. Placeholder fields and the
+            inline "[Flag for counsel: …]" notes still need a qualified attorney's sign-off
+            and your real company details before these documents are relied on.
+          </p>
+        </div>
       </div>
     </div>
   );
