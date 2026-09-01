@@ -774,6 +774,14 @@ body {
   cursor: pointer;
 }
 
+.app-footer-disclaimer {
+  max-width: 640px;
+  margin: 10px auto 0;
+  color: var(--accent-yellow);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
 .footer-link-btn:hover {
   color: var(--accent);
 }

@@ -78,7 +78,8 @@ export const translations = {
     },
     footer: {
       tagline: 'educational tool · indicative rates drift weekly · not financial advice',
-      privacyTerms: 'Privacy & Terms'
+      privacyTerms: 'Privacy & Terms',
+      disclaimer: 'This is an educational tool only, not financial advice -- please seek advice from a reputable, qualified accountant or financial advisor before making financial decisions.'
     },
     startHere: {
       title: '👋 Start Here',
@@ -168,7 +169,8 @@ export const translations = {
     },
     footer: {
       tagline: 'opvoedkundige hulpmiddel · aanwyserkoerse wissel weekliks · nie finansiële advies nie',
-      privacyTerms: 'Privaatheid & Voorwaardes'
+      privacyTerms: 'Privaatheid & Voorwaardes',
+      disclaimer: "Dit is slegs 'n opvoedkundige hulpmiddel, nie finansiële advies nie -- raadpleeg asseblief 'n betroubare, gekwalifiseerde rekenmeester of finansiële adviseur voordat u finansiële besluite neem."
     },
     startHere: {
       title: '👋 Begin Hier',
@@ -258,7 +260,8 @@ export const translations = {
     },
     footer: {
       tagline: 'herramienta educativa · las tasas indicativas cambian semanalmente · no es asesoramiento financiero',
-      privacyTerms: 'Privacidad y Términos'
+      privacyTerms: 'Privacidad y Términos',
+      disclaimer: 'Esta es solo una herramienta educativa, no es asesoramiento financiero -- consulte a un contador o asesor financiero calificado y de confianza antes de tomar decisiones financieras.'
     },
     startHere: {
       title: '👋 Empieza Aquí',
@@ -348,7 +351,8 @@ export const translations = {
     },
     footer: {
       tagline: 'outil éducatif · taux indicatifs mis à jour chaque semaine · ne constitue pas un conseil financier',
-      privacyTerms: 'Confidentialité & Conditions'
+      privacyTerms: 'Confidentialité & Conditions',
+      disclaimer: 'Ceci est uniquement un outil éducatif, et ne constitue pas un conseil financier -- veuillez consulter un comptable ou un conseiller financier qualifié et digne de confiance avant de prendre des décisions financières.'
     },
     startHere: {
       title: '👋 Commencer Ici',
@@ -437,7 +441,8 @@ export const translations = {
     },
     footer: {
       tagline: 'Bildungstool · indikative Zinssätze schwanken wöchentlich · keine Finanzberatung',
-      privacyTerms: 'Datenschutz & Bedingungen'
+      privacyTerms: 'Datenschutz & Bedingungen',
+      disclaimer: 'Dies ist lediglich ein Bildungstool und keine Finanzberatung -- bitte wenden Sie sich vor finanziellen Entscheidungen an einen vertrauenswürdigen, qualifizierten Steuerberater oder Finanzberater.'
     },
     startHere: {
       title: '👋 Loslegen',
@@ -526,7 +531,8 @@ export const translations = {
     },
     footer: {
       tagline: 'educatieve tool · indicatieve tarieven wisselen wekelijks · geen financieel advies',
-      privacyTerms: 'Privacy & Voorwaarden'
+      privacyTerms: 'Privacy & Voorwaarden',
+      disclaimer: 'Dit is uitsluitend een educatieve tool, geen financieel advies -- raadpleeg een betrouwbare, gekwalificeerde accountant of financieel adviseur voordat u financiële beslissingen neemt.'
     },
     startHere: {
       title: '👋 Begin Hier',
@@ -615,7 +621,8 @@ export const translations = {
     },
     footer: {
       tagline: 'strumento educativo · tassi indicativi variano settimanalmente · non è consulenza finanziaria',
-      privacyTerms: 'Privacy e Termini'
+      privacyTerms: 'Privacy e Termini',
+      disclaimer: 'Questo è solo uno strumento educativo, non una consulenza finanziaria -- consulta un commercialista o un consulente finanziario qualificato e affidabile prima di prendere decisioni finanziarie.'
     },
     startHere: {
       title: '👋 Inizia Qui',
@@ -704,7 +711,8 @@ export const translations = {
     },
     footer: {
       tagline: 'ferramenta educacional · taxas indicativas variam semanalmente · não é consultoria financeira',
-      privacyTerms: 'Privacidade e Termos'
+      privacyTerms: 'Privacidade e Termos',
+      disclaimer: 'Esta é apenas uma ferramenta educacional, não é consultoria financeira -- consulte um contador ou consultor financeiro qualificado e confiável antes de tomar decisões financeiras.'
     },
     startHere: {
       title: '👋 Comece Aqui',
@@ -793,7 +801,8 @@ export const translations = {
     },
     footer: {
       tagline: 'utbildningsverktyg · indikativa räntor ändras veckovis · ingen finansiell rådgivning',
-      privacyTerms: 'Integritet & Villkor'
+      privacyTerms: 'Integritet & Villkor',
+      disclaimer: 'Detta är endast ett utbildningsverktyg, inte finansiell rådgivning -- rådfråga en pålitlig, kvalificerad revisor eller finansiell rådgivare innan du fattar finansiella beslut.'
     },
     startHere: {
       title: '👋 Börja Här',
@@ -882,7 +891,8 @@ export const translations = {
     },
     footer: {
       tagline: 'undervisningsverktøy · veiledende rentesatser endres ukentlig · ikke finansiell rådgivning',
-      privacyTerms: 'Personvern & Vilkår'
+      privacyTerms: 'Personvern & Vilkår',
+      disclaimer: 'Dette er kun et undervisningsverktøy, ikke finansiell rådgivning -- rådfør deg med en pålitelig, kvalifisert regnskapsfører eller finansrådgiver før du tar finansielle beslutninger.'
     },
     startHere: {
       title: '👋 Start Her',
@@ -971,7 +981,8 @@ export const translations = {
     },
     footer: {
       tagline: 'undervisningsværktøj · vejledende renter ændres ugentligt · ikke finansiel rådgivning',
-      privacyTerms: 'Privatliv & Vilkår'
+      privacyTerms: 'Privatliv & Vilkår',
+      disclaimer: 'Dette er udelukkende et undervisningsværktøj, ikke finansiel rådgivning -- søg venligst rådgivning hos en pålidelig, kvalificeret revisor eller finansiel rådgiver, før du træffer finansielle beslutninger.'
     },
     startHere: {
       title: '👋 Start Her',
@@ -1060,7 +1071,8 @@ export const translations = {
     },
     footer: {
       tagline: 'narzędzie edukacyjne · orientacyjne stawki zmieniają się co tydzień · nie jest to porada finansowa',
-      privacyTerms: 'Prywatność i Warunki'
+      privacyTerms: 'Prywatność i Warunki',
+      disclaimer: 'To wyłącznie narzędzie edukacyjne, a nie porada finansowa -- przed podjęciem decyzji finansowych skonsultuj się z zaufanym, wykwalifikowanym księgowym lub doradcą finansowym.'
     },
     startHere: {
       title: '👋 Zacznij Tutaj',
@@ -1149,7 +1161,8 @@ export const translations = {
     },
     footer: {
       tagline: 'eğitim aracı · gösterge niteliğindeki oranlar haftalık değişir · finansal tavsiye değildir',
-      privacyTerms: 'Gizlilik ve Koşullar'
+      privacyTerms: 'Gizlilik ve Koşullar',
+      disclaimer: 'Bu yalnızca eğitim amaçlı bir araçtır, finansal tavsiye değildir -- finansal kararlar almadan önce lütfen güvenilir, nitelikli bir muhasebeci veya finansal danışmana danışın.'
     },
     startHere: {
       title: '👋 Buradan Başlayın',
@@ -1238,7 +1251,8 @@ export const translations = {
     },
     footer: {
       tagline: '教育ツール・目安の利率は毎週変動します・投資助言ではありません',
-      privacyTerms: 'プライバシーと規約'
+      privacyTerms: 'プライバシーと規約',
+      disclaimer: 'これは教育目的のツールに過ぎず、投資助言ではありません。財務上の決定を行う前に、信頼できる有資格の会計士またはファイナンシャルアドバイザーにご相談ください。'
     },
     startHere: {
       title: '👋 はじめに',
@@ -1327,7 +1341,8 @@ export const translations = {
     },
     footer: {
       tagline: '教育工具 · 参考利率每周浮动 · 非财务建议',
-      privacyTerms: '隐私与条款'
+      privacyTerms: '隐私与条款',
+      disclaimer: '这仅是一款教育工具，不构成财务建议 —— 在做出财务决策前，请咨询信誉良好、具备资质的会计师或财务顾问。'
     },
     startHere: {
       title: '👋 从这里开始',
@@ -1416,7 +1431,8 @@ export const translations = {
     },
     footer: {
       tagline: '교육용 도구 · 참고 금리는 매주 변동 · 재무 조언 아님',
-      privacyTerms: '개인정보 및 약관'
+      privacyTerms: '개인정보 및 약관',
+      disclaimer: '이것은 교육용 도구일 뿐이며 재무 조언이 아닙니다 -- 재무 관련 결정을 내리기 전에 신뢰할 수 있는 공인 회계사 또는 재무 상담사와 상담하시기 바랍니다.'
     },
     startHere: {
       title: '👋 시작하기',
@@ -1505,7 +1521,8 @@ export const translations = {
     },
     footer: {
       tagline: 'शैक्षिक उपकरण · संकेतक दरें साप्ताहिक रूप से बदलती हैं · यह वित्तीय सलाह नहीं है',
-      privacyTerms: 'गोपनीयता और शर्तें'
+      privacyTerms: 'गोपनीयता और शर्तें',
+      disclaimer: 'यह केवल एक शैक्षिक उपकरण है, वित्तीय सलाह नहीं -- कृपया कोई भी वित्तीय निर्णय लेने से पहले किसी विश्वसनीय, योग्य चार्टर्ड अकाउंटेंट या वित्तीय सलाहकार से सलाह लें।'
     },
     startHere: {
       title: '👋 यहाँ से शुरू करें',
@@ -1594,7 +1611,8 @@ export const translations = {
     },
     footer: {
       tagline: 'công cụ giáo dục · lãi suất tham khảo thay đổi hàng tuần · không phải tư vấn tài chính',
-      privacyTerms: 'Quyền Riêng Tư & Điều Khoản'
+      privacyTerms: 'Quyền Riêng Tư & Điều Khoản',
+      disclaimer: 'Đây chỉ là một công cụ giáo dục, không phải tư vấn tài chính -- vui lòng tham khảo ý kiến của một kế toán viên hoặc cố vấn tài chính uy tín, có trình độ trước khi đưa ra quyết định tài chính.'
     },
     startHere: {
       title: '👋 Bắt Đầu Tại Đây',
@@ -1683,7 +1701,8 @@ export const translations = {
     },
     footer: {
       tagline: 'alat edukasi · suku bunga indikatif berubah setiap minggu · bukan nasihat keuangan',
-      privacyTerms: 'Privasi & Ketentuan'
+      privacyTerms: 'Privasi & Ketentuan',
+      disclaimer: 'Ini hanyalah alat edukasi, bukan nasihat keuangan -- silakan berkonsultasi dengan akuntan atau penasihat keuangan yang tepercaya dan berkualifikasi sebelum membuat keputusan keuangan.'
     },
     startHere: {
       title: '👋 Mulai Di Sini',
@@ -1772,7 +1791,8 @@ export const translations = {
     },
     footer: {
       tagline: 'أداة تعليمية · الأسعار الإرشادية تتغير أسبوعياً · ليست نصيحة مالية',
-      privacyTerms: 'الخصوصية والشروط'
+      privacyTerms: 'الخصوصية والشروط',
+      disclaimer: 'هذه أداة تعليمية فقط، وليست نصيحة مالية -- يُرجى استشارة محاسب أو مستشار مالي موثوق ومؤهل قبل اتخاذ أي قرارات مالية.'
     },
     startHere: {
       title: '👋 ابدأ هنا',
@@ -1861,7 +1881,8 @@ export const translations = {
     },
     footer: {
       tagline: 'تعلیمی آلہ · اشاریہ شرحیں ہفتہ وار تبدیل ہوتی ہیں · یہ مالی مشورہ نہیں ہے',
-      privacyTerms: 'رازداری اور شرائط'
+      privacyTerms: 'رازداری اور شرائط',
+      disclaimer: 'یہ صرف ایک تعلیمی آلہ ہے، مالی مشورہ نہیں -- براہ کرم کوئی بھی مالی فیصلہ کرنے سے پہلے کسی قابل اعتماد، اہل اکاؤنٹنٹ یا مالی مشیر سے مشورہ کریں۔'
     },
     startHere: {
       title: '👋 یہاں سے شروع کریں',
@@ -1950,7 +1971,8 @@ export const translations = {
     },
     footer: {
       tagline: 'zana ya kielimu · viwango vya kiashiria hubadilika kila wiki · si ushauri wa kifedha',
-      privacyTerms: 'Faragha na Masharti'
+      privacyTerms: 'Faragha na Masharti',
+      disclaimer: 'Hii ni zana ya kielimu tu, si ushauri wa kifedha -- tafadhali wasiliana na mhasibu au mshauri wa kifedha anayeaminika na mwenye sifa kabla ya kufanya maamuzi ya kifedha.'
     },
     startHere: {
       title: '👋 Anza Hapa',

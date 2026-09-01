@@ -734,6 +734,11 @@ export default function App() {
           {' '}· <button className="footer-link-btn" onClick={() => setShowLegal(true)}>{t('footer.privacyTerms')}</button>
           {' '}· <button className="footer-link-btn" onClick={() => setShowTour(true)}>🧭 Take the Tour</button>
         </p>
+        {/* Restates the tagline's "not financial advice" in its own full sentence, with
+            the explicit call to seek a professional -- deliberately its own line (not
+            folded into the dense pipe-separated tagline above) so it reads as a real
+            disclaimer rather than dense microcopy easy to skim past. */}
+        <p className="app-footer-disclaimer">⚠️ {t('footer.disclaimer')}</p>
         <DataBackup />
       </footer>
 
