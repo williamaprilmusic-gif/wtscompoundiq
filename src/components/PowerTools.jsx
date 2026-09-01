@@ -11,6 +11,10 @@ import { maxLoanForPayment, estimateZaTransferDuty } from '../homeAffordability'
 import { computeCoverGap } from '../insuranceNeeds';
 import { projectEducationCost } from '../educationSavings';
 import { solveMonthlyForGoal } from '../goalSolver';
+import { calculateTakeHomePay } from '../salaryCalculator';
+import { calculateDTI } from '../debtToIncome';
+import { compareRentVsBuy } from '../rentVsBuy';
+import { projectFutureCost, projectPurchasingPower } from '../futureCost';
 import { readJSONArray } from '../utils/storage';
 import { convertAmount } from '../data/countries';
 import { DEBTS_KEY } from './DebtPayoff';
@@ -25,7 +29,11 @@ const SUB_TABS = [
   { key: 'savings', label: '🏦 Savings Account' },
   { key: 'education', label: '🎓 Education Savings' },
   { key: 'affordability', label: '🏠 Home Affordability' },
-  { key: 'insurance', label: '🛡️ Insurance Needs' }
+  { key: 'insurance', label: '🛡️ Insurance Needs' },
+  { key: 'salary', label: '💰 Take-Home Pay' },
+  { key: 'dti', label: '📊 Debt-to-Income' },
+  { key: 'rentVsBuy', label: '🏘️ Rent vs. Buy' },
+  { key: 'futureCost', label: '📈 Future Cost' }
 ];
 
 const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [] }) => {
@@ -77,6 +85,28 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const [eduInflation, setEduInflation] = useState(Math.round((country.typicalInflation || 5) + 3));
   const [eduAlreadySaved, setEduAlreadySaved] = useState(0);
 
+  const [salaryGross, setSalaryGross] = useState(0);
+  // Off by default, same reasoning as App.jsx's own progressiveTax toggle: the flat
+  // country.taxRate keeps being what's used everywhere else in the app unless a user
+  // opts in, and only the handful of countries with real taxBrackets data can use it.
+  const [salaryProgressive, setSalaryProgressive] = useState(false);
+
+  const [dtiIncome, setDtiIncome] = useState(0);
+  const [dtiDebt, setDtiDebt] = useState(0);
+
+  const [rvbHomePrice, setRvbHomePrice] = useState(0);
+  const [rvbDownPayment, setRvbDownPayment] = useState(0);
+  const [rvbMortgageRate, setRvbMortgageRate] = useState(country.typicalBankRate || 10);
+  const [rvbTermYears, setRvbTermYears] = useState(20);
+  const [rvbMonthlyExtras, setRvbMonthlyExtras] = useState(0);
+  const [rvbAppreciation, setRvbAppreciation] = useState(Math.round(country.typicalInflation || 5));
+  const [rvbMonthlyRent, setRvbMonthlyRent] = useState(0);
+  const [rvbRentIncrease, setRvbRentIncrease] = useState(Math.round(country.typicalInflation || 5));
+
+  const [futureCostAmount, setFutureCostAmount] = useState(0);
+  const [futureCostYears, setFutureCostYears] = useState(10);
+  const [futureCostInflation, setFutureCostInflation] = useState(Math.round(country.typicalInflation || 5));
+
   const safeWithdrawalRate = withdrawalRate > 0 ? withdrawalRate : 0.01;
   const fireNumber = annualExpenses / (safeWithdrawalRate / 100);
   const yearsToFire = yearsToReachTarget({
@@ -127,11 +157,14 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const affordAmort = calculateLoanAmortization({ principal: maxBondAmount, annualRate: affordRate, termYears: affordTermYears });
   const zaTransferDuty = country.code === 'za' && maxHomePrice > 0 ? estimateZaTransferDuty(maxHomePrice) : null;
 
-  const pullExistingDebtPayments = () => {
-    const debts = readJSONArray(DEBTS_KEY);
-    const total = debts.filter(d => d.balance > 0).reduce((sum, d) => sum + (d.minPayment || 0), 0);
-    setAffordExistingDebt(Math.round(total));
-  };
+  // Total of the minimum monthly repayments across every still-owed debt saved in the
+  // Debt Payoff tab -- the figure both the Home Affordability and Debt-to-Income "pull
+  // from Debt Payoff" buttons drop in, computed once here rather than fetched and
+  // reduced twice.
+  const savedDebtMinPaymentTotal = () => Math.round(
+    readJSONArray(DEBTS_KEY).filter(d => d.balance > 0).reduce((sum, d) => sum + (d.minPayment || 0), 0)
+  );
+  const pullExistingDebtPayments = () => setAffordExistingDebt(savedDebtMinPaymentTotal());
 
   // Insurance Needs (Life Cover Gap): needs-based method -- outstanding debts, a chosen
   // number of years of income replacement, and final expenses, minus cover/savings
@@ -179,6 +212,30 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
     // honour the Calculator's annual contribution-increase setting the same way.
     contributionIncreaseRate: contributionIncrease
   });
+
+  // Take-Home Pay: reuses engine.js's taxOwedAtBrackets (via salaryCalculator.js) for
+  // the few countries with real progressive personal brackets, otherwise the flat
+  // country.taxRate every other tool in the app already uses.
+  const takeHome = calculateTakeHomePay({
+    grossAnnual: salaryGross,
+    taxRate: country.taxRate,
+    taxBrackets: (salaryProgressive && country.taxBrackets) ? country.taxBrackets : null
+  });
+
+  const dti = calculateDTI({ monthlyDebtPayments: dtiDebt, grossMonthlyIncome: dtiIncome });
+  const pullDtiDebtPayments = () => setDtiDebt(savedDebtMinPaymentTotal());
+
+  // Rent vs. Buy: defaults the invest-return side to this plan's own Calculator rate
+  // and horizon (years) so "invest the difference instead" is compared at the same
+  // return the rest of the app already assumes, not a second unrelated guess.
+  const rentVsBuy = compareRentVsBuy({
+    homePrice: rvbHomePrice, downPayment: rvbDownPayment, mortgageRate: rvbMortgageRate,
+    mortgageTermYears: rvbTermYears, monthlyExtras: rvbMonthlyExtras, homeAppreciationRate: rvbAppreciation,
+    monthlyRent: rvbMonthlyRent, rentIncreaseRate: rvbRentIncrease, investReturnRate: rate, years
+  });
+
+  const futureCost = projectFutureCost({ currentCost: futureCostAmount, years: futureCostYears, inflationRate: futureCostInflation });
+  const purchasingPower = projectPurchasingPower({ currentAmount: futureCostAmount, years: futureCostYears, inflationRate: futureCostInflation });
 
   const saveFirePlan = () => {
     savePlanSection('fire', {
@@ -565,6 +622,203 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
                 : 'Existing cover and savings already meet the need entered above.'} Needs-based estimate only -- a real
               assessment also weighs age, health, dependents' ages, and future expenses like education, none of which
               are modeled here. Not financial or insurance advice.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'salary' && (
+      <div className="power-tool-card">
+        <h3>💰 Salary / Take-Home Pay Calculator</h3>
+        <p className="power-tool-desc">What a gross annual income actually works out to after tax -- monthly, in your pocket.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Gross Annual Income ({country.symbol})</label>
+            <input type="number" min="0" step="1000" value={salaryGross} onChange={(e) => setSalaryGross(Number(e.target.value))} />
+          </div>
+          {country.taxBrackets && (
+            <div className="form-group checkbox-group">
+              <label>
+                <input type="checkbox" checked={salaryProgressive} onChange={(e) => setSalaryProgressive(e.target.checked)} />
+                {' '}Use {country.name}'s progressive tax brackets
+              </label>
+            </div>
+          )}
+        </div>
+        {salaryGross > 0 && (
+          <>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Net Pay (monthly)</span>
+                <strong className="positive">{country.symbol} {Math.round(takeHome.netMonthly).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Net Pay (annual)</span>
+                <strong className="positive">{country.symbol} {Math.round(takeHome.netAnnual).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Tax Paid (annual)</span>
+                <strong className="warn">{country.symbol} {Math.round(takeHome.tax).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Effective Tax Rate</span>
+                <strong>{takeHome.effectiveRate.toFixed(1)}%</strong>
+              </div>
+            </div>
+            <p className="power-tool-note">
+              {salaryProgressive && country.taxBrackets
+                ? (country.taxBracketsNote || `${country.name}'s progressive bracket schedule -- illustrative only.`)
+                : `Flat ${country.taxRate}% assumed on the full gross amount.`} Doesn't model deductions, rebates,
+              social security/pension contributions, or medical aid credits -- a real payslip's net figure will
+              differ. Not tax advice.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'dti' && (
+      <div className="power-tool-card">
+        <h3>📊 Debt-to-Income Ratio Calculator</h3>
+        <p className="power-tool-desc">The metric a lender actually checks -- how much of gross income already goes toward debt repayments, before any new borrowing.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Gross Monthly Income ({country.symbol})</label>
+            <input type="number" min="0" step="1000" value={dtiIncome} onChange={(e) => setDtiIncome(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Total Monthly Debt Repayments ({country.symbol})</label>
+            <input type="number" min="0" step="100" value={dtiDebt} onChange={(e) => setDtiDebt(Number(e.target.value))} />
+          </div>
+        </div>
+        <button type="button" className="power-use-fire-btn" onClick={pullDtiDebtPayments}>Pull existing debt repayments from Debt Payoff</button>
+        {dtiIncome > 0 && (
+          <>
+            <div className={`power-verdict ${dti.band === 'healthy' || dti.band === 'manageable' ? 'invest' : 'debt'}`}>
+              Debt-to-income ratio: {dti.ratio.toFixed(1)}% -- {dti.bandLabel}.
+            </div>
+            <p className="power-tool-note">
+              Rough banding from common mortgage-lending guidelines: under 20% is considered healthy, 20-36%
+              manageable, 36-43% getting stretched, and above 43% is where many lenders decline new credit outright.
+              This is one overall ratio, not a lender's actual front-end/back-end underwriting calculation -- treat
+              it as a gut-check, not a pre-approval.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'rentVsBuy' && (
+      <div className="power-tool-card">
+        <h3>🏘️ Rent vs. Buy Calculator</h3>
+        <p className="power-tool-desc">Given a specific home, is buying it actually the better move over {years} years compared to renting and investing the difference?</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Home Price ({country.symbol})</label>
+            <input type="number" min="0" step="10000" value={rvbHomePrice} onChange={(e) => setRvbHomePrice(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Down Payment ({country.symbol})</label>
+            <input type="number" min="0" step="1000" value={rvbDownPayment} onChange={(e) => setRvbDownPayment(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Mortgage Rate (%)</label>
+            <input type="number" min="0" step="0.1" value={rvbMortgageRate} onChange={(e) => setRvbMortgageRate(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Mortgage Term (years)</label>
+            <input type="number" min="1" max="30" value={rvbTermYears} onChange={(e) => setRvbTermYears(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Other Monthly Home Costs ({country.symbol})</label>
+            <input type="number" min="0" step="100" value={rvbMonthlyExtras} onChange={(e) => setRvbMonthlyExtras(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Home Appreciation (%/yr)</label>
+            <input type="number" step="0.1" value={rvbAppreciation} onChange={(e) => setRvbAppreciation(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Comparable Monthly Rent ({country.symbol})</label>
+            <input type="number" min="0" step="100" value={rvbMonthlyRent} onChange={(e) => setRvbMonthlyRent(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Rent Increase (%/yr)</label>
+            <input type="number" step="0.1" value={rvbRentIncrease} onChange={(e) => setRvbRentIncrease(Number(e.target.value))} />
+          </div>
+        </div>
+        {rvbHomePrice > 0 && rvbMonthlyRent > 0 && (
+          <>
+            <div className={`power-verdict ${rentVsBuy.buyIsBetter ? 'invest' : 'debt'}`}>
+              {rentVsBuy.buyIsBetter
+                ? `Buying wins here. After ${years} years, home equity (${country.symbol} ${Math.round(rentVsBuy.finalBuyEquity).toLocaleString()}) beats renting and investing the difference at ${rate}% (${country.symbol} ${Math.round(rentVsBuy.finalRentPortfolio).toLocaleString()}).`
+                : `Renting and investing wins here. After ${years} years, that portfolio (${country.symbol} ${Math.round(rentVsBuy.finalRentPortfolio).toLocaleString()}) beats home equity (${country.symbol} ${Math.round(rentVsBuy.finalBuyEquity).toLocaleString()}).`}
+            </div>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Monthly Cost to Buy (bond + extras)</span>
+                <strong>{country.symbol} {Math.round(rentVsBuy.monthlyBuyPayment).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Home Equity after {years}yr</span>
+                <strong className={rentVsBuy.buyIsBetter ? 'positive' : ''}>{country.symbol} {Math.round(rentVsBuy.finalBuyEquity).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Rent + Invest Portfolio after {years}yr</span>
+                <strong className={!rentVsBuy.buyIsBetter ? 'positive' : ''}>{country.symbol} {Math.round(rentVsBuy.finalRentPortfolio).toLocaleString()}</strong>
+              </div>
+            </div>
+            <p className="power-tool-note">
+              The rent side invests the down payment upfront, then invests the gap whenever buying would cost more
+              per month than renting, all at your {rate}% Calculator rate. Doesn't model selling costs, transfer
+              duty, maintenance beyond the monthly figure entered, or tax on investment gains outside a wrapper -- a
+              rough comparison of the two paths' trajectories, not a purchase recommendation.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'futureCost' && (
+      <div className="power-tool-card">
+        <h3>📈 Future Cost of Living Calculator</h3>
+        <p className="power-tool-desc">What a today's-money cost will actually be after years of inflation -- and what today's money will be worth by comparison.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Cost / Amount Today ({country.symbol})</label>
+            <input type="number" min="0" step="100" value={futureCostAmount} onChange={(e) => setFutureCostAmount(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Years</label>
+            <input type="number" min="0" max="60" value={futureCostYears} onChange={(e) => setFutureCostYears(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label><Term k="inflation">Inflation</Term> Rate (%/yr)</label>
+            <input type="number" step="0.1" value={futureCostInflation} onChange={(e) => setFutureCostInflation(Number(e.target.value))} />
+          </div>
+        </div>
+        {futureCostAmount > 0 && (
+          <>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Future Cost in {futureCostYears}yr</span>
+                <strong className="warn">{country.symbol} {Math.round(futureCost.futureCost).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Increase</span>
+                <strong className="warn">+{futureCost.percentIncrease.toFixed(0)}%</strong>
+              </div>
+              <div className="power-stat">
+                <span>Today's {country.symbol}{futureCostAmount.toLocaleString()} in {futureCostYears}yr's real terms</span>
+                <strong className="warn">{country.symbol} {Math.round(purchasingPower.realValue).toLocaleString()}</strong>
+              </div>
+            </div>
+            <p className="power-tool-note">
+              Two sides of the same {futureCostInflation}%/yr inflation assumption: the top figure is what this
+              cost will actually be charged as in {futureCostYears} years; the bottom is what today's{' '}
+              {country.symbol}{futureCostAmount.toLocaleString()} would be worth if it just sat still, in today's
+              purchasing power. Same math the Calculator tab's "Real Value" column already applies to your
+              investment balance.
             </p>
           </>
         )}
