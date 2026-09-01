@@ -8,7 +8,7 @@ import { usePersistedState } from '../utils/usePersistedState';
 import { confirmRemoval } from '../utils/confirmRemoval';
 import { uniqueId } from '../utils/uniqueId';
 import { safeTrim } from '../utils/safeTrim';
-import { readJSONArray } from '../utils/storage';
+import { readJSONArray, writeJSON } from '../utils/storage';
 import SnapshotChart from './SnapshotChart';
 import CountrySelect from './CountrySelect';
 import AllocationChart from './AllocationChart';
@@ -286,7 +286,7 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
   const saveSnapshot = () => {
     const entry = { date: new Date().toISOString(), netWorth, totalAssets, totalDebts, displayCurrency: country.code };
     const updated = [...history, entry].slice(-24); // keep the most recent 24 snapshots
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+    writeJSON(HISTORY_KEY, updated);
     setHistory(updated);
   };
 

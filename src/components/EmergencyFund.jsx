@@ -6,7 +6,7 @@ import { savePlanSection } from '../utils/planStorage';
 import { usePersistedState } from '../utils/usePersistedState';
 import { convertAmount } from '../data/countries';
 import { downloadCSV } from '../utils/csv';
-import { readJSONArray } from '../utils/storage';
+import { readJSONArray, writeJSON } from '../utils/storage';
 import SnapshotChart from './SnapshotChart';
 
 const INPUTS_KEY = 'wts_compoundiq_emergencyfund_inputs';
@@ -80,7 +80,7 @@ const EmergencyFund = ({ country }) => {
   const saveSnapshot = () => {
     const entry = { date: new Date().toISOString(), total: currentSavings, displayCurrency: country.code };
     const updated = [...history, entry].slice(-24); // keep the most recent 24 snapshots
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+    writeJSON(HISTORY_KEY, updated);
     setHistory(updated);
   };
 

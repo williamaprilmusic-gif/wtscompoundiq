@@ -12,3 +12,15 @@ export const readJSONArray = (key) => {
     return Array.isArray(parsed) ? parsed : [];
   } catch { return []; } // corrupt/foreign JSON in that key -- treat as no data rather than crash
 };
+
+// Mirror of readJSONArray for the write side. The "Log Balance" snapshot buttons in
+// EmergencyFund/DebtPayoff/NetWorth call this straight from an onClick with no try/catch
+// of their own -- wrapped here (same rationale as savePlanSection in planStorage.js and
+// every write in usePersistedState.js) so Safari private-browsing or a full quota, both
+// of which make setItem throw, degrades to "this snapshot didn't persist" instead of
+// throwing out of the handler and leaving the in-memory history/chart un-updated too.
+export const writeJSON = (key, value) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch { /* ignore (private mode, storage full, etc.) -- caller still updates its own state */ }
+};

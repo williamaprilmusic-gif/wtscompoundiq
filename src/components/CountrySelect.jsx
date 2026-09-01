@@ -77,24 +77,35 @@ const CountrySelect = ({ countries, value, onChange, ariaLabel }) => {
         onChange={(e) => { setQuery(e.target.value); setOpen(true); setHighlightIdx(0); }}
         onKeyDown={handleKeyDown}
         // Safe alongside the mousedown-outside handler above rather than redundant with
-        // it: a mouse click on an option calls e.preventDefault() in its own onMouseDown
-        // (below), which blocks the browser's default blur-on-mousedown, so this only
-        // ever fires there via selectCountry's own explicit .blur() call, after state is
-        // already correct. For a keyboard user who Tabs away with no click at all, no
+        // it: any mousedown landing inside the dropdown calls e.preventDefault() at the
+        // <ul> level (below), which blocks the browser's default blur-on-mousedown, so a
+        // click on an option only reaches this handler via selectCountry's own explicit
+        // .blur() call, after state is already correct -- and a click on the list's
+        // padding or the "No matching country" row doesn't collapse the list out from
+        // under the cursor. For a keyboard user who Tabs away with no click at all, no
         // mousedown ever fires (so the effect above never runs) -- this is the only
         // thing that closes the list and reverts the input to showing the selected
         // country's name instead of leaving the stale typed filter query on screen.
         onBlur={() => { setOpen(false); setQuery(''); }}
       />
       {open && (
-        <ul className="country-select-list" role="listbox" id={listboxId}>
+        // preventDefault on mousedown anywhere in the dropdown keeps the input focused
+        // (the empty-state <li> and the ~4px of <ul> padding are not otherwise covered);
+        // selection still works because options act on onMouseDown, not a focus-dependent
+        // click, and onMouseEnter for highlighting is unaffected.
+        <ul
+          className="country-select-list"
+          role="listbox"
+          id={listboxId}
+          onMouseDown={(e) => e.preventDefault()}
+        >
           {filtered.length === 0 && <li className="country-select-empty">No matching country</li>}
           {filtered.map((c, i) => (
             <li key={c.code} role="option" aria-selected={c.code === value}>
               <button
                 type="button"
                 className={`country-select-option ${i === highlightIdx ? 'highlighted' : ''} ${c.code === value ? 'selected' : ''}`}
-                onMouseDown={(e) => { e.preventDefault(); selectCountry(c.code); }}
+                onMouseDown={() => selectCountry(c.code)}
                 onMouseEnter={() => setHighlightIdx(i)}
               >
                 <span>{c.name}</span>

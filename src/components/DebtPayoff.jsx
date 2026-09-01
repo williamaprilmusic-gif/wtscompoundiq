@@ -11,7 +11,7 @@ import { parseCSV, downloadCSV, cleanCSVNumber } from '../utils/csv';
 import { convertAmount } from '../data/countries';
 import { uniqueId } from '../utils/uniqueId';
 import { safeTrim } from '../utils/safeTrim';
-import { readJSONArray } from '../utils/storage';
+import { readJSONArray, writeJSON } from '../utils/storage';
 import SnapshotChart from './SnapshotChart';
 
 // Exported so PowerTools.jsx's Home Affordability / Insurance Needs calculators can
@@ -187,7 +187,7 @@ const DebtPayoff = ({ country }) => {
   const saveSnapshot = () => {
     const entry = { date: new Date().toISOString(), total: totalBalance, displayCurrency: country.code };
     const updated = [...history, entry].slice(-24); // keep the most recent 24 snapshots
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+    writeJSON(HISTORY_KEY, updated);
     setHistory(updated);
   };
 
