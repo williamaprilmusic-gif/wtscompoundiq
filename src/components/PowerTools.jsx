@@ -31,6 +31,10 @@ import { allocateWindfall } from '../windfallAllocator';
 import { marginalTaxAnalysis } from '../marginalTax';
 import { rateSensitivity } from '../rateSensitivity';
 import { raiseForInflation } from '../raiseForInflation';
+import { feeDragAnalysis } from '../feeDrag';
+import { nominalToEffective, effectiveToNominal } from '../effectiveRate';
+import { leaseVsBuy } from '../leaseVsBuy';
+import { baristaFireNumber } from '../baristaFire';
 import { readJSONArray } from '../utils/storage';
 import { convertAmount, countriesData } from '../data/countries';
 import { DEBTS_KEY } from './DebtPayoff';
@@ -66,19 +70,23 @@ const SUB_TABS = [
   { key: 'windfall', label: '🎁 Windfall Split' },
   { key: 'marginalTax', label: '🧮 Marginal Tax Rate' },
   { key: 'raiseInflation', label: '🏃 Beat Inflation' },
-  { key: 'rateShock', label: '📉 Rate Shock' }
+  { key: 'rateShock', label: '📉 Rate Shock' },
+  { key: 'feeDrag', label: '💸 Fee Drag' },
+  { key: 'baristaFire', label: '☕ Barista FIRE' },
+  { key: 'effRate', label: '🔢 Effective Rate' },
+  { key: 'leaseVsBuy', label: '🚙 Lease vs. Buy' }
 ];
 
 // Groups the 24 pills above into labelled categories so the bar stays scannable. Every
 // key must appear exactly once; any that's missed drops into a "More" catch-all in
 // SubTabs rather than vanishing.
 const SUB_TAB_GROUPS = [
-  { label: 'Retire & Financial Independence', keys: ['fire', 'coastFire', 'savingsRate', 'drawdown', 'pretaxRA', 'dividend'] },
+  { label: 'Retire & Financial Independence', keys: ['fire', 'coastFire', 'baristaFire', 'savingsRate', 'drawdown', 'pretaxRA', 'dividend', 'feeDrag'] },
   { label: 'Debt & Credit', keys: ['debtVsInvest', 'dti', 'cardTrap'] },
-  { label: 'Property & Big Purchases', keys: ['affordability', 'rentVsBuy', 'carCost', 'rateShock'] },
+  { label: 'Property & Big Purchases', keys: ['affordability', 'rentVsBuy', 'carCost', 'leaseVsBuy', 'rateShock'] },
   { label: 'Saving for a Goal', keys: ['savings', 'education', 'sinkingFund', 'efRunway', 'insurance', 'windfall'] },
   { label: 'Income & Tax', keys: ['salary', 'raiseValue', 'budgetRule', 'marginalTax', 'raiseInflation'] },
-  { label: 'Money Basics', keys: ['futureCost', 'fxConvert', 'rule72', 'freqCompare'] }
+  { label: 'Money Basics', keys: ['futureCost', 'fxConvert', 'rule72', 'freqCompare', 'effRate'] }
 ];
 
 const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [] }) => {
@@ -232,6 +240,28 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const [rsBalance, setRsBalance] = useState(0);
   const [rsRate, setRsRate] = useState(country.typicalBankRate || 11);
   const [rsYearsLeft, setRsYearsLeft] = useState(20);
+
+  const [fdInitial, setFdInitial] = useState(0);
+  const [fdMonthly, setFdMonthly] = useState(0);
+  const [fdGross, setFdGross] = useState(rate || 9);
+  const [fdFee, setFdFee] = useState(1);
+  const [fdYears, setFdYears] = useState(30);
+
+  const [bfExpenses, setBfExpenses] = useState(0);
+  const [bfIncome, setBfIncome] = useState(0);
+  const [bfSwr, setBfSwr] = useState(4);
+
+  const [erRate, setErRate] = useState(0);
+  const [erPeriods, setErPeriods] = useState(12);
+
+  const [lvbPrice, setLvbPrice] = useState(0);
+  const [lvbDeposit, setLvbDeposit] = useState(0);
+  const [lvbFinanceRate, setLvbFinanceRate] = useState(country.typicalBankRate ? Math.round(country.typicalBankRate + 2) : 12);
+  const [lvbFinanceTerm, setLvbFinanceTerm] = useState(6);
+  const [lvbDepreciation, setLvbDepreciation] = useState(15);
+  const [lvbPeriod, setLvbPeriod] = useState(3);
+  const [lvbLeaseUpfront, setLvbLeaseUpfront] = useState(0);
+  const [lvbLeaseMonthly, setLvbLeaseMonthly] = useState(0);
 
   const safeWithdrawalRate = withdrawalRate > 0 ? withdrawalRate : 0.01;
   const fireNumber = annualExpenses / (safeWithdrawalRate / 100);
@@ -416,6 +446,16 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const raiseInflation = raiseForInflation({ currentSalary: riSalary, inflationRate: riInflation, offeredRaisePercent: riOffered });
 
   const rateShock = rateSensitivity({ balance: rsBalance, currentRate: rsRate, yearsRemaining: rsYearsLeft });
+
+  const feeDrag = feeDragAnalysis({ initial: fdInitial, monthly: fdMonthly, grossReturn: fdGross, feePercent: fdFee, years: fdYears });
+  const barista = baristaFireNumber({ annualExpenses: bfExpenses, partTimeIncome: bfIncome, withdrawalRate: bfSwr });
+  const effAnnual = nominalToEffective({ nominalRate: erRate, periodsPerYear: erPeriods });
+  const nominalEquiv = effectiveToNominal({ effectiveRate: erRate, periodsPerYear: erPeriods });
+  const leaseBuy = leaseVsBuy({
+    carPrice: lvbPrice, buyDeposit: lvbDeposit, financeRate: lvbFinanceRate, financeTermYears: lvbFinanceTerm,
+    annualDepreciationRate: lvbDepreciation, comparePeriodYears: lvbPeriod,
+    leaseUpfront: lvbLeaseUpfront, leaseMonthly: lvbLeaseMonthly
+  });
 
   const saveFirePlan = () => {
     savePlanSection('fire', {
@@ -1778,6 +1818,200 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
               Reprices the standard installment on the balance over the years left at each rate — it doesn't shorten
               or extend the term. A +3% move on a large balance is a meaningful monthly jump; stress-test your budget
               against the top row, not the bottom.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'feeDrag' && (
+      <div className="power-tool-card">
+        <h3>💸 Investment Fee Drag</h3>
+        <p className="power-tool-desc">A yearly fee sounds small next to a market return — over decades it quietly takes a large slice of the final pot. See how much.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Starting Amount ({country.symbol})</label>
+            <input type="number" min="0" step="10000" value={fdInitial} onChange={(e) => setFdInitial(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Monthly Contribution ({country.symbol})</label>
+            <input type="number" min="0" step="500" value={fdMonthly} onChange={(e) => setFdMonthly(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Gross Return Before Fees (%)</label>
+            <input type="number" step="0.1" value={fdGross} onChange={(e) => setFdGross(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Annual Fee (%)</label>
+            <input type="number" min="0" step="0.05" value={fdFee} onChange={(e) => setFdFee(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Years Invested</label>
+            <input type="number" min="1" max="60" value={fdYears} onChange={(e) => setFdYears(Number(e.target.value))} />
+          </div>
+        </div>
+        {(fdInitial > 0 || fdMonthly > 0) && fdFee > 0 && (
+          <>
+            <div className="power-verdict debt">
+              A {fdFee}% annual fee costs about {country.symbol} {Math.round(feeDrag.lifetimeFeeCost).toLocaleString()} over {fdYears} years — {feeDrag.costAsPercentOfPot.toFixed(0)}% of what the fee-free pot would have been.
+            </div>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Final Pot — No Fee</span>
+                <strong className="positive">{country.symbol} {Math.round(feeDrag.finalNoFee).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Final Pot — After {fdFee}% Fee</span>
+                <strong>{country.symbol} {Math.round(feeDrag.finalWithFee).toLocaleString()}</strong>
+              </div>
+            </div>
+            <p className="power-tool-note">
+              Models the fee as a flat reduction to the annual return ({fdGross}% gross → {(fdGross - fdFee).toFixed(2)}% net),
+              which is how a percentage-of-assets fee (TER, platform fee, advice fee) compounds against you. Ignores tax and
+              assumes the gross return is steady.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'baristaFire' && (
+      <div className="power-tool-card">
+        <h3>☕ Barista FIRE Number</h3>
+        <p className="power-tool-desc">If you'll keep some part-time or lower-stress income, your investments only have to cover the gap — so the pot you need is smaller.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Annual Expenses ({country.symbol})</label>
+            <input type="number" min="0" step="10000" value={bfExpenses} onChange={(e) => setBfExpenses(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Part-Time / Ongoing Income ({country.symbol}/yr)</label>
+            <input type="number" min="0" step="10000" value={bfIncome} onChange={(e) => setBfIncome(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label><Term k="safeWithdrawalRate">Safe Withdrawal Rate</Term> (%)</label>
+            <input type="number" min="1" max="10" step="0.1" value={bfSwr} onChange={(e) => setBfSwr(Number(e.target.value))} />
+          </div>
+        </div>
+        {bfExpenses > 0 && (
+          <>
+            <div className={`power-verdict ${barista.coversItself ? 'invest' : 'debt'}`}>
+              {barista.coversItself
+                ? `Your ${country.symbol}${Math.round(bfIncome).toLocaleString()}/yr income already covers your expenses — no investment pot is strictly required to stop full-time work.`
+                : `Barista FIRE number: ${country.symbol} ${Math.round(barista.baristaFireNumber).toLocaleString()} — ${country.symbol} ${Math.round(barista.reduction).toLocaleString()} less than the ${country.symbol} ${Math.round(barista.fullFireNumber).toLocaleString()} full FIRE number, because the pot only has to fund the ${country.symbol} ${Math.round(barista.gap).toLocaleString()}/yr gap.`}
+            </div>
+            <p className="power-tool-note">
+              Same {bfSwr}% withdrawal-rate assumption as the FIRE Number tool, applied only to expenses your ongoing
+              income doesn't cover. Assumes that income is durable and roughly keeps pace with inflation — if it's
+              likely to stop or shrink, size closer to the full FIRE number.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'effRate' && (
+      <div className="power-tool-card">
+        <h3>🔢 Nominal vs. Effective Annual Rate</h3>
+        <p className="power-tool-desc">A rate quoted "per year, compounded monthly" isn't what you actually earn or pay — the intra-year compounding makes the effective rate higher.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Quoted Rate (%)</label>
+            <input type="number" step="0.01" value={erRate} onChange={(e) => setErRate(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Compounding Periods per Year</label>
+            <select value={erPeriods} onChange={(e) => setErPeriods(Number(e.target.value))}>
+              <option value="1">1 — Annually</option>
+              <option value="2">2 — Semi-annually</option>
+              <option value="4">4 — Quarterly</option>
+              <option value="12">12 — Monthly</option>
+              <option value="52">52 — Weekly</option>
+              <option value="365">365 — Daily</option>
+            </select>
+          </div>
+        </div>
+        {erRate !== 0 && (
+          <div className="power-verdict-grid">
+            <div className="power-stat">
+              <span>If {erRate}% is the nominal rate, the effective rate is</span>
+              <strong className="positive">{effAnnual.toFixed(3)}%</strong>
+            </div>
+            <div className="power-stat">
+              <span>If {erRate}% is the effective rate, the nominal rate is</span>
+              <strong>{nominalEquiv.toFixed(3)}%</strong>
+            </div>
+          </div>
+        )}
+        <p className="power-tool-note">
+          Nominal → effective: (1 + r/n)<sup>n</sup> − 1. Lenders often quote the nominal (lower-sounding) figure;
+          the effective rate is the honest cost of a debt or the real yield on savings. This is a rate conversion
+          only — it doesn't account for fees.
+        </p>
+      </div>
+      )}
+
+      {activeSubTab === 'leaseVsBuy' && (
+      <div className="power-tool-card">
+        <h3>🚙 Lease vs. Buy a Car</h3>
+        <p className="power-tool-desc">Over the same period: buying costs you depreciation plus finance interest but leaves you owning the residual; leasing costs the payments and leaves you with nothing.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Car Price ({country.symbol})</label>
+            <input type="number" min="0" step="10000" value={lvbPrice} onChange={(e) => setLvbPrice(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Deposit if Buying ({country.symbol})</label>
+            <input type="number" min="0" step="5000" value={lvbDeposit} onChange={(e) => setLvbDeposit(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Finance Rate (%)</label>
+            <input type="number" min="0" step="0.1" value={lvbFinanceRate} onChange={(e) => setLvbFinanceRate(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Finance Term (years, 0 = cash)</label>
+            <input type="number" min="0" max="10" value={lvbFinanceTerm} onChange={(e) => setLvbFinanceTerm(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Depreciation (%/yr)</label>
+            <input type="number" min="0" max="50" step="0.5" value={lvbDepreciation} onChange={(e) => setLvbDepreciation(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Comparison Period (years)</label>
+            <input type="number" min="1" max="15" value={lvbPeriod} onChange={(e) => setLvbPeriod(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Lease Upfront ({country.symbol})</label>
+            <input type="number" min="0" step="5000" value={lvbLeaseUpfront} onChange={(e) => setLvbLeaseUpfront(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Lease Payment ({country.symbol}/mo)</label>
+            <input type="number" min="0" step="500" value={lvbLeaseMonthly} onChange={(e) => setLvbLeaseMonthly(Number(e.target.value))} />
+          </div>
+        </div>
+        {lvbPrice > 0 && lvbLeaseMonthly > 0 && (
+          <>
+            <div className={`power-verdict ${leaseBuy.buyIsCheaper ? 'invest' : 'debt'}`}>
+              Over {lvbPeriod} years, {leaseBuy.buyIsCheaper ? 'buying' : 'leasing'} is cheaper by about {country.symbol} {Math.round(leaseBuy.difference).toLocaleString()}.
+            </div>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Buy — Net Cost (depreciation + interest)</span>
+                <strong className={leaseBuy.buyIsCheaper ? 'positive' : 'warn'}>{country.symbol} {Math.round(leaseBuy.buyNetCost).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Buy — Car Still Worth</span>
+                <strong>{country.symbol} {Math.round(leaseBuy.residualValue).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Lease — Total Cost</span>
+                <strong className={!leaseBuy.buyIsCheaper ? 'positive' : 'warn'}>{country.symbol} {Math.round(leaseBuy.leaseCost).toLocaleString()}</strong>
+              </div>
+            </div>
+            <p className="power-tool-note">
+              Buying's "net cost" is what the car loses in value over the period plus finance interest — you still hold
+              the residual after. Leasing usually includes maintenance and a warranty that buying doesn't; it also caps
+              your mileage and leaves nothing at the end. Insurance and fuel are the same either way and aren't modelled.
             </p>
           </>
         )}
