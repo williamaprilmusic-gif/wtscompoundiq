@@ -366,27 +366,57 @@ export const LEGAL_DOCS = [
       {
         heading: 'Disclaimers & Warranty',
         body: (
-          <p>
-            The Service is provided <strong>"as is" and "as available,"</strong> without
-            warranty of any kind, express or implied, including fitness for a particular
-            purpose, accuracy, or non-infringement. We don't guarantee the Service will be
-            uninterrupted, error-free, or that any calculation will match your real-world
-            outcome.
-          </p>
+          <>
+            <p>
+              The Service is provided <strong>"as is" and "as available,"</strong> without
+              warranty of any kind, express or implied, including fitness for a particular
+              purpose, accuracy, or non-infringement. We don't guarantee the Service will be
+              uninterrupted, error-free, or that any calculation will match your real-world
+              outcome.
+            </p>
+            <p>
+              <strong>Assumption of risk.</strong> Investment, debt, and financial markets
+              carry inherent risk, and past or projected performance shown by the Service
+              never guarantees a future result. By using the Service you acknowledge that any
+              financial decision you make is yours alone, made at your own risk, and not made
+              in reliance on the Service as a guarantee of any outcome.
+            </p>
+            <p>
+              <strong>No liability for data loss.</strong> Because the Service stores your
+              plan data only in your own browser's local storage and never on our servers
+              (Section 5), we have no ability to back it up, recover it, or restore it, and
+              accept no liability for its loss however caused — including you clearing your
+              browser's site data, a browser or device failure, or an uninstalled or
+              corrupted browser profile. Exporting a backup via the in-app Export/Import
+              feature is solely your own responsibility.
+            </p>
+            <p>
+              <strong>Third-party services.</strong> We're not liable for the acts, omissions,
+              downtime, or errors of any third-party service the Service relies on or links
+              to, including our payment processor (Paystack), your browser, your device, or
+              your internet service provider — each is a separate party under its own terms,
+              outside our control.
+            </p>
+          </>
         )
       },
       {
         heading: 'Limitation of Liability',
         body: (
           <p>
-            To the maximum extent permitted by law, <Fill>[Company Legal Name]</Fill> will
-            not be liable for any indirect, incidental, special, or consequential loss —
-            including lost profits or investment losses — arising from your use of, or
-            reliance on, the Service. Our total aggregate liability to you for any claim
-            arising from these Terms is limited to the amount you paid us in the 12 months
-            before the claim arose, or <Fill>[R500]</Fill>, whichever is greater. Nothing in
-            this section limits liability that cannot be limited under South African law,
-            including for gross negligence or willful misconduct.
+            To the maximum extent permitted by law, and regardless of the legal theory
+            asserted (contract, delict/tort, negligence, strict liability, or otherwise),{' '}
+            <Fill>[Company Legal Name]</Fill> will not be liable for any indirect, incidental,
+            special, punitive, or consequential loss — including lost profits, lost revenue,
+            lost or corrupted data, loss of goodwill, or investment losses — arising from your
+            use of, or reliance on, the Service, even if we've been advised of the
+            possibility of such loss. Our total aggregate liability to you for any and all
+            claims arising from or relating to these Terms or the Service is limited to, and
+            is your <strong>sole and exclusive remedy</strong> for, the amount you paid us in
+            the 12 months before the claim arose, or <Fill>[R500]</Fill>, whichever is
+            greater. Nothing in this section limits liability that cannot be limited under
+            South African law, including for gross negligence, willful misconduct, fraud, or
+            death or personal injury caused by our negligence.
           </p>
         )
       },
@@ -417,14 +447,16 @@ export const LEGAL_DOCS = [
         heading: 'Indemnification',
         body: (
           <p>
-            You agree to indemnify and hold us harmless from claims, losses, or expenses
-            (including reasonable legal fees) arising from: your breach of these Terms; your
-            misuse of the Service; or, if you're an Enterprise licensee, any representation
-            your organization makes to your own end clients using the white-labeled Service —
-            including a client's reliance on projections your organization presented as its
-            own advice without carrying forward the disclaimers in Section 3. We're not a
-            party to, and accept no liability for, your relationship with your own end
-            clients.
+            You agree to indemnify, defend, and hold us and our officers, directors, and
+            employees harmless from any claim, loss, liability, or expense (including
+            reasonable legal fees) arising from: your breach of these Terms; your misuse of
+            the Service; your violation of any law or a third party's rights; content or data
+            you input into the Service; or, if you're an Enterprise licensee, any
+            representation your organization makes to your own end clients using the
+            white-labeled Service — including a client's reliance on projections your
+            organization presented as its own advice without carrying forward the disclaimers
+            in Section 3. We're not a party to, and accept no liability for, your relationship
+            with your own end clients.
           </p>
         )
       },
