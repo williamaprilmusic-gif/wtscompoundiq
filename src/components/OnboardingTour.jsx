@@ -23,7 +23,7 @@ const STEPS = [
     body: 'A locked tab shows 🔒 until your plan covers it -- tap this anytime to compare Free, Pro, Ultra and Enterprise side by side.'
   },
   {
-    selector: '.language-switcher-compact',
+    selector: '.language-switcher',
     title: 'Your language',
     body: 'Switch the app language here -- it stays visible from every tab, so you never need to hunt for it.'
   },

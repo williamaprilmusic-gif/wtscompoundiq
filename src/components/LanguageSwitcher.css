@@ -1,15 +1,54 @@
 /* src/components/LanguageSwitcher.css */
-.language-switcher-compact {
-  background: var(--raise-05);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 9px 10px;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  outline: none;
+.language-switcher {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
 }
 
-.language-switcher-compact:hover {
+.language-switcher-icon {
+  position: absolute;
+  left: 10px;
+  font-size: 0.95rem;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.language-switcher-caret {
+  position: absolute;
+  right: 10px;
+  font-size: 0.7rem;
+  color: var(--mut);
+  pointer-events: none;
+}
+
+.language-switcher-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--surface-2);
+  border: 1.5px solid var(--accent);
+  color: var(--text);
+  padding: 9px 28px 9px 34px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  max-width: 190px;
+  text-overflow: ellipsis;
+}
+
+.language-switcher-select:hover {
   background: var(--raise-1);
+}
+
+.language-switcher-select:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+@media (max-width: 640px) {
+  .language-switcher-select {
+    max-width: 130px;
+    padding-left: 30px;
+  }
+  .language-switcher-icon { left: 8px; font-size: 0.85rem; }
 }
