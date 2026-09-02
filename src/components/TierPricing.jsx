@@ -134,13 +134,13 @@ export default function TierPricing({ currentTier, onUpgrade, onClose }) {
         <div className="billing-toggle" role="group" aria-label="Billing period">
           <button
             className={billingPeriod === 'monthly' ? 'active' : ''}
-            onClick={() => setBillingPeriod('monthly')}
+            onClick={() => { setBillingPeriod('monthly'); setConfirmingDowngrade(false); }}
           >
             Monthly
           </button>
           <button
             className={billingPeriod === 'annual' ? 'active' : ''}
-            onClick={() => setBillingPeriod('annual')}
+            onClick={() => { setBillingPeriod('annual'); setConfirmingDowngrade(false); }}
           >
             Annual <span className="save-badge">Save up to 30%</span>
           </button>

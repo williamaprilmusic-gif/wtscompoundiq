@@ -730,6 +730,17 @@ export default function App() {
           onUpgrade={(tier, period = 'monthly') => {
             if (tier === userTier) return;
             if (tier === 'Basic') { downgradeToBasic(); return; }
+            // Enterprise is a custom, per-seat quote -- there's no self-serve price, so
+            // routing it through the (fake) checkout for a "Custom" amount is nonsense.
+            // Unlock the features for preview and say plainly that a real licence goes
+            // through sales.
+            if (tier === 'Enterprise') {
+              setUserTier('Enterprise');
+              try { localStorage.setItem('wts_compoundiq_tier', 'Enterprise'); } catch { /* private mode / quota */ }
+              setTierChangeMsg('Enterprise features unlocked for preview — a live Enterprise licence is a custom, per-seat quote arranged with sales.');
+              setShowPricing(false);
+              return;
+            }
             setSelectedUpgradeTier(tier);
             setSelectedBillingPeriod(period);
             // This path isn't tied to any specific locked tab, so don't let a stale

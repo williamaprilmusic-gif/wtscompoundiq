@@ -238,7 +238,7 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
             <p className="compare-scenario-verdict">
               {scenarioRanked[0].scenario.name || `Plan ${scenarioRanked[0].label}`} comes out ahead at{' '}
               {country.symbol} {Math.round(scenarioRanked[0].value).toLocaleString()} —{' '}
-              {country.symbol} {Math.abs(Math.round(scenarioRunnerUpGap)).toLocaleString()} more than{' '}
+              {country.symbol} {Math.round(scenarioRunnerUpGap).toLocaleString()} more than{' '}
               {scenarioRanked[1].scenario.name || `Plan ${scenarioRanked[1].label}`}, driven by whatever's different
               between the plans (contribution, rate, timeframe, or wrapper use).
             </p>

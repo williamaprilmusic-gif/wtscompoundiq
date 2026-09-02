@@ -97,7 +97,7 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
           <div className="payment-methods-toggle">
             <button
               className={paymentMethod === 'card' ? 'active' : ''}
-              onClick={() => setPaymentMethod('card')}
+              onClick={() => { setPaymentMethod('card'); setEmailError(false); }}
             >
               Credit / Debit Card
             </button>

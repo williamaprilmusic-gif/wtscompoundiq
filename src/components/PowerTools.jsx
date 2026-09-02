@@ -472,6 +472,9 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   });
 
   const retireGap = retirementIncomeGap({ projectedPot: rgPot, targetAnnualIncome: rgTarget, withdrawalRate: rgSwr });
+  // The engine floors the rate at 0.01% and falls back to 4% for a 0 -- show the rate
+  // it actually used, not the raw (possibly cleared/negative) field value.
+  const rgSwrShown = Math.max(0.01, rgSwr || 4);
   const depositTimeline = depositSavingsTimeline({ homePrice: dtPrice, depositPercent: dtPercent, monthlySaving: dtMonthly, alreadySaved: dtSaved, annualSavingsRate: dtRate });
 
   const saveFirePlan = () => {
@@ -2060,11 +2063,11 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className={`power-verdict ${retireGap.onTrack ? 'invest' : 'debt'}`}>
               {retireGap.onTrack
-                ? `On track. At ${rgSwr}%, ${country.symbol} ${Math.round(rgPot).toLocaleString()} throws off about ${country.symbol} ${Math.round(retireGap.incomeFromPot).toLocaleString()}/yr — ${country.symbol} ${Math.round(-retireGap.annualGap).toLocaleString()} more than the ${country.symbol} ${Math.round(rgTarget).toLocaleString()} you want.`
+                ? `On track. At ${rgSwrShown}%, ${country.symbol} ${Math.round(rgPot).toLocaleString()} throws off about ${country.symbol} ${Math.round(retireGap.incomeFromPot).toLocaleString()}/yr — ${country.symbol} ${Math.round(-retireGap.annualGap).toLocaleString()} more than the ${country.symbol} ${Math.round(rgTarget).toLocaleString()} you want.`
                 : `Short by about ${country.symbol} ${Math.round(retireGap.annualGap).toLocaleString()}/yr — that pot gives ${country.symbol} ${Math.round(retireGap.incomeFromPot).toLocaleString()}/yr (${retireGap.coverageRatio.toFixed(0)}% of your target). Closing the gap needs roughly ${country.symbol} ${Math.round(retireGap.capitalGap).toLocaleString()} more capital.`}
             </div>
             <p className="power-tool-note">
-              Uses the same {rgSwr}% rule as the FIRE Number tool. "Projected pot" is your own figure — get it from the
+              Uses the same {rgSwrShown}% rule as the FIRE Number tool. "Projected pot" is your own figure — get it from the
               Calculator tab or the FIRE / Coast FIRE tools. Doesn't model tax on withdrawals or any state/employer
               pension you'll also receive — subtract those from the income you want first.
             </p>

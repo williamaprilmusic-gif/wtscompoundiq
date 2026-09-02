@@ -14,7 +14,9 @@ export const depositSavingsTimeline = ({ homePrice, depositPercent, monthlySavin
   if (start >= targetAmount) {
     return { targetAmount, months: 0, alreadyThere: true, totalSaved: start, interestEarned: 0 };
   }
-  if (monthly === 0 && i === 0) {
+  // Nothing going in, and either no interest or no balance for interest to act on --
+  // it never reaches the target, so skip the loop.
+  if (monthly === 0 && (i === 0 || start === 0)) {
     return { targetAmount, months: null, alreadyThere: false, totalSaved: start, interestEarned: 0 };
   }
 

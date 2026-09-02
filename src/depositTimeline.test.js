@@ -28,6 +28,12 @@ describe('depositSavingsTimeline', () => {
     expect(result.months).toBeNull();
   });
 
+  it('returns months: null immediately when nothing is saved and nothing goes in, even with a rate set', () => {
+    // start 0 * (1+i) + 0 stays 0 forever -- must not spin the loop.
+    const result = depositSavingsTimeline({ homePrice: 1000000, depositPercent: 10, monthlySaving: 0, alreadySaved: 0, annualSavingsRate: 8 });
+    expect(result.months).toBeNull();
+  });
+
   it('returns months: null when the monthly amount is too small to reach target within the 100-year cap', () => {
     const result = depositSavingsTimeline({ homePrice: 5000000, depositPercent: 20, monthlySaving: 100, annualSavingsRate: 0 });
     // 1,000,000 target at 100/mo, no interest -> 10,000 months, past the 1200 cap.
