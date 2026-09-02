@@ -10,6 +10,7 @@ import { uniqueId } from '../utils/uniqueId';
 import { safeTrim } from '../utils/safeTrim';
 import { readJSONArray, writeJSON } from '../utils/storage';
 import { annualisedGrowth, yearsBetweenDates } from '../growthRate';
+import { balanceSheetRatios } from '../balanceSheetRatios';
 import SnapshotChart from './SnapshotChart';
 import CountrySelect from './CountrySelect';
 import AllocationChart from './AllocationChart';
@@ -202,6 +203,7 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
   const totalAssets = items.filter(i => i.type === 'asset').reduce((s, i) => s + valueIn(i), 0);
   const totalDebts = items.filter(i => i.type === 'debt').reduce((s, i) => s + valueIn(i), 0);
   const netWorth = totalAssets - totalDebts;
+  const bsRatios = balanceSheetRatios({ totalAssets, totalDebts });
 
   // Category breakdown for the allocation donuts below -- every category always
   // appears (even at value 0) so the color assignment stays stable as items move
@@ -417,6 +419,25 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
           </div>
         )}
       </div>
+
+      {(totalAssets > 0 || totalDebts > 0) && (
+        <div className="nw-ratios">
+          <div className="nw-ratio">
+            <span>Leverage (debt ÷ assets)</span>
+            <strong className={bsRatios.band === 'strong' || bsRatios.band === 'ok' ? 'positive' : 'warn'}>
+              {bsRatios.debtToAsset == null ? '—' : `${bsRatios.debtToAsset.toFixed(0)}%`}
+            </strong>
+          </div>
+          <div className="nw-ratio">
+            <span>Equity ratio (owned outright)</span>
+            <strong className="positive">{bsRatios.equityRatio == null ? '—' : `${bsRatios.equityRatio.toFixed(0)}%`}</strong>
+          </div>
+          <div className="nw-ratio">
+            <span>Read</span>
+            <strong>{bsRatios.bandLabel}</strong>
+          </div>
+        </div>
+      )}
 
       <button className="nw-save-btn" onClick={saveSnapshot}>📸 Save Snapshot</button>
       </>

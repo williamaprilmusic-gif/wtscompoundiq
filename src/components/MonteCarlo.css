@@ -83,6 +83,55 @@
   box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
 }
 
+.mc-solver {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.15);
+}
+.mc-solver-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.mc-solver-row label {
+  flex: 1;
+  min-width: 220px;
+  font-size: 0.86rem;
+  color: var(--mut);
+  line-height: 1.5;
+}
+.mc-solver-row label input {
+  width: 52px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  text-align: center;
+}
+.mc-solver-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--accent-purple);
+  color: var(--text);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.mc-solver-btn:disabled { opacity: 0.6; cursor: default; }
+.mc-solver-result {
+  margin: 10px 0 0;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--text-soft);
+}
+.mc-solver-result.warn { color: var(--accent-yellow); }
+
 .mc-run-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;

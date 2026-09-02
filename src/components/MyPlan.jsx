@@ -7,20 +7,30 @@ import { PLAN_STORAGE_KEY, readPlan, loanEffectiveMonthlyPayment, loanEffectiveT
 const REMINDER_KEY = 'wts_compoundiq_reminder_at';
 const REMINDER_NOTIFIED_KEY = 'wts_compoundiq_reminder_notified_at';
 const REMINDER_DAYS = 30;
+const ADVISER_NOTES_KEY = 'wts_compoundiq_adviser_notes';
 
 const monthsBetween = (isoDate) => daysBetween(isoDate) / 30.44;
 
-const MyPlan = ({ country }) => {
+const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
   const [snapshot, setSnapshot] = useState(null);
   const [currentDebtBalance, setCurrentDebtBalance] = useState('');
   const [currentEfBalance, setCurrentEfBalance] = useState('');
   const [currentLoanBalance, setCurrentLoanBalance] = useState('');
   const [reminderAt, setReminderAt] = useState(null);
   const [reminderDue, setReminderDue] = useState(false);
+  // Enterprise-tier adviser annotation, persisted locally. Kept in storage even when
+  // the tier can't currently see it, so a downgrade doesn't destroy typed notes.
+  const [adviserNotes, setAdviserNotes] = useState('');
+
+  const updateAdviserNotes = (value) => {
+    setAdviserNotes(value);
+    try { localStorage.setItem(ADVISER_NOTES_KEY, value); } catch { /* private mode / quota */ }
+  };
 
   useEffect(() => {
     const plan = readPlan();
     if (Object.keys(plan).length > 0) setSnapshot(plan);
+    try { setAdviserNotes(localStorage.getItem(ADVISER_NOTES_KEY) || ''); } catch { /* ignore */ }
 
     const storedReminder = localStorage.getItem(REMINDER_KEY);
     if (storedReminder) {
@@ -243,7 +253,26 @@ const MyPlan = ({ country }) => {
 
       {reminderBlock}
 
-      <button className="plan-clear-btn" onClick={clearPlan}>Clear saved plan</button>
+      {canAdviserNotes ? (
+        <div className="plan-adviser-notes">
+          <h3>🗒️ Adviser Notes <span className="plan-adviser-badge">Enterprise</span></h3>
+          <textarea
+            value={adviserNotes}
+            onChange={(e) => updateAdviserNotes(e.target.value)}
+            placeholder="Context, assumptions, and recommendations to hand to a client with this plan. Saved on this device (not synced or uploaded)."
+            rows={5}
+          />
+        </div>
+      ) : adviserNotes.trim() ? null : (
+        <div className="plan-adviser-upsell no-print">
+          <p>
+            🗒️ <strong>Adviser Notes</strong> — attach context and recommendations to a client's plan. Included on Enterprise.
+            {onOpenPricing && <button type="button" className="plan-adviser-upsell-btn" onClick={onOpenPricing}>View Pricing</button>}
+          </p>
+        </div>
+      )}
+
+      <button className="plan-clear-btn no-print" onClick={clearPlan}>Clear saved plan</button>
 
       <p className="plan-note">
         This lives only in your browser's local storage -- nothing is sent anywhere, and it won't follow you to another

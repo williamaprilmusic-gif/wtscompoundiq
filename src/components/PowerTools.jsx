@@ -37,6 +37,7 @@ import { leaseVsBuy } from '../leaseVsBuy';
 import { baristaFireNumber } from '../baristaFire';
 import { retirementIncomeGap } from '../retirementGap';
 import { depositSavingsTimeline } from '../depositTimeline';
+import { realReturn } from '../realReturn';
 import { readJSONArray } from '../utils/storage';
 import { convertAmount, countriesData } from '../data/countries';
 import { DEBTS_KEY } from './DebtPayoff';
@@ -78,7 +79,8 @@ const SUB_TABS = [
   { key: 'effRate', label: '🔢 Effective Rate' },
   { key: 'leaseVsBuy', label: '🚙 Lease vs. Buy' },
   { key: 'retireGap', label: '📊 Retirement Income Gap' },
-  { key: 'depositTimeline', label: '🕐 Deposit Timeline' }
+  { key: 'depositTimeline', label: '🕐 Deposit Timeline' },
+  { key: 'realReturn', label: '📉 Real Return' }
 ];
 
 // Groups the pills above into labelled categories so the bar stays scannable. Every
@@ -90,7 +92,7 @@ const SUB_TAB_GROUPS = [
   { label: 'Property & Big Purchases', keys: ['affordability', 'rentVsBuy', 'carCost', 'leaseVsBuy', 'depositTimeline', 'rateShock'] },
   { label: 'Saving for a Goal', keys: ['savings', 'education', 'sinkingFund', 'efRunway', 'insurance', 'windfall'] },
   { label: 'Income & Tax', keys: ['salary', 'raiseValue', 'budgetRule', 'marginalTax', 'raiseInflation'] },
-  { label: 'Money Basics', keys: ['futureCost', 'fxConvert', 'rule72', 'freqCompare', 'effRate'] }
+  { label: 'Money Basics', keys: ['futureCost', 'fxConvert', 'rule72', 'freqCompare', 'effRate', 'realReturn'] }
 ];
 
 const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [] }) => {
@@ -276,6 +278,10 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const [dtMonthly, setDtMonthly] = useState(0);
   const [dtSaved, setDtSaved] = useState(0);
   const [dtRate, setDtRate] = useState(Math.round(country.typicalBankRate || 5));
+
+  const [rrNominal, setRrNominal] = useState(rate || 8);
+  const [rrInflation, setRrInflation] = useState(Math.round(country.typicalInflation || 5));
+  const [rrTax, setRrTax] = useState(country.taxRate);
 
   const safeWithdrawalRate = withdrawalRate > 0 ? withdrawalRate : 0.01;
   const fireNumber = annualExpenses / (safeWithdrawalRate / 100);
@@ -476,6 +482,7 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   // it actually used, not the raw (possibly cleared/negative) field value.
   const rgSwrShown = Math.max(0.01, rgSwr || 4);
   const depositTimeline = depositSavingsTimeline({ homePrice: dtPrice, depositPercent: dtPercent, monthlySaving: dtMonthly, alreadySaved: dtSaved, annualSavingsRate: dtRate });
+  const realRet = realReturn({ nominalRate: rrNominal, inflationRate: rrInflation, taxRate: rrTax });
 
   const saveFirePlan = () => {
     savePlanSection('fire', {
@@ -2124,6 +2131,41 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
                 the Sinking Fund tool.
               </p>
             )}
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'realReturn' && (
+      <div className="power-tool-card">
+        <h3>📉 Real (After-Tax, After-Inflation) Return</h3>
+        <p className="power-tool-desc">A headline return is not what your money actually earns. Take tax off the gains, divide out inflation, and see what's left growing your purchasing power.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Nominal Return (%/yr)</label>
+            <input type="number" step="0.1" value={rrNominal} onChange={(e) => setRrNominal(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label><Term k="inflation">Inflation</Term> (%/yr)</label>
+            <input type="number" step="0.1" value={rrInflation} onChange={(e) => setRrInflation(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Tax on Gains (%)</label>
+            <input type="number" min="0" max="100" step="1" value={rrTax} onChange={(e) => setRrTax(Number(e.target.value))} />
+          </div>
+        </div>
+        {rrNominal !== 0 && (
+          <>
+            <div className={`power-verdict ${realRet.losesToInflation ? 'danger' : realRet.realRate < 1 ? 'debt' : 'invest'}`}>
+              Your {rrNominal}% nominal return is {realRet.afterTaxNominal.toFixed(1)}% after {rrTax}% tax, and about{' '}
+              <strong>{realRet.realRate.toFixed(1)}% real</strong> once {rrInflation}% inflation is taken out.
+              {realRet.losesToInflation ? ' At this rate your money is losing purchasing power.' : ''}
+            </div>
+            <p className="power-tool-note">
+              Uses the exact (1 + after-tax) ÷ (1 + inflation) − 1 identity. The rough "just subtract" shortcut would
+              say {realRet.roughApprox.toFixed(1)}% — always a little optimistic. Inside a {country.wrapperLabel && country.wrapperLabel !== 'N/A' ? country.wrapperLabel : 'tax-free wrapper'} the
+              tax line is 0, so set it to 0 to see the sheltered real return.
+            </p>
           </>
         )}
       </div>

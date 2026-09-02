@@ -25,7 +25,8 @@ const tiers = [
       'Compound interest calculator, all 36 countries',
       'Tax-free wrapper vs. taxable comparison',
       'Compounding frequency control',
-      'Year-by-year growth data table'
+      'Year-by-year growth data table',
+      'Cost-of-waiting projection'
     ],
     cta: 'Downgrade to Basic',
     highlighted: false
@@ -46,8 +47,8 @@ const tiers = [
       'My Plan (save a snapshot, check in on progress later, with reminders)',
       'Goal-based Invest planner (multiple goals at once)',
       'Tax Optimizer, including a retirement fund comparison',
-      'Power Tools (FIRE number, Debt vs. Invest, Home Affordability, Education Savings, Insurance Needs, and more)',
-      'Net Worth tracker with asset allocation & forecast',
+      'Power Tools — 35 focused calculators (FIRE, Debt vs. Invest, Home Affordability, Real Return, and more)',
+      'Net Worth tracker with asset allocation, forecast & balance-sheet ratios',
       'Dashboard with Financial Health Score, milestones & PDF export',
       'Financial Snapshot export (print / PDF / CSV)',
       'Side-by-side country comparison tool, plus compare your own plans',
@@ -67,6 +68,7 @@ const tiers = [
     features: [
       'Everything in Pro, plus:',
       'Monte Carlo simulation (1,000-path outcome range)',
+      'Monte Carlo contribution solver (hit a target success probability)',
       'FX stress test for Net Worth (offshore holdings)',
       'AI Wealth Coach (Step 1-3 planner)',
       'AI Investment Advisor (personalized recommendations)'
@@ -82,6 +84,7 @@ const tiers = [
     features: [
       'Everything in Ultra, plus:',
       'White-label branding (your own logo)',
+      'Adviser notes on client plans',
       'Bulk user management & admin dashboard',
       'API access for external integrations',
       'Dedicated tax specialist consultation',

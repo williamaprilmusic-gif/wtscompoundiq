@@ -112,6 +112,9 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
   const [result, setResult] = useState(null);
   const [wrapperCompare, setWrapperCompare] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [targetProb, setTargetProb] = useState(90);
+  const [solveResult, setSolveResult] = useState(null);
+  const [isSolving, setIsSolving] = useState(false);
 
   const activeHistoricalModel = RETURN_MODELS.find(m => m.key === historicalModelKey) || RETURN_MODELS[0];
 
@@ -138,6 +141,44 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
         setResult(runSimulation(base)); // no taxRate/wrapper passed -- stays pre-tax, as this mode always has been
       }
       setIsRunning(false);
+    }, 20);
+  };
+
+  // Ultra-only: binary-search the monthly contribution that lifts the probability of
+  // hitting `goal` to at least `targetProb`. ~18 iterations x 1,000 paths each, run off
+  // the main thread's paint like handleRun. probabilityOfGoal is noisy at 1,000 sims so
+  // the answer is "about this much", not to-the-rand.
+  const handleSolve = () => {
+    setIsSolving(true);
+    setTimeout(() => {
+      const base = {
+        initial, rate, years, volatility, goal,
+        contributionIncreaseRate: contributionIncrease, lumpSums, returnModel,
+        historicalSeries: activeHistoricalModel.data
+      };
+      const probAt = (m) => runSimulation({ ...base, monthly: m }).probabilityOfGoal;
+      const wanted = Math.max(1, Math.min(99, targetProb || 90));
+
+      let lo = 0;
+      let hi = Math.max(5000, (monthly || 0) * 4, Math.round(goal / Math.max(1, years) / 6));
+      // widen hi until it clears the bar or we give up
+      let hiProb = probAt(hi);
+      let guard = 0;
+      while (hiProb < wanted && guard < 8) { hi *= 1.8; hiProb = probAt(hi); guard++; }
+
+      const loProb = probAt(lo);
+      if (loProb >= wanted) {
+        setSolveResult({ monthly: 0, achievedProb: loProb, wanted, reachable: true });
+      } else if (hiProb < wanted) {
+        setSolveResult({ monthly: Math.round(hi), achievedProb: hiProb, wanted, reachable: false });
+      } else {
+        for (let i = 0; i < 16; i++) {
+          const mid = (lo + hi) / 2;
+          if (probAt(mid) >= wanted) hi = mid; else lo = mid;
+        }
+        setSolveResult({ monthly: Math.round(hi), achievedProb: probAt(hi), wanted, reachable: true });
+      }
+      setIsSolving(false);
     }, 20);
   };
 
@@ -202,6 +243,28 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
       <button className="mc-run-btn" onClick={handleRun} disabled={isRunning}>
         {isRunning ? '⏳ Running…' : 'Run Simulation'}
       </button>
+
+      <div className="mc-solver">
+        <div className="mc-solver-row">
+          <label>
+            Or — find the monthly contribution for a{' '}
+            <input
+              type="number" min="1" max="99" value={targetProb}
+              onChange={(e) => setTargetProb(Number(e.target.value))}
+            />% chance of reaching {country.symbol}{Math.round(goal).toLocaleString()}
+          </label>
+          <button className="mc-solver-btn" onClick={handleSolve} disabled={isSolving}>
+            {isSolving ? '⏳ Solving…' : 'Find it'}
+          </button>
+        </div>
+        {solveResult && (
+          <p className={`mc-solver-result ${solveResult.reachable ? '' : 'warn'}`}>
+            {solveResult.reachable
+              ? `About ${country.symbol} ${solveResult.monthly.toLocaleString()}/month gives roughly a ${solveResult.achievedProb.toFixed(0)}% chance of hitting the goal (target was ${solveResult.wanted}%). Approximate — the probability is estimated from ${NUM_SIMULATIONS.toLocaleString()} random paths and moves a point or two each run.`
+              : `Even ${country.symbol} ${solveResult.monthly.toLocaleString()}/month only reaches about ${solveResult.achievedProb.toFixed(0)}% — the ${solveResult.wanted}% target isn't achievable at this volatility and timeframe. Lower the goal, extend the years, or accept a lower success rate.`}
+          </p>
+        )}
+      </div>
 
       {result && (
         <div className="mc-results">

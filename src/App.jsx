@@ -4,6 +4,7 @@ import './App.css';
 import TierPricing, { UPGRADE_PRICES } from './components/TierPricing';
 import PaymentSection from './components/PaymentSection';
 import { calculateCompoundInterest } from './engine';
+import { costOfWaiting } from './costOfWaiting';
 import { countriesData as WTS_COUNTRIES, getCountryByCode, getVerificationInfo } from './data/countries';
 import AIAdvisor from './components/AIAdvisor';
 import TaxOptimizer from './components/TaxOptimizer';
@@ -131,6 +132,7 @@ export default function App() {
   // country.taxRate keeps being used everywhere else regardless of this toggle.
   const [progressiveTax, setProgressiveTax] = useState(false);
   const [otherTaxableIncome, setOtherTaxableIncome] = useState(0);
+  const [waitYears, setWaitYears] = useState(5); // "cost of waiting" on the Calculator (Basic tier)
   const hasTaxBrackets = !!country.taxBrackets;
   const effectiveTaxBrackets = (progressiveTax && hasTaxBrackets) ? country.taxBrackets : null;
 
@@ -267,6 +269,14 @@ export default function App() {
     lumpSums,
     taxBrackets: effectiveTaxBrackets,
     otherTaxableIncome
+  });
+
+  // "Cost of waiting" -- same plan against the same target date, started `waitYears`
+  // later (fewer compounding years). A free-tier nudge shown under the result.
+  const waitingCost = costOfWaiting({
+    initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper, compoundFrequency,
+    annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit,
+    contributionIncreaseRate: contributionIncrease, lumpSums, delayYears: waitYears
   });
 
   // `name` is the stable internal tab id -- used for activeTab routing, canAccess
@@ -527,6 +537,28 @@ export default function App() {
                 </div>
               </div>
 
+              {monthly > 0 && years > 1 && (
+                <div className="cost-of-waiting">
+                  <label htmlFor="wait-years">Cost of waiting</label>
+                  <div className="cost-of-waiting-body">
+                    <span>
+                      Starting{' '}
+                      <input
+                        id="wait-years"
+                        type="number"
+                        min="1"
+                        max={Math.max(1, years - 1)}
+                        value={waitYears}
+                        onChange={(e) => setWaitYears(Number(e.target.value))}
+                      />{' '}
+                      year{waitingCost.delayYears === 1 ? '' : 's'} later would leave you with about{' '}
+                      <strong>{country.symbol} {Math.round(waitingCost.cost).toLocaleString()}</strong> less at the end
+                      ({country.symbol} {Math.round(waitingCost.startLaterBalance).toLocaleString()} vs {country.symbol} {Math.round(waitingCost.startNowBalance).toLocaleString()}) — the same {country.symbol}{monthly.toLocaleString()}/month, just fewer years to compound.
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <GrowthChart yearlyData={results.yearlyData} initial={initial} symbol={country.symbol} />
 
               <button className="share-plan-btn" onClick={shareCurrentPlan}>
@@ -664,7 +696,7 @@ export default function App() {
 
         {activeTab === 'My Plan' && canAccess('Pro') && (
           <div className="tab-pane active">
-            <MyPlan country={country} />
+            <MyPlan country={country} canAdviserNotes={canAccess('Enterprise')} onOpenPricing={() => setShowPricing(true)} />
           </div>
         )}
 
