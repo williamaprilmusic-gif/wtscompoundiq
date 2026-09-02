@@ -35,6 +35,8 @@ import { feeDragAnalysis } from '../feeDrag';
 import { nominalToEffective, effectiveToNominal } from '../effectiveRate';
 import { leaseVsBuy } from '../leaseVsBuy';
 import { baristaFireNumber } from '../baristaFire';
+import { retirementIncomeGap } from '../retirementGap';
+import { depositSavingsTimeline } from '../depositTimeline';
 import { readJSONArray } from '../utils/storage';
 import { convertAmount, countriesData } from '../data/countries';
 import { DEBTS_KEY } from './DebtPayoff';
@@ -74,16 +76,18 @@ const SUB_TABS = [
   { key: 'feeDrag', label: '💸 Fee Drag' },
   { key: 'baristaFire', label: '☕ Barista FIRE' },
   { key: 'effRate', label: '🔢 Effective Rate' },
-  { key: 'leaseVsBuy', label: '🚙 Lease vs. Buy' }
+  { key: 'leaseVsBuy', label: '🚙 Lease vs. Buy' },
+  { key: 'retireGap', label: '📊 Retirement Income Gap' },
+  { key: 'depositTimeline', label: '🕐 Deposit Timeline' }
 ];
 
 // Groups the pills above into labelled categories so the bar stays scannable. Every
 // key must appear exactly once; any that's missed drops into a "More" catch-all in
 // SubTabs rather than vanishing.
 const SUB_TAB_GROUPS = [
-  { label: 'Retire & Financial Independence', keys: ['fire', 'coastFire', 'baristaFire', 'savingsRate', 'drawdown', 'pretaxRA', 'dividend', 'feeDrag'] },
+  { label: 'Retire & Financial Independence', keys: ['fire', 'coastFire', 'baristaFire', 'savingsRate', 'drawdown', 'pretaxRA', 'dividend', 'feeDrag', 'retireGap'] },
   { label: 'Debt & Credit', keys: ['debtVsInvest', 'dti', 'cardTrap'] },
-  { label: 'Property & Big Purchases', keys: ['affordability', 'rentVsBuy', 'carCost', 'leaseVsBuy', 'rateShock'] },
+  { label: 'Property & Big Purchases', keys: ['affordability', 'rentVsBuy', 'carCost', 'leaseVsBuy', 'depositTimeline', 'rateShock'] },
   { label: 'Saving for a Goal', keys: ['savings', 'education', 'sinkingFund', 'efRunway', 'insurance', 'windfall'] },
   { label: 'Income & Tax', keys: ['salary', 'raiseValue', 'budgetRule', 'marginalTax', 'raiseInflation'] },
   { label: 'Money Basics', keys: ['futureCost', 'fxConvert', 'rule72', 'freqCompare', 'effRate'] }
@@ -262,6 +266,16 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const [lvbPeriod, setLvbPeriod] = useState(3);
   const [lvbLeaseUpfront, setLvbLeaseUpfront] = useState(0);
   const [lvbLeaseMonthly, setLvbLeaseMonthly] = useState(0);
+
+  const [rgPot, setRgPot] = useState(0);
+  const [rgTarget, setRgTarget] = useState(0);
+  const [rgSwr, setRgSwr] = useState(4);
+
+  const [dtPrice, setDtPrice] = useState(0);
+  const [dtPercent, setDtPercent] = useState(10);
+  const [dtMonthly, setDtMonthly] = useState(0);
+  const [dtSaved, setDtSaved] = useState(0);
+  const [dtRate, setDtRate] = useState(Math.round(country.typicalBankRate || 5));
 
   const safeWithdrawalRate = withdrawalRate > 0 ? withdrawalRate : 0.01;
   const fireNumber = annualExpenses / (safeWithdrawalRate / 100);
@@ -456,6 +470,9 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
     annualDepreciationRate: lvbDepreciation, comparePeriodYears: lvbPeriod,
     leaseUpfront: lvbLeaseUpfront, leaseMonthly: lvbLeaseMonthly
   });
+
+  const retireGap = retirementIncomeGap({ projectedPot: rgPot, targetAnnualIncome: rgTarget, withdrawalRate: rgSwr });
+  const depositTimeline = depositSavingsTimeline({ homePrice: dtPrice, depositPercent: dtPercent, monthlySaving: dtMonthly, alreadySaved: dtSaved, annualSavingsRate: dtRate });
 
   const saveFirePlan = () => {
     savePlanSection('fire', {
@@ -2016,6 +2033,88 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
               the residual after. Leasing usually includes maintenance and a warranty that buying doesn't; it also caps
               your mileage and leaves nothing at the end. Insurance and fuel are the same either way and aren't modelled.
             </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'retireGap' && (
+      <div className="power-tool-card">
+        <h3>📊 Retirement Income Gap</h3>
+        <p className="power-tool-desc">You've a number in mind for the pot you'll retire with. At your withdrawal rate, does the income it throws off actually cover what you want to spend?</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Projected Pot at Retirement ({country.symbol})</label>
+            <input type="number" min="0" step="100000" value={rgPot} onChange={(e) => setRgPot(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Income You Want ({country.symbol}/yr, today's money)</label>
+            <input type="number" min="0" step="10000" value={rgTarget} onChange={(e) => setRgTarget(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label><Term k="safeWithdrawalRate">Safe Withdrawal Rate</Term> (%)</label>
+            <input type="number" min="1" max="10" step="0.1" value={rgSwr} onChange={(e) => setRgSwr(Number(e.target.value))} />
+          </div>
+        </div>
+        {rgPot > 0 && rgTarget > 0 && (
+          <>
+            <div className={`power-verdict ${retireGap.onTrack ? 'invest' : 'debt'}`}>
+              {retireGap.onTrack
+                ? `On track. At ${rgSwr}%, ${country.symbol} ${Math.round(rgPot).toLocaleString()} throws off about ${country.symbol} ${Math.round(retireGap.incomeFromPot).toLocaleString()}/yr — ${country.symbol} ${Math.round(-retireGap.annualGap).toLocaleString()} more than the ${country.symbol} ${Math.round(rgTarget).toLocaleString()} you want.`
+                : `Short by about ${country.symbol} ${Math.round(retireGap.annualGap).toLocaleString()}/yr — that pot gives ${country.symbol} ${Math.round(retireGap.incomeFromPot).toLocaleString()}/yr (${retireGap.coverageRatio.toFixed(0)}% of your target). Closing the gap needs roughly ${country.symbol} ${Math.round(retireGap.capitalGap).toLocaleString()} more capital.`}
+            </div>
+            <p className="power-tool-note">
+              Uses the same {rgSwr}% rule as the FIRE Number tool. "Projected pot" is your own figure — get it from the
+              Calculator tab or the FIRE / Coast FIRE tools. Doesn't model tax on withdrawals or any state/employer
+              pension you'll also receive — subtract those from the income you want first.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'depositTimeline' && (
+      <div className="power-tool-card">
+        <h3>🕐 Deposit Savings Timeline</h3>
+        <p className="power-tool-desc">How long until you've saved a home deposit, given what you can put away each month and a modest savings rate on the balance.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Home Price ({country.symbol})</label>
+            <input type="number" min="0" step="50000" value={dtPrice} onChange={(e) => setDtPrice(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Deposit (% of price)</label>
+            <input type="number" min="0" max="100" step="1" value={dtPercent} onChange={(e) => setDtPercent(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>You Can Save ({country.symbol}/mo)</label>
+            <input type="number" min="0" step="500" value={dtMonthly} onChange={(e) => setDtMonthly(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Already Saved ({country.symbol})</label>
+            <input type="number" min="0" step="5000" value={dtSaved} onChange={(e) => setDtSaved(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Savings Account Rate (%/yr)</label>
+            <input type="number" min="0" step="0.1" value={dtRate} onChange={(e) => setDtRate(Number(e.target.value))} />
+          </div>
+        </div>
+        {dtPrice > 0 && dtPercent > 0 && (
+          <>
+            <div className={`power-verdict ${depositTimeline.months === null ? 'danger' : depositTimeline.alreadyThere || depositTimeline.months <= 36 ? 'invest' : 'debt'}`}>
+              {depositTimeline.alreadyThere
+                ? `You've already got the ${country.symbol} ${Math.round(depositTimeline.targetAmount).toLocaleString()} deposit saved.`
+                : depositTimeline.months === null
+                  ? `With nothing going in each month, this deposit never gets saved — set a monthly amount.`
+                  : `About ${depositTimeline.months} months (${(depositTimeline.months / 12).toFixed(1)} years) to save the ${country.symbol} ${Math.round(depositTimeline.targetAmount).toLocaleString()} deposit (${dtPercent}% of ${country.symbol} ${Math.round(dtPrice).toLocaleString()}).`}
+            </div>
+            {depositTimeline.months != null && depositTimeline.months > 0 && (
+              <p className="power-tool-note">
+                The balance earns {dtRate}% along the way ({country.symbol} {Math.round(depositTimeline.interestEarned).toLocaleString()} of the total). House prices move too — a longer timeline is a moving target. To size the
+                bond the remaining balance would need, use the Home Affordability tool; to plan a fixed-date goal, use
+                the Sinking Fund tool.
+              </p>
+            )}
           </>
         )}
       </div>

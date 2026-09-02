@@ -10,6 +10,7 @@ import CountrySelect from './CountrySelect';
 
 const SCENARIO_A_KEY = 'wts_compoundiq_scenario_a';
 const SCENARIO_B_KEY = 'wts_compoundiq_scenario_b';
+const SCENARIO_C_KEY = 'wts_compoundiq_scenario_c';
 
 const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [] }) => {
   const otherDefault = countriesData.find(c => c.code !== country.code) || countriesData[0];
@@ -36,6 +37,7 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
   // nobody's touched yet.
   const [scenarioA, setScenarioA] = usePersistedState(SCENARIO_A_KEY, { name: 'Plan A', initial, monthly, rate, years, inflation, wrapper: !!wrapper, touched: false });
   const [scenarioB, setScenarioB] = usePersistedState(SCENARIO_B_KEY, { name: 'Plan B', initial, monthly, rate, years, inflation, wrapper: !!wrapper, touched: false });
+  const [scenarioC, setScenarioC] = usePersistedState(SCENARIO_C_KEY, { name: 'Plan C', initial, monthly, rate, years, inflation, wrapper: !!wrapper, touched: false });
 
   const updateScenario = (setScenario, field, value) => setScenario(prev => ({ ...prev, [field]: field === 'name' ? value : Number(value), touched: true }));
   const toggleScenarioWrapper = (setScenario) => setScenario(prev => ({ ...prev, wrapper: !prev.wrapper, touched: true }));
@@ -47,29 +49,42 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
   // such (usePersistedState debounces/flushes its write regardless of whether the
   // value is "real"). Flagged here so the empty-looking result comes with an
   // explanation instead of just showing R0 with no context.
-  const bothScenariosEmpty = scenarioA.touched === false && scenarioB.touched === false;
+  const allScenariosEmpty = scenarioA.touched === false && scenarioB.touched === false && scenarioC.touched === false;
 
   const scenarioBase = { taxRate: country.taxRate, compoundFrequency, contributionIncreaseRate: contributionIncrease, annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit };
-  const resultsScenarioA = calculateCompoundInterest({ ...scenarioBase, initial: scenarioA.initial, monthly: scenarioA.monthly, rate: scenarioA.rate, years: scenarioA.years, inflation: scenarioA.inflation, wrapper: scenarioA.wrapper });
-  const resultsScenarioB = calculateCompoundInterest({ ...scenarioBase, initial: scenarioB.initial, monthly: scenarioB.monthly, rate: scenarioB.rate, years: scenarioB.years, inflation: scenarioB.inflation, wrapper: scenarioB.wrapper });
-  // Same currency (same country) on both sides -- a direct balance comparison, no FX
-  // conversion needed here (unlike the country-vs-country winner logic below).
-  const scenarioWinner = resultsScenarioA.finalBalance === resultsScenarioB.finalBalance ? null : (resultsScenarioA.finalBalance > resultsScenarioB.finalBalance ? 'A' : 'B');
-  const scenarioDelta = resultsScenarioB.finalBalance - resultsScenarioA.finalBalance;
+  const runScenario = (s) => calculateCompoundInterest({ ...scenarioBase, initial: s.initial, monthly: s.monthly, rate: s.rate, years: s.years, inflation: s.inflation, wrapper: s.wrapper });
+  const resultsScenarioA = runScenario(scenarioA);
+  const resultsScenarioB = runScenario(scenarioB);
+  const resultsScenarioC = runScenario(scenarioC);
+
+  // Same currency (same country) across all three -- a direct balance comparison, no FX
+  // conversion needed here (unlike the country-vs-country winner logic below). Ranked
+  // best-first; winner is null when every plan lands on the same number (nobody's
+  // edited anything yet).
+  const scenarioRanked = [
+    { label: 'A', scenario: scenarioA, value: resultsScenarioA.finalBalance },
+    { label: 'B', scenario: scenarioB, value: resultsScenarioB.finalBalance },
+    { label: 'C', scenario: scenarioC, value: resultsScenarioC.finalBalance }
+  ].sort((x, y) => y.value - x.value);
+  const scenarioWinner = scenarioRanked[0].value === scenarioRanked[scenarioRanked.length - 1].value ? null : scenarioRanked[0].label;
+  const scenarioRunnerUpGap = scenarioRanked[0].value - scenarioRanked[1].value;
 
   const exportScenarioCSV = () => {
-    const header = ['Year', `${scenarioA.name} Balance (${country.currency})`, `${scenarioA.name} Interest`, `${scenarioB.name} Balance (${country.currency})`, `${scenarioB.name} Interest`];
-    // Scenario A and B each have their own independently-set Years, so one yearlyData
-    // array can be longer than the other -- iterate the longer of the two (not just A's)
-    // so a shorter scenario's early rollover-to-empty doesn't silently truncate the
-    // longer scenario's remaining years out of the export.
-    const rowCount = Math.max(resultsScenarioA.yearlyData.length, resultsScenarioB.yearlyData.length);
+    const header = ['Year',
+      `${scenarioA.name} Balance (${country.currency})`, `${scenarioA.name} Interest`,
+      `${scenarioB.name} Balance (${country.currency})`, `${scenarioB.name} Interest`,
+      `${scenarioC.name} Balance (${country.currency})`, `${scenarioC.name} Interest`];
+    // Each plan has its own independently-set Years, so the yearlyData arrays can differ
+    // in length -- iterate the longest so a shorter plan's early rollover-to-empty
+    // doesn't truncate a longer plan's remaining years out of the export.
+    const rowCount = Math.max(resultsScenarioA.yearlyData.length, resultsScenarioB.yearlyData.length, resultsScenarioC.yearlyData.length);
     const rows = Array.from({ length: rowCount }, (_, i) => {
       const rowA = resultsScenarioA.yearlyData[i] || {};
       const rowB = resultsScenarioB.yearlyData[i] || {};
-      return [rowA.year ?? rowB.year ?? i, rowA.balance ?? '', rowA.interest ?? '', rowB.balance ?? '', rowB.interest ?? ''];
+      const rowC = resultsScenarioC.yearlyData[i] || {};
+      return [rowA.year ?? rowB.year ?? rowC.year ?? i, rowA.balance ?? '', rowA.interest ?? '', rowB.balance ?? '', rowB.interest ?? '', rowC.balance ?? '', rowC.interest ?? ''];
     });
-    downloadCSV(`wts-compoundiq-compare-${scenarioA.name || 'plan-a'}-vs-${scenarioB.name || 'plan-b'}.csv`.toLowerCase().replace(/\s+/g, '-'), [header, ...rows]);
+    downloadCSV('wts-compoundiq-compare-plans.csv', [header, ...rows]);
   };
 
   const countryA = countriesData.find(c => c.code === codeA) || country;
@@ -105,7 +120,7 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
         <p>
           {mode === 'country'
             ? `Same ${initial.toLocaleString()}/${monthly.toLocaleString()}/mo plan at ${rate}% over ${years} years -- different tax regimes.`
-            : `Same ${country.name} tax rules -- two independently-editable plans, so you can see what changing the contribution, rate, timeframe, or wrapper actually does.`}
+            : `Same ${country.name} tax rules -- three independently-editable plans, so you can see what changing the contribution, rate, timeframe, or wrapper actually does.`}
         </p>
       </div>
 
@@ -159,15 +174,15 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
         </>
       ) : (
         <>
-          {bothScenariosEmpty && (
+          {allScenariosEmpty && (
             <p className="compare-scenario-empty-hint">
-              Both plans start at {country.symbol}0 -- this tab seeds itself from the Calculator tab's inputs the first
-              time you open it, so if you haven't entered anything there yet, edit the fields below directly, or fill in
-              the Calculator tab first and click "Sync with Calculator" on either plan.
+              All three plans start at {country.symbol}0 -- this tab seeds itself from the Calculator tab's inputs the
+              first time you open it, so if you haven't entered anything there yet, edit the fields below directly, or
+              fill in the Calculator tab first and click "Sync with Calculator" on any plan.
             </p>
           )}
           <div className="compare-grid">
-            {[['A', scenarioA, setScenarioA, resultsScenarioA], ['B', scenarioB, setScenarioB, resultsScenarioB]].map(([label, scenario, setScenario, results]) => (
+            {[['A', scenarioA, setScenarioA, resultsScenarioA], ['B', scenarioB, setScenarioB, resultsScenarioB], ['C', scenarioC, setScenarioC, resultsScenarioC]].map(([label, scenario, setScenario, results]) => (
               <div key={label} className={`compare-card ${scenarioWinner === label ? 'winner' : ''}`}>
                 <input
                   type="text"
@@ -214,9 +229,13 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
             ))}
           </div>
 
-          {scenarioDelta !== 0 && (
+          {scenarioWinner && (
             <p className="compare-scenario-verdict">
-              {scenarioVerdictLabel(scenarioB, scenarioA, scenarioDelta, country)}
+              {scenarioRanked[0].scenario.name || `Plan ${scenarioRanked[0].label}`} comes out ahead at{' '}
+              {country.symbol} {Math.round(scenarioRanked[0].value).toLocaleString()} —{' '}
+              {country.symbol} {Math.abs(Math.round(scenarioRunnerUpGap)).toLocaleString()} more than{' '}
+              {scenarioRanked[1].scenario.name || `Plan ${scenarioRanked[1].label}`}, driven by whatever's different
+              between the plans (contribution, rate, timeframe, or wrapper use).
             </p>
           )}
 
@@ -232,10 +251,5 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
     </div>
   );
 };
-
-// Small helper kept outside the component body since it's pure formatting, not
-// something that needs to re-close over Compare's state each render.
-const scenarioVerdictLabel = (scenarioB, scenarioA, delta, country) =>
-  `${scenarioB.name || 'Plan B'} ends up ${country.symbol} ${Math.abs(Math.round(delta)).toLocaleString()} ${delta > 0 ? 'ahead of' : 'behind'} ${scenarioA.name || 'Plan A'} -- driven by whatever's different between the two (contribution, rate, timeframe, or wrapper use).`;
 
 export default Compare;
