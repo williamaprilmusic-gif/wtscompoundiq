@@ -27,4 +27,9 @@ describe('effectiveToNominal', () => {
   it('clamps periodsPerYear to at least 1', () => {
     expect(effectiveToNominal({ effectiveRate: 10, periodsPerYear: 0 })).toBeCloseTo(10, 6);
   });
+
+  it('floors a sub -100% rate rather than returning NaN from a negative n-th root', () => {
+    expect(Number.isFinite(effectiveToNominal({ effectiveRate: -150, periodsPerYear: 12 }))).toBe(true);
+    expect(Number.isFinite(nominalToEffective({ nominalRate: -200, periodsPerYear: 12 }))).toBe(true);
+  });
 });

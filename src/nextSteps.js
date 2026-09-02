@@ -32,7 +32,8 @@ export const buildNextSteps = ({ plan, hasNetWorth, hasHealthScore }) => {
   }
 
   if (!hasHealthScore) {
-    add('Dashboard', 'Save at least two plan sections to unlock the Financial Health Score.');
+    // No tab -- this one is already on the Dashboard, so it's informational, not a link.
+    add(null, 'Save at least two plan sections (from any tab) to unlock the Financial Health Score.');
   }
 
   return steps.slice(0, 4);

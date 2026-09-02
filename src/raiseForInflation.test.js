@@ -18,9 +18,11 @@ describe('raiseForInflation', () => {
     expect(below.realChangePercent).toBeLessThan(0);
   });
 
-  it('a raise exactly matching inflation is roughly flat in real terms', () => {
+  it('a raise exactly matching inflation is roughly flat in real terms and flagged matchesInflation', () => {
     const result = raiseForInflation({ currentSalary: 500000, inflationRate: 5, offeredRaisePercent: 5 });
     expect(result.realChangePercent).toBeCloseTo(0, 6);
+    expect(result.matchesInflation).toBe(true);
+    expect(result.beatsInflation).toBe(false);
   });
 
   it('real salary after the offer discounts the new nominal by inflation', () => {

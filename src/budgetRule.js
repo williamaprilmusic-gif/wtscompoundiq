@@ -14,10 +14,15 @@ export const budgetRuleCheck = ({ takeHomeIncome, needs, wants, savings }) => {
   const pct = (v) => (income > 0 ? (v / income) * 100 : 0);
   const actualPct = { needs: pct(actual.needs), wants: pct(actual.wants), savings: pct(actual.savings) };
 
+  const unallocated = income - actual.needs - actual.wants - actual.savings;
+
   return {
     targets,
     actualPct,
-    unallocated: income - actual.needs - actual.wants - actual.savings,
-    onTrack: actualPct.needs <= 55 && actualPct.savings >= 20
+    unallocated,
+    // Within a loose tolerance of 50/30/20 on all three, and not over-allocated
+    // (spending more than income). Checking wants too -- the earlier version let a
+    // wildly-over-budget "wants" still read as on track.
+    onTrack: actualPct.needs <= 55 && actualPct.wants <= 35 && actualPct.savings >= 18 && unallocated >= -1
   };
 };

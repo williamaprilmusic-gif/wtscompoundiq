@@ -22,6 +22,13 @@ describe('projectFutureCost', () => {
   it('percentIncrease is 0 (not NaN) when currentCost is 0', () => {
     expect(projectFutureCost({ currentCost: 0, years: 10, inflationRate: 6 }).percentIncrease).toBe(0);
   });
+
+  it('floors an absurd sub -100% rate instead of returning Infinity or NaN', () => {
+    const future = projectFutureCost({ currentCost: 1000, years: 10, inflationRate: -150 });
+    expect(Number.isFinite(future.futureCost)).toBe(true);
+    const real = projectPurchasingPower({ currentAmount: 1000, years: 10.5, inflationRate: -150 });
+    expect(Number.isFinite(real.realValue)).toBe(true);
+  });
 });
 
 describe('projectPurchasingPower', () => {

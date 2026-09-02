@@ -18,6 +18,9 @@ export const raiseForInflation = ({ currentSalary, inflationRate, offeredRaisePe
     newNominal,
     realSalaryAfterOffer: newReal,
     realChangePercent,
-    beatsInflation: offered > inf
+    beatsInflation: offered > inf,
+    // Within a small tolerance of exactly matching inflation -- neither a real gain
+    // nor a real cut, so the UI can say "keeps pace" instead of "a real cut of 0.0%".
+    matchesInflation: Math.abs(offered - inf) < 0.05
   };
 };

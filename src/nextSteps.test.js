@@ -5,7 +5,9 @@ import { buildNextSteps } from './nextSteps.js';
 describe('buildNextSteps', () => {
   it('a brand-new user is pointed at the emergency fund, FIRE number, net worth, and health score', () => {
     const steps = buildNextSteps({ plan: {}, hasNetWorth: false, hasHealthScore: false });
-    expect(steps.map(s => s.tab)).toEqual(['Emergency Fund', 'Power Tools', 'Net Worth', 'Dashboard']);
+    // The health-score step carries no tab (it's shown on the Dashboard itself, so it's
+    // informational rather than a self-navigating link).
+    expect(steps.map(s => s.tab)).toEqual(['Emergency Fund', 'Power Tools', 'Net Worth', null]);
   });
 
   it('caps the list at four items', () => {

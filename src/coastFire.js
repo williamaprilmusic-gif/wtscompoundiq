@@ -7,8 +7,10 @@ import { calculateCompoundInterest } from './engine';
 
 export const computeCoastFire = ({ currentPortfolio, annualReturn, yearsToRetirement, fireNumber }) => {
   const pot = Math.max(0, currentPortfolio || 0);
-  const rate = annualReturn || 0;
-  const safeYears = Math.max(0, yearsToRetirement || 0);
+  const rate = Math.max(-99.99, annualReturn || 0);
+  // Rounded so the projection (calculateCompoundInterest floors years internally) and
+  // the discount-back below run over the same whole-year horizon.
+  const safeYears = Math.max(0, Math.round(yearsToRetirement || 0));
   const target = Math.max(0, fireNumber || 0);
 
   // No contributions, no tax/wrapper machinery -- a plain "grow this lump sum" run,

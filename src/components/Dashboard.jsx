@@ -177,7 +177,9 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
             {nextSteps.map((s, i) => (
               <li key={i}>
                 <span className="dashboard-nextstep-text">{s.text}</span>
-                <button className="dashboard-card-link" onClick={() => onNavigate(s.tab)}>Open {s.tab} →</button>
+                {s.tab && (
+                  <button className="dashboard-card-link" onClick={() => onNavigate(s.tab)}>Open {s.tab} →</button>
+                )}
               </li>
             ))}
           </ul>

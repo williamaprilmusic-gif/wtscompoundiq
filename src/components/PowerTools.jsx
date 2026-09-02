@@ -77,7 +77,7 @@ const SUB_TABS = [
   { key: 'leaseVsBuy', label: '🚙 Lease vs. Buy' }
 ];
 
-// Groups the 24 pills above into labelled categories so the bar stays scannable. Every
+// Groups the pills above into labelled categories so the bar stays scannable. Every
 // key must appear exactly once; any that's missed drops into a "More" catch-all in
 // SubTabs rather than vanishing.
 const SUB_TAB_GROUPS = [
@@ -1460,8 +1460,9 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
             <p className="power-tool-note">
               Doesn't model tax on the pre-tax pot when you eventually draw it down in retirement — most systems tax
               those withdrawals, often at a lower effective rate than working-life income. The figure above is the
-              deferral-plus-full-compounding advantage before that, and assumes {country.name}'s {country.taxRate}%
-              rate as the taxable account's drag on gains. Not tax advice.
+              deferral-plus-full-compounding advantage before that, and applies your entered marginal rate
+              ({praMarginalRate}%) as the taxable account's drag on gains -- most systems tax investment gains
+              lower than income, so the real advantage is likely a little larger than shown. Not tax advice.
             </p>
           </>
         )}
@@ -1761,11 +1762,13 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
         </div>
         {riSalary > 0 && (
           <>
-            <div className={`power-verdict ${riOffered > 0 ? (raiseInflation.beatsInflation ? 'invest' : 'debt') : 'debt'}`}>
+            <div className={`power-verdict ${riOffered > 0 ? (raiseInflation.matchesInflation ? 'debt' : raiseInflation.beatsInflation ? 'invest' : 'debt') : 'debt'}`}>
               You need a {raiseInflation.breakEvenRaisePercent.toFixed(1)}% raise ({country.symbol} {Math.round(raiseInflation.breakEvenRaiseAmount).toLocaleString()}) just to hold your ground at {riInflation}% inflation.
-              {riOffered > 0 && (raiseInflation.beatsInflation
-                ? ` The ${riOffered}% offered is a real gain of about ${raiseInflation.realChangePercent.toFixed(1)}%.`
-                : ` The ${riOffered}% offered is a real cut of about ${Math.abs(raiseInflation.realChangePercent).toFixed(1)}%.`)}
+              {riOffered > 0 && (raiseInflation.matchesInflation
+                ? ` The ${riOffered}% offered just about keeps pace — roughly flat in real terms.`
+                : raiseInflation.beatsInflation
+                  ? ` The ${riOffered}% offered is a real gain of about ${raiseInflation.realChangePercent.toFixed(1)}%.`
+                  : ` The ${riOffered}% offered is a real cut of about ${Math.abs(raiseInflation.realChangePercent).toFixed(1)}%.`)}
             </div>
             <p className="power-tool-note">
               "Real" here means after dividing the new salary back by {riInflation}% inflation — its purchasing power

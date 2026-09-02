@@ -36,6 +36,21 @@ describe('annualisedGrowth', () => {
   it('returns cagr: null when no time has elapsed', () => {
     expect(annualisedGrowth({ startValue: 10000, endValue: 12000, years: 0 }).cagr).toBeNull();
   });
+
+  it('returns cagr: null for a sub-month span so a same-day re-log cannot print Infinity%', () => {
+    const sameDay = annualisedGrowth({ startValue: 100000, endValue: 250000, years: 2e-6 });
+    expect(sameDay.cagr).toBeNull();
+    expect(sameDay.totalChange).toBe(150000);
+
+    const twoWeeks = annualisedGrowth({ startValue: 100000, endValue: 110000, years: 14 / 365 });
+    expect(twoWeeks.cagr).toBeNull();
+  });
+
+  it('still gives a (finite) cagr once the span is at least a month', () => {
+    const result = annualisedGrowth({ startValue: 100000, endValue: 101000, years: 1 / 12 });
+    expect(result.cagr).not.toBeNull();
+    expect(Number.isFinite(result.cagr)).toBe(true);
+  });
 });
 
 describe('yearsBetweenDates', () => {

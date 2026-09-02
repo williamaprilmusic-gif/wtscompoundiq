@@ -23,6 +23,13 @@ describe('budgetRuleCheck', () => {
     expect(result.actualPct.needs).toBeCloseTo(70, 5);
   });
 
+  it('flags a blown "wants" budget as off track even if needs and savings are fine', () => {
+    // needs 50%, savings 20%, but wants 75% and the plan is over-allocated by 20000.
+    const result = budgetRuleCheck({ takeHomeIncome: 40000, needs: 20000, wants: 30000, savings: 8000 });
+    expect(result.onTrack).toBe(false);
+    expect(result.unallocated).toBeCloseTo(-18000, 5);
+  });
+
   it('reports unallocated income left over', () => {
     const result = budgetRuleCheck({ takeHomeIncome: 40000, needs: 15000, wants: 10000, savings: 5000 });
     expect(result.unallocated).toBeCloseTo(10000, 5);
