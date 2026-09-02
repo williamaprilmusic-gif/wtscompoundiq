@@ -1196,7 +1196,11 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
                 </div>
                 <div className="power-stat">
                   <span>Interest saved vs. minimum</span>
-                  <strong className="positive">{country.symbol} {Math.round(Math.max(0, cardResult.minimumOnly.totalInterest - cardResult.fixed.totalInterest)).toLocaleString()}</strong>
+                  <strong className="positive">
+                    {cardResult.minimumOnly.neverPaysOff
+                      ? 'avoids a balance the minimum never clears'
+                      : `${country.symbol} ${Math.round(Math.max(0, cardResult.minimumOnly.totalInterest - cardResult.fixed.totalInterest)).toLocaleString()}`}
+                  </strong>
                 </div>
               </div>
             )}
@@ -1383,7 +1387,7 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
             <input type="number" min="0" step="100" value={carMaintenance} onChange={(e) => setCarMaintenance(Number(e.target.value))} />
           </div>
         </div>
-        {carPrice > 0 && (
+        {carPrice > 0 && carYearsOwned > 0 && (
           <>
             <div className="power-verdict debt">
               Owning this car for {carYearsOwned} years costs about {country.symbol} {Math.round(carCost.totalCost).toLocaleString()} all-in — roughly {country.symbol} {Math.round(carCost.costPerMonth).toLocaleString()}/month. It's worth about {country.symbol} {Math.round(carCost.residualValue).toLocaleString()} at the end.
@@ -1514,7 +1518,9 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
         {sfTarget > 0 && (
           <>
             <div className="power-verdict invest">
-              Set aside about {country.symbol} {Math.round(sinkingFund.monthlyAmount).toLocaleString()}/month for {sfMonths || 0} months to have {country.symbol} {Math.round(sfTarget).toLocaleString()} ready{sfSaved > 0 ? `, on top of the ${country.symbol} ${Math.round(sfSaved).toLocaleString()} you've already saved` : ''}.
+              {sfMonths > 0
+                ? `Set aside about ${country.symbol} ${Math.round(sinkingFund.monthlyAmount).toLocaleString()}/month for ${sfMonths} months to have ${country.symbol} ${Math.round(sfTarget).toLocaleString()} ready${sfSaved > 0 ? `, on top of the ${country.symbol} ${Math.round(sfSaved).toLocaleString()} you've already saved` : ''}.`
+                : `You need the full ${country.symbol} ${Math.round(Math.max(0, sfTarget - sfSaved)).toLocaleString()} now — set a number of months to spread it into a monthly amount.`}
             </div>
             <p className="power-tool-note">
               Assumes the balance earns {sfRate}% in a savings account ({country.symbol} {Math.round(sinkingFund.interestEarned).toLocaleString()} of the total over the term), not a market return —
@@ -1782,7 +1788,7 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
         </div>
         {riSalary > 0 && (
           <>
-            <div className={`power-verdict ${riOffered > 0 ? (raiseInflation.matchesInflation ? 'debt' : raiseInflation.beatsInflation ? 'invest' : 'debt') : 'debt'}`}>
+            <div className={`power-verdict ${riOffered > 0 ? (raiseInflation.matchesInflation ? 'neutral' : raiseInflation.beatsInflation ? 'invest' : 'debt') : 'debt'}`}>
               You need a {raiseInflation.breakEvenRaisePercent.toFixed(1)}% raise ({country.symbol} {Math.round(raiseInflation.breakEvenRaiseAmount).toLocaleString()}) just to hold your ground at {riInflation}% inflation.
               {riOffered > 0 && (raiseInflation.matchesInflation
                 ? ` The ${riOffered}% offered just about keeps pace — roughly flat in real terms.`

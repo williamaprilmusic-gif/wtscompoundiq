@@ -518,7 +518,7 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
             <p className="nw-history-growth">
               {nwGrowth.cagr != null
                 ? `Net worth has ${nwGrowth.cagr >= 0 ? 'grown' : 'shrunk'} at about ${Math.abs(nwGrowth.cagr).toFixed(1)}%/yr over ${nwGrowth.years.toFixed(1)} years (${nwGrowth.totalChange >= 0 ? '+' : '−'}${country.symbol}${Math.abs(Math.round(nwGrowth.totalChange)).toLocaleString()} in total).`
-                : `${nwGrowth.totalChange >= 0 ? '+' : '−'}${country.symbol}${Math.abs(Math.round(nwGrowth.totalChange)).toLocaleString()} in total across your snapshots — an annualised rate needs a positive starting net worth.`}
+                : `${nwGrowth.totalChange >= 0 ? '+' : '−'}${country.symbol}${Math.abs(Math.round(nwGrowth.totalChange)).toLocaleString()} in total across your snapshots — ${nwGrowth.years < 1 / 12 ? 'too little time between them to annualise a rate yet.' : 'an annualised rate needs a positive starting net worth.'}`}
             </p>
           )}
           {canForecast && (

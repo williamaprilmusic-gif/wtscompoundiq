@@ -15,8 +15,23 @@ describe('computeCoastFire', () => {
     const result = computeCoastFire({ currentPortfolio: 10000, annualReturn: 6, yearsToRetirement: 20, fireNumber: 500000 });
     expect(result.hasCoasted).toBe(false);
     expect(result.shortfallToday).toBeGreaterThan(0);
-    // coastNumber is the target discounted back at the same return.
-    expect(result.coastNumber).toBeCloseTo(500000 / Math.pow(1.06, 20), 2);
+    // coastNumber is the target discounted back at the same return, compounded monthly
+    // to match projectedAtRetirement (which uses compoundFrequency: 12).
+    expect(result.coastNumber).toBeCloseTo(500000 / Math.pow(1 + 0.06 / 12, 240), 2);
+  });
+
+  it('the discount and the projection use the same (monthly) compounding, so they reconcile', () => {
+    // A pot exactly equal to coastNumber should project to ~the target.
+    const r = computeCoastFire({ currentPortfolio: 0, annualReturn: 7, yearsToRetirement: 25, fireNumber: 1000000 });
+    const atTheNumber = computeCoastFire({ currentPortfolio: r.coastNumber, annualReturn: 7, yearsToRetirement: 25, fireNumber: 1000000 });
+    expect(atTheNumber.projectedAtRetirement).toBeCloseTo(1000000, -1); // within ~R10
+  });
+
+  it('never renders Infinity: an absurd near-total-loss rate over a long horizon returns Infinity, not NaN, and the UI guards it', () => {
+    const result = computeCoastFire({ currentPortfolio: 1, annualReturn: -150, yearsToRetirement: 90, fireNumber: 1000000 });
+    expect(Number.isFinite(result.projectedAtRetirement)).toBe(true);
+    expect(result.coastNumber === Infinity || Number.isFinite(result.coastNumber)).toBe(true);
+    expect(Number.isNaN(result.shortfallToday)).toBe(false);
   });
 
   it('coastNumber + shortfall reconcile: pot + shortfall == coastNumber when short', () => {
