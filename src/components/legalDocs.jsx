@@ -397,6 +397,13 @@ export const LEGAL_DOCS = [
               your internet service provider — each is a separate party under its own terms,
               outside our control.
             </p>
+            <p>
+              <strong>Changes to and availability of the Service.</strong> We may add, change,
+              suspend, or discontinue any part of the Service, or the whole of it, at any
+              time. If we permanently discontinue a paid tier you are actively subscribed to,
+              your sole remedy is a pro-rata refund of any prepaid, unused portion of that
+              subscription — we have no further liability for the discontinuation.
+            </p>
           </>
         )
       },
@@ -414,9 +421,11 @@ export const LEGAL_DOCS = [
             claims arising from or relating to these Terms or the Service is limited to, and
             is your <strong>sole and exclusive remedy</strong> for, the amount you paid us in
             the 12 months before the claim arose, or <Fill>[R500]</Fill>, whichever is
-            greater. Nothing in this section limits liability that cannot be limited under
-            South African law, including for gross negligence, willful misconduct, fraud, or
-            death or personal injury caused by our negligence.
+            greater. Multiple claims arising from the same event, or from a related series of
+            events, count as a single claim for the purpose of this cap. Nothing in this
+            section limits liability that cannot be limited under South African law,
+            including for gross negligence, willful misconduct, fraud, or death or personal
+            injury caused by our negligence.
           </p>
         )
       },
@@ -553,6 +562,31 @@ export const LEGAL_DOCS = [
               reasonable discretion, including where we suspect fraud, payment abuse,
               chargeback abuse, or a breach of Section 11 (Acceptable Use) — without it
               entitling that User to a refund beyond what Section 9 already provides.
+            </p>
+
+            <h4>No Third-Party Beneficiaries</h4>
+            <p>
+              These Terms are between you and us alone. No other person — including, where you
+              are an Enterprise licensee, your own end clients — has any right to enforce any
+              part of them.
+            </p>
+
+            <h4>No Partnership or Agency</h4>
+            <p>
+              Nothing in these Terms creates a partnership, joint venture, franchise,
+              employment, or agency relationship between you and us. Neither party may bind or
+              incur obligations on behalf of the other.
+            </p>
+
+            <h4>Time Limit on Claims</h4>
+            <p>
+              Any claim you bring arising out of or relating to these Terms or the Service
+              must be commenced within <Fill>[one year]</Fill> of the date the cause of action
+              arose, failing which it is permanently barred, except where a longer period
+              cannot lawfully be shortened by agreement.{' '}
+              <Fill>[Flag for counsel: a contractually shortened limitation period may not be
+              enforceable against a natural-person consumer under the CPA / common law —
+              confirm before relying on it.]</Fill>
             </p>
           </>
         )
