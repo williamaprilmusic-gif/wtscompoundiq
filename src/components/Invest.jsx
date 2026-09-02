@@ -129,6 +129,8 @@ const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12, con
   });
 
   const combinedMonthly = computed.reduce((sum, g) => sum + g.requiredMonthly, 0);
+  const combinedContributed = computed.reduce((sum, g) => sum + g.projection.totalDeposited, 0);
+  const combinedInterest = computed.reduce((sum, g) => sum + g.projection.totalInterest, 0);
 
   return (
     <div className="card invest-planner">
@@ -202,8 +204,20 @@ const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12, con
 
       {goals.length > 1 && (
         <div className="invest-combined">
-          <span>Combined monthly needed for all {goals.length} goals</span>
-          <strong>{country.symbol} {Math.round(combinedMonthly).toLocaleString()}/month</strong>
+          <div className="invest-combined-main">
+            <span>Combined monthly needed for all {goals.length} goals</span>
+            <strong>{country.symbol} {Math.round(combinedMonthly).toLocaleString()}/month</strong>
+          </div>
+          <div className="invest-combined-totals">
+            <div>
+              <span>Total contributed across all goals</span>
+              <strong>{country.symbol} {Math.round(combinedContributed).toLocaleString()}</strong>
+            </div>
+            <div>
+              <span>Total interest earned across all goals</span>
+              <strong className="positive">{country.symbol} {Math.round(combinedInterest).toLocaleString()}</strong>
+            </div>
+          </div>
         </div>
       )}
 

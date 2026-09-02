@@ -129,12 +129,20 @@
 .invest-combined {
   margin-top: 20px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 14px;
   background: rgba(56, 189, 248, 0.08);
   border: 1px solid rgba(56, 189, 248, 0.3);
   border-radius: 12px;
   padding: 18px 22px;
+}
+
+.invest-combined-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .invest-combined span {
@@ -144,9 +152,32 @@
   letter-spacing: 0.4px;
 }
 
-.invest-combined strong {
+.invest-combined-main strong {
   font-size: 1.3rem;
   color: var(--accent);
+}
+
+.invest-combined-totals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px 22px;
+  border-top: 1px solid rgba(56, 189, 248, 0.2);
+  padding-top: 12px;
+}
+
+.invest-combined-totals > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.invest-combined-totals strong {
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+.invest-combined-totals strong.positive {
+  color: var(--accent-green);
 }
 
 .invest-form {
