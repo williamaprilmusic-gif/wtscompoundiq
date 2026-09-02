@@ -66,8 +66,11 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
     { label: 'B', scenario: scenarioB, value: resultsScenarioB.finalBalance },
     { label: 'C', scenario: scenarioC, value: resultsScenarioC.finalBalance }
   ].sort((x, y) => y.value - x.value);
-  const scenarioWinner = scenarioRanked[0].value === scenarioRanked[scenarioRanked.length - 1].value ? null : scenarioRanked[0].label;
+  // No winner unless the top plan strictly beats the second -- a tie for first (two
+  // plans identical, third worse) shouldn't crown one of them or claim an "R0 more"
+  // lead. Matches the old two-plan behaviour of returning null on an exact tie.
   const scenarioRunnerUpGap = scenarioRanked[0].value - scenarioRanked[1].value;
+  const scenarioWinner = scenarioRunnerUpGap > 0 ? scenarioRanked[0].label : null;
 
   const exportScenarioCSV = () => {
     const header = ['Year',
@@ -84,7 +87,9 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
       const rowC = resultsScenarioC.yearlyData[i] || {};
       return [rowA.year ?? rowB.year ?? rowC.year ?? i, rowA.balance ?? '', rowA.interest ?? '', rowB.balance ?? '', rowB.interest ?? '', rowC.balance ?? '', rowC.interest ?? ''];
     });
-    downloadCSV('wts-compoundiq-compare-plans.csv', [header, ...rows]);
+    const slug = [scenarioA.name, scenarioB.name, scenarioC.name]
+      .map(n => (n || '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')).filter(Boolean).join('-vs-');
+    downloadCSV(`wts-compoundiq-compare-${slug || 'plans'}.csv`, [header, ...rows]);
   };
 
   const countryA = countriesData.find(c => c.code === codeA) || country;
@@ -242,7 +247,7 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
           <button className="compare-export-btn" onClick={exportScenarioCSV}>⬇️ Export Year-by-Year CSV</button>
 
           <div className="compare-note">
-            Both plans use {country.name}'s current tax rules and Calculator-tab compounding frequency/contribution
+            All three plans use {country.name}'s current tax rules and Calculator-tab compounding frequency/contribution
             growth settings -- only the fields shown above differ between them. Saved in your browser so they're still
             here next time.
           </div>

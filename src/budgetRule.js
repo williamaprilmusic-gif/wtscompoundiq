@@ -20,9 +20,10 @@ export const budgetRuleCheck = ({ takeHomeIncome, needs, wants, savings }) => {
     targets,
     actualPct,
     unallocated,
-    // Within a loose tolerance of 50/30/20 on all three, and not over-allocated
-    // (spending more than income). Checking wants too -- the earlier version let a
+    // Within a loose tolerance of 50/30/20 on all three, and not materially
+    // over-allocated (a 2%-of-income slack absorbs rounding without letting a plan that
+    // adds up to well over 100% pass). Checking wants too -- the earlier version let a
     // wildly-over-budget "wants" still read as on track.
-    onTrack: actualPct.needs <= 55 && actualPct.wants <= 35 && actualPct.savings >= 18 && unallocated >= -1
+    onTrack: actualPct.needs <= 55 && actualPct.wants <= 35 && actualPct.savings >= 18 && unallocated >= -income * 0.02
   };
 };

@@ -28,6 +28,13 @@ describe('depositSavingsTimeline', () => {
     expect(result.months).toBeNull();
   });
 
+  it('returns months: null when the monthly amount is too small to reach target within the 100-year cap', () => {
+    const result = depositSavingsTimeline({ homePrice: 5000000, depositPercent: 20, monthlySaving: 100, annualSavingsRate: 0 });
+    // 1,000,000 target at 100/mo, no interest -> 10,000 months, past the 1200 cap.
+    expect(result.months).toBeNull();
+    expect(result.alreadyThere).toBe(false);
+  });
+
   it('clamps a deposit percent above 100', () => {
     const result = depositSavingsTimeline({ homePrice: 1000000, depositPercent: 250, monthlySaving: 20000, annualSavingsRate: 0 });
     expect(result.targetAmount).toBeCloseTo(1000000, 5); // capped at 100% of price

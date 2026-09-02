@@ -26,9 +26,14 @@ describe('retirementIncomeGap', () => {
     expect(retirementIncomeGap({ projectedPot: 1000000, targetAnnualIncome: 0, withdrawalRate: 4 }).coverageRatio).toBe(100);
   });
 
-  it('guards a 0 withdrawal rate', () => {
+  it('guards a 0 withdrawal rate (falls back to the 4% default)', () => {
     const result = retirementIncomeGap({ projectedPot: 1000000, targetAnnualIncome: 300000, withdrawalRate: 0 });
-    expect(Number.isFinite(result.incomeFromPot)).toBe(true);
+    expect(result.incomeFromPot).toBeCloseTo(40000, 5); // 1,000,000 * 4%
+  });
+
+  it('floors a negative or tiny withdrawal rate at 0.01% rather than dividing by ~0', () => {
+    const result = retirementIncomeGap({ projectedPot: 1000000, targetAnnualIncome: 300000, withdrawalRate: -5 });
     expect(Number.isFinite(result.capitalGap)).toBe(true);
+    expect(result.incomeFromPot).toBeCloseTo(1000000 * 0.0001, 5);
   });
 });
