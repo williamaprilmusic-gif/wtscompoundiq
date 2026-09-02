@@ -9,6 +9,7 @@ import { confirmRemoval } from '../utils/confirmRemoval';
 import { uniqueId } from '../utils/uniqueId';
 import { safeTrim } from '../utils/safeTrim';
 import { readJSONArray, writeJSON } from '../utils/storage';
+import { annualisedGrowth, yearsBetweenDates } from '../growthRate';
 import SnapshotChart from './SnapshotChart';
 import CountrySelect from './CountrySelect';
 import AllocationChart from './AllocationChart';
@@ -259,6 +260,17 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
   const lastSnapshot = convertedHistory.length > 0 ? convertedHistory[convertedHistory.length - 1] : null;
   const delta = lastSnapshot ? netWorth - lastSnapshot.net : null;
 
+  // Compound annual growth rate of net worth across the whole saved history (first
+  // snapshot to last), using the real time span between their dates. cagr is null when
+  // the starting net worth was zero or negative -- growthRate.js falls back to a plain
+  // total-change figure for that case, which the readout handles.
+  const nwGrowth = useMemo(() => {
+    if (convertedHistory.length < 2) return null;
+    const first = convertedHistory[0];
+    const last = convertedHistory[convertedHistory.length - 1];
+    return annualisedGrowth({ startValue: first.net, endValue: last.net, years: yearsBetweenDates(first.date, last.date) });
+  }, [convertedHistory]);
+
   // Forecast: extends the chart with a dashed continuation of the trend, via
   // SnapshotChart's opt-in projectedPoints prop. Simplification, stated below in the
   // note: assets compound at forecastRate/yr, debts are assumed to hold flat at their
@@ -502,6 +514,13 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
               <button className="nw-clear-btn" onClick={clearHistory}>Clear history</button>
             </div>
           </div>
+          {nwGrowth && (
+            <p className="nw-history-growth">
+              {nwGrowth.cagr != null
+                ? `Net worth has ${nwGrowth.cagr >= 0 ? 'grown' : 'shrunk'} at about ${Math.abs(nwGrowth.cagr).toFixed(1)}%/yr over ${nwGrowth.years.toFixed(1)} years (${nwGrowth.totalChange >= 0 ? '+' : '−'}${country.symbol}${Math.abs(Math.round(nwGrowth.totalChange)).toLocaleString()} in total).`
+                : `${nwGrowth.totalChange >= 0 ? '+' : '−'}${country.symbol}${Math.abs(Math.round(nwGrowth.totalChange)).toLocaleString()} in total across your snapshots — an annualised rate needs a positive starting net worth.`}
+            </p>
+          )}
           {canForecast && (
             <div className="nw-forecast-controls">
               <label className="nw-forecast-toggle">

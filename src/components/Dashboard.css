@@ -56,6 +56,39 @@
   margin-bottom: 22px;
 }
 
+.dashboard-nextsteps {
+  margin-bottom: 22px;
+}
+.dashboard-nextsteps h3 {
+  font-size: 1rem;
+  color: var(--text);
+  margin: 0 0 10px;
+}
+.dashboard-nextsteps ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dashboard-nextsteps li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--raise-05);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+}
+.dashboard-nextstep-text {
+  color: var(--text);
+  flex: 1;
+  min-width: 60%;
+}
+
 .dashboard-milestones h3 {
   font-size: 1rem;
   color: var(--text);

@@ -15,6 +15,7 @@ import { HISTORY_KEY as DEBTPAYOFF_HISTORY_KEY, isValidDebtHistoryEntry } from '
 import { HISTORY_KEY as EMERGENCYFUND_HISTORY_KEY, isValidEfHistoryEntry } from './EmergencyFund';
 import { scoreEmergencyFund, scoreDebtPayoff, scoreNetWorthTrend, scoreFireProgress, computeHealthScore } from '../financialHealthScore';
 import { detectNetWorthMilestones, detectDebtClearedMilestone, detectEfFundedMilestone, sortMilestones } from '../milestones';
+import { buildNextSteps } from '../nextSteps';
 import { readJSONArray } from '../utils/storage';
 
 const NETWORTH_SERIES = [{ key: 'assets', label: 'Assets' }, { key: 'debts', label: 'Debts' }, { key: 'net', label: 'Net Worth' }];
@@ -109,6 +110,14 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
     ...detectEfFundedMilestone(plan?.emergencyFund)
   ]), [netWorthPoints, netWorthCountry.code, debtPoints, plan]);
 
+  // Same pattern-matching approach as the milestones above -- reads only what's already
+  // saved and surfaces the obvious gaps as tab shortcuts. No new numbers, no advice.
+  const nextSteps = useMemo(() => buildNextSteps({
+    plan,
+    hasNetWorth: !!netWorthEntry,
+    hasHealthScore: !!healthScore
+  }), [plan, netWorthEntry, healthScore]);
+
   const today = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
 
   return (
@@ -158,6 +167,21 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {nextSteps.length > 0 && (
+        <div className="dashboard-nextsteps no-print">
+          <h3>✅ Suggested next steps</h3>
+          <ul>
+            {nextSteps.map((s, i) => (
+              <li key={i}>
+                <span className="dashboard-nextstep-text">{s.text}</span>
+                <button className="dashboard-card-link" onClick={() => onNavigate(s.tab)}>Open {s.tab} →</button>
+              </li>
+            ))}
+          </ul>
+          <p className="dashboard-note">Pattern-matched from what you've saved so far — not advice, just the obvious gaps.</p>
         </div>
       )}
 

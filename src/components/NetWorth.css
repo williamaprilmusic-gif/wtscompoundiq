@@ -486,3 +486,9 @@
   color: var(--mut2);
   line-height: 1.5;
 }
+
+.nw-history-growth {
+  margin: -4px 0 14px;
+  font-size: 0.82rem;
+  color: var(--mut);
+}
