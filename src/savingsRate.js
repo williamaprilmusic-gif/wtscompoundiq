@@ -4,7 +4,7 @@
 // real (after-inflation) return and needing 25x annual spending (the 4% rule) to be
 // done. Independent of any current portfolio -- FIRE Number / Coast FIRE cover that.
 
-export const YEARS_CAP = 100;
+const YEARS_CAP = 100;
 export const FI_MULTIPLE = 25; // 4% safe withdrawal rate -> 25x annual spending
 
 export const yearsToFinancialIndependence = ({ takeHomeIncome, annualSpending, realReturn }) => {

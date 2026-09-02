@@ -2,7 +2,7 @@
 // Two quick solvency reads off a Net Worth snapshot: how leveraged you are (debt as a
 // share of assets) and how much of your assets you actually own outright (equity
 // ratio). No new inputs -- both derive from the totals the Net Worth tab already has.
-export const LEVERAGE_BANDS = [
+const LEVERAGE_BANDS = [
   { upTo: 20, key: 'strong', label: 'Low leverage' },
   { upTo: 40, key: 'ok', label: 'Moderate leverage' },
   { upTo: 60, key: 'stretched', label: 'High leverage' },

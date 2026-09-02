@@ -10,10 +10,11 @@
 // rate than working-life income. Treat the advantage figure as the deferral-plus-full-
 // compounding benefit before that, not a final after-everything number.
 import { calculateCompoundInterest } from './engine';
+import { clampPct } from './utils/sanitize';
 
 export const pretaxRetirementBoost = ({ monthlyContribution, marginalTaxRate, years, returnRate, taxableReturnTaxRate }) => {
   const gross = Math.max(0, monthlyContribution || 0);
-  const mRate = Math.max(0, Math.min(marginalTaxRate || 0, 100)) / 100;
+  const mRate = clampPct(marginalTaxRate) / 100;
   const netCost = gross * (1 - mRate);       // real out-of-pocket cost per month
   const annualRefund = gross * 12 * mRate;   // tax back for a full year of contributions
 

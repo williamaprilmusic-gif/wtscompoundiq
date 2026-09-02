@@ -4,6 +4,7 @@
 // monthly payments over the term, owning nothing after. Distinct from carCost.js,
 // which only costs out the buy path. Reuses loanAmortization.js for the finance side.
 import { calculateLoanAmortization } from './loanAmortization';
+import { clampPct } from './utils/sanitize';
 
 export const leaseVsBuy = ({
   carPrice, buyDeposit = 0, financeRate = 0, financeTermYears = 0,
@@ -25,7 +26,7 @@ export const leaseVsBuy = ({
     financeInterest = amort.yearlyData.filter(r => r.year <= yrs).reduce((s, r) => s + r.interestPaid, 0);
   }
 
-  const depRate = Math.max(0, Math.min(annualDepreciationRate || 0, 100)) / 100;
+  const depRate = clampPct(annualDepreciationRate) / 100;
   const residualValue = price * Math.pow(1 - depRate, period);
   const buyNetCost = (price - residualValue) + financeInterest;
 

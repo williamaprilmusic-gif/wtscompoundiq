@@ -2163,7 +2163,8 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
             </div>
             <p className="power-tool-note">
               Uses the exact (1 + after-tax) ÷ (1 + inflation) − 1 identity. The rough "just subtract" shortcut would
-              say {realRet.roughApprox.toFixed(1)}% — always a little optimistic. Inside a {country.wrapperLabel && country.wrapperLabel !== 'N/A' ? country.wrapperLabel : 'tax-free wrapper'} the
+              say {realRet.roughApprox.toFixed(1)}% — it skips the interaction between the two rates (at normal
+              positive inflation that makes it slightly optimistic). Inside a {country.wrapperLabel && country.wrapperLabel !== 'N/A' ? country.wrapperLabel : 'tax-free wrapper'} the
               tax line is 0, so set it to 0 to see the sheltered real return.
             </p>
           </>

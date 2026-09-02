@@ -19,6 +19,17 @@ describe('costOfWaiting', () => {
     expect(r.startLaterBalance).toBeCloseTo(expected, 2);
   });
 
+  it('threads progressive brackets through so "start now" equals the full engine result', () => {
+    const taxBrackets = [{ upTo: 250000, rate: 18 }, { upTo: null, rate: 31 }];
+    const args = { ...plan, taxBrackets, otherTaxableIncome: 400000, years: 30, delayYears: 5 };
+    const r = costOfWaiting(args);
+    const full = calculateCompoundInterest({ ...args }).finalBalance;
+    expect(r.startNowBalance).toBeCloseTo(full, 2);
+    // and it actually differs from the flat-rate run (proves the brackets took effect)
+    const flat = calculateCompoundInterest({ ...plan, years: 30 }).finalBalance;
+    expect(r.startNowBalance).not.toBeCloseTo(flat, 0);
+  });
+
   it('a longer delay costs more', () => {
     const short = costOfWaiting({ ...plan, years: 30, delayYears: 3 });
     const long = costOfWaiting({ ...plan, years: 30, delayYears: 10 });

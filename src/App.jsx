@@ -273,10 +273,15 @@ export default function App() {
 
   // "Cost of waiting" -- same plan against the same target date, started `waitYears`
   // later (fewer compounding years). A free-tier nudge shown under the result.
+  // effWait is the delay actually applied: clamped to [1, years-1] so the spelled-out
+  // number in the sentence always matches what the math used, even if `years` shrank
+  // under a stale `waitYears` or the field was cleared/negatived.
+  const effWait = Math.max(1, Math.min(Math.max(1, years - 1), waitYears || 1));
   const waitingCost = costOfWaiting({
     initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper, compoundFrequency,
     annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit,
-    contributionIncreaseRate: contributionIncrease, lumpSums, delayYears: waitYears
+    contributionIncreaseRate: contributionIncrease, lumpSums,
+    taxBrackets: effectiveTaxBrackets, otherTaxableIncome, delayYears: effWait
   });
 
   // `name` is the stable internal tab id -- used for activeTab routing, canAccess
@@ -548,7 +553,7 @@ export default function App() {
                         type="number"
                         min="1"
                         max={Math.max(1, years - 1)}
-                        value={waitYears}
+                        value={effWait}
                         onChange={(e) => setWaitYears(Number(e.target.value))}
                       />{' '}
                       year{waitingCost.delayYears === 1 ? '' : 's'} later would leave you with about{' '}

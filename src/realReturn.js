@@ -3,10 +3,12 @@
 // inflation, to get the return that actually grows purchasing power. Uses the exact
 // (1 + after-tax) / (1 + inflation) - 1 identity, and also reports the rough
 // "just subtract" approximation so the gap between them is visible.
+import { clampPct } from './utils/sanitize';
+
 export const realReturn = ({ nominalRate, inflationRate, taxRate = 0 }) => {
   const n = (nominalRate || 0) / 100;
   const i = (inflationRate || 0) / 100;
-  const t = Math.max(0, Math.min(taxRate || 0, 100)) / 100;
+  const t = clampPct(taxRate) / 100;
 
   const afterTax = n * (1 - t);
   const denom = 1 + i;

@@ -430,7 +430,9 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
           </div>
           <div className="nw-ratio">
             <span>Equity ratio (owned outright)</span>
-            <strong className="positive">{bsRatios.equityRatio == null ? '—' : `${bsRatios.equityRatio.toFixed(0)}%`}</strong>
+            <strong className={bsRatios.equityRatio == null || bsRatios.equityRatio >= 50 ? 'positive' : 'warn'}>
+              {bsRatios.equityRatio == null ? '—' : `${bsRatios.equityRatio.toFixed(0)}%`}
+            </strong>
           </div>
           <div className="nw-ratio">
             <span>Read</span>

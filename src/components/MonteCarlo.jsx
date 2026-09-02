@@ -172,11 +172,15 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
       } else if (hiProb < wanted) {
         setSolveResult({ monthly: Math.round(hi), achievedProb: hiProb, wanted, reachable: false });
       } else {
+        // Track the probability at the best accepted `hi` so the displayed % is one
+        // that actually cleared the bar -- no extra 1,000-path draw after the loop.
+        let hiProbFinal = hiProb;
         for (let i = 0; i < 16; i++) {
           const mid = (lo + hi) / 2;
-          if (probAt(mid) >= wanted) hi = mid; else lo = mid;
+          const pm = probAt(mid);
+          if (pm >= wanted) { hi = mid; hiProbFinal = pm; } else lo = mid;
         }
-        setSolveResult({ monthly: Math.round(hi), achievedProb: probAt(hi), wanted, reachable: true });
+        setSolveResult({ monthly: Math.round(hi), achievedProb: hiProbFinal, wanted, reachable: true });
       }
       setIsSolving(false);
     }, 20);

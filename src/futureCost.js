@@ -5,17 +5,14 @@
 // Math.pow(1 + rate/100, years) escalation engine.js's siblings already use elsewhere
 // (educationSavings.js's per-year cost inflation, simulateDrawdown's withdrawal
 // escalation), factored out here since this tool asks the question standalone rather
-// than as one step inside a bigger projection.
-
-// Floor the rate just above -100% -- a rate of -100 or below drives Math.pow to 0 or a
-// negative base (NaN with a fractional exponent), and "prices fall to nothing" isn't a
-// meaningful projection anyway.
-const safeRate = (rate) => Math.max(-99.99, rate || 0);
+// than as one step inside a bigger projection. floorRate keeps a sub -100% inflation
+// input from driving Math.pow to a zero/negative base.
+import { floorRate } from './utils/sanitize';
 
 export const projectFutureCost = ({ currentCost, years, inflationRate }) => {
   const safeCost = Math.max(0, currentCost || 0);
   const safeYears = Math.max(0, years || 0);
-  const futureCost = safeCost * Math.pow(1 + safeRate(inflationRate) / 100, safeYears);
+  const futureCost = safeCost * Math.pow(1 + floorRate(inflationRate) / 100, safeYears);
   return {
     currentCost: safeCost,
     futureCost,
@@ -30,7 +27,7 @@ export const projectFutureCost = ({ currentCost, years, inflationRate }) => {
 export const projectPurchasingPower = ({ currentAmount, years, inflationRate }) => {
   const safeAmount = Math.max(0, currentAmount || 0);
   const safeYears = Math.max(0, years || 0);
-  const realValue = safeAmount / Math.pow(1 + safeRate(inflationRate) / 100, safeYears);
+  const realValue = safeAmount / Math.pow(1 + floorRate(inflationRate) / 100, safeYears);
   return {
     currentAmount: safeAmount,
     realValue,

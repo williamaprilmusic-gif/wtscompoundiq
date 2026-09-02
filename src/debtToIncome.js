@@ -5,7 +5,7 @@
 // actually checks. Bands follow the widely-cited mortgage-underwriting convention (a
 // back-end DTI under ~36% is considered healthy, 43%+ is where many lenders decline).
 
-export const DTI_BANDS = [
+const DTI_BANDS = [
   { upTo: 20, key: 'healthy', label: 'Healthy' },
   { upTo: 36, key: 'manageable', label: 'Manageable' },
   { upTo: 43, key: 'stretched', label: 'Getting stretched' },

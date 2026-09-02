@@ -4,10 +4,11 @@
 // optional. A different question from powerToolsEngine.js's FIRE Number /
 // yearsToReachTarget, which assume you keep contributing the whole way there.
 import { calculateCompoundInterest } from './engine';
+import { floorRate } from './utils/sanitize';
 
 export const computeCoastFire = ({ currentPortfolio, annualReturn, yearsToRetirement, fireNumber }) => {
   const pot = Math.max(0, currentPortfolio || 0);
-  const rate = Math.max(-99.99, annualReturn || 0);
+  const rate = floorRate(annualReturn);
   // Rounded so the projection (calculateCompoundInterest floors years internally) and
   // the discount-back below run over the same whole-year horizon; capped so an absurd
   // typed value can't drive Math.pow to underflow/overflow (no retirement is 150+ years).

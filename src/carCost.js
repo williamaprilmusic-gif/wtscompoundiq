@@ -4,6 +4,7 @@
 // maintenance, licensing) a sticker price never shows. Reuses loanAmortization.js for
 // the finance portion, the same amortization math the Loan & Bond tab uses.
 import { calculateLoanAmortization } from './loanAmortization';
+import { clampPct } from './utils/sanitize';
 
 export const carOwnershipCost = ({
   purchasePrice, deposit = 0, financeRate = 0, financeTermYears = 0,
@@ -28,7 +29,7 @@ export const carOwnershipCost = ({
       .reduce((s, r) => s + r.interestPaid, 0);
   }
 
-  const depRate = Math.max(0, Math.min(annualDepreciationRate || 0, 100)) / 100;
+  const depRate = clampPct(annualDepreciationRate) / 100;
   const residualValue = price * Math.pow(1 - depRate, held);
   const depreciation = price - residualValue;
 
