@@ -28,9 +28,12 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
   // a returning customer). It's collected here, not stored by this app anywhere, and
   // (per the Privacy Policy) only ever reaches the payment processor.
   const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState(false);
   const periodLabel = period === 'annual' ? '/yr' : '/mo';
 
   const handlePaystackRedirect = () => {
+    // The real processor needs an email for the receipt -- the demo path doesn't.
+    if (!email.trim()) { setEmailError(true); return; }
     // Real Paystack Integration Key placeholder:
     if (!window.Paystack || typeof price !== 'number') {
       // No live Paystack script is loaded in this demo build, so fall back to the
@@ -62,12 +65,15 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
   };
 
   const simulateLocalPayment = () => {
+    // Demo path: no real charge, no receipt, so no email is required. A short spinner
+    // for feedback, then straight to onSuccess -- which closes this modal and flips the
+    // tier badge. No blocking alert() (some browsers suppress repeat dialogs, which used
+    // to leave this looking like it did nothing).
     setProcessing(true);
     setTimeout(() => {
-      alert("SIMULATION SUCCESSFUL! Tier upgraded locally for testing.");
       onSuccess(tier);
       setProcessing(false);
-    }, 3000);
+    }, 600);
   };
 
   return (
@@ -79,12 +85,13 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
 
         <input
           type="email"
-          className="payment-email-input"
-          placeholder="Email (for your receipt)"
+          className={`payment-email-input ${emailError ? 'has-error' : ''}`}
+          placeholder="Email (optional in this demo)"
           aria-label="Email address"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError(false); }}
         />
+        {emailError && <small className="payment-email-hint">Enter an email to continue with the bank redirect.</small>}
 
         {bankRedirectAvailable && (
           <div className="payment-methods-toggle">
@@ -127,9 +134,9 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
           <button
             className="btn-pay now"
             onClick={paymentMethod === 'bank' && bankRedirectAvailable ? handlePaystackRedirect : simulateLocalPayment}
-            disabled={processing || !email.trim()}
+            disabled={processing}
           >
-            {processing ? 'Simulating Upgrade...' : `Simulate Upgrade (No Charge)`}
+            {processing ? 'Upgrading…' : `Simulate Upgrade (No Charge)`}
           </button>
           <small className="secure-note">⚠️ Demo mode: no real payment processor is connected. No card details are collected, validated, or stored.</small>
         </div>

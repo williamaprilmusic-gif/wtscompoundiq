@@ -1,4 +1,14 @@
 /* src/components/PaymentSection.css */
+.payment-email-input.has-error {
+  border-color: var(--accent-red, #f87171);
+}
+.payment-email-hint {
+  display: block;
+  color: var(--accent-red, #f87171);
+  font-size: 0.78rem;
+  margin: 4px 0 0;
+}
+
 .payment-overlay {
   position: fixed;
   top: 0;

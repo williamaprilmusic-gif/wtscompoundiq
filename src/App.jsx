@@ -85,6 +85,10 @@ export default function App() {
   // over a stale choice from an earlier abandoned pricing-modal visit.
   const [selectedBillingPeriod, setSelectedBillingPeriod] = useState('monthly');
   const [pendingTab, setPendingTab] = useState(null);
+  // Short-lived in-app confirmation after a tier change -- replaces the blocking
+  // alert()s the upgrade/downgrade paths used to fire (which a browser can suppress,
+  // making the whole thing look like it did nothing).
+  const [tierChangeMsg, setTierChangeMsg] = useState(null);
 
   // Calculator state -- starts blank; every number here should come from the user, not
   // a placeholder scenario. The one exception is a shared plan link: if the URL carries
@@ -207,6 +211,13 @@ export default function App() {
     }
   }, []);
 
+  // Auto-dismiss the tier-change confirmation banner.
+  useEffect(() => {
+    if (!tierChangeMsg) return;
+    const id = setTimeout(() => setTierChangeMsg(null), 4500);
+    return () => clearTimeout(id);
+  }, [tierChangeMsg]);
+
   const handleUpgradeClick = (targetTier, targetTab = null) => {
     if (userTier === targetTier || targetTier === 'Basic') return;
     setSelectedUpgradeTier(targetTier);
@@ -215,27 +226,28 @@ export default function App() {
     setShowPayment(true);
   };
 
-  const processSuccessfulPayment = (tier) => {
+  const setTier = (tier) => {
     setUserTier(tier);
-    localStorage.setItem('wts_compoundiq_tier', tier);
+    try { localStorage.setItem('wts_compoundiq_tier', tier); } catch { /* private mode / quota */ }
+    setTierChangeMsg(tier === 'Basic' ? "You're now on the free Basic plan." : `You're now on ${tier} — premium features unlocked.`);
+  };
+
+  const processSuccessfulPayment = (tier) => {
+    setTier(tier);
     setShowPayment(false);
     if (pendingTab) {
       setActiveTab(pendingTab);
       setPendingTab(null);
     }
-    alert(`Successfully upgraded to ${tier}! Premium features unlocked.`);
   };
 
-  // Basic is free -- downgrading to it shouldn't go through the (fake) payment flow at
-  // all, unlike upgrading to Pro/Ultra/Enterprise. Confirmed first since it immediately
-  // locks every premium tab again.
+  // Basic is free -- downgrading to it skips the (fake) payment flow entirely. The
+  // "are you sure" step now lives in the pricing modal's Basic card (a two-tap confirm),
+  // so this just applies it -- no window.confirm(), which a browser can silently refuse.
   const downgradeToBasic = () => {
     if (userTier === 'Basic') return;
-    if (!window.confirm(`Downgrade to the free Basic plan? You'll lose access to ${userTier}-tier tabs immediately (your saved data stays put -- upgrading again later restores access to it).`)) return;
-    setUserTier('Basic');
-    localStorage.setItem('wts_compoundiq_tier', 'Basic');
+    setTier('Basic');
     setShowPricing(false);
-    alert("You're now on the Basic plan.");
   };
 
   const verification = getVerificationInfo(country.code);
@@ -338,6 +350,13 @@ export default function App() {
           </button>
         </div>
       </header>
+
+      {tierChangeMsg && (
+        <div className="tier-change-banner" role="status">
+          ✓ {tierChangeMsg}
+          <button className="tier-change-banner-close" onClick={() => setTierChangeMsg(null)} aria-label="Dismiss">&times;</button>
+        </div>
+      )}
 
       <nav className="tabs-nav">
         {tabGroups.map((group, groupIdx) => (

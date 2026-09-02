@@ -109,11 +109,18 @@ export default function TierPricing({ currentTier, onUpgrade, onClose }) {
   // Only Pro/Ultra carry an annual option -- Basic is free and Enterprise is a direct
   // quote, so this toggle only ever changes what those two cards show.
   const [billingPeriod, setBillingPeriod] = useState('monthly');
+  // Two-tap confirm for the downgrade, in place of a window.confirm() the browser can
+  // suppress. Only the Basic card ever reads this.
+  const [confirmingDowngrade, setConfirmingDowngrade] = useState(false);
 
   const handleUpgrade = (tier) => {
     // App.jsx branches: Basic downgrades directly (it's free, no payment flow), anything
     // else goes through checkout. Only pass 'annual' for a tier that actually has one --
     // Basic/Enterprise ignore the toggle so they should never carry it through.
+    if (tier.name === 'Basic') {
+      if (!confirmingDowngrade) { setConfirmingDowngrade(true); return; }
+      setConfirmingDowngrade(false);
+    }
     onUpgrade(tier.name, tier.priceAnnual ? billingPeriod : 'monthly');
   };
 
@@ -157,12 +164,21 @@ export default function TierPricing({ currentTier, onUpgrade, onClose }) {
                   ))}
                 </ul>
                 <button
-                  className={`upgrade-btn ${currentTier === tier.name ? 'current' : ''}`}
+                  className={`upgrade-btn ${currentTier === tier.name ? 'current' : ''} ${tier.name === 'Basic' && confirmingDowngrade ? 'confirming' : ''}`}
                   onClick={() => handleUpgrade(tier)}
                   disabled={currentTier === tier.name}
                 >
-                  {currentTier === tier.name ? 'Active Plan' : tier.cta}
+                  {currentTier === tier.name
+                    ? 'Active Plan'
+                    : tier.name === 'Basic' && confirmingDowngrade
+                      ? 'Tap again to confirm downgrade'
+                      : tier.cta}
                 </button>
+                {tier.name === 'Basic' && confirmingDowngrade && currentTier !== 'Basic' && (
+                  <button type="button" className="downgrade-cancel-btn" onClick={() => setConfirmingDowngrade(false)}>
+                    Keep {currentTier}
+                  </button>
+                )}
               </div>
             );
           })}
