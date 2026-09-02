@@ -209,6 +209,14 @@ export const LEGAL_DOCS = [
         body: (
           <>
             <p>
+              <Fill>[Remove this paragraph once live billing is switched on.]</Fill>{' '}
+              <strong>The in-app checkout is currently operating in demo mode — no card is
+              charged and no payment is taken.</strong> Selecting a paid tier unlocks its
+              features locally in your browser for evaluation only. The billing, renewal, and
+              refund terms in this Section and the Refund &amp; Cancellation Policy describe
+              how paid subscriptions work once live payment processing is enabled.
+            </p>
+            <p>
               Paid subscriptions are processed by Paystack, an independent third-party
               payment processor. We never receive or store your full card number, CVV, or
               banking credentials — see the Privacy Policy for what limited data is shared
@@ -935,11 +943,19 @@ export const LEGAL_DOCS = [
       {
         heading: 'Overview',
         body: (
-          <p>
-            This policy covers cancelling a subscription and requesting a refund for Pro,
-            Ultra, and Enterprise tiers. The Basic tier is free and has nothing to cancel or
-            refund.
-          </p>
+          <>
+            <p>
+              <Fill>[Remove this paragraph once live billing is switched on.]</Fill>{' '}
+              <strong>The in-app checkout is currently in demo mode and takes no payment</strong>,
+              so there is nothing to refund today. This policy sets out how cancellations and
+              refunds will work once live payment processing is enabled.
+            </p>
+            <p>
+              This policy covers cancelling a subscription and requesting a refund for Pro,
+              Ultra, and Enterprise tiers. The Basic tier is free and has nothing to cancel or
+              refund.
+            </p>
+          </>
         )
       },
       {
