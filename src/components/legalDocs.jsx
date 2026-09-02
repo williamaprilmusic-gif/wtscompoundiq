@@ -588,6 +588,28 @@ export const LEGAL_DOCS = [
               enforceable against a natural-person consumer under the CPA / common law —
               confirm before relying on it.]</Fill>
             </p>
+
+            <h4>Electronic Communications</h4>
+            <p>
+              The Service operates without an account, so we communicate with you
+              electronically — through the app itself and, for anything tied to a purchase, by
+              email to the address you entered at checkout. You consent to receive all
+              notices, disclosures, and agreements from us in electronic form, and agree that
+              this satisfies any legal requirement that such communications be in writing.
+            </p>
+
+            <h4>Notices</h4>
+            <p>
+              Notice to us must be sent to <Fill>[legal@wtscompoundiq.co.za]</Fill> and is
+              treated as received on the next business day. Notice to you is treated as
+              received when we post it in the app or send it to your checkout email address.
+            </p>
+
+            <h4>Headings</h4>
+            <p>
+              Section headings are for convenience only and do not affect how these Terms are
+              interpreted.
+            </p>
           </>
         )
       },
