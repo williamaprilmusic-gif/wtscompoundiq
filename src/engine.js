@@ -136,12 +136,21 @@ export function calculateCompoundInterest({
         // Simple flat tax on nominal interest earned this year
         taxPaid = yearInterestEarned * (taxRate / 100);
       }
+      // A down year (negative rate -> negative yearInterestEarned) must not generate a
+      // negative "tax" that gets added back to the balance -- this simple model has no
+      // loss carry-back/refund, and letting it happen made a taxable account beat a
+      // sheltered one on identical negative returns. No gain, no tax.
+      taxPaid = Math.max(0, taxPaid);
       balance -= taxPaid;
       totalInterest -= taxPaid; // Net interest after tax
     }
 
-    // 4. Calculate real value (inflation adjusted)
-    const realValue = balance / Math.pow(1 + (inflation / 100), y + 1);
+    // 4. Calculate real value (inflation adjusted). Floor the discount base just above
+    // zero so an inflation input at or below -100% (reachable from a hand-edited share
+    // link) can't hand Math.pow a zero/negative base and flip realValue's sign or blow
+    // it to Infinity.
+    const inflationBase = Math.max(0.0001, 1 + (inflation / 100));
+    const realValue = balance / Math.pow(inflationBase, y + 1);
 
     yearlyData.push({
       year: y + 1,

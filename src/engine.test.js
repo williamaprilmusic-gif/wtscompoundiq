@@ -218,4 +218,21 @@ describe('calculateCompoundInterest -- malformed input hardening', () => {
     expect(r.finalBalance).toBe(1000);
     expect(r.yearlyData).toHaveLength(0);
   });
+
+  it('a down year generates no negative "tax" that would beat a sheltered account', () => {
+    const base = { initial: 100000, monthly: 0, rate: -8, years: 5, taxRate: 30 };
+    const taxable = calculateCompoundInterest({ ...base, wrapper: false });
+    const sheltered = calculateCompoundInterest({ ...base, wrapper: true });
+    // No gain -> no tax either way, so a sustained loss can't leave the taxable
+    // account ahead of the sheltered one via a phantom loss refund.
+    expect(taxable.yearlyData.every(y => y.taxPaid === 0)).toBe(true);
+    expect(taxable.finalBalance).toBe(sheltered.finalBalance);
+    expect(taxable.finalBalance).toBeLessThan(100000);
+  });
+
+  it('an inflation input at or below -100% still yields a finite real value', () => {
+    const r = calculateCompoundInterest({ initial: 1000, monthly: 100, rate: 6, years: 10, inflation: -150 });
+    expect(r.yearlyData.every(y => Number.isFinite(y.realValue))).toBe(true);
+    expect(r.yearlyData.every(y => y.realValue >= 0)).toBe(true);
+  });
 });

@@ -35,11 +35,12 @@ export const LEGAL_DOCS = [
         <p>
           Checked against POPIA, the Consumer Protection Act (CPA), and the Electronic
           Communications and Transactions Act (ECTA) — see Sections 8–10 and 20, added
-          specifically for that. Section 21 (General Provisions) and Sections 16/18/22 add
-          the boilerplate that protects <em>you</em> as the operator — severability, entire
-          agreement, no waiver, force majeure, assignment, a class-action waiver, a feedback
-          license, sanctions compliance, fraud/abuse termination grounds, and Enterprise
-          white-label indemnification — the kind of clauses a first draft usually leaves out
+          specifically for that. Section 21 (General Provisions), together with Sections 16
+          and 18, adds the boilerplate that protects <em>you</em> as the operator —
+          severability, entire agreement, no waiver, force majeure, assignment, a
+          class-action waiver, a feedback license, sanctions compliance, fraud/abuse
+          termination grounds, and Enterprise white-label indemnification — the kind of
+          clauses a first draft usually leaves out
           and a counterparty's lawyer usually notices. This is a substantive review based on
           knowledge of these frameworks, not a formal legal opinion from a practicing
           attorney: a few calls below (flagged inline) are genuine judgment territory — most
@@ -710,7 +711,7 @@ export const LEGAL_DOCS = [
             debts, net worth, goals, calculator inputs, browsing behavior inside the app, IP
             address logs tied to your activity, or device fingerprints. There is no analytics
             script, tracking pixel, or third-party script running in the Service beyond
-            what's listed in Section 5. This is a verifiable architectural claim, not
+            what's listed in Sections 4 and 5. This is a verifiable architectural claim, not
             boilerplate — the app's only outbound network calls are its own service worker
             caching its own files for offline use, and (only if you subscribe) the payment
             processor's own checkout.
