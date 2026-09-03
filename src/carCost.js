@@ -13,7 +13,10 @@ export const carOwnershipCost = ({
 }) => {
   const price = Math.max(0, purchasePrice || 0);
   const dep = Math.max(0, Math.min(deposit || 0, price));
-  const held = Math.max(0, yearsOwned || 0);
+  // Whole-year horizon, so depreciation (Math.pow below) and finance interest (the
+  // yearlyData filter) are measured over the same span -- a fractional yearsOwned
+  // otherwise prorated the depreciation but billed a full extra year of interest.
+  const held = Math.max(0, Math.round(yearsOwned || 0));
   const financed = price - dep;
 
   const amort = (financed > 0 && (financeTermYears || 0) > 0)
@@ -23,7 +26,7 @@ export const carOwnershipCost = ({
   // Interest actually paid across the years the car is held (never past the loan term).
   let financeInterest = 0;
   if (amort) {
-    const heldYearCount = Math.min(Math.ceil(held), Math.ceil(amort.payoffMonths / 12));
+    const heldYearCount = Math.min(held, Math.ceil(amort.payoffMonths / 12));
     financeInterest = amort.yearlyData
       .filter(r => r.year <= heldYearCount)
       .reduce((s, r) => s + r.interestPaid, 0);

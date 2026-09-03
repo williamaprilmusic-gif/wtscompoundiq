@@ -255,3 +255,13 @@
   text-decoration: underline;
 }
 .downgrade-cancel-btn:hover { color: var(--text, #f1f5f9); }
+
+@media (max-width: 640px) {
+  .pricing-overlay { padding: 10px; }
+  .pricing-modal { padding: 24px 18px; border-radius: 18px; }
+  .pricing-title { font-size: 1.5rem; }
+  .pricing-subtitle { font-size: 0.92rem; margin-bottom: 26px; }
+  .close-btn { top: 12px; right: 14px; font-size: 26px; }
+  .tiers-grid { gap: 16px; }
+  .tier-card { padding: 24px 20px; }
+}

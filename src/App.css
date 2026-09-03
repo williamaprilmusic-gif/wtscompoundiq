@@ -844,3 +844,56 @@ body {
 .footer-link-btn:hover {
   color: var(--accent);
 }
+
+/* ---------------------------------------------------------------------------
+   Mobile / narrow viewports. The app is desktop-first (1200px shell). Below
+   ~640px the multi-group tab bar would otherwise stack into a full-screen wall
+   of buttons before any content is visible, so each group's buttons become a
+   single horizontally-scrolling row and the generous desktop padding is pulled
+   in. Matches the 640px breakpoint LanguageSwitcher.css already uses.
+   --------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .app-container { padding: 14px 12px 40px; }
+
+  .app-header { padding: 14px 0; margin-bottom: 18px; gap: 10px; }
+  .brand { gap: 10px; }
+  .logo-badge { width: 42px; height: 42px; }
+  .brand-text h1 { font-size: 1.3rem; letter-spacing: -0.3px; }
+  .brand-text p { font-size: 0.68rem; }
+  .header-actions { gap: 10px; width: 100%; }
+
+  /* Tab bar: one scrolling row per group instead of a wrapped wall. */
+  .tabs-nav { gap: 12px; margin-bottom: 20px; }
+  .tab-group { width: 100%; align-items: stretch; gap: 6px; }
+  .tab-group-divider { display: none; }
+  .tab-group-buttons {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 6px;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .tab-btn {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    font-size: 0.85rem;
+  }
+
+  .card { padding: 18px 16px; border-radius: 14px; margin-bottom: 18px; }
+  .card-subtitle { margin-bottom: 18px; }
+
+  .form-grid,
+  .results-summary,
+  .scenario-grid { grid-template-columns: 1fr; }
+  .results-summary { padding: 16px; gap: 12px; }
+  .result-item strong { font-size: 1.2rem; }
+
+  .cost-of-waiting { margin: -6px 0 22px; padding: 12px 14px; }
+
+  .lock-card { padding: 28px 22px; }
+  .lock-card h3 { font-size: 1.4rem; }
+  .lock-icon-large { font-size: 44px; }
+
+  .app-footer { margin-top: 34px; }
+}

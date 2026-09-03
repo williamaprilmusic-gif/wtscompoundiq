@@ -281,3 +281,9 @@
 .mc-probability.small strong {
   font-size: 1.4rem;
 }
+
+@media (max-width: 640px) {
+  .mc-compare-grid { grid-template-columns: 1fr; gap: 18px; }
+  .mc-solver-row label { min-width: 0; }
+  .mc-probability strong { font-size: 1.6rem; }
+}

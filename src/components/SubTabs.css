@@ -51,3 +51,23 @@
   border-color: var(--accent);
   color: var(--bg);
 }
+
+/* On narrow screens the grouped Power Tools sub-nav is ~35 pills; wrapped, that
+   is several screens tall before any tool is visible. One scrolling row per
+   group instead. */
+@media (max-width: 640px) {
+  .sub-tabs-grouped { gap: 12px; }
+  .sub-tab-group { gap: 6px; }
+  .sub-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .sub-tab-btn {
+    flex-shrink: 0;
+    padding: 8px 13px;
+    font-size: 0.8rem;
+  }
+}

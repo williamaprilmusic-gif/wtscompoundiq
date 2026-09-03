@@ -27,4 +27,10 @@ describe('ruleOf72', () => {
   it('clamps negative years to 0', () => {
     expect(ruleOf72({ annualRate: 7, years: -5 }).growthMultiple).toBeCloseTo(1, 5);
   });
+
+  it('floors a sub -100% rate instead of returning a NaN growth multiple', () => {
+    const result = ruleOf72({ annualRate: -150, years: 10 });
+    expect(Number.isFinite(result.growthMultiple)).toBe(true);
+    expect(result.growthMultiple).toBeGreaterThanOrEqual(0);
+  });
 });

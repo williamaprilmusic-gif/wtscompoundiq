@@ -196,3 +196,10 @@
 }
 .power-freq-table td { color: var(--text-soft); }
 .power-freq-table td:first-child { color: var(--mut); }
+
+@media (max-width: 640px) {
+  .power-tool-card { padding: 16px 14px; }
+  .power-verdict-grid { grid-template-columns: 1fr; }
+  .power-result { gap: 16px; }
+  .power-header h2 { font-size: 1.3rem; }
+}

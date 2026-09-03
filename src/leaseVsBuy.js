@@ -12,7 +12,9 @@ export const leaseVsBuy = ({
   leaseUpfront = 0, leaseMonthly = 0
 }) => {
   const price = Math.max(0, carPrice || 0);
-  const period = Math.max(0, comparePeriodYears || 0);
+  // Whole-year horizon so the buy side's depreciation and finance interest, and the
+  // lease side's monthly total, are all measured over the same span.
+  const period = Math.max(0, Math.round(comparePeriodYears || 0));
 
   const dep = Math.max(0, Math.min(buyDeposit || 0, price));
   const financed = price - dep;
@@ -22,7 +24,7 @@ export const leaseVsBuy = ({
 
   let financeInterest = 0;
   if (amort) {
-    const yrs = Math.min(Math.ceil(period), Math.ceil(amort.payoffMonths / 12));
+    const yrs = Math.min(period, Math.ceil(amort.payoffMonths / 12));
     financeInterest = amort.yearlyData.filter(r => r.year <= yrs).reduce((s, r) => s + r.interestPaid, 0);
   }
 
