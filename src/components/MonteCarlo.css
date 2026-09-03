@@ -282,6 +282,23 @@
   font-size: 1.4rem;
 }
 
+.mc-drawdown-form {
+  margin-top: 4px;
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border);
+}
+
+.mc-drawdown-result {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--border);
+}
+.mc-drawdown-result .mc-probability { margin-bottom: 8px; }
+.mc-drawdown-result .mc-probability strong { font-size: 1.5rem; }
+
 @media (max-width: 640px) {
   .mc-compare-grid { grid-template-columns: 1fr; gap: 18px; }
   .mc-solver-row label { min-width: 0; }

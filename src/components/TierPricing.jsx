@@ -27,7 +27,8 @@ const tiers = [
       'Compounding frequency control',
       'Year-by-year growth data table',
       'Cost-of-waiting projection',
-      'Rate-sensitivity band (±2% on every projection)'
+      'Rate-sensitivity band (±2% on every projection)',
+      'Milestone pacing — "you reach R1m in year 18"'
     ],
     cta: 'Downgrade to Basic',
     highlighted: false
@@ -48,7 +49,7 @@ const tiers = [
       'My Plan (save a snapshot, check in on progress later, with reminders)',
       'Goal-based Invest planner (multiple goals at once)',
       'Tax Optimizer, including a retirement fund comparison',
-      'Power Tools — 38 focused calculators (FIRE, Debt vs. Invest, Debt Consolidation, Home-Buying Costs, Bonus Take-Home, and more)',
+      'Power Tools — 40 focused calculators (FIRE, Debt Consolidation, Home-Buying Costs, Bonus Take-Home, RA Tax Optimizer, Sequence Risk, and more)',
       'Net Worth tracker with asset allocation, forecast & balance-sheet ratios',
       'Dashboard with Financial Health Score, milestones & PDF export',
       'Financial Snapshot export (print / PDF / CSV)',
@@ -70,6 +71,7 @@ const tiers = [
       'Everything in Pro, plus:',
       'Monte Carlo simulation (1,000-path outcome range)',
       'Monte Carlo solvers — contribution OR years to hit a target success probability',
+      'Monte Carlo retirement drawdown — how often the pot survives being lived off',
       'FX stress test for Net Worth (offshore holdings)',
       'AI Wealth Coach (Step 1-3 planner)',
       'AI Investment Advisor (personalized recommendations)'

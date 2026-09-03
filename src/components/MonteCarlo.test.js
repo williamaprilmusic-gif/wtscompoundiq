@@ -41,4 +41,27 @@ describe('runSimulation', () => {
     const high = runSimulation({ ...base, goal: 5000000, volatility: 0 }).probabilityOfGoal;
     expect(high).toBeLessThanOrEqual(low);
   });
+
+  it('omits the drawdown block unless retirementYears is set', () => {
+    expect(runSimulation(base).drawdown).toBeNull();
+  });
+
+  it('models a retirement drawdown and reports a 0-100 survival rate', () => {
+    const r = runSimulation({
+      ...base, initial: 2000000, monthly: 0, years: 0, volatility: 10,
+      retirementYears: 30, annualWithdrawal: 80000, withdrawalInflation: 5
+    });
+    expect(r.drawdown).not.toBeNull();
+    expect(r.drawdown.retirementYears).toBe(30);
+    expect(r.drawdown.survivalRate).toBeGreaterThanOrEqual(0);
+    expect(r.drawdown.survivalRate).toBeLessThanOrEqual(100);
+    expect(r.drawdown.medianYearsLasted).toBeLessThanOrEqual(30);
+  });
+
+  it('a bigger withdrawal never raises the survival rate', () => {
+    const shared = { ...base, initial: 2000000, monthly: 0, years: 0, volatility: 0, retirementYears: 25, withdrawalInflation: 0 };
+    const light = runSimulation({ ...shared, annualWithdrawal: 40000 }).drawdown.survivalRate;
+    const heavy = runSimulation({ ...shared, annualWithdrawal: 400000 }).drawdown.survivalRate;
+    expect(heavy).toBeLessThanOrEqual(light);
+  });
 });

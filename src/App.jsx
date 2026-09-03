@@ -35,6 +35,7 @@ import { buildShareUrl, parseShareParams, clearShareParamsFromUrl } from './util
 import { downloadCSV } from './utils/csv';
 import { uniqueId } from './utils/uniqueId';
 import { readEntitlement, refreshEntitlement, clearEntitlement, consumePaystackRedirect } from './utils/entitlement';
+import { projectionMilestones } from './projectionMilestones';
 
 const THEME_KEY = 'wts_compoundiq_theme';
 const REPORTING_CURRENCY_KEY = 'wts_compoundiq_reporting_currency';
@@ -321,6 +322,10 @@ export default function App() {
   };
   const rateBandLow = calculateCompoundInterest({ ...rateBandParams, rate: rate - RATE_BAND }).finalBalance;
   const rateBandHigh = calculateCompoundInterest({ ...rateBandParams, rate: rate + RATE_BAND }).finalBalance;
+
+  // "You cross R1,000,000 in year 18" -- pace for the headline figure, from the same
+  // projection. A free-tier touch like the rate band and cost-of-waiting.
+  const balanceMilestones = projectionMilestones(results.yearlyData, country.code, 4);
 
   // "Cost of waiting" -- same plan against the same target date, started `waitYears`
   // later (fewer compounding years). A free-tier nudge shown under the result.
@@ -611,6 +616,19 @@ export default function App() {
                       <span>{(rate + RATE_BAND).toFixed(1)}%/yr</span>
                       <strong>{country.symbol} {Math.round(rateBandHigh).toLocaleString()}</strong>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {balanceMilestones.length > 0 && (
+                <div className="milestone-strip">
+                  <span className="milestone-strip-label">On track to reach</span>
+                  <div className="milestone-strip-items">
+                    {balanceMilestones.map((m) => (
+                      <span className="milestone-chip" key={m.thresholdZar}>
+                        <strong>{country.symbol}{Math.round(m.amount).toLocaleString()}</strong> in year {m.year}
+                      </span>
+                    ))}
                   </div>
                 </div>
               )}

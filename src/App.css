@@ -433,6 +433,38 @@ body {
   color: var(--text);
 }
 
+/* Projection milestones ("reach R1m in year 18"). */
+.milestone-strip {
+  margin: -8px 0 22px;
+  padding: 12px 18px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent-green) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-green) 28%, transparent);
+}
+.milestone-strip-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-green);
+  margin-bottom: 8px;
+}
+.milestone-strip-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.milestone-chip {
+  font-size: 0.82rem;
+  color: var(--text-soft);
+  background: var(--raise-05);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 12px;
+}
+.milestone-chip strong { color: var(--text); }
+
 .cost-of-waiting {
   margin: -18px 0 30px;
   padding: 14px 18px;

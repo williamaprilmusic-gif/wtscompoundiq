@@ -41,6 +41,8 @@ import { realReturn } from '../realReturn';
 import { compareDebtConsolidation } from '../debtConsolidation';
 import { estimateHomePurchaseCosts } from '../homePurchaseCosts';
 import { bonusTakeHome } from '../bonusTax';
+import { optimiseRaContribution } from '../raOptimizer';
+import { analyseSequenceRisk } from '../sequenceRisk';
 import { readJSONArray } from '../utils/storage';
 import { convertAmount, countriesData } from '../data/countries';
 import { DEBTS_KEY } from './DebtPayoff';
@@ -86,18 +88,20 @@ const SUB_TABS = [
   { key: 'realReturn', label: '📉 Real Return' },
   { key: 'debtConsol', label: '🔗 Debt Consolidation' },
   { key: 'homeCosts', label: '🏦 Home Buying Costs' },
-  { key: 'bonusTax', label: '🎉 Bonus Take-Home' }
+  { key: 'bonusTax', label: '🎉 Bonus Take-Home' },
+  { key: 'raOptimizer', label: '🧾 RA Tax Optimizer' },
+  { key: 'seqRisk', label: '🎢 Sequence Risk' }
 ];
 
 // Groups the pills above into labelled categories so the bar stays scannable. Every
 // key must appear exactly once; any that's missed drops into a "More" catch-all in
 // SubTabs rather than vanishing.
 const SUB_TAB_GROUPS = [
-  { label: 'Retire & Financial Independence', keys: ['fire', 'coastFire', 'baristaFire', 'savingsRate', 'drawdown', 'pretaxRA', 'dividend', 'feeDrag', 'retireGap'] },
+  { label: 'Retire & Financial Independence', keys: ['fire', 'coastFire', 'baristaFire', 'savingsRate', 'drawdown', 'pretaxRA', 'dividend', 'feeDrag', 'retireGap', 'seqRisk'] },
   { label: 'Debt & Credit', keys: ['debtVsInvest', 'dti', 'cardTrap', 'debtConsol'] },
   { label: 'Property & Big Purchases', keys: ['affordability', 'rentVsBuy', 'carCost', 'leaseVsBuy', 'depositTimeline', 'homeCosts', 'rateShock'] },
   { label: 'Saving for a Goal', keys: ['savings', 'education', 'sinkingFund', 'efRunway', 'insurance', 'windfall'] },
-  { label: 'Income & Tax', keys: ['salary', 'raiseValue', 'bonusTax', 'budgetRule', 'marginalTax', 'raiseInflation'] },
+  { label: 'Income & Tax', keys: ['salary', 'raiseValue', 'bonusTax', 'raOptimizer', 'budgetRule', 'marginalTax', 'raiseInflation'] },
   { label: 'Money Basics', keys: ['futureCost', 'fxConvert', 'rule72', 'freqCompare', 'effRate', 'realReturn'] }
 ];
 
@@ -307,6 +311,18 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const [btSalary, setBtSalary] = useState(0);
   const [btBonus, setBtBonus] = useState(0);
   const [btProgressive, setBtProgressive] = useState(false);
+
+  const [raIncome, setRaIncome] = useState(0);
+  const [raCurrent, setRaCurrent] = useState(0);
+  const [raProgressive, setRaProgressive] = useState(false);
+
+  const [sqPot, setSqPot] = useState(0);
+  const [sqWithdrawal, setSqWithdrawal] = useState(0);
+  const [sqYears, setSqYears] = useState(30);
+  const [sqAvgReturn, setSqAvgReturn] = useState(rate || 7);
+  const [sqBadReturn, setSqBadReturn] = useState(-8);
+  const [sqBadYears, setSqBadYears] = useState(5);
+  const [sqInflation, setSqInflation] = useState(Math.round(country.typicalInflation || 5));
 
   const safeWithdrawalRate = withdrawalRate > 0 ? withdrawalRate : 0.01;
   const fireNumber = annualExpenses / (safeWithdrawalRate / 100);
@@ -523,6 +539,17 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
     annualSalary: btSalary, bonusAmount: btBonus,
     taxRate: country.taxRate,
     taxBrackets: (btProgressive && country.taxBrackets) ? country.taxBrackets : null
+  });
+
+  const raResult = optimiseRaContribution({
+    taxableIncome: raIncome, currentAnnualContribution: raCurrent,
+    taxRate: country.taxRate,
+    taxBrackets: (raProgressive && country.taxBrackets) ? country.taxBrackets : null
+  });
+
+  const seqResult = analyseSequenceRisk({
+    startingPot: sqPot, annualWithdrawal: sqWithdrawal, retirementYears: sqYears,
+    averageReturn: sqAvgReturn, badReturn: sqBadReturn, badYears: sqBadYears, inflationPct: sqInflation
   });
 
   const saveFirePlan = () => {
@@ -2371,6 +2398,118 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
                 ? (country.taxBracketsNote || `${country.name}'s progressive bracket schedule — illustrative only.`)
                 : `Flat ${country.taxRate}% estimate. Turn on progressive brackets above (where available) for a marginal figure.`}
               {' '}Ignores UIF/pension/medical-aid deductions and any employer withholding quirks — it's the income-tax bite only. To invest what's left, drop the net figure into the Windfall Split tool.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'raOptimizer' && (
+      <div className="power-tool-card">
+        <h3>🧾 Retirement Annuity — Tax Optimizer</h3>
+        <p className="power-tool-desc">South Africa lets you deduct retirement-fund contributions up to 27.5% of income, capped at {country.symbol}350,000/yr. This works out how much more you could put in to reach that ceiling — and the tax the fiscus effectively refunds on it.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Taxable Income ({country.symbol}/yr)</label>
+            <input type="number" min="0" step="10000" value={raIncome} onChange={(e) => setRaIncome(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>RA / Pension Contributions So Far ({country.symbol}/yr)</label>
+            <input type="number" min="0" step="5000" value={raCurrent} onChange={(e) => setRaCurrent(Number(e.target.value))} />
+          </div>
+        </div>
+        {country.taxBrackets && (
+          <label className="mc-compare-toggle">
+            <input type="checkbox" checked={raProgressive} onChange={(e) => setRaProgressive(e.target.checked)} />
+            Use {country.name}'s progressive brackets for the tax-saving figure
+          </label>
+        )}
+        {raIncome > 0 && (
+          <>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Deductible ceiling</span>
+                <strong>{country.symbol} {Math.round(raResult.maxDeductible).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Room left this year</span>
+                <strong className={raResult.roomRemaining > 0 ? 'positive' : ''}>{country.symbol} {Math.round(raResult.roomRemaining).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Tax saved if you max it</span>
+                <strong className="positive">{country.symbol} {Math.round(raResult.taxSavingIfMaxed).toLocaleString()}</strong>
+              </div>
+            </div>
+            <div className={`power-verdict ${raResult.alreadyOverLimit ? 'neutral' : 'invest'}`}>
+              {raResult.alreadyOverLimit
+                ? `You're already contributing at or above the ${country.symbol}${Math.round(raResult.maxDeductible).toLocaleString()} deductible limit — extra contributions still grow tax-free but no longer cut this year's tax bill.`
+                : `Contributing another ${country.symbol} ${Math.round(raResult.roomRemaining).toLocaleString()} this year gets you to the ceiling and cuts your tax by about ${country.symbol} ${Math.round(raResult.taxSavingIfMaxed).toLocaleString()} — an effective ${raResult.effectiveReliefPct.toFixed(0)}% discount, so the real out-of-pocket cost is about ${country.symbol} ${Math.round(raResult.netCostIfMaxed).toLocaleString()}.`}
+            </div>
+            <p className="power-tool-note">
+              Limit is 27.5% of the greater of taxable income or remuneration, capped at {country.symbol}350,000 — here bound by the {raResult.limitedBy === 'cap' ? `${country.symbol}350k cap` : '27.5% rate'}. SA-specific rules; other countries' figures are illustrative. Doesn't model the tax on the eventual retirement income (see the Pre-Tax Retirement tool for that side). Not advice.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'seqRisk' && (
+      <div className="power-tool-card">
+        <h3>🎢 Sequence-of-Returns Risk</h3>
+        <p className="power-tool-desc">Two retirees earn the <em>same average return</em>, but one hits a bad run early — while the pot is largest and being drawn down. This shows how much that timing alone changes how long the money lasts.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Starting Pot ({country.symbol})</label>
+            <input type="number" min="0" step="100000" value={sqPot} onChange={(e) => setSqPot(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Withdrawal ({country.symbol}/yr, year 1)</label>
+            <input type="number" min="0" step="10000" value={sqWithdrawal} onChange={(e) => setSqWithdrawal(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Retirement Length (years)</label>
+            <input type="number" min="1" max="60" step="1" value={sqYears} onChange={(e) => setSqYears(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Average Return (%/yr)</label>
+            <input type="number" step="0.5" value={sqAvgReturn} onChange={(e) => setSqAvgReturn(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Bad-Year Return (%/yr)</label>
+            <input type="number" step="0.5" value={sqBadReturn} onChange={(e) => setSqBadReturn(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>How Many Bad Years</label>
+            <input type="number" min="0" max="20" step="1" value={sqBadYears} onChange={(e) => setSqBadYears(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label><Term k="inflation">Inflation</Term> on Withdrawals (%/yr)</label>
+            <input type="number" min="0" step="0.5" value={sqInflation} onChange={(e) => setSqInflation(Number(e.target.value))} />
+          </div>
+        </div>
+        {sqPot > 0 && sqWithdrawal > 0 && (
+          <>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Bad years FIRST — pot lasts</span>
+                <strong className="warn">{seqResult.earlyLosses.yearsLasted} yrs</strong>
+              </div>
+              <div className="power-stat">
+                <span>Bad years LAST — pot lasts</span>
+                <strong className="positive">{seqResult.lateLosses.depleted ? `${seqResult.lateLosses.yearsLasted} yrs` : `${seqResult.horizonYears}+ yrs`}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Good-year return (implied)</span>
+                <strong>{seqResult.goodYearReturn.toFixed(1)}%</strong>
+              </div>
+            </div>
+            <div className={`power-verdict ${seqResult.bothSurvive ? 'invest' : seqResult.yearsGap >= 3 ? 'danger' : 'debt'}`}>
+              {seqResult.bothSurvive
+                ? `This pot survives the full ${seqResult.horizonYears} years either way — it's comfortably funded against sequence risk at this withdrawal.`
+                : `Same ${sqAvgReturn}% average, but hitting the ${sqBadYears} bad years first drains the pot ${seqResult.yearsGap} year${seqResult.yearsGap === 1 ? '' : 's'} sooner than hitting them last (${seqResult.earlyLosses.yearsLasted} vs ${seqResult.lateLosses.depleted ? seqResult.lateLosses.yearsLasted : `${seqResult.horizonYears}+`} years). That gap is sequence-of-returns risk — an average return figure hides it entirely.`}
+            </div>
+            <p className="power-tool-note">
+              The good years' return is solved so the arithmetic mean across all {seqResult.horizonYears} years equals your {sqAvgReturn}% average — a fair like-for-like. A deterministic illustration of one ordering, not a probability (that's the Monte Carlo tab's drawdown mode). Withdrawals come off at the start of each year, rising {sqInflation}%/yr.
             </p>
           </>
         )}

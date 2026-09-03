@@ -25,16 +25,30 @@ const percentileOf = (sortedArr, p) => sortedArr[Math.floor(p * (sortedArr.lengt
 export const runSimulation = ({
   initial, monthly, rate, years, volatility, goal, contributionIncreaseRate = 0, lumpSums = [],
   returnModel = 'normal', historicalSeries = [], taxRate = 0, wrapper = false,
-  annualWrapperLimit = null, lifetimeWrapperLimit = null
+  annualWrapperLimit = null, lifetimeWrapperLimit = null,
+  // Optional decumulation phase: after `years` of accumulation, draw down for
+  // `retirementYears` more years, withdrawing `annualWithdrawal` (escalated by
+  // `withdrawalInflation`% each year) at the start of each year against the same random
+  // return model. Reports how often the pot survives the whole retirement.
+  retirementYears = 0, annualWithdrawal = 0, withdrawalInflation = 0
 }) => {
   // engine.js floors `years` internally; this loop builds a per-year array sized
   // years+1 and writes balancesByYear[y+1], so a fractional years (reachable via a
   // ?y=20.5 share link, which never floors) would leave the array a slot short and
   // throw inside the setTimeout -- leaving the button stuck. Floor it here too.
   years = Math.max(0, Math.floor(years || 0));
+  const drawdownYears = Math.max(0, Math.floor(retirementYears || 0));
   const meanReturn = rate / 100;
   const stddev = volatility / 100;
   const finalBalances = [];
+  const retirementEndBalances = [];
+  const yearsLastedList = [];
+  let survivedCount = 0;
+  // One random annual return under whichever model is active -- factored out so the
+  // drawdown phase draws from the same distribution as accumulation.
+  const drawReturn = () => returnModel === 'historical'
+    ? historicalSeries[Math.floor(Math.random() * historicalSeries.length)] / 100
+    : Math.max(gaussianRandom(meanReturn, stddev), -0.95);
   // balancesByYear[y] holds every simulation's balance at year y (index 0 = year 0,
   // the starting balance) -- this is what lets the fan chart show the spread widening
   // over time instead of only at the final year.
@@ -75,6 +89,25 @@ export const runSimulation = ({
       balancesByYear[y + 1].push(balance);
     }
     finalBalances.push(balance);
+
+    // Decumulation: withdraw at the start of each retirement year, then grow what's
+    // left by a fresh random return. The pot "survives" if it's still above zero after
+    // the last withdrawal-and-growth year.
+    if (drawdownYears > 0) {
+      let potInRetirement = balance;
+      let thisYearWithdrawal = Math.max(0, annualWithdrawal || 0);
+      let yearsLasted = 0;
+      for (let ry = 0; ry < drawdownYears; ry++) {
+        potInRetirement -= thisYearWithdrawal;
+        if (potInRetirement <= 0) { potInRetirement = 0; break; }
+        potInRetirement = Math.max(0, potInRetirement * (1 + drawReturn()));
+        thisYearWithdrawal *= 1 + (withdrawalInflation || 0) / 100;
+        yearsLasted += 1;
+      }
+      retirementEndBalances.push(potInRetirement);
+      yearsLastedList.push(yearsLasted);
+      if (potInRetirement > 0 && yearsLasted === drawdownYears) survivedCount += 1;
+    }
   }
 
   finalBalances.sort((a, b) => a - b);
@@ -92,6 +125,20 @@ export const runSimulation = ({
     };
   });
 
+  let drawdown = null;
+  if (drawdownYears > 0) {
+    const sortedEnds = [...retirementEndBalances].sort((a, b) => a - b);
+    const sortedYears = [...yearsLastedList].sort((a, b) => a - b);
+    drawdown = {
+      retirementYears: drawdownYears,
+      survivalRate: (survivedCount / NUM_SIMULATIONS) * 100,
+      p10EndBalance: percentileOf(sortedEnds, 0.10),
+      p50EndBalance: percentileOf(sortedEnds, 0.50),
+      medianYearsLasted: percentileOf(sortedYears, 0.50),
+      worstCaseYearsLasted: sortedYears[0]
+    };
+  }
+
   return {
     p10: percentileOf(finalBalances, 0.10),
     p25: percentileOf(finalBalances, 0.25),
@@ -101,7 +148,8 @@ export const runSimulation = ({
     min: finalBalances[0],
     max: finalBalances[finalBalances.length - 1],
     probabilityOfGoal: (successCount / finalBalances.length) * 100,
-    yearlyPercentiles
+    yearlyPercentiles,
+    drawdown
   };
 };
 
@@ -114,6 +162,10 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
   const [returnModel, setReturnModel] = useState('normal');
   const [historicalModelKey, setHistoricalModelKey] = useState('sp500');
   const [compareWrapper, setCompareWrapper] = useState(false);
+  const [modelDrawdown, setModelDrawdown] = useState(false);
+  const [retirementYears, setRetirementYears] = useState(30);
+  const [annualWithdrawal, setAnnualWithdrawal] = useState(Math.round(deterministic.finalBalance * 0.04) || 0);
+  const [withdrawalInflation, setWithdrawalInflation] = useState(Math.round(country.typicalInflation || 5));
   const [result, setResult] = useState(null);
   const [wrapperCompare, setWrapperCompare] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -135,7 +187,8 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
       const base = {
         initial, monthly, rate, years, volatility, goal,
         contributionIncreaseRate: contributionIncrease, lumpSums, returnModel,
-        historicalSeries: activeHistoricalModel.data
+        historicalSeries: activeHistoricalModel.data,
+        ...(modelDrawdown ? { retirementYears, annualWithdrawal, withdrawalInflation } : {})
       };
       if (compareWrapper && hasWrapper) {
         setResult(null);
@@ -310,6 +363,27 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
         </label>
       )}
 
+      <label className="mc-compare-toggle">
+        <input type="checkbox" checked={modelDrawdown} onChange={(e) => setModelDrawdown(e.target.checked)} />
+        Then model a retirement drawdown — how often does the pot survive being lived off?
+      </label>
+      {modelDrawdown && (
+        <div className="mc-form mc-drawdown-form">
+          <div className="form-group">
+            <label>Retirement length (years)</label>
+            <input type="number" min="1" max="60" step="1" value={retirementYears} onChange={(e) => setRetirementYears(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Withdrawal ({country.symbol}/yr, year 1)</label>
+            <input type="number" min="0" step="10000" value={annualWithdrawal} onChange={(e) => setAnnualWithdrawal(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Grow withdrawal by (%/yr)</label>
+            <input type="number" min="0" step="0.5" value={withdrawalInflation} onChange={(e) => setWithdrawalInflation(Number(e.target.value))} />
+          </div>
+        </div>
+      )}
+
       <button className="mc-run-btn" onClick={handleRun} disabled={isRunning}>
         {isRunning ? '⏳ Running…' : 'Run Simulation'}
       </button>
@@ -376,6 +450,20 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
             <div className="mc-stat"><span>75th percentile</span><strong>{country.symbol} {Math.round(result.p75).toLocaleString()}</strong></div>
             <div className="mc-stat"><span>90th percentile</span><strong>{country.symbol} {Math.round(result.p90).toLocaleString()}</strong></div>
           </div>
+
+          {result.drawdown && (
+            <div className="mc-drawdown-result">
+              <div className="mc-probability">
+                <span>Pot survives {result.drawdown.retirementYears} years of drawdown</span>
+                <strong className={result.drawdown.survivalRate >= 85 ? 'positive' : result.drawdown.survivalRate >= 60 ? 'warn' : 'warn'}>
+                  {result.drawdown.survivalRate.toFixed(0)}% of the time
+                </strong>
+              </div>
+              <p className="mc-model-note">
+                Drawing {country.symbol}{Math.round(annualWithdrawal).toLocaleString()} in year one, rising {withdrawalInflation}%/yr. In the unlucky runs the money lasts a median of {result.drawdown.medianYearsLasted} years (worst case {result.drawdown.worstCaseYearsLasted}); the surviving runs end with a median of {country.symbol}{Math.round(result.drawdown.p50EndBalance).toLocaleString()} left. Withdrawals come off the pot at the start of each year, then a fresh random return is applied — same return model as the accumulation phase.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
