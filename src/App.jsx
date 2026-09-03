@@ -633,6 +633,26 @@ export default function App() {
                 </div>
               )}
 
+              {results.finalBalance > 0 && results.totalDeposited > 0 && (() => {
+                const growth = Math.max(0, results.finalBalance - results.totalDeposited);
+                const denom = results.totalDeposited + growth;
+                const depPct = denom > 0 ? (results.totalDeposited / denom) * 100 : 100;
+                return (
+                  <div className="split-bar">
+                    <span className="split-bar-label">What builds the final balance</span>
+                    <div className="split-bar-track" role="img"
+                      aria-label={`Your deposits ${depPct.toFixed(0)} percent, compound growth ${(100 - depPct).toFixed(0)} percent`}>
+                      <div className="split-bar-deposits" style={{ width: `${depPct}%` }} />
+                      <div className="split-bar-growth" style={{ width: `${100 - depPct}%` }} />
+                    </div>
+                    <div className="split-bar-legend">
+                      <span><i className="dot dep" /> Your deposits — {country.symbol}{results.totalDeposited.toLocaleString()} ({depPct.toFixed(0)}%)</span>
+                      <span><i className="dot grow" /> Compound growth — {country.symbol}{Math.round(growth).toLocaleString()} ({(100 - depPct).toFixed(0)}%)</span>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {monthly > 0 && years > 1 && Number.isFinite(waitingCost.cost) && (
                 <div className="cost-of-waiting">
                   <label htmlFor="wait-years">Cost of waiting</label>

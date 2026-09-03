@@ -113,6 +113,16 @@ export const runSimulation = ({
   finalBalances.sort((a, b) => a - b);
   const successCount = finalBalances.filter(b => b >= goal).length;
 
+  // Probability the balance is already at or above `goal` at a few checkpoint years --
+  // "40% chance by year 10, 75% by year 15" -- straight from the per-year snapshots the
+  // fan chart already uses. Only the checkpoints that fall within the horizon.
+  const goalProbByYear = (goal > 0 ? [5, 10, 15, 20, 25, 30, 40] : [])
+    .filter(cy => cy < years)
+    .map(cy => ({
+      year: cy,
+      probability: (balancesByYear[cy].filter(b => b >= goal).length / NUM_SIMULATIONS) * 100
+    }));
+
   const yearlyPercentiles = balancesByYear.map((yearBalances, year) => {
     const sorted = [...yearBalances].sort((a, b) => a - b);
     return {
@@ -148,6 +158,7 @@ export const runSimulation = ({
     min: finalBalances[0],
     max: finalBalances[finalBalances.length - 1],
     probabilityOfGoal: (successCount / finalBalances.length) * 100,
+    goalProbByYear,
     yearlyPercentiles,
     drawdown
   };
@@ -440,6 +451,20 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
             <span>Probability of Reaching Your Goal</span>
             <strong className={result.probabilityOfGoal >= 50 ? 'positive' : 'warn'}>{result.probabilityOfGoal.toFixed(1)}%</strong>
           </div>
+
+          {result.goalProbByYear && result.goalProbByYear.length > 0 && (
+            <div className="mc-prob-timeline">
+              <span className="mc-prob-timeline-label">Chance you're already there by year…</span>
+              <div className="mc-prob-timeline-cells">
+                {result.goalProbByYear.map(pt => (
+                  <div key={pt.year}>
+                    <span>Yr {pt.year}</span>
+                    <strong className={pt.probability >= 50 ? 'positive' : ''}>{pt.probability.toFixed(0)}%</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <FanChart yearlyPercentiles={result.yearlyPercentiles} symbol={country.symbol} />
 

@@ -1,4 +1,52 @@
 /* src/components/MyPlan.css */
+
+/* Enterprise white-label header, shown atop the plan and kept in print. */
+.plan-branding {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: -6px 0 20px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent-purple) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-purple) 35%, transparent);
+}
+.plan-branding-firm {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.plan-branding-tagline {
+  font-size: 0.8rem;
+  color: var(--mut);
+}
+.plan-branding-editor {
+  margin: 18px 0;
+}
+.plan-branding-editor h3 {
+  font-size: 0.95rem;
+  color: var(--text);
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.plan-branding-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.plan-branding-fields input {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.88rem;
+}
+
 .plan-adviser-notes {
   margin: 18px 0;
 }

@@ -433,6 +433,51 @@ body {
   color: var(--text);
 }
 
+/* Deposits vs. compound-growth split of the final balance. */
+.split-bar {
+  margin: -8px 0 22px;
+  padding: 12px 18px 14px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--border);
+}
+.split-bar-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mut);
+  margin-bottom: 10px;
+}
+.split-bar-track {
+  display: flex;
+  height: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--raise-05);
+}
+.split-bar-deposits { background: var(--mut2); }
+.split-bar-growth { background: var(--accent-green); }
+.split-bar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+}
+.split-bar-legend .dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.split-bar-legend .dot.dep { background: var(--mut2); }
+.split-bar-legend .dot.grow { background: var(--accent-green); }
+
 /* Projection milestones ("reach R1m in year 18"). */
 .milestone-strip {
   margin: -8px 0 22px;

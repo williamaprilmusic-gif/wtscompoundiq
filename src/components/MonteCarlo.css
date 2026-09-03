@@ -282,6 +282,46 @@
   font-size: 1.4rem;
 }
 
+.mc-prob-timeline {
+  margin: -8px 0 22px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border);
+}
+.mc-prob-timeline-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--mut);
+  margin-bottom: 8px;
+}
+.mc-prob-timeline-cells {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+  gap: 8px;
+}
+.mc-prob-timeline-cells > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  padding: 6px 4px;
+  border-radius: 8px;
+  background: var(--raise-02);
+  border: 1px solid var(--border);
+}
+.mc-prob-timeline-cells span {
+  font-size: 0.68rem;
+  color: var(--mut);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.mc-prob-timeline-cells strong { font-size: 0.95rem; color: var(--text); }
+.mc-prob-timeline-cells strong.positive { color: var(--accent-green); }
+
 .mc-drawdown-form {
   margin-top: 4px;
   margin-bottom: 20px;

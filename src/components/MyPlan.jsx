@@ -8,8 +8,16 @@ const REMINDER_KEY = 'wts_compoundiq_reminder_at';
 const REMINDER_NOTIFIED_KEY = 'wts_compoundiq_reminder_notified_at';
 const REMINDER_DAYS = 30;
 const ADVISER_NOTES_KEY = 'wts_compoundiq_adviser_notes';
+const BRANDING_KEY = 'wts_compoundiq_plan_branding';
 
 const monthsBetween = (isoDate) => daysBetween(isoDate) / 30.44;
+
+const readBranding = () => {
+  try {
+    const raw = JSON.parse(localStorage.getItem(BRANDING_KEY) || '{}');
+    return { firm: String(raw.firm || ''), tagline: String(raw.tagline || '') };
+  } catch { return { firm: '', tagline: '' }; }
+};
 
 const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
   const [snapshot, setSnapshot] = useState(null);
@@ -21,16 +29,28 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
   // Enterprise-tier adviser annotation, persisted locally. Kept in storage even when
   // the tier can't currently see it, so a downgrade doesn't destroy typed notes.
   const [adviserNotes, setAdviserNotes] = useState('');
+  // Enterprise white-label: a firm name/tagline shown atop the plan and carried into
+  // print. Persisted locally like the adviser notes, and kept through a downgrade.
+  const [branding, setBranding] = useState({ firm: '', tagline: '' });
 
   const updateAdviserNotes = (value) => {
     setAdviserNotes(value);
     try { localStorage.setItem(ADVISER_NOTES_KEY, value); } catch { /* private mode / quota */ }
   };
 
+  const updateBranding = (patch) => {
+    setBranding((prev) => {
+      const next = { ...prev, ...patch };
+      try { localStorage.setItem(BRANDING_KEY, JSON.stringify(next)); } catch { /* private mode / quota */ }
+      return next;
+    });
+  };
+
   useEffect(() => {
     const plan = readPlan();
     if (Object.keys(plan).length > 0) setSnapshot(plan);
     try { setAdviserNotes(localStorage.getItem(ADVISER_NOTES_KEY) || ''); } catch { /* ignore */ }
+    setBranding(readBranding());
 
     const storedReminder = localStorage.getItem(REMINDER_KEY);
     if (storedReminder) {
@@ -76,6 +96,35 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
   };
 
 
+  const brandingBanner = branding.firm.trim() ? (
+    <div className="plan-branding">
+      <span className="plan-branding-firm">{branding.firm.trim()}</span>
+      {branding.tagline.trim() && <span className="plan-branding-tagline">{branding.tagline.trim()}</span>}
+    </div>
+  ) : null;
+
+  const brandingEditor = canAdviserNotes ? (
+    <div className="plan-branding-editor no-print">
+      <h3>🏷️ Practice Branding <span className="plan-adviser-badge">Enterprise</span></h3>
+      <div className="plan-branding-fields">
+        <input
+          type="text"
+          value={branding.firm}
+          onChange={(e) => updateBranding({ firm: e.target.value })}
+          placeholder="Firm / practice name (shown on the plan and in print)"
+          maxLength={80}
+        />
+        <input
+          type="text"
+          value={branding.tagline}
+          onChange={(e) => updateBranding({ tagline: e.target.value })}
+          placeholder="Tagline or licence line (optional)"
+          maxLength={120}
+        />
+      </div>
+    </div>
+  ) : null;
+
   const reminderBlock = (
     <div className="plan-reminder">
       {reminderDue ? (
@@ -97,10 +146,12 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
   if (!snapshot) {
     return (
       <div className="card my-plan">
+        {brandingBanner}
         <div className="plan-header">
           <h2>📓 My Plan</h2>
           <p>Nothing saved yet. This is a check-in tool, not a calculator -- save a snapshot from the Debt Payoff, Emergency Fund, Loan & Bond, or Power Tools (FIRE) tabs (look for "Save This Plan"), then come back later to see if you're on track.</p>
         </div>
+        {brandingEditor}
         {reminderBlock}
         <p className="plan-note">
           Reminders only fire while this app is open (there's no background server to push a notification while your
@@ -159,6 +210,7 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
 
   return (
     <div className="card my-plan">
+      {brandingBanner}
       <div className="plan-header">
         <h2>📓 My Plan</h2>
         <p>Enter where things actually stand to see if you're ahead or behind your own plan.</p>
@@ -252,6 +304,8 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
       )}
 
       {reminderBlock}
+
+      {brandingEditor}
 
       {canAdviserNotes ? (
         <div className="plan-adviser-notes">

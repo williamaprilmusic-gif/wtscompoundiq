@@ -43,6 +43,9 @@ import { estimateHomePurchaseCosts } from '../homePurchaseCosts';
 import { bonusTakeHome } from '../bonusTax';
 import { optimiseRaContribution } from '../raOptimizer';
 import { analyseSequenceRisk } from '../sequenceRisk';
+import { analyseTwoPotWithdrawal } from '../twoPotWithdrawal';
+import { compareLoanOffers } from '../loanComparison';
+import { subscriptionCost } from '../subscriptionCost';
 import { readJSONArray } from '../utils/storage';
 import { convertAmount, countriesData } from '../data/countries';
 import { DEBTS_KEY } from './DebtPayoff';
@@ -90,19 +93,22 @@ const SUB_TABS = [
   { key: 'homeCosts', label: '🏦 Home Buying Costs' },
   { key: 'bonusTax', label: '🎉 Bonus Take-Home' },
   { key: 'raOptimizer', label: '🧾 RA Tax Optimizer' },
-  { key: 'seqRisk', label: '🎢 Sequence Risk' }
+  { key: 'seqRisk', label: '🎢 Sequence Risk' },
+  { key: 'twoPot', label: '🫙 Two-Pot Withdrawal' },
+  { key: 'loanCompare', label: '⚖️ Loan Offer Compare' },
+  { key: 'subCost', label: '🔁 Subscription Cost' }
 ];
 
 // Groups the pills above into labelled categories so the bar stays scannable. Every
 // key must appear exactly once; any that's missed drops into a "More" catch-all in
 // SubTabs rather than vanishing.
 const SUB_TAB_GROUPS = [
-  { label: 'Retire & Financial Independence', keys: ['fire', 'coastFire', 'baristaFire', 'savingsRate', 'drawdown', 'pretaxRA', 'dividend', 'feeDrag', 'retireGap', 'seqRisk'] },
-  { label: 'Debt & Credit', keys: ['debtVsInvest', 'dti', 'cardTrap', 'debtConsol'] },
+  { label: 'Retire & Financial Independence', keys: ['fire', 'coastFire', 'baristaFire', 'savingsRate', 'drawdown', 'pretaxRA', 'dividend', 'feeDrag', 'retireGap', 'seqRisk', 'twoPot'] },
+  { label: 'Debt & Credit', keys: ['debtVsInvest', 'dti', 'cardTrap', 'debtConsol', 'loanCompare'] },
   { label: 'Property & Big Purchases', keys: ['affordability', 'rentVsBuy', 'carCost', 'leaseVsBuy', 'depositTimeline', 'homeCosts', 'rateShock'] },
   { label: 'Saving for a Goal', keys: ['savings', 'education', 'sinkingFund', 'efRunway', 'insurance', 'windfall'] },
   { label: 'Income & Tax', keys: ['salary', 'raiseValue', 'bonusTax', 'raOptimizer', 'budgetRule', 'marginalTax', 'raiseInflation'] },
-  { label: 'Money Basics', keys: ['futureCost', 'fxConvert', 'rule72', 'freqCompare', 'effRate', 'realReturn'] }
+  { label: 'Money Basics', keys: ['futureCost', 'fxConvert', 'rule72', 'freqCompare', 'effRate', 'realReturn', 'subCost'] }
 ];
 
 const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [] }) => {
@@ -323,6 +329,27 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const [sqBadReturn, setSqBadReturn] = useState(-8);
   const [sqBadYears, setSqBadYears] = useState(5);
   const [sqInflation, setSqInflation] = useState(Math.round(country.typicalInflation || 5));
+
+  const [tpAmount, setTpAmount] = useState(0);
+  const [tpIncome, setTpIncome] = useState(0);
+  const [tpYearsToRetire, setTpYearsToRetire] = useState(20);
+  const [tpGrowth, setTpGrowth] = useState(rate || 9);
+  const [tpProgressive, setTpProgressive] = useState(false);
+
+  const [lcAmount, setLcAmount] = useState(0);
+  const [lcaRate, setLcaRate] = useState(Math.round(country.typicalBankRate || 12));
+  const [lcaTerm, setLcaTerm] = useState(5);
+  const [lcaUpfront, setLcaUpfront] = useState(0);
+  const [lcaMonthly, setLcaMonthly] = useState(0);
+  const [lcbRate, setLcbRate] = useState(Math.round((country.typicalBankRate || 12) + 2));
+  const [lcbTerm, setLcbTerm] = useState(5);
+  const [lcbUpfront, setLcbUpfront] = useState(0);
+  const [lcbMonthly, setLcbMonthly] = useState(0);
+
+  const [scMonthly, setScMonthly] = useState(0);
+  const [scYears, setScYears] = useState(20);
+  const [scReturn, setScReturn] = useState(rate || 8);
+  const [scIncrease, setScIncrease] = useState(Math.round(country.typicalInflation || 5));
 
   const safeWithdrawalRate = withdrawalRate > 0 ? withdrawalRate : 0.01;
   const fireNumber = annualExpenses / (safeWithdrawalRate / 100);
@@ -550,6 +577,23 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const seqResult = analyseSequenceRisk({
     startingPot: sqPot, annualWithdrawal: sqWithdrawal, retirementYears: sqYears,
     averageReturn: sqAvgReturn, badReturn: sqBadReturn, badYears: sqBadYears, inflationPct: sqInflation
+  });
+
+  const twoPot = analyseTwoPotWithdrawal({
+    withdrawalAmount: tpAmount, annualIncome: tpIncome,
+    taxRate: country.taxRate,
+    taxBrackets: (tpProgressive && country.taxBrackets) ? country.taxBrackets : null,
+    yearsToRetirement: tpYearsToRetire, growthRate: tpGrowth
+  });
+
+  const loanCompare = compareLoanOffers({
+    amount: lcAmount,
+    offerA: { rate: lcaRate, termYears: lcaTerm, upfrontFee: lcaUpfront, monthlyFee: lcaMonthly },
+    offerB: { rate: lcbRate, termYears: lcbTerm, upfrontFee: lcbUpfront, monthlyFee: lcbMonthly }
+  });
+
+  const subCost = subscriptionCost({
+    monthlyAmount: scMonthly, years: scYears, investReturn: scReturn, annualPriceIncrease: scIncrease
   });
 
   const saveFirePlan = () => {
@@ -2510,6 +2554,165 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
             </div>
             <p className="power-tool-note">
               The good years' return is solved so the arithmetic mean across all {seqResult.horizonYears} years equals your {sqAvgReturn}% average — a fair like-for-like. A deterministic illustration of one ordering, not a probability (that's the Monte Carlo tab's drawdown mode). Withdrawals come off at the start of each year, rising {sqInflation}%/yr.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'twoPot' && (
+      <div className="power-tool-card">
+        <h3>🫙 Two-Pot Retirement — Cost of Withdrawing</h3>
+        <p className="power-tool-desc">South Africa's two-pot system lets you dip into the savings pot before retirement. It costs you twice: the withdrawal is taxed at your marginal rate now, and you forfeit everything it would have compounded to by retirement.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Amount to Withdraw ({country.symbol})</label>
+            <input type="number" min="0" step="5000" value={tpAmount} onChange={(e) => setTpAmount(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Your Taxable Income ({country.symbol}/yr)</label>
+            <input type="number" min="0" step="10000" value={tpIncome} onChange={(e) => setTpIncome(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Years Until Retirement</label>
+            <input type="number" min="0" max="60" step="1" value={tpYearsToRetire} onChange={(e) => setTpYearsToRetire(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Expected Growth (%/yr)</label>
+            <input type="number" step="0.5" value={tpGrowth} onChange={(e) => setTpGrowth(Number(e.target.value))} />
+          </div>
+        </div>
+        {country.taxBrackets && (
+          <label className="mc-compare-toggle">
+            <input type="checkbox" checked={tpProgressive} onChange={(e) => setTpProgressive(e.target.checked)} />
+            Use {country.name}'s progressive brackets for the tax figure
+          </label>
+        )}
+        {tpAmount > 0 && (
+          <>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Tax on the withdrawal</span>
+                <strong className="warn">{country.symbol} {Math.round(twoPot.taxOnWithdrawal).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Cash you actually get</span>
+                <strong>{country.symbol} {Math.round(twoPot.netCashNow).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Retirement value given up</span>
+                <strong className="warn">{country.symbol} {Math.round(twoPot.futureValueForgone).toLocaleString()}</strong>
+              </div>
+            </div>
+            <div className="power-verdict danger">
+              Withdrawing {country.symbol} {Math.round(tpAmount).toLocaleString()} nets you {country.symbol} {Math.round(twoPot.netCashNow).toLocaleString()} after {twoPot.marginalRatePct.toFixed(0)}% tax — but that money would have grown to about <strong>{country.symbol} {Math.round(twoPot.futureValueForgone).toLocaleString()}</strong> by retirement. Every spendable rand today costs roughly {country.symbol}{twoPot.costPerRandTaken.toFixed(2)} of future retirement money.
+            </div>
+            <p className="power-tool-note">
+              SA two-pot rules. Tax is at your marginal rate (the withdrawal stacks on your income), not the retirement lump-sum tables. "Value given up" grows the gross amount at {tpGrowth}%/yr for {Math.round(tpYearsToRetire)} years with no further contributions. Ignores any SARS admin fee on the withdrawal. Not advice — dipping in during genuine hardship can still be the right call.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'loanCompare' && (
+      <div className="power-tool-card">
+        <h3>⚖️ Loan Offer Comparison</h3>
+        <p className="power-tool-desc">Two offers for the same amount, compared on what they actually cost once the term and every fee are counted — not just the headline rate.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Amount to Borrow ({country.symbol})</label>
+            <input type="number" min="0" step="10000" value={lcAmount} onChange={(e) => setLcAmount(Number(e.target.value))} />
+          </div>
+        </div>
+        <div className="dc-rows">
+          <div className="dc-row">
+            <span className="dc-row-num">A</span>
+            <div className="form-group"><label>Rate (%/yr)</label><input type="number" step="0.5" value={lcaRate} onChange={(e) => setLcaRate(Number(e.target.value))} /></div>
+            <div className="form-group"><label>Term (yrs)</label><input type="number" min="1" max="30" value={lcaTerm} onChange={(e) => setLcaTerm(Number(e.target.value))} /></div>
+            <div className="form-group"><label>Upfront fee ({country.symbol})</label><input type="number" min="0" step="500" value={lcaUpfront} onChange={(e) => setLcaUpfront(Number(e.target.value))} /></div>
+            <div className="form-group"><label>Monthly fee ({country.symbol})</label><input type="number" min="0" step="10" value={lcaMonthly} onChange={(e) => setLcaMonthly(Number(e.target.value))} /></div>
+          </div>
+          <div className="dc-row">
+            <span className="dc-row-num">B</span>
+            <div className="form-group"><label>Rate (%/yr)</label><input type="number" step="0.5" value={lcbRate} onChange={(e) => setLcbRate(Number(e.target.value))} /></div>
+            <div className="form-group"><label>Term (yrs)</label><input type="number" min="1" max="30" value={lcbTerm} onChange={(e) => setLcbTerm(Number(e.target.value))} /></div>
+            <div className="form-group"><label>Upfront fee ({country.symbol})</label><input type="number" min="0" step="500" value={lcbUpfront} onChange={(e) => setLcbUpfront(Number(e.target.value))} /></div>
+            <div className="form-group"><label>Monthly fee ({country.symbol})</label><input type="number" min="0" step="10" value={lcbMonthly} onChange={(e) => setLcbMonthly(Number(e.target.value))} /></div>
+          </div>
+        </div>
+        {lcAmount > 0 && loanCompare.a && (
+          <>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Offer A — total cost</span>
+                <strong className={loanCompare.cheaper === 'A' ? 'positive' : ''}>{country.symbol} {Math.round(loanCompare.a.totalCost).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Offer B — total cost</span>
+                <strong className={loanCompare.cheaper === 'B' ? 'positive' : ''}>{country.symbol} {Math.round(loanCompare.b.totalCost).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Monthly: A vs B</span>
+                <strong>{country.symbol} {Math.round(loanCompare.a.monthlyPayment).toLocaleString()} / {Math.round(loanCompare.b.monthlyPayment).toLocaleString()}</strong>
+              </div>
+            </div>
+            <div className={`power-verdict ${loanCompare.cheaper === 'tie' ? 'neutral' : 'invest'}`}>
+              {loanCompare.cheaper === 'tie'
+                ? 'Both offers cost the same all-in. Pick on flexibility, service, or early-settlement terms.'
+                : `Offer ${loanCompare.cheaper} is cheaper overall by about ${country.symbol} ${Math.round(loanCompare.totalCostSaving).toLocaleString()} across the life of the loan${loanCompare.monthlyDifference > 1 ? `, though its monthly differs by about ${country.symbol} ${Math.round(loanCompare.monthlyDifference).toLocaleString()}` : ''}.`}
+            </div>
+            <p className="power-tool-note">
+              All-in cost = principal + total interest + every fee. The "all-in %" is a rough comparative rate, not a regulated APR/APRC. Assumes each loan runs its full term with no early settlement.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'subCost' && (
+      <div className="power-tool-card">
+        <h3>🔁 What a Subscription Really Costs</h3>
+        <p className="power-tool-desc">A small monthly charge is an annual cost that creeps up with inflation — and every rand of it is a rand not compounding somewhere else.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Monthly Cost ({country.symbol})</label>
+            <input type="number" min="0" step="10" value={scMonthly} onChange={(e) => setScMonthly(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Over How Many Years</label>
+            <input type="number" min="1" max="60" step="1" value={scYears} onChange={(e) => setScYears(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>If Invested Instead (%/yr)</label>
+            <input type="number" step="0.5" value={scReturn} onChange={(e) => setScReturn(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Annual Price Increase (%)</label>
+            <input type="number" min="0" step="0.5" value={scIncrease} onChange={(e) => setScIncrease(Number(e.target.value))} />
+          </div>
+        </div>
+        {scMonthly > 0 && (
+          <>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Costs you now</span>
+                <strong>{country.symbol} {Math.round(subCost.annualCostNow).toLocaleString()}/yr</strong>
+              </div>
+              <div className="power-stat">
+                <span>Total paid over {subCost.horizonYears} yrs</span>
+                <strong className="warn">{country.symbol} {Math.round(subCost.totalPaid).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>That money invested instead</span>
+                <strong className="positive">{country.symbol} {Math.round(subCost.investedInsteadValue).toLocaleString()}</strong>
+              </div>
+            </div>
+            <div className="power-verdict debt">
+              {country.symbol}{Math.round(scMonthly).toLocaleString()}/month is {country.symbol}{Math.round(subCost.annualCostNow).toLocaleString()} a year now, about <strong>{country.symbol} {Math.round(subCost.totalPaid).toLocaleString()}</strong> over {subCost.horizonYears} years with {scIncrease}%/yr price rises. Invested at {scReturn}% instead it would be worth {country.symbol} {Math.round(subCost.investedInsteadValue).toLocaleString()} — {country.symbol} {Math.round(subCost.opportunityCost).toLocaleString()} of that is growth you're giving up on top of the cash.
+            </div>
+            <p className="power-tool-note">
+              Worth it or not is your call — this just puts a number on the trade-off. Stack a few subscriptions together to see the real total.
             </p>
           </>
         )}

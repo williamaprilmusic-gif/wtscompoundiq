@@ -58,6 +58,20 @@ describe('runSimulation', () => {
     expect(r.drawdown.medianYearsLasted).toBeLessThanOrEqual(30);
   });
 
+  it('goalProbByYear rises over time and only covers years within the horizon', () => {
+    const r = runSimulation({ ...base, years: 25, volatility: 5 });
+    expect(r.goalProbByYear.length).toBeGreaterThan(0);
+    expect(r.goalProbByYear.every(pt => pt.year < 25)).toBe(true);
+    for (let i = 1; i < r.goalProbByYear.length; i++) {
+      // Non-decreasing (allow a small dip for simulation noise).
+      expect(r.goalProbByYear[i].probability).toBeGreaterThanOrEqual(r.goalProbByYear[i - 1].probability - 8);
+    }
+  });
+
+  it('goalProbByYear is empty when there is no positive goal', () => {
+    expect(runSimulation({ ...base, goal: 0 }).goalProbByYear).toEqual([]);
+  });
+
   it('a bigger withdrawal never raises the survival rate', () => {
     const shared = { ...base, initial: 2000000, monthly: 0, years: 0, volatility: 0, retirementYears: 25, withdrawalInflation: 0 };
     const light = runSimulation({ ...shared, annualWithdrawal: 40000 }).drawdown.survivalRate;
