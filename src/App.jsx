@@ -309,6 +309,19 @@ export default function App() {
     otherTaxableIncome
   });
 
+  // Rate-sensitivity band under the headline number: the same plan run a couple of
+  // points either side of the entered return, so the projection reads as a range rather
+  // than a single confident figure. A free-tier nudge, like "cost of waiting" below.
+  const RATE_BAND = 2;
+  const rateBandParams = {
+    initial, monthly, years, inflation, taxRate: country.taxRate, wrapper, compoundFrequency,
+    annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit,
+    contributionIncreaseRate: contributionIncrease, lumpSums,
+    taxBrackets: effectiveTaxBrackets, otherTaxableIncome
+  };
+  const rateBandLow = calculateCompoundInterest({ ...rateBandParams, rate: rate - RATE_BAND }).finalBalance;
+  const rateBandHigh = calculateCompoundInterest({ ...rateBandParams, rate: rate + RATE_BAND }).finalBalance;
+
   // "Cost of waiting" -- same plan against the same target date, started `waitYears`
   // later (fewer compounding years). A free-tier nudge shown under the result.
   // effWait is the delay actually applied: rounded to a whole year and clamped to
@@ -581,6 +594,26 @@ export default function App() {
                   <strong style={{ color: 'var(--mut)' }}>{country.symbol} {(results.yearlyData[results.yearlyData.length - 1]?.realValue ?? 0).toLocaleString()}</strong>
                 </div>
               </div>
+
+              {years >= 1 && (initial > 0 || monthly > 0) && Number.isFinite(rateBandLow) && Number.isFinite(rateBandHigh) && (
+                <div className="rate-band">
+                  <span className="rate-band-label">If the return runs ±{RATE_BAND}%/yr of your {rate}% estimate</span>
+                  <div className="rate-band-cells">
+                    <div>
+                      <span>{(rate - RATE_BAND).toFixed(1)}%/yr</span>
+                      <strong>{country.symbol} {Math.round(rateBandLow).toLocaleString()}</strong>
+                    </div>
+                    <div className="rate-band-mid">
+                      <span>{Number(rate).toFixed(1)}%/yr</span>
+                      <strong>{country.symbol} {results.finalBalance.toLocaleString()}</strong>
+                    </div>
+                    <div>
+                      <span>{(rate + RATE_BAND).toFixed(1)}%/yr</span>
+                      <strong>{country.symbol} {Math.round(rateBandHigh).toLocaleString()}</strong>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {monthly > 0 && years > 1 && Number.isFinite(waitingCost.cost) && (
                 <div className="cost-of-waiting">

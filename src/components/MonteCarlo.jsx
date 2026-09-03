@@ -120,6 +120,8 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
   const [targetProb, setTargetProb] = useState(90);
   const [solveResult, setSolveResult] = useState(null);
   const [isSolving, setIsSolving] = useState(false);
+  const [yearsSolveResult, setYearsSolveResult] = useState(null);
+  const [isSolvingYears, setIsSolvingYears] = useState(false);
 
   const activeHistoricalModel = RETURN_MODELS.find(m => m.key === historicalModelKey) || RETURN_MODELS[0];
 
@@ -204,6 +206,52 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
     }, 20);
   };
 
+  // Ultra-only companion to handleSolve: hold the contribution where it is and find how
+  // many more years of investing lift the probability of hitting `goal` to `targetProb`.
+  // probabilityOfGoal rises monotonically with the horizon, so a short binary search
+  // over the extra years works the same way the contribution search does.
+  const handleSolveYears = () => {
+    setIsSolvingYears(true);
+    setTimeout(() => {
+      if (!(goal > 0)) {
+        setYearsSolveResult(null);
+        setIsSolvingYears(false);
+        return;
+      }
+      const base = {
+        initial, monthly, rate, volatility, goal,
+        contributionIncreaseRate: contributionIncrease, lumpSums, returnModel,
+        historicalSeries: activeHistoricalModel.data
+      };
+      const probAtYears = (y) => runSimulation({ ...base, years: y }).probabilityOfGoal;
+      const wanted = Math.max(1, Math.min(99, targetProb || 90));
+      const startYears = Math.max(1, Math.floor(years || 1));
+
+      if (probAtYears(startYears) >= wanted) {
+        setYearsSolveResult({ years: startYears, extraYears: 0, achievedProb: probAtYears(startYears), wanted, reachable: true });
+        setIsSolvingYears(false);
+        return;
+      }
+      // Cap the horizon: MAX_YEARS app-wide is 100, and nobody plans past that.
+      let lo = startYears;
+      let hi = Math.min(100, startYears + 45);
+      let hiProb = probAtYears(hi);
+      if (hiProb < wanted) {
+        setYearsSolveResult({ years: hi, extraYears: hi - startYears, achievedProb: hiProb, wanted, reachable: false });
+        setIsSolvingYears(false);
+        return;
+      }
+      let hiProbFinal = hiProb;
+      while (hi - lo > 1) {
+        const mid = Math.round((lo + hi) / 2);
+        const pm = probAtYears(mid);
+        if (pm >= wanted) { hi = mid; hiProbFinal = pm; } else lo = mid;
+      }
+      setYearsSolveResult({ years: hi, extraYears: hi - startYears, achievedProb: hiProbFinal, wanted, reachable: true });
+      setIsSolvingYears(false);
+    }, 20);
+  };
+
   return (
     <div className="card monte-carlo">
       <div className="mc-header">
@@ -285,6 +333,29 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
             {solveResult.reachable
               ? `About ${country.symbol} ${solveResult.monthly.toLocaleString()}/month gives roughly a ${solveResult.achievedProb.toFixed(0)}% chance of hitting the goal (target was ${solveResult.wanted}%). Approximate — the probability is estimated from ${NUM_SIMULATIONS.toLocaleString()} random paths and moves a point or two each run.`
               : `Even ${country.symbol} ${solveResult.monthly.toLocaleString()}/month only reaches about ${solveResult.achievedProb.toFixed(0)}% — the ${solveResult.wanted}% target isn't achievable at this volatility and timeframe. Lower the goal, extend the years, or accept a lower success rate.`}
+          </p>
+        )}
+
+        <div className="mc-solver-row">
+          <label>
+            Or — hold the contribution and find how many <strong>years</strong> get you to a{' '}
+            <input
+              type="number" min="1" max="99"
+              value={Math.max(1, Math.min(99, targetProb || 90))}
+              onChange={(e) => setTargetProb(Number(e.target.value))}
+            />% chance of {country.symbol}{Math.round(goal).toLocaleString()}
+          </label>
+          <button className="mc-solver-btn" onClick={handleSolveYears} disabled={isSolvingYears}>
+            {isSolvingYears ? '⏳ Solving…' : 'Find it'}
+          </button>
+        </div>
+        {yearsSolveResult && (
+          <p className={`mc-solver-result ${yearsSolveResult.reachable ? '' : 'warn'}`}>
+            {yearsSolveResult.reachable
+              ? (yearsSolveResult.extraYears === 0
+                  ? `You're already there — at ${yearsSolveResult.years} years the current plan hits about a ${yearsSolveResult.achievedProb.toFixed(0)}% chance (target ${yearsSolveResult.wanted}%).`
+                  : `About ${yearsSolveResult.years} years total — ${yearsSolveResult.extraYears} more than your current plan — gets you to roughly ${yearsSolveResult.achievedProb.toFixed(0)}% (target ${yearsSolveResult.wanted}%). Approximate, from ${NUM_SIMULATIONS.toLocaleString()} random paths.`)
+              : `Even ${yearsSolveResult.years} years only reaches about ${yearsSolveResult.achievedProb.toFixed(0)}% — the ${yearsSolveResult.wanted}% target needs a higher contribution or a lower goal, not just more time.`}
           </p>
         )}
       </div>

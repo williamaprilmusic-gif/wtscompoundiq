@@ -38,6 +38,9 @@ import { baristaFireNumber } from '../baristaFire';
 import { retirementIncomeGap } from '../retirementGap';
 import { depositSavingsTimeline } from '../depositTimeline';
 import { realReturn } from '../realReturn';
+import { compareDebtConsolidation } from '../debtConsolidation';
+import { estimateHomePurchaseCosts } from '../homePurchaseCosts';
+import { bonusTakeHome } from '../bonusTax';
 import { readJSONArray } from '../utils/storage';
 import { convertAmount, countriesData } from '../data/countries';
 import { DEBTS_KEY } from './DebtPayoff';
@@ -80,7 +83,10 @@ const SUB_TABS = [
   { key: 'leaseVsBuy', label: '🚙 Lease vs. Buy' },
   { key: 'retireGap', label: '📊 Retirement Income Gap' },
   { key: 'depositTimeline', label: '🕐 Deposit Timeline' },
-  { key: 'realReturn', label: '📉 Real Return' }
+  { key: 'realReturn', label: '📉 Real Return' },
+  { key: 'debtConsol', label: '🔗 Debt Consolidation' },
+  { key: 'homeCosts', label: '🏦 Home Buying Costs' },
+  { key: 'bonusTax', label: '🎉 Bonus Take-Home' }
 ];
 
 // Groups the pills above into labelled categories so the bar stays scannable. Every
@@ -88,10 +94,10 @@ const SUB_TABS = [
 // SubTabs rather than vanishing.
 const SUB_TAB_GROUPS = [
   { label: 'Retire & Financial Independence', keys: ['fire', 'coastFire', 'baristaFire', 'savingsRate', 'drawdown', 'pretaxRA', 'dividend', 'feeDrag', 'retireGap'] },
-  { label: 'Debt & Credit', keys: ['debtVsInvest', 'dti', 'cardTrap'] },
-  { label: 'Property & Big Purchases', keys: ['affordability', 'rentVsBuy', 'carCost', 'leaseVsBuy', 'depositTimeline', 'rateShock'] },
+  { label: 'Debt & Credit', keys: ['debtVsInvest', 'dti', 'cardTrap', 'debtConsol'] },
+  { label: 'Property & Big Purchases', keys: ['affordability', 'rentVsBuy', 'carCost', 'leaseVsBuy', 'depositTimeline', 'homeCosts', 'rateShock'] },
   { label: 'Saving for a Goal', keys: ['savings', 'education', 'sinkingFund', 'efRunway', 'insurance', 'windfall'] },
-  { label: 'Income & Tax', keys: ['salary', 'raiseValue', 'budgetRule', 'marginalTax', 'raiseInflation'] },
+  { label: 'Income & Tax', keys: ['salary', 'raiseValue', 'bonusTax', 'budgetRule', 'marginalTax', 'raiseInflation'] },
   { label: 'Money Basics', keys: ['futureCost', 'fxConvert', 'rule72', 'freqCompare', 'effRate', 'realReturn'] }
 ];
 
@@ -282,6 +288,25 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const [rrNominal, setRrNominal] = useState(rate || 8);
   const [rrInflation, setRrInflation] = useState(Math.round(country.typicalInflation || 5));
   const [rrTax, setRrTax] = useState(country.taxRate);
+
+  const [dcRows, setDcRows] = useState([
+    { id: 1, balance: 0, rate: 0, minPayment: 0 },
+    { id: 2, balance: 0, rate: 0, minPayment: 0 }
+  ]);
+  const [dcNewRate, setDcNewRate] = useState(Math.round(country.typicalBankRate || 12));
+  const [dcNewTerm, setDcNewTerm] = useState(5);
+  const updateDcRow = (id, field, val) =>
+    setDcRows(rows => rows.map(r => (r.id === id ? { ...r, [field]: val } : r)));
+  const addDcRow = () =>
+    setDcRows(rows => (rows.length >= 6 ? rows : [...rows, { id: Math.max(0, ...rows.map(r => r.id)) + 1, balance: 0, rate: 0, minPayment: 0 }]));
+  const removeDcRow = (id) => setDcRows(rows => (rows.length <= 1 ? rows : rows.filter(r => r.id !== id)));
+
+  const [hcPrice, setHcPrice] = useState(0);
+  const [hcDeposit, setHcDeposit] = useState(0);
+
+  const [btSalary, setBtSalary] = useState(0);
+  const [btBonus, setBtBonus] = useState(0);
+  const [btProgressive, setBtProgressive] = useState(false);
 
   const safeWithdrawalRate = withdrawalRate > 0 ? withdrawalRate : 0.01;
   const fireNumber = annualExpenses / (safeWithdrawalRate / 100);
@@ -483,6 +508,22 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const rgSwrShown = Math.max(0.01, rgSwr || 4);
   const depositTimeline = depositSavingsTimeline({ homePrice: dtPrice, depositPercent: dtPercent, monthlySaving: dtMonthly, alreadySaved: dtSaved, annualSavingsRate: dtRate });
   const realRet = realReturn({ nominalRate: rrNominal, inflationRate: rrInflation, taxRate: rrTax });
+
+  const debtConsol = compareDebtConsolidation({
+    debts: dcRows.map(r => ({ balance: r.balance, rate: r.rate, minPayment: r.minPayment })),
+    newRate: dcNewRate, newTermYears: dcNewTerm
+  });
+  const dcHasDebts = dcRows.some(r => r.balance > 0);
+
+  const homeCosts = estimateHomePurchaseCosts({
+    purchasePrice: hcPrice, depositAmount: hcDeposit, countryCode: country.code
+  });
+
+  const bonusTax = bonusTakeHome({
+    annualSalary: btSalary, bonusAmount: btBonus,
+    taxRate: country.taxRate,
+    taxBrackets: (btProgressive && country.taxBrackets) ? country.taxBrackets : null
+  });
 
   const saveFirePlan = () => {
     savePlanSection('fire', {
@@ -2166,6 +2207,170 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
               say {realRet.roughApprox.toFixed(1)}% — it skips the interaction between the two rates (at normal
               positive inflation that makes it slightly optimistic). Inside a {country.wrapperLabel && country.wrapperLabel !== 'N/A' ? country.wrapperLabel : 'tax-free wrapper'} the
               tax line is 0, so set it to 0 to see the sheltered real return.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'debtConsol' && (
+      <div className="power-tool-card">
+        <h3>🔗 Debt Consolidation</h3>
+        <p className="power-tool-desc">Rolling several debts into one loan can lower the rate and free up monthly cash — or just stretch the term and cost more overall. This compares keeping them as they are against one consolidation loan.</p>
+        <div className="dc-rows">
+          {dcRows.map((r, i) => (
+            <div className="dc-row" key={r.id}>
+              <span className="dc-row-num">{i + 1}</span>
+              <div className="form-group">
+                <label>Balance ({country.symbol})</label>
+                <input type="number" min="0" step="1000" value={r.balance} onChange={(e) => updateDcRow(r.id, 'balance', Number(e.target.value))} />
+              </div>
+              <div className="form-group">
+                <label>Rate (%/yr)</label>
+                <input type="number" min="0" step="0.5" value={r.rate} onChange={(e) => updateDcRow(r.id, 'rate', Number(e.target.value))} />
+              </div>
+              <div className="form-group">
+                <label>You Pay ({country.symbol}/mo)</label>
+                <input type="number" min="0" step="100" value={r.minPayment} onChange={(e) => updateDcRow(r.id, 'minPayment', Number(e.target.value))} />
+              </div>
+              <button className="dc-row-remove" onClick={() => removeDcRow(r.id)} disabled={dcRows.length <= 1} aria-label={`Remove debt ${i + 1}`}>×</button>
+            </div>
+          ))}
+          {dcRows.length < 6 && <button className="power-use-fire-btn" onClick={addDcRow}>+ Add another debt</button>}
+        </div>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Consolidation Loan Rate (%/yr)</label>
+            <input type="number" min="0" step="0.5" value={dcNewRate} onChange={(e) => setDcNewRate(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Consolidation Loan Term (years)</label>
+            <input type="number" min="1" max="30" step="1" value={dcNewTerm} onChange={(e) => setDcNewTerm(Number(e.target.value))} />
+          </div>
+        </div>
+        {dcHasDebts && (
+          <>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Combined balance</span>
+                <strong>{country.symbol} {Math.round(debtConsol.totalBalance).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>New monthly payment</span>
+                <strong>{country.symbol} {Math.round(debtConsol.consolidatedMonthly).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Now paying</span>
+                <strong>{country.symbol} {Math.round(debtConsol.currentMonthly).toLocaleString()}/mo</strong>
+              </div>
+            </div>
+            <div className={`power-verdict ${debtConsol.interestSaved == null ? 'neutral' : debtConsol.interestSaved > 0 ? 'invest' : 'debt'}`}>
+              {debtConsol.anyNeverPaysOff
+                ? `At least one debt's current payment barely covers its interest, so "keeping things as they are" never actually clears — consolidating at ${dcNewRate}% over ${dcNewTerm} years pays it off for about ${country.symbol} ${Math.round(debtConsol.consolidatedMonthly).toLocaleString()}/mo and ${country.symbol} ${Math.round(debtConsol.consolidatedInterest).toLocaleString()} total interest.`
+                : debtConsol.interestSaved > 0
+                  ? `Consolidating saves about ${country.symbol} ${Math.round(debtConsol.interestSaved).toLocaleString()} in interest${debtConsol.monthsSaved > 0 ? ` and clears the debt ${debtConsol.monthsSaved} months sooner` : ''}${debtConsol.monthlyDifference > 0 ? `, while freeing up about ${country.symbol} ${Math.round(debtConsol.monthlyDifference).toLocaleString()}/mo` : ''}.`
+                  : `Consolidating costs about ${country.symbol} ${Math.round(-debtConsol.interestSaved).toLocaleString()} MORE in interest over the life of the loan — the lower monthly payment (${country.symbol} ${Math.round(debtConsol.monthlyDifference).toLocaleString()}/mo freed up) is bought with a longer term. Only worth it if the cash-flow relief matters more than the total cost.`}
+            </div>
+            <p className="power-tool-note">
+              "You Pay" is your current actual monthly payment per debt (for a credit card, roughly its minimum). The current-path figure runs each debt independently at that payment; the consolidation figure is one amortising loan for the combined balance. Doesn't model an origination/initiation fee on the new loan — add that to the balance if it's significant. Not advice.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'homeCosts' && (
+      <div className="power-tool-card">
+        <h3>🏦 Home Buying — Upfront Costs</h3>
+        <p className="power-tool-desc">The cash you need on the day, over and above the deposit: {country.code === 'za' ? 'transfer duty, the transferring and bond attorneys, and the deeds office' : 'purchase tax and professional fees'}. A bond calculator never shows these.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Purchase Price ({country.symbol})</label>
+            <input type="number" min="0" step="50000" value={hcPrice} onChange={(e) => setHcPrice(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Deposit ({country.symbol})</label>
+            <input type="number" min="0" step="10000" value={hcDeposit} onChange={(e) => setHcDeposit(Number(e.target.value))} />
+          </div>
+        </div>
+        {hcPrice > 0 && (
+          <>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>{country.code === 'za' ? 'Transfer duty' : 'Purchase tax'}</span>
+                <strong>{country.symbol} {Math.round(homeCosts.transferDuty).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>{country.code === 'za' ? 'Attorneys + deeds office' : 'Professional fees'}</span>
+                <strong>{country.symbol} {Math.round(homeCosts.transferAttorney + homeCosts.bondRegistration + homeCosts.deedsOffice).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Total fees</span>
+                <strong className="warn">{country.symbol} {Math.round(homeCosts.totalFees).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Cash needed upfront</span>
+                <strong>{country.symbol} {Math.round(homeCosts.cashNeededUpfront).toLocaleString()}</strong>
+              </div>
+            </div>
+            <div className="power-verdict neutral">
+              On a {country.symbol} {Math.round(hcPrice).toLocaleString()} home you'd need about <strong>{country.symbol} {Math.round(homeCosts.cashNeededUpfront).toLocaleString()}</strong> in cash on transfer day — the {country.symbol} {Math.round(hcDeposit).toLocaleString()} deposit plus {country.symbol} {Math.round(homeCosts.totalFees).toLocaleString()} of fees ({homeCosts.feesAsPctOfPrice.toFixed(1)}% of the price).
+            </div>
+            <p className="power-tool-note">
+              {country.code === 'za'
+                ? 'Transfer duty uses the SARS natural-person brackets (indicative, 2026/27); attorney and deeds-office figures approximate the recommended conveyancing tariff. Not a conveyancer’s quote — bond initiation fees, rates clearance, and levy advances vary. Buying through a company or trust is taxed differently.'
+                : 'Outside South Africa this uses a single purchase-tax percentage plus a professional-fee allowance — refine it with your actual local stamp duty / land tax and solicitor quote.'}
+              {' '}Pair with the Deposit Timeline tool to see how long the cash takes to save.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'bonusTax' && (
+      <div className="power-tool-card">
+        <h3>🎉 Bonus / 13th Cheque — Take-Home</h3>
+        <p className="power-tool-desc">A bonus sits on top of your salary, so it's taxed entirely at your marginal rate — the rate on your top slice of income. This is how much actually lands in your account.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Annual Salary ({country.symbol})</label>
+            <input type="number" min="0" step="10000" value={btSalary} onChange={(e) => setBtSalary(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Bonus Amount ({country.symbol})</label>
+            <input type="number" min="0" step="5000" value={btBonus} onChange={(e) => setBtBonus(Number(e.target.value))} />
+          </div>
+        </div>
+        {country.taxBrackets && (
+          <label className="mc-compare-toggle">
+            <input type="checkbox" checked={btProgressive} onChange={(e) => setBtProgressive(e.target.checked)} />
+            Use {country.name}'s progressive brackets instead of the flat {country.taxRate}% estimate
+          </label>
+        )}
+        {btBonus > 0 && (
+          <>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Tax on the bonus</span>
+                <strong className="warn">{country.symbol} {Math.round(bonusTax.taxOnBonus).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>You actually keep</span>
+                <strong className="positive">{country.symbol} {Math.round(bonusTax.netBonus).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Marginal rate</span>
+                <strong>{bonusTax.marginalRatePct.toFixed(0)}%</strong>
+              </div>
+            </div>
+            <div className="power-verdict debt">
+              Of a {country.symbol} {Math.round(btBonus).toLocaleString()} bonus you keep about <strong>{country.symbol} {Math.round(bonusTax.netBonus).toLocaleString()}</strong> ({bonusTax.keepPct.toFixed(0)}%) — {country.symbol} {Math.round(bonusTax.taxOnBonus).toLocaleString()} goes to tax at an average {bonusTax.averageRateOnBonusPct.toFixed(0)}% across the bonus.
+            </div>
+            <p className="power-tool-note">
+              {btProgressive && country.taxBrackets
+                ? (country.taxBracketsNote || `${country.name}'s progressive bracket schedule — illustrative only.`)
+                : `Flat ${country.taxRate}% estimate. Turn on progressive brackets above (where available) for a marginal figure.`}
+              {' '}Ignores UIF/pension/medical-aid deductions and any employer withholding quirks — it's the income-tax bite only. To invest what's left, drop the net figure into the Windfall Split tool.
             </p>
           </>
         )}

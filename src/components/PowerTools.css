@@ -197,9 +197,45 @@
 .power-freq-table td { color: var(--text-soft); }
 .power-freq-table td:first-child { color: var(--mut); }
 
+/* Debt Consolidation: a small stack of editable debt rows. */
+.dc-rows { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.dc-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.dc-row .form-group { flex: 1; min-width: 0; }
+.dc-row-num {
+  align-self: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--mut2);
+  width: 1ch;
+  flex-shrink: 0;
+}
+.dc-row-remove {
+  align-self: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  background: rgba(248, 113, 113, 0.12);
+  color: var(--accent-red);
+  font-size: 1rem;
+  cursor: pointer;
+}
+.dc-row-remove:disabled { opacity: 0.4; cursor: not-allowed; }
+
 @media (max-width: 640px) {
   .power-tool-card { padding: 16px 14px; }
   .power-verdict-grid { grid-template-columns: 1fr; }
   .power-result { gap: 16px; }
   .power-header h2 { font-size: 1.3rem; }
+  .dc-row { flex-wrap: wrap; gap: 8px; }
+  .dc-row .form-group { flex-basis: 100%; }
 }

@@ -387,6 +387,52 @@ body {
   border: 1px solid var(--border);
 }
 
+/* Rate-sensitivity band under the headline result. */
+.rate-band {
+  margin: -18px 0 22px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--border);
+}
+.rate-band-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mut);
+  margin-bottom: 10px;
+}
+.rate-band-cells {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.rate-band-cells > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--raise-02);
+  border: 1px solid var(--border);
+}
+.rate-band-cells > div.rate-band-mid {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.35);
+}
+.rate-band-cells span {
+  font-size: 0.72rem;
+  color: var(--mut);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.rate-band-cells strong {
+  font-size: 1rem;
+  color: var(--text);
+}
+
 .cost-of-waiting {
   margin: -18px 0 30px;
   padding: 14px 18px;
