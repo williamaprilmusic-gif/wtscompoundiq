@@ -34,6 +34,7 @@ import CountrySelect from './components/CountrySelect';
 import { buildShareUrl, parseShareParams, clearShareParamsFromUrl } from './utils/shareLink';
 import { downloadCSV } from './utils/csv';
 import { uniqueId } from './utils/uniqueId';
+import { readEntitlement, refreshEntitlement, clearEntitlement, consumePaystackRedirect } from './utils/entitlement';
 
 const THEME_KEY = 'wts_compoundiq_theme';
 const REPORTING_CURRENCY_KEY = 'wts_compoundiq_reporting_currency';
@@ -205,12 +206,49 @@ export default function App() {
     ]);
   };
 
-  // Load tier from local storage
+  // Load tier on mount. Precedence:
+  //   1. A returning Paystack checkout (?reference=) -> verify server-side, store the
+  //      signed entitlement, unlock its tier.
+  //   2. An existing signed entitlement in localStorage -> unlock its tier now, then
+  //      revalidate it against Paystack in the background and downgrade if it lapsed.
+  //   3. The legacy plain `wts_compoundiq_tier` string -> demo-mode / manually-set tier,
+  //      unchanged behaviour for when live payments aren't configured.
   useEffect(() => {
-    const savedTier = localStorage.getItem('wts_compoundiq_tier');
-    if (savedTier) {
-      setUserTier(savedTier);
-    }
+    let cancelled = false;
+
+    const savedTier = (() => { try { return localStorage.getItem('wts_compoundiq_tier'); } catch { return null; } })();
+    const ent = readEntitlement();
+    if (ent) setUserTier(ent.tier);
+    else if (savedTier) setUserTier(savedTier);
+
+    (async () => {
+      const granted = await consumePaystackRedirect();
+      if (cancelled) return;
+      if (granted && granted.tier) {
+        setTier(granted.tier);
+        return;
+      }
+      if (ent) {
+        const outcome = await refreshEntitlement();
+        if (cancelled) return;
+        if (['lapsed', 'invalid', 'unconfigured'].includes(outcome)) {
+          clearEntitlement();
+          // Only force a downgrade if the entitlement was what was unlocking the tier;
+          // don't stomp a legacy/demo tier the user set another way.
+          if (!savedTier || savedTier === ent.tier) {
+            setUserTier('Basic');
+            try { localStorage.removeItem('wts_compoundiq_tier'); } catch { /* ignore */ }
+          }
+        } else {
+          const fresh = readEntitlement();
+          if (fresh) setUserTier(fresh.tier);
+        }
+      }
+    })();
+
+    return () => { cancelled = true; };
+    // setTier is stable (defined in component body, no deps captured that change).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Auto-dismiss the tier-change confirmation banner.
