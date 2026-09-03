@@ -3,9 +3,11 @@
 // home deposit (expressed as a % of the purchase price), how long until it's saved --
 // with the running balance earning a modest savings rate. Distinct from Home
 // Affordability, which sizes the bond rather than timing the deposit.
+import { clampPct } from './utils/sanitize';
+
 export const depositSavingsTimeline = ({ homePrice, depositPercent, monthlySaving, alreadySaved = 0, annualSavingsRate = 0 }) => {
   const price = Math.max(0, homePrice || 0);
-  const pct = Math.max(0, Math.min(depositPercent || 0, 100));
+  const pct = clampPct(depositPercent);
   const targetAmount = price * (pct / 100);
   const start = Math.max(0, alreadySaved || 0);
   const monthly = Math.max(0, monthlySaving || 0);

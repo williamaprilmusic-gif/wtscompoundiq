@@ -38,7 +38,7 @@ const decodeLumpSums = (raw) => {
     const [year, amount] = pair.split(':').map(Number);
     return {
       id: uniqueId(),
-      year: clampNumber(year, 1, { min: 1, max: 100 }),
+      year: clampNumber(year, 1, { min: 1, max: 100, integer: true }),
       amount: clampNumber(amount, 0, { min: 0, max: 1e12 })
     };
   }).filter(l => l.amount > 0 && l.year > 0);
@@ -65,10 +65,11 @@ export const buildShareUrl = (state) => {
   return url.toString();
 };
 
-const clampNumber = (value, fallback, { min = -Infinity, max = Infinity } = {}) => {
+const clampNumber = (value, fallback, { min = -Infinity, max = Infinity, integer = false } = {}) => {
   const n = Number(value);
   if (!Number.isFinite(n)) return fallback;
-  return Math.min(max, Math.max(min, n));
+  const clamped = Math.min(max, Math.max(min, n));
+  return integer ? Math.round(clamped) : clamped;
 };
 
 // Reads share params from the current URL (if any) and returns a partial Calculator
@@ -89,7 +90,7 @@ export const parseShareParams = () => {
     initial: clampNumber(params.get(PARAM_KEYS.initial), 0, { min: 0, max: 1e12 }),
     monthly: clampNumber(params.get(PARAM_KEYS.monthly), 0, { min: 0, max: 1e10 }),
     rate: clampNumber(params.get(PARAM_KEYS.rate), 0, { min: -50, max: 100 }),
-    years: clampNumber(params.get(PARAM_KEYS.years), 1, { min: 1, max: 100 }),
+    years: clampNumber(params.get(PARAM_KEYS.years), 1, { min: 1, max: 100, integer: true }),
     inflation: clampNumber(params.get(PARAM_KEYS.inflation), 0, { min: -20, max: 100 }),
     wrapper: params.get(PARAM_KEYS.wrapper) === '1',
     compoundFrequency: validFrequencies.includes(compoundFrequency) ? compoundFrequency : 12,

@@ -1,9 +1,9 @@
 // src/growthRate.js
 // Annualised (compound) growth rate between two dated values -- the CAGR that turns
 // startValue into endValue over `years`. Backs the Net Worth history's "growing at
-// ~X%/yr" readout and the Dashboard's net-worth card. Returns cagr: null when a
-// compound rate isn't meaningful (start at or below zero, an end that's gone negative,
-// or no time elapsed), while still giving the plain total change in that case.
+// ~X%/yr" readout. Returns cagr: null (with a `reason`) when a compound rate isn't
+// meaningful (start at or below zero, an end that's gone negative, or no time
+// elapsed), while still giving the plain total change in that case.
 // Under this many years apart, an annualised rate is just noise -- e.g. two snapshots
 // logged the same day (one correcting the other) would otherwise annualise a large
 // jump to Infinity or thousands of percent. Below the floor, cagr is null and the
@@ -23,7 +23,18 @@ export const annualisedGrowth = ({ startValue, endValue, years }) => {
   let cagr = canCompound ? (Math.pow(end / start, 1 / t) - 1) * 100 : null;
   if (cagr != null && !Number.isFinite(cagr)) cagr = null;
 
-  return { cagr, totalChange, totalChangePercent, years: Number.isFinite(t) ? t : 0 };
+  // Why cagr is null, so the caller can show the right explanation rather than a
+  // one-size-fits-all "needs a positive starting value" (which is wrong when it was
+  // the *end* that went non-positive).
+  let reason = null;
+  if (cagr == null) {
+    if (!(Number.isFinite(start) && start > 0)) reason = 'nonpositive-start';
+    else if (!(Number.isFinite(end) && end > 0)) reason = 'nonpositive-end';
+    else if (!(Number.isFinite(t) && t >= MIN_YEARS_FOR_CAGR)) reason = 'short-span';
+    else reason = 'short-span';
+  }
+
+  return { cagr, reason, totalChange, totalChangePercent, years: Number.isFinite(t) ? t : 0 };
 };
 
 // Whole-year gap between two ISO date strings, as a float (so 18 months -> 1.5).

@@ -59,7 +59,7 @@ const SUB_TABS = [
   { key: 'futureCost', label: '📈 Future Cost' },
   { key: 'coastFire', label: '🌴 Coast FIRE' },
   { key: 'savingsRate', label: '⏱️ Savings Rate' },
-  { key: 'cardTrap', label: '🪤 Card Min. Trap' },
+  { key: 'cardTrap', label: '💳 Card Min. Trap' },
   { key: 'fxConvert', label: '💱 Currency Convert' },
   { key: 'rule72', label: '⏳ Rule of 72' },
   { key: 'dividend', label: '💵 Dividend Income' },
@@ -1160,7 +1160,7 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'cardTrap' && (
       <div className="power-tool-card">
-        <h3>🪤 Credit Card Minimum-Payment Trap</h3>
+        <h3>💳 Credit Card Minimum-Payment Trap</h3>
         <p className="power-tool-desc">Paying only the minimum on one card — because the required amount shrinks with the balance — can stretch payoff over decades. See how much, and what a fixed payment does instead.</p>
         <div className="power-form">
           <div className="form-group">

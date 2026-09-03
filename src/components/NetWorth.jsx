@@ -264,8 +264,9 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
 
   // Compound annual growth rate of net worth across the whole saved history (first
   // snapshot to last), using the real time span between their dates. cagr is null when
-  // the starting net worth was zero or negative -- growthRate.js falls back to a plain
-  // total-change figure for that case, which the readout handles.
+  // the starting or ending net worth was zero or negative, or the snapshots are too
+  // close together -- growthRate.js reports which via `reason` and still gives a plain
+  // total-change figure, both of which the readout below handles.
   const nwGrowth = useMemo(() => {
     if (convertedHistory.length < 2) return null;
     const first = convertedHistory[0];
@@ -541,7 +542,12 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
             <p className="nw-history-growth">
               {nwGrowth.cagr != null
                 ? `Net worth has ${nwGrowth.cagr >= 0 ? 'grown' : 'shrunk'} at about ${Math.abs(nwGrowth.cagr).toFixed(1)}%/yr over ${nwGrowth.years.toFixed(1)} years (${nwGrowth.totalChange >= 0 ? '+' : '−'}${country.symbol}${Math.abs(Math.round(nwGrowth.totalChange)).toLocaleString()} in total).`
-                : `${nwGrowth.totalChange >= 0 ? '+' : '−'}${country.symbol}${Math.abs(Math.round(nwGrowth.totalChange)).toLocaleString()} in total across your snapshots — ${nwGrowth.years < 1 / 12 ? 'too little time between them to annualise a rate yet.' : 'an annualised rate needs a positive starting net worth.'}`}
+                : `${nwGrowth.totalChange >= 0 ? '+' : '−'}${country.symbol}${Math.abs(Math.round(nwGrowth.totalChange)).toLocaleString()} in total across your snapshots — ${
+                    nwGrowth.reason === 'short-span'
+                      ? 'too little time between them to annualise a rate yet.'
+                      : nwGrowth.reason === 'nonpositive-end'
+                        ? 'net worth is now zero or negative, so an annualised rate has no meaning.'
+                        : 'an annualised rate needs a positive starting net worth.'}`}
             </p>
           )}
           {canForecast && (

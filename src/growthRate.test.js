@@ -21,16 +21,28 @@ describe('annualisedGrowth', () => {
   it('returns cagr: null but a total change when starting from zero or below', () => {
     const fromZero = annualisedGrowth({ startValue: 0, endValue: 40000, years: 2 });
     expect(fromZero.cagr).toBeNull();
+    expect(fromZero.reason).toBe('nonpositive-start');
     expect(fromZero.totalChange).toBe(40000);
     expect(fromZero.totalChangePercent).toBeNull();
 
     const fromNegative = annualisedGrowth({ startValue: -10000, endValue: 5000, years: 1 });
     expect(fromNegative.cagr).toBeNull();
+    expect(fromNegative.reason).toBe('nonpositive-start');
     expect(fromNegative.totalChange).toBe(15000);
   });
 
-  it('returns cagr: null when the end value has gone negative (no real root)', () => {
-    expect(annualisedGrowth({ startValue: 20000, endValue: -5000, years: 2 }).cagr).toBeNull();
+  it('returns cagr: null (reason nonpositive-end) when the end value has gone negative (no real root)', () => {
+    const r = annualisedGrowth({ startValue: 20000, endValue: -5000, years: 2 });
+    expect(r.cagr).toBeNull();
+    expect(r.reason).toBe('nonpositive-end');
+  });
+
+  it('flags a sub-month span with reason short-span, not a value problem', () => {
+    expect(annualisedGrowth({ startValue: 100000, endValue: 250000, years: 2e-6 }).reason).toBe('short-span');
+  });
+
+  it('leaves reason null when a real cagr was produced', () => {
+    expect(annualisedGrowth({ startValue: 100000, endValue: 200000, years: 5 }).reason).toBeNull();
   });
 
   it('returns cagr: null when no time has elapsed', () => {

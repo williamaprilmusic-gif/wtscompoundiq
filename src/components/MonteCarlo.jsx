@@ -22,11 +22,16 @@ const percentileOf = (sortedArr, p) => sortedArr[Math.floor(p * (sortedArr.lengt
 // taxRate/wrapper/cap params default to "no tax at all" (this simulation's original
 // behavior) -- only the wrapper-comparison mode below passes real tax figures in, so
 // the plain single-run mode stays exactly as pre-tax as it always was.
-const runSimulation = ({
+export const runSimulation = ({
   initial, monthly, rate, years, volatility, goal, contributionIncreaseRate = 0, lumpSums = [],
   returnModel = 'normal', historicalSeries = [], taxRate = 0, wrapper = false,
   annualWrapperLimit = null, lifetimeWrapperLimit = null
 }) => {
+  // engine.js floors `years` internally; this loop builds a per-year array sized
+  // years+1 and writes balancesByYear[y+1], so a fractional years (reachable via a
+  // ?y=20.5 share link, which never floors) would leave the array a slot short and
+  // throw inside the setTimeout -- leaving the button stuck. Floor it here too.
+  years = Math.max(0, Math.floor(years || 0));
   const meanReturn = rate / 100;
   const stddev = volatility / 100;
   const finalBalances = [];
@@ -151,6 +156,13 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
   const handleSolve = () => {
     setIsSolving(true);
     setTimeout(() => {
+      // No positive goal means "chance of reaching R0", which is always 100% -- the
+      // solver would otherwise report "R 0/month gives a 100% chance". Bail cleanly.
+      if (!(goal > 0)) {
+        setSolveResult(null);
+        setIsSolving(false);
+        return;
+      }
       const base = {
         initial, rate, years, volatility, goal,
         contributionIncreaseRate: contributionIncrease, lumpSums, returnModel,
@@ -160,16 +172,22 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
       const wanted = Math.max(1, Math.min(99, targetProb || 90));
 
       let lo = 0;
+      // If zero contribution already clears the bar, there's nothing to search for --
+      // check this before spending draws widening `hi`.
+      const loProb = probAt(lo);
+      if (loProb >= wanted) {
+        setSolveResult({ monthly: 0, achievedProb: loProb, wanted, reachable: true });
+        setIsSolving(false);
+        return;
+      }
+
       let hi = Math.max(5000, (monthly || 0) * 4, Math.round(goal / Math.max(1, years) / 6));
       // widen hi until it clears the bar or we give up
       let hiProb = probAt(hi);
       let guard = 0;
       while (hiProb < wanted && guard < 8) { hi *= 1.8; hiProb = probAt(hi); guard++; }
 
-      const loProb = probAt(lo);
-      if (loProb >= wanted) {
-        setSolveResult({ monthly: 0, achievedProb: loProb, wanted, reachable: true });
-      } else if (hiProb < wanted) {
+      if (hiProb < wanted) {
         setSolveResult({ monthly: Math.round(hi), achievedProb: hiProb, wanted, reachable: false });
       } else {
         // Track the probability at the best accepted `hi` so the displayed % is one
@@ -253,7 +271,8 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
           <label>
             Or — find the monthly contribution for a{' '}
             <input
-              type="number" min="1" max="99" value={targetProb}
+              type="number" min="1" max="99"
+              value={Math.max(1, Math.min(99, targetProb || 90))}
               onChange={(e) => setTargetProb(Number(e.target.value))}
             />% chance of reaching {country.symbol}{Math.round(goal).toLocaleString()}
           </label>

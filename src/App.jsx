@@ -168,7 +168,7 @@ export default function App() {
   // AI Coach's "Set timeframe to N years" button both route through setYearsClamped, so
   // neither can push `years` past MAX_YEARS -- an unbounded value freezes every per-year
   // loop and Monte Carlo (see MAX_YEARS above). Number(...) || 1 keeps a cleared field at 1.
-  const clampYears = (value) => Math.min(MAX_YEARS, Math.max(1, Number(value) || 1));
+  const clampYears = (value) => Math.min(MAX_YEARS, Math.max(1, Math.round(Number(value) || 1)));
   const setYearsClamped = (value) => setYears(clampYears(value));
 
   const addLumpSum = () => setLumpSums(prev => [...prev, { id: uniqueId(), year: 1, amount: 0 }]);
@@ -273,10 +273,12 @@ export default function App() {
 
   // "Cost of waiting" -- same plan against the same target date, started `waitYears`
   // later (fewer compounding years). A free-tier nudge shown under the result.
-  // effWait is the delay actually applied: clamped to [1, years-1] so the spelled-out
-  // number in the sentence always matches what the math used, even if `years` shrank
-  // under a stale `waitYears` or the field was cleared/negatived.
-  const effWait = Math.max(1, Math.min(Math.max(1, years - 1), waitYears || 1));
+  // effWait is the delay actually applied: rounded to a whole year and clamped to
+  // [1, years-1] so the spelled-out number in the sentence (and the input's own value)
+  // always matches what the math used -- costOfWaiting rounds delayYears internally, so
+  // a fractional 2.5 here would otherwise show "2.5" in the box while the math used 3 --
+  // even if `years` shrank under a stale `waitYears` or the field was cleared/negatived.
+  const effWait = Math.max(1, Math.min(Math.max(1, years - 1), Math.round(waitYears || 1)));
   const waitingCost = costOfWaiting({
     initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper, compoundFrequency,
     annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit,
@@ -542,7 +544,7 @@ export default function App() {
                 </div>
               </div>
 
-              {monthly > 0 && years > 1 && (
+              {monthly > 0 && years > 1 && Number.isFinite(waitingCost.cost) && (
                 <div className="cost-of-waiting">
                   <label htmlFor="wait-years">Cost of waiting</label>
                   <div className="cost-of-waiting-body">
