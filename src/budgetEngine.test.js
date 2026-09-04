@@ -1,6 +1,6 @@
 // src/budgetEngine.test.js
 import { describe, it, expect } from 'vitest';
-import { computeBudgetSummary, EXPENSE_CATEGORIES } from './budgetEngine.js';
+import { computeBudgetSummary, EXPENSE_CATEGORIES, isValidBudgetHistoryEntry } from './budgetEngine.js';
 
 describe('computeBudgetSummary', () => {
   it('sums income and expenses separately and computes the surplus', () => {
@@ -40,5 +40,20 @@ describe('computeBudgetSummary', () => {
   it('handles an empty budget without dividing by zero or crashing', () => {
     const result = computeBudgetSummary([]);
     expect(result).toEqual({ totalIncome: 0, totalExpenses: 0, surplus: 0, byCategory: EXPENSE_CATEGORIES.map(cat => ({ category: cat, total: 0 })) });
+  });
+});
+
+describe('isValidBudgetHistoryEntry', () => {
+  it('accepts a positive or negative finite surplus', () => {
+    expect(isValidBudgetHistoryEntry({ surplus: 5000 })).toBe(true);
+    expect(isValidBudgetHistoryEntry({ surplus: -2000 })).toBe(true);
+    expect(isValidBudgetHistoryEntry({ surplus: 0 })).toBe(true);
+  });
+
+  it('rejects a missing, non-numeric, or corrupt surplus', () => {
+    expect(isValidBudgetHistoryEntry({})).toBe(false);
+    expect(isValidBudgetHistoryEntry({ surplus: 'lots' })).toBe(false);
+    expect(isValidBudgetHistoryEntry({ surplus: NaN })).toBe(false);
+    expect(isValidBudgetHistoryEntry({ surplus: undefined })).toBe(false);
   });
 });

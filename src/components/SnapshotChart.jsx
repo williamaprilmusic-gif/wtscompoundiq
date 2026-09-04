@@ -35,7 +35,11 @@ const SERIES_COLOR_VAR = {
   total: '--accent-red',
   standard: '--mut',
   plan: '--accent-green',
-  efBalance: '--accent-green'
+  efBalance: '--accent-green',
+  // Budget.jsx's monthly surplus/deficit history -- can swing negative just like net
+  // worth, so it gets the same neutral "headline" blue rather than green (green implies
+  // "growing/good" specifically, which a still-positive-but-shrinking surplus isn't).
+  surplus: '--accent'
 };
 
 const defaultFormatXAxis = (x) => new Date(x).toLocaleDateString(undefined, { month: 'short', year: '2-digit' });

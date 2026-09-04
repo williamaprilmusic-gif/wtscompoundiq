@@ -80,6 +80,21 @@ const AIAdvisor = ({ country, profile, onProfileUpdate }) => {
       });
     }
 
+    // Debt-based advice: a rough real (after-inflation, pre-tax) return most balanced
+    // portfolios can be expected to beat is around 5-6%/yr -- a debt costing meaningfully
+    // more than that is a near-guaranteed "return" to pay it down first, since paying it
+    // off is a certain outcome and investing isn't. Only fires above a clear threshold so
+    // it isn't second-guessing every mortgage-rate debt against a rough benchmark.
+    if (profile.debtRate > 12) {
+      recommendations.push({
+        type: "debt",
+        title: "🧯 Pay Down High-Interest Debt First",
+        message: `Debt at ${profile.debtRate}% is a close-to-guaranteed "return" that almost certainly beats what a balanced portfolio would earn after tax and inflation. Prioritize clearing it before directing new money toward investments.`,
+        strategy: "Put spare cash toward the highest-rate balance before increasing contributions elsewhere",
+        color: "#ef4444"
+      });
+    }
+
     return recommendations;
   };
 
@@ -124,6 +139,16 @@ const AIAdvisor = ({ country, profile, onProfileUpdate }) => {
               onChange={(e) => onProfileUpdate({...profile, savings: Number(e.target.value)})}
               min="0"
               step="1000"
+            />
+          </div>
+          <div className="form-group">
+            <label>Highest Debt Rate, if any (%)</label>
+            <input
+              type="number"
+              value={profile.debtRate ?? 0}
+              onChange={(e) => onProfileUpdate({...profile, debtRate: Number(e.target.value)})}
+              min="0"
+              step="0.5"
             />
           </div>
           <div className="form-group">

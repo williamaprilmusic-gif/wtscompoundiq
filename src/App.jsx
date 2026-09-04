@@ -37,6 +37,7 @@ import { uniqueId } from './utils/uniqueId';
 import { readEntitlement, refreshEntitlement, clearEntitlement, consumePaystackRedirect } from './utils/entitlement';
 import { projectionMilestones } from './projectionMilestones';
 import { solveMonthlyForGoal } from './goalSolver';
+import { ruleOf72 } from './ruleOf72';
 
 const THEME_KEY = 'wts_compoundiq_theme';
 const REPORTING_CURRENCY_KEY = 'wts_compoundiq_reporting_currency';
@@ -186,7 +187,7 @@ export default function App() {
   const removeLumpSum = (id) => setLumpSums(prev => prev.filter(l => l.id !== id));
 
   // AI Advisor profile state -- no assumed persona; blank until the user fills it in.
-  const [profile, setProfile] = useState({ age: 18, income: 0, savings: 0, riskTolerance: 'moderate' });
+  const [profile, setProfile] = useState({ age: 18, income: 0, savings: 0, debtRate: 0, riskTolerance: 'moderate' });
 
   // Calculator scenario comparison -- saved snapshots of the inputs/results above, side by side.
   const [scenarios, setScenarios] = useState([]);
@@ -354,6 +355,11 @@ export default function App() {
         contributionIncreaseRate: contributionIncrease
       })
     : null;
+
+  // "At 9%/yr your money roughly doubles every 8 years" -- a quick mental-math fact
+  // alongside the other free-tier insights, reusing the same Rule of 72 engine the
+  // dedicated Power Tools version uses.
+  const doublingTime = rate > 0 ? ruleOf72({ annualRate: rate, years }) : null;
 
   // "Cost of waiting" -- same plan against the same target date, started `waitYears`
   // later (fewer compounding years). A free-tier nudge shown under the result.
@@ -691,6 +697,12 @@ export default function App() {
                     </div>
                   </div>
                 </div>
+              )}
+
+              {doublingTime && (
+                <p className="doubling-time-note">
+                  🔁 At {rate}%/yr, money roughly doubles every <strong>{doublingTime.exactDoublingYears.toFixed(1)} years</strong> — over your {years}-year horizon that's about {doublingTime.doublingsOverPeriod.toFixed(1)} doublings.
+                </p>
               )}
 
               {balanceMilestones.length > 0 && (

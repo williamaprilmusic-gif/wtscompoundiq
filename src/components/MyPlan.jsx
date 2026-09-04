@@ -9,7 +9,9 @@ const REMINDER_NOTIFIED_KEY = 'wts_compoundiq_reminder_notified_at';
 const REMINDER_DAYS = 30;
 const ADVISER_NOTES_KEY = 'wts_compoundiq_adviser_notes';
 const BRANDING_KEY = 'wts_compoundiq_plan_branding';
-const COMPLIANCE_KEY = 'wts_compoundiq_plan_compliance';
+// Exported so Snapshot.jsx's client report can surface the same firm disclosure text
+// an adviser already set here, rather than asking them to type it twice in two places.
+export const COMPLIANCE_KEY = 'wts_compoundiq_plan_compliance';
 const PREPARED_BY_KEY = 'wts_compoundiq_plan_prepared_by';
 const CLIENT_NAME_KEY = 'wts_compoundiq_plan_client_name';
 

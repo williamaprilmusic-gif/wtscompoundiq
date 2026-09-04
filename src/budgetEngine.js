@@ -6,6 +6,16 @@
 // reasoning as goalSolver.js/homeAffordability.js living outside any one component.
 
 export const BUDGET_ITEMS_KEY = 'wts_compoundiq_budget_items';
+// Monthly surplus/deficit snapshots -- Budget.jsx used to be the one saved-plan tool
+// with "no history tracking, unlike Net Worth/Debt Payoff/Emergency Fund" (its own
+// former note). Same shape/pattern as those: an array of { date, surplus,
+// displayCurrency }, most recent 24 kept.
+export const BUDGET_HISTORY_KEY = 'wts_compoundiq_budget_history';
+
+// A history entry is only safe to feed to convertAmount/SnapshotChart when `surplus` is
+// a real number -- guards a hand-edited/corrupt localStorage value or an incompatible
+// imported backup the same way EmergencyFund.jsx's isValidEfHistoryEntry does.
+export const isValidBudgetHistoryEntry = (h) => Number.isFinite(h.surplus);
 
 // Fixed category set -- 'Income' items aren't categorized further (a name is enough:
 // salary, side income, etc.); expense items pick one of these. 'Other' is the default/

@@ -6,6 +6,7 @@ import GrowthChart from './GrowthChart';
 import { readPlan, loanEffectiveMonthlyPayment, loanEffectiveTermLabel } from '../utils/planStorage';
 import { usePersistedState } from '../utils/usePersistedState';
 import { downloadCSV } from '../utils/csv';
+import { COMPLIANCE_KEY } from './MyPlan';
 
 const BRANDING_KEY = 'wts_compoundiq_report_branding';
 const DEFAULT_BRANDING = { firmName: '', advisorName: '', clientName: '', logoDataUrl: '' };
@@ -27,9 +28,14 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
   const [plan, setPlan] = useState(null);
   const [branding, setBranding] = usePersistedState(BRANDING_KEY, DEFAULT_BRANDING);
   const [brandingError, setBrandingError] = useState(null);
+  // Read-only here -- the one editor for this text lives on My Plan (shared via
+  // COMPLIANCE_KEY) so an adviser sets a firm disclosure once and it appears on both
+  // documents instead of being typed into two separate fields that could drift apart.
+  const [compliance, setCompliance] = useState('');
 
   useEffect(() => {
     setPlan(readPlan());
+    try { setCompliance(localStorage.getItem(COMPLIANCE_KEY) || ''); } catch { /* ignore */ }
   }, []);
 
   // White-label branding (firm/advisor/client name, logo) is an Enterprise perk -- see
@@ -232,7 +238,16 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
           WTS CompoundIQ · educational tool · figures are indicative projections, not financial advice. Tax and wrapper
           data is simplified and may drift from current law -- verify with a qualified advisor before acting.
         </p>
+        {canWhiteLabel && compliance.trim() && (
+          <p className="snapshot-disclaimer snapshot-compliance">{compliance.trim()}</p>
+        )}
       </div>
+
+      {canWhiteLabel && !compliance.trim() && (
+        <p className="snapshot-compliance-hint no-print">
+          Add a firm compliance/disclosure line (e.g. FAIS / FSP details) in the My Plan tab's Practice Branding section -- it'll appear on this report too.
+        </p>
+      )}
     </div>
   );
 };

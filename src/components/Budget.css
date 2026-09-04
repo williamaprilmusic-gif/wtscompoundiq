@@ -190,3 +190,82 @@
   color: var(--mut2);
   line-height: 1.5;
 }
+
+/* Surplus history -- same pattern as EmergencyFund.css's .ef-history* block. */
+.budget-log-btn {
+  margin: 0 0 20px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-blue-deep) 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.budget-history {
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+  margin-bottom: 20px;
+}
+
+.budget-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.budget-history-header h3 {
+  font-size: 0.95rem;
+  color: var(--text);
+  margin: 0;
+}
+
+.budget-history-header-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.budget-clear-history-btn {
+  background: transparent;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: var(--accent-red);
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.budget-history-delta {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.budget-history-delta.up { color: var(--accent-green); }
+.budget-history-delta.down { color: var(--accent-red); }
+
+.budget-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 12px;
+}
+
+.budget-history-row {
+  display: flex;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  color: var(--mut);
+}
+.budget-history-row strong.positive { color: var(--accent-green); }
+.budget-history-row strong.negative { color: var(--accent-red); }

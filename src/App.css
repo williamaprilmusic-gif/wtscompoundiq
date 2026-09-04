@@ -569,6 +569,14 @@ body {
   color: var(--mut2);
 }
 
+.doubling-time-note {
+  margin: -8px 0 22px;
+  font-size: 0.82rem;
+  color: var(--mut);
+  line-height: 1.5;
+}
+.doubling-time-note strong { color: var(--text); }
+
 /* Goal-seek: "to have R X by year N, save R Y/month". Blue/accent tint. */
 .target-seek {
   margin: -8px 0 22px;

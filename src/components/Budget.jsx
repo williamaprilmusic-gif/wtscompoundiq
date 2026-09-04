@@ -1,13 +1,19 @@
 // src/components/Budget.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './Budget.css';
 import { usePersistedState } from '../utils/usePersistedState';
 import { confirmRemoval } from '../utils/confirmRemoval';
-import { BUDGET_ITEMS_KEY, EXPENSE_CATEGORIES, computeBudgetSummary } from '../budgetEngine';
+import { BUDGET_ITEMS_KEY, BUDGET_HISTORY_KEY, isValidBudgetHistoryEntry, EXPENSE_CATEGORIES, computeBudgetSummary } from '../budgetEngine';
 import { EXTRA_KEY as DEBT_EXTRA_KEY } from './DebtPayoff';
 import AllocationChart from './AllocationChart';
+import SnapshotChart from './SnapshotChart';
 import { uniqueId } from '../utils/uniqueId';
 import { safeTrim } from '../utils/safeTrim';
+import { convertAmount } from '../data/countries';
+import { downloadCSV } from '../utils/csv';
+import { readJSONArray, writeJSON } from '../utils/storage';
+
+const HISTORY_SERIES = [{ key: 'surplus', label: 'Monthly Surplus' }];
 
 // Fixed hue per expense category, assigned by identity -- same convention as
 // NetWorth.jsx's CATEGORY_COLOR_VAR. 'Other' reads as neutral everywhere else in the
@@ -25,6 +31,11 @@ const EXPENSE_CATEGORY_COLOR_VAR = {
 const Budget = ({ country }) => {
   const [items, setItems] = usePersistedState(BUDGET_ITEMS_KEY, []);
   const [pushed, setPushed] = useState(false);
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => {
+    setHistory(readJSONArray(BUDGET_HISTORY_KEY));
+  }, []);
 
   const addItem = (kind) => setItems(prev => [...prev, { id: uniqueId(), kind, name: '', category: 'Other', amount: 0 }]);
 
@@ -65,6 +76,37 @@ const Budget = ({ country }) => {
 
   const incomeItems = items.filter(i => i.kind === 'income');
   const expenseItems = items.filter(i => i.kind === 'expense');
+
+  // Same currency-tagged snapshot pattern as EmergencyFund/NetWorth/DebtPayoff: record
+  // which currency each entry was saved in and convert through a memo before use, so
+  // switching the global country selector doesn't mislabel an old surplus.
+  const convertedHistory = useMemo(() => history
+    .filter(isValidBudgetHistoryEntry)
+    .map(h => ({ date: h.date, surplus: convertAmount(h.surplus, h.displayCurrency || country.code, country.code) })),
+    [history, country.code]);
+
+  const lastSnapshot = convertedHistory.length > 0 ? convertedHistory[convertedHistory.length - 1] : null;
+  const delta = lastSnapshot ? summary.surplus - lastSnapshot.surplus : null;
+
+  const saveBudgetSnapshot = () => {
+    const entry = { date: new Date().toISOString(), surplus: summary.surplus, displayCurrency: country.code };
+    const updated = [...history, entry].slice(-24); // keep the most recent 24 snapshots
+    writeJSON(BUDGET_HISTORY_KEY, updated);
+    setHistory(updated);
+  };
+
+  const clearBudgetHistory = () => {
+    if (!window.confirm("Clear all saved budget snapshots? This can't be undone.")) return;
+    localStorage.removeItem(BUDGET_HISTORY_KEY);
+    setHistory([]);
+  };
+
+  const exportBudgetHistoryCSV = () => {
+    downloadCSV('wts-compoundiq-budget-history.csv', [
+      ['Date', `Surplus (${country.currency})`],
+      ...convertedHistory.map(h => [new Date(h.date).toLocaleDateString(), Math.round(h.surplus)])
+    ]);
+  };
 
   return (
     <div className="card budget-tracker">
@@ -129,6 +171,40 @@ const Budget = ({ country }) => {
         </button>
       )}
 
+      {(summary.totalIncome > 0 || summary.totalExpenses > 0) && (
+        <button className="budget-log-btn" onClick={saveBudgetSnapshot}>📸 Log This Month's Surplus</button>
+      )}
+
+      {history.length > 0 && (
+        <div className="budget-history">
+          <div className="budget-history-header">
+            <h3>Surplus History ({convertedHistory.length} snapshot{convertedHistory.length === 1 ? '' : 's'})</h3>
+            <div className="budget-history-header-actions">
+              <button className="history-export-btn" onClick={exportBudgetHistoryCSV}>⬇️ Export CSV</button>
+              <button className="budget-clear-history-btn" onClick={clearBudgetHistory}>Clear history</button>
+            </div>
+          </div>
+          {delta !== null && (
+            <div className={`budget-history-delta ${delta >= 0 ? 'up' : 'down'}`}>
+              {delta >= 0 ? '▲' : '▼'} {country.symbol} {Math.abs(Math.round(delta)).toLocaleString()} since last snapshot
+            </div>
+          )}
+          {convertedHistory.length > 1 && (
+            <SnapshotChart points={convertedHistory} series={HISTORY_SERIES} symbol={country.symbol} />
+          )}
+          <div className="budget-history-list">
+            {[...convertedHistory].reverse().map((h, idx) => (
+              <div key={idx} className="budget-history-row">
+                <span>{new Date(h.date).toLocaleDateString()}</span>
+                <strong className={h.surplus >= 0 ? 'positive' : 'negative'}>
+                  {h.surplus >= 0 ? '' : '−'}{country.symbol} {Math.abs(Math.round(h.surplus)).toLocaleString()}
+                </strong>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {summary.totalExpenses > 0 && (
         <div className="budget-allocation">
           <h3>Expense Breakdown</h3>
@@ -137,8 +213,9 @@ const Budget = ({ country }) => {
       )}
 
       <p className="budget-note">
-        Saved only in your browser's local storage -- nothing is sent anywhere. This is a simple monthly snapshot (no
-        history tracking, unlike Net Worth/Debt Payoff/Emergency Fund) -- re-enter or adjust amounts as your budget changes.
+        Saved only in your browser's local storage -- nothing is sent anywhere. Update the line items as your budget
+        changes, then log a snapshot each month to track your surplus trend over time, the same way Net Worth, Debt
+        Payoff, and Emergency Fund do.
       </p>
     </div>
   );

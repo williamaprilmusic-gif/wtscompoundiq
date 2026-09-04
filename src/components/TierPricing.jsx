@@ -28,6 +28,7 @@ const tiers = [
       'Year-by-year growth data table',
       'Cost-of-waiting projection',
       'Rate-sensitivity band (±2% on every projection)',
+      'Doubling-time fact (Rule of 72) for every rate you enter',
       'Milestone pacing — "you reach R1m in year 18"',
       'Deposits vs. compound-growth split of every result',
       '"One small bump" nudge — what an extra R500/mo is worth',
@@ -46,7 +47,7 @@ const tiers = [
     description: 'The full planning toolkit, beyond the calculator.',
     features: [
       'Everything in Basic, plus:',
-      'Budget / Cash Flow tracker',
+      'Budget / Cash Flow tracker, with a monthly surplus history & trend chart',
       'Emergency Fund tracker',
       'Debt Payoff planner (Avalanche & Snowball, plus a consolidation analyzer)',
       'My Plan (save a snapshot, check in on progress later, with reminders)',
@@ -81,7 +82,7 @@ const tiers = [
       "Monte Carlo history's-worst-window — your plan through the worst real stretch",
       'FX stress test for Net Worth (offshore holdings)',
       'AI Wealth Coach (4-step planner: wrapper, contribution boost, extra years, contribution escalation)',
-      'AI Investment Advisor (personalized recommendations)'
+      'AI Investment Advisor (personalized recommendations, incl. high-interest debt priority)'
     ],
     cta: 'Upgrade to Ultra',
     highlighted: false
@@ -95,7 +96,7 @@ const tiers = [
       'Everything in Ultra, plus:',
       'White-label branding (your own logo)',
       'Branded plan header — firm name & tagline on every client plan and printout',
-      'Custom compliance / FSP disclosure line on printed plans',
+      'Custom compliance / FSP disclosure line, shared across My Plan and the client Snapshot report',
       '"Prepared by [adviser] for [client] on [date]" line on client plans',
       'Adviser notes on client plans',
       'Bulk user management & admin dashboard',
