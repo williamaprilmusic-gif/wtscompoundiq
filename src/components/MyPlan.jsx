@@ -9,6 +9,7 @@ const REMINDER_NOTIFIED_KEY = 'wts_compoundiq_reminder_notified_at';
 const REMINDER_DAYS = 30;
 const ADVISER_NOTES_KEY = 'wts_compoundiq_adviser_notes';
 const BRANDING_KEY = 'wts_compoundiq_plan_branding';
+const COMPLIANCE_KEY = 'wts_compoundiq_plan_compliance';
 
 const monthsBetween = (isoDate) => daysBetween(isoDate) / 30.44;
 
@@ -32,6 +33,9 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
   // Enterprise white-label: a firm name/tagline shown atop the plan and carried into
   // print. Persisted locally like the adviser notes, and kept through a downgrade.
   const [branding, setBranding] = useState({ firm: '', tagline: '' });
+  // Enterprise: a custom compliance/disclosure line (e.g. FAIS / FSP wording) appended
+  // to the plan and always included in print.
+  const [compliance, setCompliance] = useState('');
 
   const updateAdviserNotes = (value) => {
     setAdviserNotes(value);
@@ -46,10 +50,16 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
     });
   };
 
+  const updateCompliance = (value) => {
+    setCompliance(value);
+    try { localStorage.setItem(COMPLIANCE_KEY, value); } catch { /* private mode / quota */ }
+  };
+
   useEffect(() => {
     const plan = readPlan();
     if (Object.keys(plan).length > 0) setSnapshot(plan);
     try { setAdviserNotes(localStorage.getItem(ADVISER_NOTES_KEY) || ''); } catch { /* ignore */ }
+    try { setCompliance(localStorage.getItem(COMPLIANCE_KEY) || ''); } catch { /* ignore */ }
     setBranding(readBranding());
 
     const storedReminder = localStorage.getItem(REMINDER_KEY);
@@ -125,6 +135,19 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
     </div>
   ) : null;
 
+  const complianceEditor = canAdviserNotes ? (
+    <div className="plan-branding-editor no-print">
+      <h3>⚖️ Compliance Line <span className="plan-adviser-badge">Enterprise</span></h3>
+      <textarea
+        className="plan-compliance-input"
+        value={compliance}
+        onChange={(e) => updateCompliance(e.target.value)}
+        placeholder="Your firm's disclosure/compliance wording (e.g. FAIS / FSP licence details). Shown on the plan and always included when it's printed. Saved on this device only."
+        rows={3}
+      />
+    </div>
+  ) : null;
+
   const reminderBlock = (
     <div className="plan-reminder">
       {reminderDue ? (
@@ -152,6 +175,8 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
           <p>Nothing saved yet. This is a check-in tool, not a calculator -- save a snapshot from the Debt Payoff, Emergency Fund, Loan & Bond, or Power Tools (FIRE) tabs (look for "Save This Plan"), then come back later to see if you're on track.</p>
         </div>
         {brandingEditor}
+        {complianceEditor}
+        {compliance.trim() && <div className="plan-compliance-note">{compliance.trim()}</div>}
         {reminderBlock}
         <p className="plan-note">
           Reminders only fire while this app is open (there's no background server to push a notification while your
@@ -306,6 +331,7 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
       {reminderBlock}
 
       {brandingEditor}
+      {complianceEditor}
 
       {canAdviserNotes ? (
         <div className="plan-adviser-notes">
@@ -324,6 +350,10 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
             {onOpenPricing && <button type="button" className="plan-adviser-upsell-btn" onClick={onOpenPricing}>View Pricing</button>}
           </p>
         </div>
+      )}
+
+      {compliance.trim() && (
+        <div className="plan-compliance-note">{compliance.trim()}</div>
       )}
 
       <button className="plan-clear-btn no-print" onClick={clearPlan}>Clear saved plan</button>

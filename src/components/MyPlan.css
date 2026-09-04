@@ -46,6 +46,29 @@
   font: inherit;
   font-size: 0.88rem;
 }
+.plan-compliance-input {
+  width: 100%;
+  resize: vertical;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.plan-compliance-note {
+  margin: 16px 0 4px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--accent-purple);
+  background: rgba(0, 0, 0, 0.14);
+  border-radius: 0 8px 8px 0;
+  font-size: 0.76rem;
+  line-height: 1.55;
+  color: var(--mut);
+  white-space: pre-wrap;
+}
 
 .plan-adviser-notes {
   margin: 18px 0;

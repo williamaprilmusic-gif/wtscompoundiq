@@ -324,12 +324,13 @@
 
 .mc-drawdown-form {
   margin-top: 4px;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   padding: 14px 16px;
   border-radius: 10px;
   background: rgba(0, 0, 0, 0.15);
   border: 1px solid var(--border);
 }
+.mc-solver-inline { margin-top: 0; margin-bottom: 18px; }
 
 .mc-drawdown-result {
   margin-top: 22px;

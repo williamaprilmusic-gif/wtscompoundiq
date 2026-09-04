@@ -185,6 +185,8 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
   const [isSolving, setIsSolving] = useState(false);
   const [yearsSolveResult, setYearsSolveResult] = useState(null);
   const [isSolvingYears, setIsSolvingYears] = useState(false);
+  const [withdrawalSolveResult, setWithdrawalSolveResult] = useState(null);
+  const [isSolvingWithdrawal, setIsSolvingWithdrawal] = useState(false);
 
   const activeHistoricalModel = RETURN_MODELS.find(m => m.key === historicalModelKey) || RETURN_MODELS[0];
 
@@ -316,6 +318,45 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
     }, 20);
   };
 
+  // Ultra-only, drawdown mode: binary-search the largest year-one withdrawal whose pot
+  // still survives `targetProb`% of retirements. Survival falls monotonically as the
+  // withdrawal rises, so a plain bracketing search works.
+  const handleSolveWithdrawal = () => {
+    setIsSolvingWithdrawal(true);
+    setTimeout(() => {
+      const base = {
+        initial, monthly, rate, years, volatility, goal,
+        contributionIncreaseRate: contributionIncrease, lumpSums, returnModel,
+        historicalSeries: activeHistoricalModel.data,
+        retirementYears, withdrawalInflation
+      };
+      const survivalAt = (w) => (runSimulation({ ...base, annualWithdrawal: w }).drawdown || {}).survivalRate ?? 0;
+      const wanted = Math.max(1, Math.min(99, targetProb || 90));
+
+      if (survivalAt(0) < wanted) {
+        // Even zero withdrawal can't clear the bar (pot too small / horizon too long).
+        setWithdrawalSolveResult({ withdrawal: 0, achievedSurvival: survivalAt(0), wanted, reachable: false });
+        setIsSolvingWithdrawal(false);
+        return;
+      }
+      // Start the upper bound near a 10%-of-pot draw and widen until survival drops
+      // below the target.
+      let lo = 0;
+      let hi = Math.max(50000, Math.round((deterministic.finalBalance || 1000000) * 0.1));
+      let guard = 0;
+      while (survivalAt(hi) >= wanted && guard < 8) { hi *= 1.8; guard++; }
+      let bestW = lo;
+      let bestSurv = survivalAt(lo);
+      for (let i = 0; i < 16; i++) {
+        const mid = (lo + hi) / 2;
+        const s = survivalAt(mid);
+        if (s >= wanted) { lo = mid; bestW = mid; bestSurv = s; } else hi = mid;
+      }
+      setWithdrawalSolveResult({ withdrawal: Math.round(bestW), achievedSurvival: bestSurv, wanted, reachable: true });
+      setIsSolvingWithdrawal(false);
+    }, 20);
+  };
+
   return (
     <div className="card monte-carlo">
       <div className="mc-header">
@@ -392,6 +433,30 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
             <label>Grow withdrawal by (%/yr)</label>
             <input type="number" min="0" step="0.5" value={withdrawalInflation} onChange={(e) => setWithdrawalInflation(Number(e.target.value))} />
           </div>
+        </div>
+      )}
+      {modelDrawdown && (
+        <div className="mc-solver mc-solver-inline">
+          <div className="mc-solver-row">
+            <label>
+              Or — find the year-one withdrawal the pot survives{' '}
+              <input
+                type="number" min="1" max="99"
+                value={Math.max(1, Math.min(99, targetProb || 90))}
+                onChange={(e) => setTargetProb(Number(e.target.value))}
+              />% of the time
+            </label>
+            <button className="mc-solver-btn" onClick={handleSolveWithdrawal} disabled={isSolvingWithdrawal}>
+              {isSolvingWithdrawal ? '⏳ Solving…' : 'Find it'}
+            </button>
+          </div>
+          {withdrawalSolveResult && (
+            <p className={`mc-solver-result ${withdrawalSolveResult.reachable ? '' : 'warn'}`}>
+              {withdrawalSolveResult.reachable
+                ? `About ${country.symbol} ${withdrawalSolveResult.withdrawal.toLocaleString()}/yr in year one (rising ${withdrawalInflation}%/yr) keeps the pot alive through ${retirementYears} years in roughly ${withdrawalSolveResult.achievedSurvival.toFixed(0)}% of runs (target ${withdrawalSolveResult.wanted}%). Approximate — from ${NUM_SIMULATIONS.toLocaleString()} random paths.`
+                : `Even drawing nothing, the pot only survives ${retirementYears} years in about ${withdrawalSolveResult.achievedSurvival.toFixed(0)}% of runs — it needs a bigger pot, a shorter retirement, or a lower target than ${withdrawalSolveResult.wanted}%.`}
+            </p>
+          )}
         </div>
       )}
 

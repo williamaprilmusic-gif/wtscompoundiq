@@ -46,6 +46,8 @@ import { analyseSequenceRisk } from '../sequenceRisk';
 import { analyseTwoPotWithdrawal } from '../twoPotWithdrawal';
 import { compareLoanOffers } from '../loanComparison';
 import { subscriptionCost } from '../subscriptionCost';
+import { analysePayback } from '../paybackPeriod';
+import { compareBuyCashVsFinance } from '../buyCashVsFinance';
 import { readJSONArray } from '../utils/storage';
 import { convertAmount, countriesData } from '../data/countries';
 import { DEBTS_KEY } from './DebtPayoff';
@@ -100,7 +102,9 @@ const SUB_TABS = [
   { key: 'seqRisk', label: '🎢 Sequence Risk', tier: 'Ultra' },
   { key: 'twoPot', label: '🫙 Two-Pot Withdrawal', tier: 'Ultra' },
   { key: 'loanCompare', label: '⚖️ Loan Offer Compare' },
-  { key: 'subCost', label: '🔁 Subscription Cost' }
+  { key: 'subCost', label: '🔁 Subscription Cost' },
+  { key: 'payback', label: '☀️ Big-Purchase Payback' },
+  { key: 'cashVsFinance', label: '💳 Cash vs. Finance' }
 ];
 
 const ULTRA_SUB_TAB_KEYS = new Set(SUB_TABS.filter(t => t.tier === 'Ultra').map(t => t.key));
@@ -111,8 +115,8 @@ const EMPTY_SET = new Set();
 // SubTabs rather than vanishing.
 const SUB_TAB_GROUPS = [
   { label: 'Retire & Financial Independence', keys: ['fire', 'coastFire', 'baristaFire', 'savingsRate', 'drawdown', 'pretaxRA', 'dividend', 'feeDrag', 'retireGap', 'seqRisk', 'twoPot'] },
-  { label: 'Debt & Credit', keys: ['debtVsInvest', 'dti', 'cardTrap', 'debtConsol', 'loanCompare'] },
-  { label: 'Property & Big Purchases', keys: ['affordability', 'rentVsBuy', 'carCost', 'leaseVsBuy', 'depositTimeline', 'homeCosts', 'rateShock'] },
+  { label: 'Debt & Credit', keys: ['debtVsInvest', 'dti', 'cardTrap', 'debtConsol', 'loanCompare', 'cashVsFinance'] },
+  { label: 'Property & Big Purchases', keys: ['affordability', 'rentVsBuy', 'carCost', 'leaseVsBuy', 'depositTimeline', 'homeCosts', 'payback', 'rateShock'] },
   { label: 'Saving for a Goal', keys: ['savings', 'education', 'sinkingFund', 'efRunway', 'insurance', 'windfall'] },
   { label: 'Income & Tax', keys: ['salary', 'raiseValue', 'bonusTax', 'raOptimizer', 'budgetRule', 'marginalTax', 'raiseInflation'] },
   { label: 'Money Basics', keys: ['futureCost', 'fxConvert', 'rule72', 'freqCompare', 'effRate', 'realReturn', 'subCost'] }
@@ -364,6 +368,19 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const [scReturn, setScReturn] = useState(rate || 8);
   const [scIncrease, setScIncrease] = useState(Math.round(country.typicalInflation || 5));
 
+  const [pbCost, setPbCost] = useState(0);
+  const [pbSaving, setPbSaving] = useState(0);
+  const [pbMaint, setPbMaint] = useState(0);
+  const [pbLife, setPbLife] = useState(15);
+  const [pbSavingGrowth, setPbSavingGrowth] = useState(Math.round(country.typicalInflation || 5));
+  const [pbReturn, setPbReturn] = useState(rate || 8);
+
+  const [cfPrice, setCfPrice] = useState(0);
+  const [cfDeposit, setCfDeposit] = useState(0);
+  const [cfRate, setCfRate] = useState(country.typicalBankRate ? Math.round(country.typicalBankRate + 2) : 12);
+  const [cfTerm, setCfTerm] = useState(5);
+  const [cfReturn, setCfReturn] = useState(rate || 8);
+
   const safeWithdrawalRate = withdrawalRate > 0 ? withdrawalRate : 0.01;
   const fireNumber = annualExpenses / (safeWithdrawalRate / 100);
   const yearsToFire = yearsToReachTarget({
@@ -607,6 +624,15 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
   const subCost = subscriptionCost({
     monthlyAmount: scMonthly, years: scYears, investReturn: scReturn, annualPriceIncrease: scIncrease
+  });
+
+  const payback = analysePayback({
+    upfrontCost: pbCost, monthlySaving: pbSaving, maintenanceMonthly: pbMaint,
+    lifespanYears: pbLife, savingGrowthPct: pbSavingGrowth, investReturnPct: pbReturn
+  });
+
+  const cashVsFinance = compareBuyCashVsFinance({
+    price: cfPrice, deposit: cfDeposit, financeRate: cfRate, financeTermYears: cfTerm, investReturnPct: cfReturn
   });
 
   const saveFirePlan = () => {
@@ -2740,6 +2766,126 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
             </div>
             <p className="power-tool-note">
               Worth it or not is your call — this just puts a number on the trade-off. Stack a few subscriptions together to see the real total.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'payback' && (
+      <div className="power-tool-card">
+        <h3>☀️ Big-Purchase Payback</h3>
+        <p className="power-tool-desc">Solar, a heat pump, a borehole, a water tank, a home gym, prepaying an annual plan — a big cost now that saves you money each month. This is when it breaks even, and whether it beats just investing the cash.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Upfront Cost ({country.symbol})</label>
+            <input type="number" min="0" step="5000" value={pbCost} onChange={(e) => setPbCost(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Saves You ({country.symbol}/mo)</label>
+            <input type="number" min="0" step="100" value={pbSaving} onChange={(e) => setPbSaving(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Upkeep ({country.symbol}/mo)</label>
+            <input type="number" min="0" step="50" value={pbMaint} onChange={(e) => setPbMaint(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Useful Life (years)</label>
+            <input type="number" min="1" max="50" step="1" value={pbLife} onChange={(e) => setPbLife(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Saving Grows (%/yr)</label>
+            <input type="number" step="0.5" value={pbSavingGrowth} onChange={(e) => setPbSavingGrowth(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>If Invested Instead (%/yr)</label>
+            <input type="number" step="0.5" value={pbReturn} onChange={(e) => setPbReturn(Number(e.target.value))} />
+          </div>
+        </div>
+        {pbCost > 0 && pbSaving > 0 && (
+          <>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Breaks even in</span>
+                <strong className={payback.breakEvenMonths ? 'positive' : 'warn'}>
+                  {payback.breakEvenMonths ? `${payback.breakEvenYears.toFixed(1)} yrs` : '—'}
+                </strong>
+              </div>
+              <div className="power-stat">
+                <span>Net over {Math.round(pbLife)} yrs</span>
+                <strong className={payback.lifetimeNet >= 0 ? 'positive' : 'warn'}>{country.symbol} {Math.round(payback.lifetimeNet).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>First-year saving</span>
+                <strong>{country.symbol} {Math.round(payback.firstYearSaving).toLocaleString()}</strong>
+              </div>
+            </div>
+            <div className={`power-verdict ${payback.neverBreaksEven ? 'danger' : payback.beatsInvesting ? 'invest' : 'debt'}`}>
+              {payback.neverBreaksEven
+                ? `Upkeep eats the saving — this never pays for itself at these numbers.`
+                : payback.breakEvenMonths
+                  ? `Pays for itself in about ${payback.breakEvenYears.toFixed(1)} years, then nets roughly ${country.symbol} ${Math.round(payback.lifetimeNet).toLocaleString()} over its ${Math.round(pbLife)}-year life. ${payback.beatsInvesting ? 'It also beats leaving the cash invested at ' + pbReturn + '%.' : 'But leaving the ' + country.symbol + Math.round(pbCost).toLocaleString() + ' invested at ' + pbReturn + '% would have done better — it grows to about ' + country.symbol + Math.round(payback.investedInsteadValue).toLocaleString() + '.'}`
+                  : `Doesn't break even within its ${Math.round(pbLife)}-year life at these numbers.`}
+            </div>
+            <p className="power-tool-note">
+              "Breaks even" is the plain cost ÷ net monthly saving. "Beats investing" compounds both the saving stream and the untouched upfront cash at {pbReturn}%/yr and compares — the fair test for a purchase you don't strictly need. Doesn't model resale value, tax, or a finance deal on the purchase itself.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'cashVsFinance' && (
+      <div className="power-tool-card">
+        <h3>💳 Pay Cash or Finance It?</h3>
+        <p className="power-tool-desc">You're buying the thing regardless. Paying cash gives up the growth that cash would have earned; financing costs interest but keeps the cash invested. This compares your wealth at the end of the term either way.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Price ({country.symbol})</label>
+            <input type="number" min="0" step="10000" value={cfPrice} onChange={(e) => setCfPrice(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Deposit ({country.symbol})</label>
+            <input type="number" min="0" step="5000" value={cfDeposit} onChange={(e) => setCfDeposit(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Finance Rate (%/yr)</label>
+            <input type="number" step="0.5" value={cfRate} onChange={(e) => setCfRate(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Finance Term (years)</label>
+            <input type="number" min="1" max="10" step="1" value={cfTerm} onChange={(e) => setCfTerm(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Your Invest Return (%/yr)</label>
+            <input type="number" step="0.5" value={cfReturn} onChange={(e) => setCfReturn(Number(e.target.value))} />
+          </div>
+        </div>
+        {cfPrice > 0 && cashVsFinance.cheaper && (
+          <>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Finance interest</span>
+                <strong className="warn">{country.symbol} {Math.round(cashVsFinance.financeInterest).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Monthly payment</span>
+                <strong>{country.symbol} {Math.round(cashVsFinance.monthlyPayment).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Wealth gap after {Math.round(cfTerm)} yrs</span>
+                <strong className="positive">{country.symbol} {Math.round(cashVsFinance.gap).toLocaleString()}</strong>
+              </div>
+            </div>
+            <div className={`power-verdict ${cashVsFinance.cheaper === 'tie' ? 'neutral' : 'invest'}`}>
+              {cashVsFinance.cheaper === 'tie'
+                ? `At a ${cfReturn}% return vs a ${cfRate}% finance rate it's basically a wash — decide on cash-flow comfort and flexibility.`
+                : cashVsFinance.cheaper === 'cash'
+                  ? `Paying cash comes out about ${country.symbol} ${Math.round(cashVsFinance.gap).toLocaleString()} ahead over ${Math.round(cfTerm)} years — your ${cfReturn}% return doesn't beat the ${cfRate}% finance cost, so the interest outweighs the growth you'd keep.`
+                  : `Financing and keeping the cash invested comes out about ${country.symbol} ${Math.round(cashVsFinance.gap).toLocaleString()} ahead — your ${cfReturn}% return beats the ${cfRate}% finance rate, so the growth outweighs the interest.`}
+            </div>
+            <p className="power-tool-note">
+              Both paths end owning the same asset, so its value cancels — this compares only the money. Break-even is roughly when your return equals the finance rate ({cashVsFinance.breakEvenReturnApprox}%). Ignores initiation fees and any cash-price discount a dealer might give.
             </p>
           </>
         )}

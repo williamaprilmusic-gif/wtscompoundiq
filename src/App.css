@@ -543,6 +543,40 @@ body {
   text-align: center;
 }
 
+/* Encouraging mirror of .cost-of-waiting -- same layout, green tint. */
+.bump-nudge {
+  margin: -8px 0 22px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent-green) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-green) 30%, transparent);
+}
+.bump-nudge > label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-green);
+  margin-bottom: 6px;
+}
+.bump-nudge-body {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--mut);
+}
+.bump-nudge-body strong { color: var(--text); }
+.bump-nudge-body input {
+  width: 64px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  text-align: center;
+}
+
 .result-item {
   display: flex;
   flex-direction: column;
@@ -1013,6 +1047,9 @@ body {
   .result-item strong { font-size: 1.2rem; }
 
   .cost-of-waiting { margin: -6px 0 22px; padding: 12px 14px; }
+  .bump-nudge { margin: -6px 0 22px; padding: 12px 14px; }
+  .rate-band-cells { grid-template-columns: 1fr; }
+  .split-bar-legend { font-size: 0.76rem; }
 
   .lock-card { padding: 28px 22px; }
   .lock-card h3 { font-size: 1.4rem; }

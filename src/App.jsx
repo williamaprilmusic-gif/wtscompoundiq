@@ -135,6 +135,7 @@ export default function App() {
   const [progressiveTax, setProgressiveTax] = useState(false);
   const [otherTaxableIncome, setOtherTaxableIncome] = useState(0);
   const [waitYears, setWaitYears] = useState(5); // "cost of waiting" on the Calculator (Basic tier)
+  const [bumpAmount, setBumpAmount] = useState(500); // "what one bump does" on the Calculator (Basic tier)
   const hasTaxBrackets = !!country.taxBrackets;
   const effectiveTaxBrackets = (progressiveTax && hasTaxBrackets) ? country.taxBrackets : null;
 
@@ -326,6 +327,13 @@ export default function App() {
   // "You cross R1,000,000 in year 18" -- pace for the headline figure, from the same
   // projection. A free-tier touch like the rate band and cost-of-waiting.
   const balanceMilestones = projectionMilestones(results.yearlyData, country.code, 4);
+
+  // "Adding R500/month gets you R X more" -- the encouraging mirror of cost-of-waiting.
+  const effBump = Math.max(0, Math.round(bumpAmount || 0));
+  const bumpedFinal = effBump > 0
+    ? calculateCompoundInterest({ ...rateBandParams, rate, monthly: monthly + effBump }).finalBalance
+    : results.finalBalance;
+  const bumpGain = bumpedFinal - results.finalBalance;
 
   // "Cost of waiting" -- same plan against the same target date, started `waitYears`
   // later (fewer compounding years). A free-tier nudge shown under the result.
@@ -652,6 +660,28 @@ export default function App() {
                   </div>
                 );
               })()}
+
+              {years > 1 && effBump > 0 && Number.isFinite(bumpGain) && bumpGain > 0 && (
+                <div className="bump-nudge">
+                  <label htmlFor="bump-amount">One small bump</label>
+                  <div className="bump-nudge-body">
+                    <span>
+                      Adding{' '}
+                      <input
+                        id="bump-amount"
+                        type="number"
+                        min="0"
+                        step="100"
+                        value={effBump}
+                        onChange={(e) => setBumpAmount(Number(e.target.value))}
+                      />{' '}
+                      {country.symbol}/month more would leave you with about{' '}
+                      <strong>{country.symbol} {Math.round(bumpGain).toLocaleString()}</strong> extra at the end
+                      ({country.symbol} {Math.round(bumpedFinal).toLocaleString()} vs {country.symbol} {results.finalBalance.toLocaleString()}) — for {country.symbol}{(effBump * 12 * years).toLocaleString()} more paid in over {years} years.
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {monthly > 0 && years > 1 && Number.isFinite(waitingCost.cost) && (
                 <div className="cost-of-waiting">
