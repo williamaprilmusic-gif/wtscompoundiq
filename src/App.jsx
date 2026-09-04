@@ -38,6 +38,7 @@ import { readEntitlement, refreshEntitlement, clearEntitlement, consumePaystackR
 import { projectionMilestones } from './projectionMilestones';
 import { solveMonthlyForGoal } from './goalSolver';
 import { ruleOf72 } from './ruleOf72';
+import { usePersistedState } from './utils/usePersistedState';
 
 const THEME_KEY = 'wts_compoundiq_theme';
 const REPORTING_CURRENCY_KEY = 'wts_compoundiq_reporting_currency';
@@ -141,10 +142,12 @@ export default function App() {
   const [bumpAmount, setBumpAmount] = useState(500); // "what one bump does" on the Calculator (Basic tier)
   const [targetAmount, setTargetAmount] = useState(0); // "reach this by the target year" goal-seek (Basic tier)
   // The Calculator's free-tier insight strip (goal seek, rate band, milestones, split
-  // bar, bump nudge, cost of waiting) has grown to six blocks -- collapsible, open by
-  // default, so a first-time or mobile visitor can collapse it to just the headline
-  // numbers without losing any of it.
-  const [insightsOpen, setInsightsOpen] = useState(true);
+  // bar, bump nudge, cost of waiting) has grown to several blocks -- collapsible, open
+  // by default, so a first-time or mobile visitor can collapse it to just the headline
+  // numbers without losing any of it. Persisted (a UI preference, not financial data --
+  // same category as THEME_KEY above, deliberately not in DataBackup's key list) so
+  // collapsing it once doesn't need repeating on every visit.
+  const [insightsOpen, setInsightsOpen] = usePersistedState('wts_compoundiq_calc_insights_open', true);
   const hasTaxBrackets = !!country.taxBrackets;
   const effectiveTaxBrackets = (progressiveTax && hasTaxBrackets) ? country.taxBrackets : null;
 

@@ -1,18 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import './AIAdvisor.css';
 import { readPlan } from '../utils/planStorage';
+import { readJSONArray } from '../utils/storage';
+import { HISTORY_KEY as NETWORTH_HISTORY_KEY, isValidNetWorthEntry } from './NetWorth';
+import { balanceSheetRatios } from '../balanceSheetRatios';
 
 const AIAdvisor = ({ country, profile, onProfileUpdate }) => {
   const [advice, setAdvice] = useState(null);
   const [loading, setLoading] = useState(false);
-  // Emergency Fund's own saved plan (if any) -- read once on mount, same pattern
-  // Dashboard/My Plan use, so a recommendation below can reflect it without asking the
-  // user to re-enter numbers already saved elsewhere in the app.
+  // Emergency Fund's own saved plan, and Net Worth's latest saved snapshot (if any) --
+  // read once on mount, same pattern Dashboard/My Plan use, so recommendations below
+  // can reflect them without asking the user to re-enter numbers already saved
+  // elsewhere in the app.
   const [savedEfPlan, setSavedEfPlan] = useState(null);
+  const [netWorthRatios, setNetWorthRatios] = useState(null);
 
   useEffect(() => {
     const plan = readPlan();
     if (plan?.emergencyFund) setSavedEfPlan(plan.emergencyFund);
+
+    const history = readJSONArray(NETWORTH_HISTORY_KEY).filter(isValidNetWorthEntry);
+    const latest = history.length > 0 ? history[history.length - 1] : null;
+    if (latest) {
+      setNetWorthRatios(balanceSheetRatios({ totalAssets: latest.totalAssets ?? latest.netWorth, totalDebts: latest.totalDebts ?? 0 }));
+    }
   }, []);
 
   const generateAdvice = () => {
@@ -20,13 +31,13 @@ const AIAdvisor = ({ country, profile, onProfileUpdate }) => {
 
     // Simulate AI processing
     setTimeout(() => {
-      const recommendations = generateRecommendations(country, profile, savedEfPlan);
+      const recommendations = generateRecommendations(country, profile, savedEfPlan, netWorthRatios);
       setAdvice(recommendations);
       setLoading(false);
     }, 2000);
   };
 
-  const generateRecommendations = (country, profile, efPlan) => {
+  const generateRecommendations = (country, profile, efPlan, nwRatios) => {
     const recommendations = [];
     
     // Age-based advice
@@ -122,6 +133,20 @@ const AIAdvisor = ({ country, profile, onProfileUpdate }) => {
           color: "#3b82f6"
         });
       }
+    }
+
+    // Net Worth-based advice: the same debtToAsset/band classification the Net Worth
+    // tab's own balance-sheet ratios card uses, read from the latest saved snapshot.
+    // Only fires for the two more concerning bands -- a healthy or moderate ratio isn't
+    // something this advisor needs to comment on.
+    if (nwRatios && (nwRatios.band === 'stretched' || nwRatios.band === 'risky')) {
+      recommendations.push({
+        type: "leverage",
+        title: "⚠️ Watch Your Leverage",
+        message: `Your latest saved Net Worth snapshot puts debt at ${nwRatios.debtToAsset.toFixed(0)}% of assets -- "${nwRatios.bandLabel}". Before taking on more investment risk, consider whether reducing debt (or growing assets) would put you on steadier footing.`,
+        strategy: "Revisit the Net Worth tab's balance-sheet ratios for the full picture, and Debt Payoff for a plan to bring the ratio down",
+        color: "#ef4444"
+      });
     }
 
     return recommendations;

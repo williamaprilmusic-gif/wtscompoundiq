@@ -9,7 +9,10 @@ import { parseCSV, downloadCSV, cleanCSVNumber } from '../utils/csv';
 import { uniqueId } from '../utils/uniqueId';
 import { safeTrim } from '../utils/safeTrim';
 
-const GOALS_KEY = 'wts_compoundiq_invest_goals';
+// Exported so Dashboard.jsx can read the same live goal list and show a combined-
+// monthly-needed card, and so DataBackup.jsx's existing entry for this key (it was
+// already there before this comment was added) has something to point back to.
+export const GOALS_KEY = 'wts_compoundiq_invest_goals';
 
 const GOAL_PRESETS = [
   { label: 'Retirement', amount: 2000000, years: 25 },

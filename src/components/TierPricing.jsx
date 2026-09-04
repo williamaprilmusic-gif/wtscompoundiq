@@ -57,7 +57,7 @@ const tiers = [
       'Tax Optimizer, including a retirement fund comparison & a tax-loss harvesting calculator',
       'Power Tools — 41 focused calculators (FIRE, Fund Fee Face-off, Contractor Rate, VAT Calculator, Capital Gains Tax, and more)',
       'Net Worth tracker with asset allocation, forecast & balance-sheet ratios',
-      'Dashboard with Financial Health Score, Budget surplus trend, milestones & PDF export',
+      'Dashboard with Financial Health Score, Budget & Invest Goals summaries, milestones & PDF export',
       'Financial Snapshot export (print / PDF / CSV)',
       'Side-by-side country comparison tool, plus compare your own plans',
       'Priority support'
@@ -84,7 +84,7 @@ const tiers = [
       "Monte Carlo history's-worst-window — your plan through the worst real stretch",
       'FX stress test for Net Worth (offshore holdings)',
       'AI Wealth Coach (5-step planner: wrapper, contribution boost, extra years, contribution escalation, unused Budget surplus)',
-      'AI Investment Advisor (personalized recommendations, incl. debt priority & your saved Emergency Fund status)'
+      'AI Investment Advisor (personalized recommendations, incl. debt priority, saved Emergency Fund status & Net Worth leverage)'
     ],
     cta: 'Upgrade to Ultra',
     highlighted: false
@@ -98,7 +98,7 @@ const tiers = [
       'Everything in Ultra, plus:',
       'White-label branding (your own logo)',
       'Branded plan header — firm name, logo & tagline on My Plan, Snapshot, and Dashboard printouts',
-      'Custom compliance / FSP disclosure line, shared across My Plan and the client Snapshot report',
+      'Custom compliance / FSP disclosure line, shared across My Plan, Snapshot, and the Dashboard PDF',
       '"Prepared by [adviser] for [client] on [date]" line on client plans',
       'Adviser notes on client plans',
       'Bulk user management & admin dashboard',

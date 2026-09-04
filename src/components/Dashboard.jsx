@@ -1,8 +1,8 @@
 // src/components/Dashboard.jsx
 // A single glance at everything else in the app already tracks, instead of having to
-// visit six separate tabs to piece it together. Purely a read-only view over what's
-// already saved in localStorage by Net Worth, Budget, Debt Payoff, Emergency Fund,
-// Loan & Bond, and Power Tools -- it doesn't compute anything new.
+// visit seven separate tabs to piece it together. Purely a read-only view over what's
+// already saved in localStorage by Net Worth, Budget, Invest, Debt Payoff, Emergency
+// Fund, Loan & Bond, and Power Tools -- it doesn't compute anything new.
 import React, { useState, useEffect, useMemo } from 'react';
 import './Dashboard.css';
 import { convertAmount } from '../data/countries';
@@ -15,6 +15,8 @@ import { HISTORY_KEY as DEBTPAYOFF_HISTORY_KEY, isValidDebtHistoryEntry } from '
 import { HISTORY_KEY as EMERGENCYFUND_HISTORY_KEY, isValidEfHistoryEntry } from './EmergencyFund';
 import { BUDGET_HISTORY_KEY, isValidBudgetHistoryEntry } from '../budgetEngine';
 import { BRANDING_KEY as REPORT_BRANDING_KEY, DEFAULT_BRANDING } from './Snapshot';
+import { GOALS_KEY as INVEST_GOALS_KEY } from './Invest';
+import { COMPLIANCE_KEY } from './MyPlan';
 import { scoreEmergencyFund, scoreDebtPayoff, scoreNetWorthTrend, scoreFireProgress, computeHealthScore } from '../financialHealthScore';
 import { detectNetWorthMilestones, detectDebtClearedMilestone, detectEfFundedMilestone, sortMilestones } from '../milestones';
 import { buildNextSteps } from '../nextSteps';
@@ -42,10 +44,14 @@ const Dashboard = ({ country, reportingCountry, onNavigate, userTier }) => {
   const [debtHistory, setDebtHistory] = useState([]);
   const [efHistory, setEfHistory] = useState([]);
   const [budgetHistory, setBudgetHistory] = useState([]);
+  const [investGoals, setInvestGoals] = useState([]);
   // Enterprise white-label: read-only here too (same reuse as Snapshot's own compliance
   // text on the flip side -- see MyPlan.jsx's BRANDING_KEY note) so the Dashboard PDF
   // export carries the same firm details as the client report, not a blank masthead.
   const [reportBranding, setReportBranding] = useState(DEFAULT_BRANDING);
+  // Read-only reuse of the same compliance text set once on My Plan (see Snapshot.jsx's
+  // identical reuse) -- one field, now three documents.
+  const [compliance, setCompliance] = useState('');
   const canWhiteLabel = userTier === 'Enterprise';
 
   useEffect(() => {
@@ -54,10 +60,12 @@ const Dashboard = ({ country, reportingCountry, onNavigate, userTier }) => {
     setDebtHistory(readJSONArray(DEBTPAYOFF_HISTORY_KEY));
     setEfHistory(readJSONArray(EMERGENCYFUND_HISTORY_KEY));
     setBudgetHistory(readJSONArray(BUDGET_HISTORY_KEY));
+    setInvestGoals(readJSONArray(INVEST_GOALS_KEY));
     try {
       const stored = JSON.parse(localStorage.getItem(REPORT_BRANDING_KEY) || '{}');
       setReportBranding({ ...DEFAULT_BRANDING, ...stored });
     } catch { /* ignore corrupt value, keep defaults */ }
+    try { setCompliance(localStorage.getItem(COMPLIANCE_KEY) || ''); } catch { /* ignore */ }
   }, []);
 
   // Same non-numeric guard NetWorth.jsx applies to this same history key (imported
@@ -100,7 +108,21 @@ const Dashboard = ({ country, reportingCountry, onNavigate, userTier }) => {
     .map(h => ({ date: h.date, surplus: convertAmount(h.surplus, h.displayCurrency || country.code, country.code) })),
   [budgetHistory, country.code]);
   const lastBudgetEntry = budgetPoints.length > 0 ? budgetPoints[budgetPoints.length - 1] : null;
-  const hasAnything = !!plan?.debt || !!plan?.emergencyFund || !!plan?.loan || !!plan?.fire || !!netWorthEntry || !!lastBudgetEntry;
+
+  // Invest goals are "live" working data (Invest.jsx's own usePersistedState, no "Save
+  // This Plan" snapshot step), like Net Worth/Debt Payoff/Emergency Fund/Loan's raw
+  // number fields above -- so this reads current values straight off country.symbol
+  // too, no currency-conversion pipeline to run through. Just totals here (count,
+  // target, already saved) -- the per-goal required-monthly figure needs the
+  // Calculator's live rate/inflation/wrapper, which this read-only aggregate view
+  // doesn't otherwise depend on; see Invest.jsx itself for that number.
+  const investSummary = investGoals.length > 0 ? {
+    count: investGoals.length,
+    totalTarget: investGoals.reduce((s, g) => s + (g.goalAmount || 0), 0),
+    totalSaved: investGoals.reduce((s, g) => s + (g.startingAmount || 0), 0)
+  } : null;
+
+  const hasAnything = !!plan?.debt || !!plan?.emergencyFund || !!plan?.loan || !!plan?.fire || !!netWorthEntry || !!lastBudgetEntry || !!investSummary;
 
   const hasTrends = netWorthPoints.length > 1 || debtPoints.length > 1 || efPoints.length > 1 || budgetPoints.length > 1;
 
@@ -271,6 +293,24 @@ const Dashboard = ({ country, reportingCountry, onNavigate, userTier }) => {
           </div>
         )}
 
+        {investSummary ? (
+          <div className="dashboard-card">
+            <div className="dashboard-card-header">
+              <h3>🎯 Invest Goals</h3>
+              <span className="dashboard-card-meta">{investSummary.count} goal{investSummary.count === 1 ? '' : 's'}</span>
+            </div>
+            <strong className="dashboard-card-value">{country.symbol} {Math.round(investSummary.totalTarget).toLocaleString()}</strong>
+            <span className="dashboard-card-sub">combined target, {country.symbol} {Math.round(investSummary.totalSaved).toLocaleString()} already saved toward it</span>
+            <button className="dashboard-card-link" onClick={() => onNavigate('Invest')}>Open Invest →</button>
+          </div>
+        ) : (
+          <div className="dashboard-card empty">
+            <h3>🎯 Invest Goals</h3>
+            <p>No goals added yet.</p>
+            <button className="dashboard-card-link" onClick={() => onNavigate('Invest')}>Set it up →</button>
+          </div>
+        )}
+
         {plan?.emergencyFund ? (
           <div className="dashboard-card">
             <div className="dashboard-card-header">
@@ -394,6 +434,10 @@ const Dashboard = ({ country, reportingCountry, onNavigate, userTier }) => {
         Everything here lives only in your browser's local storage -- nothing is sent anywhere, and none of these
         numbers recompute automatically. Revisit each tab and save again to refresh what's shown here.
       </p>
+
+      {canWhiteLabel && compliance.trim() && (
+        <p className="dashboard-note dashboard-print-compliance">{compliance.trim()}</p>
+      )}
     </div>
   );
 };
