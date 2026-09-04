@@ -50,6 +50,8 @@ import { analysePayback } from '../paybackPeriod';
 import { compareBuyCashVsFinance } from '../buyCashVsFinance';
 import { compareFundFees } from '../fundFeeComparison';
 import { contractorRate } from '../contractorRate';
+import { addVat, extractVat } from '../vatCalculator';
+import { estimateCapitalGainsTax, CGT_ANNUAL_EXCLUSION, CGT_INCLUSION_RATE_INDIVIDUAL } from '../capitalGainsTax';
 import { readJSONArray } from '../utils/storage';
 import { convertAmount, countriesData } from '../data/countries';
 import { DEBTS_KEY } from './DebtPayoff';
@@ -108,7 +110,9 @@ const SUB_TABS = [
   { key: 'payback', label: '☀️ Big-Purchase Payback' },
   { key: 'cashVsFinance', label: '💳 Cash vs. Finance' },
   { key: 'fundFees', label: '⚖️ Fund Fee Face-off' },
-  { key: 'contractRate', label: '🧑‍💻 Contractor Rate' }
+  { key: 'contractRate', label: '🧑‍💻 Contractor Rate' },
+  { key: 'vat', label: '🧾 VAT Calculator' },
+  { key: 'cgt', label: '📑 Capital Gains Tax' }
 ];
 
 const ULTRA_SUB_TAB_KEYS = new Set(SUB_TABS.filter(t => t.tier === 'Ultra').map(t => t.key));
@@ -122,8 +126,8 @@ const SUB_TAB_GROUPS = [
   { label: 'Debt & Credit', keys: ['debtVsInvest', 'dti', 'cardTrap', 'debtConsol', 'loanCompare', 'cashVsFinance'] },
   { label: 'Property & Big Purchases', keys: ['affordability', 'rentVsBuy', 'carCost', 'leaseVsBuy', 'depositTimeline', 'homeCosts', 'payback', 'rateShock'] },
   { label: 'Saving for a Goal', keys: ['savings', 'education', 'sinkingFund', 'efRunway', 'insurance', 'windfall'] },
-  { label: 'Income & Tax', keys: ['salary', 'raiseValue', 'bonusTax', 'raOptimizer', 'contractRate', 'budgetRule', 'marginalTax', 'raiseInflation'] },
-  { label: 'Money Basics', keys: ['futureCost', 'fxConvert', 'rule72', 'freqCompare', 'effRate', 'realReturn', 'subCost'] }
+  { label: 'Income & Tax', keys: ['salary', 'raiseValue', 'bonusTax', 'raOptimizer', 'contractRate', 'cgt', 'budgetRule', 'marginalTax', 'raiseInflation'] },
+  { label: 'Money Basics', keys: ['futureCost', 'fxConvert', 'rule72', 'freqCompare', 'effRate', 'realReturn', 'subCost', 'vat'] }
 ];
 
 const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [], canUltra = true, onOpenPricing }) => {
@@ -400,6 +404,15 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const [crHours, setCrHours] = useState(40);
   const [crUtil, setCrUtil] = useState(80);
 
+  const [vatMode, setVatMode] = useState('add'); // 'add' = exclusive -> inclusive, 'extract' = inclusive -> exclusive
+  const [vatAmount, setVatAmount] = useState(0);
+  const [vatRate, setVatRate] = useState(15);
+
+  const [cgtProceeds, setCgtProceeds] = useState(0);
+  const [cgtBaseCost, setCgtBaseCost] = useState(0);
+  const [cgtOtherIncome, setCgtOtherIncome] = useState(0);
+  const [cgtProgressive, setCgtProgressive] = useState(false);
+
   const safeWithdrawalRate = withdrawalRate > 0 ? withdrawalRate : 0.01;
   const fireNumber = annualExpenses / (safeWithdrawalRate / 100);
   const yearsToFire = yearsToReachTarget({
@@ -663,6 +676,16 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const contractRate = contractorRate({
     targetAnnualTakeHome: crTakeHome, taxRatePct: crTaxRate, benefitsLoadingPct: crBenefits,
     billableWeeksPerYear: crWeeks, billableHoursPerWeek: crHours, utilisationPct: crUtil
+  });
+
+  const vatResult = vatMode === 'add'
+    ? addVat({ exclusiveAmount: vatAmount, vatRatePct: vatRate })
+    : extractVat({ inclusiveAmount: vatAmount, vatRatePct: vatRate });
+
+  const cgtResult = estimateCapitalGainsTax({
+    proceeds: cgtProceeds, baseCost: cgtBaseCost, otherTaxableIncome: cgtOtherIncome,
+    taxRate: country.taxRate,
+    taxBrackets: (cgtProgressive && country.taxBrackets) ? country.taxBrackets : null
   });
 
   const saveFirePlan = () => {
@@ -3032,6 +3055,94 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
             </div>
             <p className="power-tool-note">
               Tax rate is your effective rate on gross (income tax plus any self-paid contributions). Benefits loading covers a pension match, medical subsidy, and insurance you'd now pay yourself. Doesn't model VAT registration, a company structure, or provisional-tax timing. Not advice.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'vat' && (
+      <div className="power-tool-card">
+        <h3>🧾 VAT / Sales Tax Calculator</h3>
+        <p className="power-tool-desc">Add VAT to a price, or pull it back out of a total that already includes it — the two aren't the same calculation, since the rate applies to the exclusive amount, not the inclusive one.</p>
+        <div className="vat-mode-toggle">
+          <button className={vatMode === 'add' ? 'active' : ''} onClick={() => setVatMode('add')}>Add VAT (exclusive → inclusive)</button>
+          <button className={vatMode === 'extract' ? 'active' : ''} onClick={() => setVatMode('extract')}>Extract VAT (inclusive → exclusive)</button>
+        </div>
+        <div className="power-form">
+          <div className="form-group">
+            <label>{vatMode === 'add' ? 'Price excl. VAT' : 'Price incl. VAT'} ({country.symbol})</label>
+            <input type="number" min="0" step="10" value={vatAmount} onChange={(e) => setVatAmount(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>VAT Rate (%)</label>
+            <input type="number" min="0" max="30" step="0.5" value={vatRate} onChange={(e) => setVatRate(Number(e.target.value))} />
+          </div>
+        </div>
+        {vatAmount > 0 && (
+          <div className="power-verdict-grid">
+            <div className="power-stat">
+              <span>Excl. VAT</span>
+              <strong>{country.symbol} {Math.round(vatResult.exclusiveAmount).toLocaleString()}</strong>
+            </div>
+            <div className="power-stat">
+              <span>VAT ({vatRate}%)</span>
+              <strong className="warn">{country.symbol} {Math.round(vatResult.vatAmount).toLocaleString()}</strong>
+            </div>
+            <div className="power-stat">
+              <span>Incl. VAT</span>
+              <strong className="positive">{country.symbol} {Math.round(vatResult.inclusiveAmount).toLocaleString()}</strong>
+            </div>
+          </div>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'cgt' && (
+      <div className="power-tool-card">
+        <h3>📑 Capital Gains Tax</h3>
+        <p className="power-tool-desc">In South Africa, the gain on a disposal — less an annual exclusion — gets a 40% inclusion rate, and that "taxable capital gain" is taxed at your normal marginal rate on top of your other income. It's not a separate flat CGT rate.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Sale Proceeds ({country.symbol})</label>
+            <input type="number" min="0" step="10000" value={cgtProceeds} onChange={(e) => setCgtProceeds(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Base Cost ({country.symbol})</label>
+            <input type="number" min="0" step="10000" value={cgtBaseCost} onChange={(e) => setCgtBaseCost(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Other Taxable Income ({country.symbol}/yr)</label>
+            <input type="number" min="0" step="10000" value={cgtOtherIncome} onChange={(e) => setCgtOtherIncome(Number(e.target.value))} />
+          </div>
+        </div>
+        {country.taxBrackets && (
+          <label className="mc-compare-toggle">
+            <input type="checkbox" checked={cgtProgressive} onChange={(e) => setCgtProgressive(e.target.checked)} />
+            Use {country.name}'s progressive brackets for the marginal rate
+          </label>
+        )}
+        {cgtProceeds > 0 && (
+          <>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Gross gain</span>
+                <strong>{country.symbol} {Math.round(cgtResult.grossGain).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Taxable capital gain</span>
+                <strong>{country.symbol} {Math.round(cgtResult.taxableCapitalGain).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Tax owed</span>
+                <strong className="warn">{country.symbol} {Math.round(cgtResult.taxOnGain).toLocaleString()}</strong>
+              </div>
+            </div>
+            <div className="power-verdict debt">
+              A {country.symbol} {Math.round(cgtResult.grossGain).toLocaleString()} gain costs about <strong>{country.symbol} {Math.round(cgtResult.taxOnGain).toLocaleString()}</strong> in tax — {cgtResult.effectiveRateOnGainPct.toFixed(1)}% of the raw gain (your {cgtResult.marginalRatePct.toFixed(0)}% marginal rate applied to just the {country.symbol}{Math.round(cgtResult.taxableCapitalGain).toLocaleString()} that's actually taxable). Net proceeds after tax: {country.symbol} {Math.round(cgtResult.netProceeds).toLocaleString()}.
+            </div>
+            <p className="power-tool-note">
+              SA individual rules: R{CGT_ANNUAL_EXCLUSION.toLocaleString()} annual exclusion, {CGT_INCLUSION_RATE_INDIVIDUAL}% inclusion rate (companies/trusts differ). Primary-residence and other specific exclusions aren't modelled — this is the general disposal case. Indicative, not a return.
             </p>
           </>
         )}

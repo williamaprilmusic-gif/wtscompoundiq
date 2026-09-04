@@ -138,6 +138,11 @@ export default function App() {
   const [waitYears, setWaitYears] = useState(5); // "cost of waiting" on the Calculator (Basic tier)
   const [bumpAmount, setBumpAmount] = useState(500); // "what one bump does" on the Calculator (Basic tier)
   const [targetAmount, setTargetAmount] = useState(0); // "reach this by the target year" goal-seek (Basic tier)
+  // The Calculator's free-tier insight strip (goal seek, rate band, milestones, split
+  // bar, bump nudge, cost of waiting) has grown to six blocks -- collapsible, open by
+  // default, so a first-time or mobile visitor can collapse it to just the headline
+  // numbers without losing any of it.
+  const [insightsOpen, setInsightsOpen] = useState(true);
   const hasTaxBrackets = !!country.taxBrackets;
   const effectiveTaxBrackets = (progressiveTax && hasTaxBrackets) ? country.taxBrackets : null;
 
@@ -623,6 +628,17 @@ export default function App() {
                 </div>
               </div>
 
+              <button
+                type="button"
+                className="insights-toggle"
+                onClick={() => setInsightsOpen((v) => !v)}
+                aria-expanded={insightsOpen}
+                aria-controls="calc-insights-panel"
+              >
+                💡 Plan Insights <span className="insights-toggle-chevron">{insightsOpen ? '▾' : '▸'}</span>
+              </button>
+
+              <div id="calc-insights-panel" hidden={!insightsOpen}>
               <div className="target-seek">
                 <label htmlFor="target-amount">Aim for a number</label>
                 <div className="target-seek-body">
@@ -753,6 +769,7 @@ export default function App() {
                   </div>
                 </div>
               )}
+              </div>
 
               <GrowthChart yearlyData={results.yearlyData} initial={initial} symbol={country.symbol} />
 
@@ -928,7 +945,7 @@ export default function App() {
 
         {activeTab === 'Coach' && canAccess('Ultra') && (
           <div className="tab-pane active">
-            <Coach country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} maxYears={MAX_YEARS} onSetWrapper={setWrapper} onSetMonthly={setMonthly} onSetYears={setYearsClamped} />
+            <Coach country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} maxYears={MAX_YEARS} onSetWrapper={setWrapper} onSetMonthly={setMonthly} onSetYears={setYearsClamped} onSetContributionIncrease={setContributionIncrease} />
           </div>
         )}
 

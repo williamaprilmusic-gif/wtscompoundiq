@@ -220,6 +220,28 @@
   white-space: nowrap;
 }
 
+.vat-mode-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.vat-mode-toggle button {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border);
+  color: var(--mut);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.vat-mode-toggle button.active {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 /* Debt Consolidation: a small stack of editable debt rows. */
 .dc-rows { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
 .dc-row {

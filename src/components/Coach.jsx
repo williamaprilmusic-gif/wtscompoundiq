@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import './Coach.css';
 import { calculateCompoundInterest } from '../engine';
 
-const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [], maxYears = Infinity, onSetWrapper, onSetMonthly, onSetYears }) => {
+const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [], maxYears = Infinity, onSetWrapper, onSetMonthly, onSetYears, onSetContributionIncrease }) => {
   const base = { initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper, compoundFrequency, annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit, contributionIncreaseRate: contributionIncrease, lumpSums };
   const baseline = calculateCompoundInterest(base);
 
@@ -29,6 +29,16 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
   const extended = calculateCompoundInterest({ ...base, years: extendedYears });
   const extendGain = extended.finalBalance - baseline.finalBalance;
 
+  // Step 4: growing the monthly contribution itself by a %/yr (matching a raise or
+  // inflation) rather than a one-off bump -- a flat contribution quietly shrinks in
+  // real terms every year it doesn't move. Suggest a couple of points above whatever
+  // escalation is already set, floored at 5%, so there's always real room to show.
+  const [escalatePercent, setEscalatePercent] = useState(() => Math.max(5, Math.round(contributionIncrease) + 2));
+  const canEscalate = typeof onSetContributionIncrease === 'function';
+  const escalated = calculateCompoundInterest({ ...base, contributionIncreaseRate: escalatePercent });
+  const escalateGain = escalated.finalBalance - baseline.finalBalance;
+  const escalateDone = contributionIncrease >= escalatePercent;
+
   const flashApplied = (key) => {
     setApplied(key);
     setTimeout(() => setApplied(null), 2000);
@@ -37,6 +47,7 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
   const applyWrapper = () => { onSetWrapper(true); flashApplied('wrapper'); };
   const applyBoost = () => { onSetMonthly(Math.round(boostedMonthly)); flashApplied('boost'); };
   const applyYears = () => { onSetYears(extendedYears); flashApplied('years'); };
+  const applyEscalate = () => { onSetContributionIncrease(escalatePercent); flashApplied('escalate'); };
 
   const steps = [
     {
@@ -88,14 +99,32 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
       ) : null,
       onApply: applyYears,
       applyLabel: `Set timeframe to ${extendedYears} years`
-    }
+    },
+    ...(canEscalate ? [{
+      key: 'escalate',
+      number: 4,
+      title: 'Make Contributions Keep Pace',
+      done: escalateDone,
+      body: escalateDone
+        ? `You're already growing contributions by ${contributionIncrease}%/yr -- ahead of this step's ${escalatePercent}% suggestion.`
+        : `A flat ${country.symbol}${monthly.toLocaleString()}/month quietly buys less every year. Growing it by ${escalatePercent}%/yr instead of ${contributionIncrease}% -- roughly matching a raise -- adds ${country.symbol} ${Math.round(escalateGain).toLocaleString()} over ${years} years, on top of anything from steps 1-3.`,
+      interactive: !escalateDone,
+      control: !escalateDone ? (
+        <div className="coach-slider-row">
+          <label>+{escalatePercent}%/yr contribution growth</label>
+          <input type="range" min="1" max="15" step="1" value={escalatePercent} aria-label="Annual contribution growth percentage" onChange={(e) => setEscalatePercent(Number(e.target.value))} />
+        </div>
+      ) : null,
+      onApply: applyEscalate,
+      applyLabel: `Set contribution growth to ${escalatePercent}%/yr`
+    }] : [])
   ];
 
   return (
     <div className="card wealth-coach">
       <div className="coach-header">
         <h2>🧭 AI Wealth Coach</h2>
-        <p>A 3-step plan built from your current calculator inputs. Adjust each lever below, then apply it straight to your plan.</p>
+        <p>A step-by-step plan built from your current calculator inputs. Adjust each lever below, then apply it straight to your plan.</p>
       </div>
 
       <div className="coach-steps">

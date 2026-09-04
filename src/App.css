@@ -543,6 +543,32 @@ body {
   text-align: center;
 }
 
+/* Collapsible wrapper around the free-tier insight strip (goal seek, rate band,
+   milestones, split bar, bump nudge, cost of waiting). Open by default. */
+.insights-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: -6px 0 14px;
+  padding: 8px 4px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--mut);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  text-align: left;
+}
+.insights-toggle:hover { color: var(--text); }
+.insights-toggle-chevron {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--mut2);
+}
+
 /* Goal-seek: "to have R X by year N, save R Y/month". Blue/accent tint. */
 .target-seek {
   margin: -8px 0 22px;

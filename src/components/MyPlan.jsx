@@ -11,6 +11,7 @@ const ADVISER_NOTES_KEY = 'wts_compoundiq_adviser_notes';
 const BRANDING_KEY = 'wts_compoundiq_plan_branding';
 const COMPLIANCE_KEY = 'wts_compoundiq_plan_compliance';
 const PREPARED_BY_KEY = 'wts_compoundiq_plan_prepared_by';
+const CLIENT_NAME_KEY = 'wts_compoundiq_plan_client_name';
 
 const monthsBetween = (isoDate) => daysBetween(isoDate) / 30.44;
 
@@ -40,6 +41,8 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
   // Enterprise: the adviser's name, shown as "Prepared by X on <date>" under the
   // branded header (and in print).
   const [preparedBy, setPreparedBy] = useState('');
+  // Enterprise: which client this printed plan is for, e.g. "Prepared by X for Y".
+  const [clientName, setClientName] = useState('');
 
   const updateAdviserNotes = (value) => {
     setAdviserNotes(value);
@@ -64,12 +67,18 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
     try { localStorage.setItem(PREPARED_BY_KEY, value); } catch { /* private mode / quota */ }
   };
 
+  const updateClientName = (value) => {
+    setClientName(value);
+    try { localStorage.setItem(CLIENT_NAME_KEY, value); } catch { /* private mode / quota */ }
+  };
+
   useEffect(() => {
     const plan = readPlan();
     if (Object.keys(plan).length > 0) setSnapshot(plan);
     try { setAdviserNotes(localStorage.getItem(ADVISER_NOTES_KEY) || ''); } catch { /* ignore */ }
     try { setCompliance(localStorage.getItem(COMPLIANCE_KEY) || ''); } catch { /* ignore */ }
     try { setPreparedBy(localStorage.getItem(PREPARED_BY_KEY) || ''); } catch { /* ignore */ }
+    try { setClientName(localStorage.getItem(CLIENT_NAME_KEY) || ''); } catch { /* ignore */ }
     setBranding(readBranding());
 
     const storedReminder = localStorage.getItem(REMINDER_KEY);
@@ -122,7 +131,7 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
       {branding.tagline.trim() && <span className="plan-branding-tagline">{branding.tagline.trim()}</span>}
       {preparedBy.trim() && (
         <span className="plan-branding-prepared">
-          Prepared by {preparedBy.trim()} · {new Date().toLocaleDateString()}
+          Prepared by {preparedBy.trim()}{clientName.trim() ? ` for ${clientName.trim()}` : ''} · {new Date().toLocaleDateString()}
         </span>
       )}
     </div>
@@ -151,6 +160,13 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
           value={preparedBy}
           onChange={(e) => updatePreparedBy(e.target.value)}
           placeholder='Prepared by (adviser name) — shows "Prepared by X on <today>"'
+          maxLength={80}
+        />
+        <input
+          type="text"
+          value={clientName}
+          onChange={(e) => updateClientName(e.target.value)}
+          placeholder='Client name (optional) — adds "for [client]" to the line above'
           maxLength={80}
         />
       </div>
