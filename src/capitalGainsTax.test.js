@@ -1,6 +1,6 @@
 // src/capitalGainsTax.test.js
 import { describe, it, expect } from 'vitest';
-import { estimateCapitalGainsTax, CGT_ANNUAL_EXCLUSION, CGT_INCLUSION_RATE_INDIVIDUAL } from './capitalGainsTax.js';
+import { estimateCapitalGainsTax, estimateLossHarvestingSaving, CGT_ANNUAL_EXCLUSION, CGT_INCLUSION_RATE_INDIVIDUAL } from './capitalGainsTax.js';
 
 const BRACKETS = [
   { upTo: 240000, rate: 18 },
@@ -50,5 +50,29 @@ describe('estimateCapitalGainsTax', () => {
     const r = estimateCapitalGainsTax({ proceeds: 500000, baseCost: 400000, taxRate: 45 });
     expect(r.effectiveRateOnGainPct).toBeLessThan(45);
     expect(r.effectiveRateOnGainPct).toBeGreaterThan(0);
+  });
+});
+
+describe('estimateLossHarvestingSaving', () => {
+  it('applies the inclusion rate then the marginal rate to a realised loss', () => {
+    const r = estimateLossHarvestingSaving({ lossAmount: 100000, marginalRatePct: 45 });
+    expect(r.taxableGainOffset).toBeCloseTo(100000 * (CGT_INCLUSION_RATE_INDIVIDUAL / 100), 6);
+    expect(r.taxSaved).toBeCloseTo(r.taxableGainOffset * 0.45, 6);
+  });
+
+  it('does NOT apply the annual exclusion (that would double-count against the offset gain)', () => {
+    const small = estimateLossHarvestingSaving({ lossAmount: 10000, marginalRatePct: 45 });
+    expect(small.taxSaved).toBeGreaterThan(0);
+    expect(small.taxableGainOffset).toBeCloseTo(10000 * (CGT_INCLUSION_RATE_INDIVIDUAL / 100), 6);
+  });
+
+  it('a zero loss saves nothing', () => {
+    expect(estimateLossHarvestingSaving({ lossAmount: 0, marginalRatePct: 45 }).taxSaved).toBe(0);
+  });
+
+  it('clamps a negative loss or an out-of-range rate rather than producing nonsense', () => {
+    const r = estimateLossHarvestingSaving({ lossAmount: -5000, marginalRatePct: 150 });
+    expect(r.taxableGainOffset).toBeGreaterThanOrEqual(0);
+    expect(r.taxSaved).toBeGreaterThanOrEqual(0);
   });
 });

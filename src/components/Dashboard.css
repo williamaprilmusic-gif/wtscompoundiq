@@ -262,6 +262,17 @@
   line-height: 1.5;
 }
 
+.dashboard-branding-hint {
+  margin: -8px 0 18px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-soft);
+  background: color-mix(in srgb, var(--accent-purple) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-purple) 30%, transparent);
+}
+
 .dashboard-health-note {
   margin-top: -12px;
   margin-bottom: 22px;
@@ -287,6 +298,14 @@
     font-size: 1.3rem;
     color: black;
     margin: 0 0 4px;
+  }
+
+  .dashboard-print-logo {
+    display: block;
+    max-height: 48px;
+    max-width: 220px;
+    object-fit: contain;
+    margin-bottom: 10px;
   }
 
   .dashboard-print-masthead p {

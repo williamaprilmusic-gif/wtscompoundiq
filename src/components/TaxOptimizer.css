@@ -142,6 +142,46 @@
   color: var(--accent);
 }
 
+.tax-loss-harvest-calc {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+.tax-loss-harvest-calc .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tax-loss-harvest-calc label {
+  font-size: 0.78rem;
+  color: var(--mut);
+  font-weight: 500;
+}
+.tax-loss-harvest-calc input {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  outline: none;
+}
+.tax-loss-harvest-calc input:focus {
+  border-color: var(--accent);
+}
+
+.tax-loss-harvest-result {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--mut);
+}
+.tax-loss-harvest-result .positive { color: var(--accent-green); }
+
 .tax-plan-card .positive {
   color: var(--accent-green);
 }

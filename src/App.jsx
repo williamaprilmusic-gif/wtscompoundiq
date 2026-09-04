@@ -130,6 +130,7 @@ export default function App() {
   const [contributionIncrease, setContributionIncrease] = useState(() => shareParams?.contributionIncrease ?? 0);
   const [lumpSums, setLumpSums] = useState(() => shareParams?.lumpSums ?? []); // one-off future contributions: [{ id, year, amount }]
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
+  const [summaryCopied, setSummaryCopied] = useState(false);
 
   // Progressive tax brackets -- only meaningful for the handful of countries with
   // taxBrackets data (see data/countries.js). Opt-in: off by default, the flat
@@ -164,6 +165,29 @@ export default function App() {
     }
     setShareLinkCopied(true);
     setTimeout(() => setShareLinkCopied(false), 2000);
+  };
+
+  // A plain-text version of the headline result, for pasting into WhatsApp/email/notes
+  // -- the link above shares the inputs so someone else's browser can recompute this;
+  // this shares the finished number for someone who doesn't need to open the app at all.
+  const copyResultsSummary = async () => {
+    const lines = [
+      `WTS CompoundIQ -- ${country.name}`,
+      `Initial: ${country.symbol}${initial.toLocaleString()} | Monthly: ${country.symbol}${monthly.toLocaleString()} | Rate: ${rate}%/yr | Years: ${years}`,
+      `Projected Balance: ${country.symbol}${results.finalBalance.toLocaleString()}`,
+      `Total Deposits: ${country.symbol}${results.totalDeposited.toLocaleString()}`,
+      `Compound Interest Earned: ${country.symbol}${results.totalInterest.toLocaleString()}`,
+      `Real Value (today's money): ${country.symbol}${(results.yearlyData[results.yearlyData.length - 1]?.realValue ?? 0).toLocaleString()}`
+    ];
+    const text = lines.join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      window.prompt('Copy this summary:', text); // clipboard API unavailable -- fall back to a manual copy
+      return;
+    }
+    setSummaryCopied(true);
+    setTimeout(() => setSummaryCopied(false), 2000);
   };
 
   const handleCountryChange = (code) => {
@@ -785,10 +809,15 @@ export default function App() {
 
               <GrowthChart yearlyData={results.yearlyData} initial={initial} symbol={country.symbol} milestones={balanceMilestones} />
 
-              <button className="share-plan-btn" onClick={shareCurrentPlan}>
-                {shareLinkCopied ? t('calculator.linkCopied') : t('calculator.sharePlan')}
-              </button>
-              <p className="share-plan-note">Copies a link that opens with these exact inputs -- nothing is uploaded, the whole plan lives in the URL itself.</p>
+              <div className="share-plan-row">
+                <button className="share-plan-btn" onClick={shareCurrentPlan}>
+                  {shareLinkCopied ? t('calculator.linkCopied') : t('calculator.sharePlan')}
+                </button>
+                <button className="share-plan-btn secondary" onClick={copyResultsSummary}>
+                  {summaryCopied ? t('calculator.summaryCopied') : t('calculator.copySummary')}
+                </button>
+              </div>
+              <p className="share-plan-note">The link opens with these exact inputs so someone else's browser can recompute them -- nothing is uploaded, the whole plan lives in the URL. The summary is just the finished numbers as plain text, for pasting into a message.</p>
 
               <div className="scenario-section">
                 <div className="scenario-header">
@@ -890,7 +919,7 @@ export default function App() {
 
         {activeTab === 'Dashboard' && canAccess('Pro') && (
           <div className="tab-pane active">
-            <Dashboard country={country} reportingCountry={reportingCountry} onNavigate={setActiveTab} />
+            <Dashboard country={country} reportingCountry={reportingCountry} onNavigate={setActiveTab} userTier={userTier} />
           </div>
         )}
 

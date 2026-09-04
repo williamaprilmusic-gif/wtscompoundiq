@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import './TaxOptimizer.css';
 import { calculateCompoundInterest } from '../engine';
 import { compareRetirementVehicle } from '../retirementComparison';
+import { estimateLossHarvestingSaving } from '../capitalGainsTax';
 import { getVerificationInfo } from '../data/countries';
 import Term from './Term';
 
@@ -17,6 +18,8 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
   // most systems this models, but this is a starting guess, not a real table. Both editable.
   const [contributionTaxRate, setContributionTaxRate] = useState(country.taxRate);
   const [withdrawalTaxRate, setWithdrawalTaxRate] = useState(Math.round(country.taxRate / 2));
+  const [lossAmount, setLossAmount] = useState(0);
+  const [lossMarginalRate, setLossMarginalRate] = useState(country.taxRate);
 
   const taxableResults = calculateCompoundInterest({
     initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper: false, compoundFrequency,
@@ -35,6 +38,8 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
     initial, monthly, rate, years, inflation, compoundFrequency, contributionIncreaseRate: contributionIncrease, lumpSums,
     contributionTaxRate, withdrawalTaxRate
   });
+
+  const lossHarvesting = estimateLossHarvestingSaving({ lossAmount, marginalRatePct: lossMarginalRate });
 
   return (
     <div className="card tax-optimizer">
@@ -96,6 +101,25 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
             <li>Reinvest in similar (not identical) assets to stay invested</li>
             <li>Watch local wash-sale / bed-and-breakfasting rules before repurchasing</li>
           </ul>
+          <div className="tax-loss-harvest-calc">
+            <div className="form-group">
+              <label>Realised Loss ({country.symbol})</label>
+              <input type="number" min="0" step="1000" value={lossAmount} onChange={(e) => setLossAmount(Number(e.target.value))} />
+            </div>
+            <div className="form-group">
+              <label>Your Marginal Rate (%)</label>
+              <input type="number" min="0" max="60" step="1" value={lossMarginalRate} onChange={(e) => setLossMarginalRate(Number(e.target.value))} />
+            </div>
+          </div>
+          {lossAmount > 0 && (
+            <p className="tax-loss-harvest-result">
+              Offsetting a <strong>{country.symbol} {Math.round(lossAmount).toLocaleString()}</strong> loss against a gain saves about{' '}
+              <strong className="positive">{country.symbol} {Math.round(lossHarvesting.taxSaved).toLocaleString()}</strong> in tax
+              -- the loss reduces your taxable capital gain by {country.symbol} {Math.round(lossHarvesting.taxableGainOffset).toLocaleString()}
+              {' '}(SA's 40% individual inclusion rate), taxed away at your {lossMarginalRate}% marginal rate. Only real if there's an
+              actual gain to offset it against -- a loss with nothing to offset just carries forward.
+            </p>
+          )}
         </div>
 
         <div className="tax-plan-card">

@@ -1,7 +1,9 @@
 // src/components/Coach.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Coach.css';
 import { calculateCompoundInterest } from '../engine';
+import { computeBudgetSummary, BUDGET_ITEMS_KEY } from '../budgetEngine';
+import { readJSONArray } from '../utils/storage';
 
 const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [], maxYears = Infinity, onSetWrapper, onSetMonthly, onSetYears, onSetContributionIncrease }) => {
   const base = { initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper, compoundFrequency, annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit, contributionIncreaseRate: contributionIncrease, lumpSums };
@@ -39,6 +41,19 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
   const escalateGain = escalated.finalBalance - baseline.finalBalance;
   const escalateDone = contributionIncrease >= escalatePercent;
 
+  // Step 5: an unused Budget surplus is money already free to invest, read straight
+  // from what's saved on the Budget tab (same computeBudgetSummary(readJSONArray(...))
+  // call Budget.jsx's own "send to Debt Payoff" button uses) -- no new number to type
+  // in, and no advice invented from nothing.
+  const [budgetSurplus, setBudgetSurplus] = useState(null);
+  useEffect(() => {
+    const summary = computeBudgetSummary(readJSONArray(BUDGET_ITEMS_KEY));
+    if (summary.totalIncome > 0 || summary.totalExpenses > 0) setBudgetSurplus(summary.surplus);
+  }, []);
+  const hasUnusedSurplus = budgetSurplus != null && budgetSurplus > monthly;
+  const surplusApplied = calculateCompoundInterest({ ...base, monthly: budgetSurplus ?? monthly });
+  const surplusGain = surplusApplied.finalBalance - baseline.finalBalance;
+
   const flashApplied = (key) => {
     setApplied(key);
     setTimeout(() => setApplied(null), 2000);
@@ -48,6 +63,7 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
   const applyBoost = () => { onSetMonthly(Math.round(boostedMonthly)); flashApplied('boost'); };
   const applyYears = () => { onSetYears(extendedYears); flashApplied('years'); };
   const applyEscalate = () => { onSetContributionIncrease(escalatePercent); flashApplied('escalate'); };
+  const applySurplus = () => { onSetMonthly(Math.round(budgetSurplus)); flashApplied('surplus'); };
 
   const steps = [
     {
@@ -117,6 +133,20 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
       ) : null,
       onApply: applyEscalate,
       applyLabel: `Set contribution growth to ${escalatePercent}%/yr`
+    }] : []),
+    ...(budgetSurplus != null ? [{
+      key: 'surplus',
+      number: canEscalate ? 5 : 4,
+      title: 'Put Your Budget Surplus to Work',
+      done: !hasUnusedSurplus,
+      body: hasUnusedSurplus
+        ? `Your saved Budget plan shows a ${country.symbol}${Math.round(budgetSurplus).toLocaleString()}/month surplus -- ${country.symbol}${Math.round(budgetSurplus - monthly).toLocaleString()} more than the ${country.symbol}${monthly.toLocaleString()} you're currently investing. Putting all of it to work adds ${country.symbol} ${Math.round(surplusGain).toLocaleString()} over ${years} years.`
+        : budgetSurplus <= 0
+          ? `Your saved Budget plan shows no surplus to redirect right now -- revisit the Budget tab once your income or expenses change.`
+          : `You're already investing at least your full saved Budget surplus (${country.symbol}${Math.round(budgetSurplus).toLocaleString()}/month) -- nothing unused to redirect here.`,
+      interactive: hasUnusedSurplus,
+      onApply: applySurplus,
+      applyLabel: `Set monthly to ${country.symbol}${Math.round(budgetSurplus).toLocaleString()}`
     }] : [])
   ];
 

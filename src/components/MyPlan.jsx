@@ -12,9 +12,14 @@ const REMINDER_DAYS = 30;
 // several rounds after that list was first written and, like the scenario/report-
 // branding keys already on it, would otherwise silently vanish on a restore.
 export const ADVISER_NOTES_KEY = 'wts_compoundiq_adviser_notes';
+// This is a separate, simpler branding store from Snapshot.jsx's BRANDING_KEY (firm/
+// advisor/client name + logo) -- that one existed first and covers the polished client
+// report; this one was added later for the lighter-weight My Plan check-in tool (no
+// logo). Not unified into one, since My Plan and Snapshot are different documents an
+// adviser might brand differently -- but Snapshot's own print masthead and Dashboard's
+// (see Dashboard.jsx) both read Snapshot's BRANDING_KEY, and Snapshot's report reads
+// this file's COMPLIANCE_KEY, so at least the compliance text is shared, not tripled.
 export const BRANDING_KEY = 'wts_compoundiq_plan_branding';
-// Exported so Snapshot.jsx's client report can surface the same firm disclosure text
-// an adviser already set here, rather than asking them to type it twice in two places.
 export const COMPLIANCE_KEY = 'wts_compoundiq_plan_compliance';
 export const PREPARED_BY_KEY = 'wts_compoundiq_plan_prepared_by';
 export const CLIENT_NAME_KEY = 'wts_compoundiq_plan_client_name';

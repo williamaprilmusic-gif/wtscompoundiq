@@ -8,8 +8,12 @@ import { usePersistedState } from '../utils/usePersistedState';
 import { downloadCSV } from '../utils/csv';
 import { COMPLIANCE_KEY } from './MyPlan';
 
-const BRANDING_KEY = 'wts_compoundiq_report_branding';
-const DEFAULT_BRANDING = { firmName: '', advisorName: '', clientName: '', logoDataUrl: '' };
+// Exported so Dashboard.jsx's own print masthead can read the same firm/advisor/client
+// details and logo an Enterprise user already set here, rather than a third place to
+// set them (My Plan has its own, separate, lighter branding store -- see MyPlan.jsx's
+// BRANDING_KEY for why that isn't unified into this one).
+export const BRANDING_KEY = 'wts_compoundiq_report_branding';
+export const DEFAULT_BRANDING = { firmName: '', advisorName: '', clientName: '', logoDataUrl: '' };
 // Keeps a data-URL logo (base64-encoded in localStorage alongside everything else this
 // app persists) from silently eating a meaningful chunk of the shared ~5-10MB
 // localStorage quota -- a compressed PNG/JPG a firm would actually use for a report

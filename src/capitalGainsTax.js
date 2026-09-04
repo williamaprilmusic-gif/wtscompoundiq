@@ -48,3 +48,22 @@ export const estimateCapitalGainsTax = ({
     marginalRatePct
   };
 };
+
+// Tax-loss harvesting, the mirror image of estimateCapitalGainsTax above: a realised
+// capital LOSS reduces your taxable capital gain rand-for-rand (same inclusion rate),
+// so it saves tax at your marginal rate on that reduced portion -- it doesn't refund
+// cash on its own. Deliberately does NOT apply the annual exclusion here: the loss
+// offsets a gain that would otherwise have used up exclusion room too, so double-
+// counting the exclusion on both sides would overstate the saving.
+export const estimateLossHarvestingSaving = ({
+  lossAmount, marginalRatePct = 0, inclusionRatePct = CGT_INCLUSION_RATE_INDIVIDUAL
+}) => {
+  const loss = Math.max(0, lossAmount || 0);
+  const inclusionRate = Math.max(0, Math.min(100, inclusionRatePct || 0)) / 100;
+  const rate = Math.max(0, Math.min(100, marginalRatePct || 0)) / 100;
+  const taxableGainOffset = loss * inclusionRate;
+  return {
+    taxableGainOffset,
+    taxSaved: taxableGainOffset * rate
+  };
+};

@@ -126,6 +126,8 @@ export const translations = {
       todaysMoney: "(Today's money):",
       sharePlan: '🔗 Share This Plan',
       linkCopied: '✓ Link copied!',
+      copySummary: '📋 Copy Summary',
+      summaryCopied: '✓ Summary copied!',
       scenarioComparison: 'Scenario Comparison',
       saveScenario: '+ Save Current as Scenario',
       tableYear: 'Year',

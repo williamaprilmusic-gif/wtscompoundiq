@@ -14,6 +14,7 @@ import { HISTORY_KEY as NETWORTH_HISTORY_KEY, isValidNetWorthEntry } from './Net
 import { HISTORY_KEY as DEBTPAYOFF_HISTORY_KEY, isValidDebtHistoryEntry } from './DebtPayoff';
 import { HISTORY_KEY as EMERGENCYFUND_HISTORY_KEY, isValidEfHistoryEntry } from './EmergencyFund';
 import { BUDGET_HISTORY_KEY, isValidBudgetHistoryEntry } from '../budgetEngine';
+import { BRANDING_KEY as REPORT_BRANDING_KEY, DEFAULT_BRANDING } from './Snapshot';
 import { scoreEmergencyFund, scoreDebtPayoff, scoreNetWorthTrend, scoreFireProgress, computeHealthScore } from '../financialHealthScore';
 import { detectNetWorthMilestones, detectDebtClearedMilestone, detectEfFundedMilestone, sortMilestones } from '../milestones';
 import { buildNextSteps } from '../nextSteps';
@@ -34,13 +35,18 @@ const BUDGET_SERIES = [{ key: 'surplus', label: 'Monthly Surplus' }];
 // Debt/Emergency Fund/Loan/FIRE below intentionally still use `country` -- their saved
 // figures are raw numbers with no conversion pipeline behind them, so relabeling their
 // symbol without converting the number would misrepresent the amount.
-const Dashboard = ({ country, reportingCountry, onNavigate }) => {
+const Dashboard = ({ country, reportingCountry, onNavigate, userTier }) => {
   const netWorthCountry = reportingCountry || country;
   const [plan, setPlan] = useState(null);
   const [netWorthHistory, setNetWorthHistory] = useState([]);
   const [debtHistory, setDebtHistory] = useState([]);
   const [efHistory, setEfHistory] = useState([]);
   const [budgetHistory, setBudgetHistory] = useState([]);
+  // Enterprise white-label: read-only here too (same reuse as Snapshot's own compliance
+  // text on the flip side -- see MyPlan.jsx's BRANDING_KEY note) so the Dashboard PDF
+  // export carries the same firm details as the client report, not a blank masthead.
+  const [reportBranding, setReportBranding] = useState(DEFAULT_BRANDING);
+  const canWhiteLabel = userTier === 'Enterprise';
 
   useEffect(() => {
     setPlan(readPlan());
@@ -48,6 +54,10 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
     setDebtHistory(readJSONArray(DEBTPAYOFF_HISTORY_KEY));
     setEfHistory(readJSONArray(EMERGENCYFUND_HISTORY_KEY));
     setBudgetHistory(readJSONArray(BUDGET_HISTORY_KEY));
+    try {
+      const stored = JSON.parse(localStorage.getItem(REPORT_BRANDING_KEY) || '{}');
+      setReportBranding({ ...DEFAULT_BRANDING, ...stored });
+    } catch { /* ignore corrupt value, keep defaults */ }
   }, []);
 
   // Same non-numeric guard NetWorth.jsx applies to this same history key (imported
@@ -133,8 +143,15 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
   return (
     <div className="card dashboard">
       <div className="dashboard-print-masthead">
-        <h1>WTS CompoundIQ -- Financial Dashboard</h1>
-        <p>{netWorthCountry.name} · Generated {today}</p>
+        {canWhiteLabel && reportBranding.logoDataUrl && (
+          <img src={reportBranding.logoDataUrl} alt={`${reportBranding.firmName || 'Firm'} logo`} className="dashboard-print-logo" />
+        )}
+        <h1>{canWhiteLabel && reportBranding.firmName ? reportBranding.firmName : 'WTS CompoundIQ'} -- Financial Dashboard</h1>
+        <p>
+          {netWorthCountry.name} · Generated {today}
+          {canWhiteLabel && reportBranding.advisorName && ` · Prepared by ${reportBranding.advisorName}`}
+          {canWhiteLabel && reportBranding.clientName && ` · Prepared for ${reportBranding.clientName}`}
+        </p>
       </div>
 
       <div className="dashboard-header">
@@ -146,6 +163,12 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
           <button className="dashboard-print-btn no-print" onClick={() => window.print()}>🖨️ Print / Save as PDF</button>
         )}
       </div>
+
+      {hasAnything && canWhiteLabel && !reportBranding.firmName && (
+        <p className="dashboard-branding-hint no-print">
+          🏷️ This PDF export can carry your firm's name and logo -- set them up in the Snapshot tab's Client Report Branding section and they'll appear here too.
+        </p>
+      )}
 
       {!hasAnything && (
         <div className="dashboard-empty">
