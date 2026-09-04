@@ -855,7 +855,7 @@ export default function App() {
 
         {activeTab === 'Power Tools' && canAccess('Pro') && (
           <div className="tab-pane active">
-            <PowerTools country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} />
+            <PowerTools country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} canUltra={canAccess('Ultra')} onOpenPricing={() => setShowPricing(true)} />
           </div>
         )}
 

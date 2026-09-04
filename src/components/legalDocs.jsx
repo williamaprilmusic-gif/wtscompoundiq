@@ -181,12 +181,13 @@ export const LEGAL_DOCS = [
                     <td>Pro</td><td>R199</td><td>R1,499</td>
                     <td>Full planning toolkit (Dashboard, Budget, Emergency Fund, Debt
                       Payoff, Loan &amp; Bond, My Plan, Net Worth, Snapshot export, Invest,
-                      Tax Optimizer, Power Tools, Compare)</td>
+                      Tax Optimizer, the core Power Tools calculators, Compare)</td>
                   </tr>
                   <tr>
                     <td>Ultra</td><td>R299</td><td>R2,499</td>
-                    <td>Everything in Pro, plus Monte Carlo, FX Stress Test, AI Wealth Coach,
-                      AI Investment Advisor</td>
+                    <td>Everything in Pro, plus the advanced Power Tools (retirement
+                      drawdown and tax-strategy set), Monte Carlo, FX Stress Test, AI
+                      Wealth Coach, AI Investment Advisor</td>
                   </tr>
                   <tr>
                     <td>Enterprise</td><td colSpan="2">Custom, per seat/firm license</td>

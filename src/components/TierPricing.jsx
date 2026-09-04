@@ -50,7 +50,7 @@ const tiers = [
       'My Plan (save a snapshot, check in on progress later, with reminders)',
       'Goal-based Invest planner (multiple goals at once)',
       'Tax Optimizer, including a retirement fund comparison',
-      'Power Tools — 43 focused calculators (FIRE, Debt Consolidation, Two-Pot Withdrawal, Loan Offer Comparison, RA Tax Optimizer, Sequence Risk, and more)',
+      'Power Tools — 35 focused calculators (FIRE, Debt Consolidation, Home-Buying Costs, Bonus Take-Home, Loan Offer Comparison, and more)',
       'Net Worth tracker with asset allocation, forecast & balance-sheet ratios',
       'Dashboard with Financial Health Score, milestones & PDF export',
       'Financial Snapshot export (print / PDF / CSV)',
@@ -70,6 +70,7 @@ const tiers = [
     description: 'Every scenario tool, plus AI-powered guidance -- on top of Pro.',
     features: [
       'Everything in Pro, plus:',
+      '8 advanced Power Tools — Drawdown, Coast & Barista FIRE, Retirement Income Gap, Pre-Tax & RA Tax Optimizer, Two-Pot Withdrawal, Sequence-of-Returns Risk',
       'Monte Carlo simulation (1,000-path outcome range)',
       'Monte Carlo solvers — contribution OR years to hit a target success probability',
       'Monte Carlo retirement drawdown — how often the pot survives being lived off',

@@ -52,22 +52,28 @@
   color: var(--bg);
 }
 
-/* On narrow screens the grouped Power Tools sub-nav is ~35 pills; wrapped, that
-   is several screens tall before any tool is visible. One scrolling row per
-   group instead. */
+.sub-tab-btn.locked {
+  opacity: 0.62;
+  border-style: dashed;
+}
+.sub-tab-btn.locked:hover {
+  border-color: var(--accent-purple);
+  color: var(--text-soft);
+}
+.sub-tab-lock { font-size: 0.72em; }
+
+/* On narrow screens keep the pills WRAPPING (compact), not in a hidden
+   horizontal scroll -- a scrolled-off pill on a phone reads as "the tool is
+   gone". Smaller padding/font keeps the wrapped block from becoming a wall. */
 @media (max-width: 640px) {
   .sub-tabs-grouped { gap: 12px; }
   .sub-tab-group { gap: 6px; }
   .sub-tabs {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 4px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
+    flex-wrap: wrap;
+    gap: 6px;
   }
   .sub-tab-btn {
-    flex-shrink: 0;
-    padding: 8px 13px;
-    font-size: 0.8rem;
+    padding: 7px 11px;
+    font-size: 0.78rem;
   }
 }

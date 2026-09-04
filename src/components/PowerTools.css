@@ -197,6 +197,29 @@
 .power-freq-table td { color: var(--text-soft); }
 .power-freq-table td:first-child { color: var(--mut); }
 
+.power-tools-tier-hint {
+  margin: -8px 0 4px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-soft);
+  background: color-mix(in srgb, var(--accent-purple) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-purple) 32%, transparent);
+}
+.power-tools-tier-hint-btn {
+  margin-left: 8px;
+  background: var(--accent-purple);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 /* Debt Consolidation: a small stack of editable debt rows. */
 .dc-rows { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
 .dc-row {

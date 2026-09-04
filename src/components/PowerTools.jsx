@@ -1,5 +1,5 @@
 // src/components/PowerTools.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './PowerTools.css';
 import Term from './Term';
 import SubTabs from './SubTabs';
@@ -53,10 +53,14 @@ import { HISTORY_KEY as NETWORTH_HISTORY_KEY, isValidNetWorthEntry } from './Net
 
 // Order here drives the sub-tab bar's order -- keep it matching the order the cards
 // appear in below so "next tab" reads the same as "next card" used to.
+// tier: 'Ultra' marks the advanced retirement & tax-strategy tools -- these stay
+// visible (with a padlock) for Pro users but open the pricing modal instead of the
+// calculator. Everything else is included with Pro. ULTRA_SUB_TAB_KEYS is derived
+// from this list so the two never drift.
 const SUB_TABS = [
   { key: 'fire', label: '🔥 FIRE Number' },
   { key: 'debtVsInvest', label: '⚖️ Debt vs. Invest' },
-  { key: 'drawdown', label: '🏖️ Drawdown' },
+  { key: 'drawdown', label: '🏖️ Drawdown', tier: 'Ultra' },
   { key: 'savings', label: '🏦 Savings Account' },
   { key: 'education', label: '🎓 Education Savings' },
   { key: 'affordability', label: '🏠 Home Affordability' },
@@ -65,7 +69,7 @@ const SUB_TABS = [
   { key: 'dti', label: '📊 Debt-to-Income' },
   { key: 'rentVsBuy', label: '🏘️ Rent vs. Buy' },
   { key: 'futureCost', label: '📈 Future Cost' },
-  { key: 'coastFire', label: '🌴 Coast FIRE' },
+  { key: 'coastFire', label: '🌴 Coast FIRE', tier: 'Ultra' },
   { key: 'savingsRate', label: '⏱️ Savings Rate' },
   { key: 'cardTrap', label: '💳 Card Min. Trap' },
   { key: 'fxConvert', label: '💱 Currency Convert' },
@@ -73,7 +77,7 @@ const SUB_TABS = [
   { key: 'dividend', label: '💵 Dividend Income' },
   { key: 'carCost', label: '🚗 Cost of a Car' },
   { key: 'raiseValue', label: '💹 Value of a Raise' },
-  { key: 'pretaxRA', label: '🧾 Pre-Tax Retirement' },
+  { key: 'pretaxRA', label: '🧾 Pre-Tax Retirement', tier: 'Ultra' },
   { key: 'sinkingFund', label: '🎯 Sinking Fund' },
   { key: 'efRunway', label: '🛟 Fund Runway' },
   { key: 'freqCompare', label: '🔁 Compounding Frequency' },
@@ -83,21 +87,24 @@ const SUB_TABS = [
   { key: 'raiseInflation', label: '🏃 Beat Inflation' },
   { key: 'rateShock', label: '📉 Rate Shock' },
   { key: 'feeDrag', label: '💸 Fee Drag' },
-  { key: 'baristaFire', label: '☕ Barista FIRE' },
+  { key: 'baristaFire', label: '☕ Barista FIRE', tier: 'Ultra' },
   { key: 'effRate', label: '🔢 Effective Rate' },
   { key: 'leaseVsBuy', label: '🚙 Lease vs. Buy' },
-  { key: 'retireGap', label: '📊 Retirement Income Gap' },
+  { key: 'retireGap', label: '📊 Retirement Income Gap', tier: 'Ultra' },
   { key: 'depositTimeline', label: '🕐 Deposit Timeline' },
   { key: 'realReturn', label: '📉 Real Return' },
   { key: 'debtConsol', label: '🔗 Debt Consolidation' },
   { key: 'homeCosts', label: '🏦 Home Buying Costs' },
   { key: 'bonusTax', label: '🎉 Bonus Take-Home' },
-  { key: 'raOptimizer', label: '🧾 RA Tax Optimizer' },
-  { key: 'seqRisk', label: '🎢 Sequence Risk' },
-  { key: 'twoPot', label: '🫙 Two-Pot Withdrawal' },
+  { key: 'raOptimizer', label: '🧾 RA Tax Optimizer', tier: 'Ultra' },
+  { key: 'seqRisk', label: '🎢 Sequence Risk', tier: 'Ultra' },
+  { key: 'twoPot', label: '🫙 Two-Pot Withdrawal', tier: 'Ultra' },
   { key: 'loanCompare', label: '⚖️ Loan Offer Compare' },
   { key: 'subCost', label: '🔁 Subscription Cost' }
 ];
+
+const ULTRA_SUB_TAB_KEYS = new Set(SUB_TABS.filter(t => t.tier === 'Ultra').map(t => t.key));
+const EMPTY_SET = new Set();
 
 // Groups the pills above into labelled categories so the bar stays scannable. Every
 // key must appear exactly once; any that's missed drops into a "More" catch-all in
@@ -111,8 +118,14 @@ const SUB_TAB_GROUPS = [
   { label: 'Money Basics', keys: ['futureCost', 'fxConvert', 'rule72', 'freqCompare', 'effRate', 'realReturn', 'subCost'] }
 ];
 
-const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [] }) => {
+const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [], canUltra = true, onOpenPricing }) => {
   const [activeSubTab, setActiveSubTab] = useState('fire');
+  const lockedSubTabs = canUltra ? EMPTY_SET : ULTRA_SUB_TAB_KEYS;
+  // If the tier drops while an Ultra-only tool is open, fall back to the default so a
+  // downgraded user never keeps a paid calculator on screen.
+  useEffect(() => {
+    if (lockedSubTabs.has(activeSubTab)) setActiveSubTab('fire');
+  }, [lockedSubTabs, activeSubTab]);
   const [annualExpenses, setAnnualExpenses] = useState(0);
   const [withdrawalRate, setWithdrawalRate] = useState(4);
   const [fireSaved, setFireSaved] = useState(false);
@@ -615,7 +628,21 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
         <p>Quick-fire calculators that use your current calculator inputs as the baseline.</p>
       </div>
 
-      <SubTabs tabs={SUB_TABS} groups={SUB_TAB_GROUPS} active={activeSubTab} onChange={setActiveSubTab} ariaLabel="Power Tools calculator" />
+      <SubTabs
+        tabs={SUB_TABS}
+        groups={SUB_TAB_GROUPS}
+        active={activeSubTab}
+        onChange={setActiveSubTab}
+        ariaLabel="Power Tools calculator"
+        lockedKeys={lockedSubTabs}
+        onLockedClick={() => onOpenPricing && onOpenPricing()}
+      />
+      {!canUltra && (
+        <p className="power-tools-tier-hint">
+          🔒 tools are part of the advanced retirement &amp; tax-strategy set on <strong>Ultra</strong> — Drawdown, Coast &amp; Barista FIRE, Pre-Tax &amp; RA Optimizer, Two-Pot, Sequence Risk, Retirement Income Gap.
+          {onOpenPricing && <button type="button" className="power-tools-tier-hint-btn" onClick={onOpenPricing}>See Ultra</button>}
+        </p>
+      )}
 
       {activeSubTab === 'fire' && (
       <div className="power-tool-card">
