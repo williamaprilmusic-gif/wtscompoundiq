@@ -347,6 +347,43 @@
   text-align: right;
 }
 
+.nw-fx-shock-range {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.nw-fx-shock-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 6px;
+  border-radius: 8px;
+  background: var(--raise-02);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font: inherit;
+  text-align: center;
+}
+.nw-fx-shock-cell:hover { border-color: var(--accent); }
+.nw-fx-shock-cell.active {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: var(--accent);
+}
+.nw-fx-shock-cell.baseline strong { color: var(--text); }
+.nw-fx-shock-cell span {
+  font-size: 0.7rem;
+  color: var(--mut);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.nw-fx-shock-cell strong {
+  font-size: 0.9rem;
+}
+.nw-fx-shock-cell strong.positive { color: var(--accent-green); }
+.nw-fx-shock-cell strong.negative { color: var(--accent-red); }
+
 .nw-fx-stress-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

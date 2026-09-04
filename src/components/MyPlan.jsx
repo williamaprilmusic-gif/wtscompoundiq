@@ -12,6 +12,11 @@ const REMINDER_DAYS = 30;
 // several rounds after that list was first written and, like the scenario/report-
 // branding keys already on it, would otherwise silently vanish on a restore.
 export const ADVISER_NOTES_KEY = 'wts_compoundiq_adviser_notes';
+// Not exported/backed up on its own -- purely a display nicety derived from the notes
+// themselves (like Dashboard's "saved X ago" labels), not data worth restoring; if
+// ADVISER_NOTES_KEY round-trips through a backup, this timestamp being stale by however
+// long the restore took is harmless.
+const ADVISER_NOTES_UPDATED_AT_KEY = 'wts_compoundiq_adviser_notes_updated_at';
 // This is a separate, simpler branding store from Snapshot.jsx's BRANDING_KEY (firm/
 // advisor/client name + logo) -- that one existed first and covers the polished client
 // report; this one was added later for the lighter-weight My Plan check-in tool (no
@@ -54,10 +59,14 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
   const [preparedBy, setPreparedBy] = useState('');
   // Enterprise: which client this printed plan is for, e.g. "Prepared by X for Y".
   const [clientName, setClientName] = useState('');
+  const [adviserNotesUpdatedAt, setAdviserNotesUpdatedAt] = useState(null);
 
   const updateAdviserNotes = (value) => {
     setAdviserNotes(value);
     try { localStorage.setItem(ADVISER_NOTES_KEY, value); } catch { /* private mode / quota */ }
+    const now = new Date().toISOString();
+    try { localStorage.setItem(ADVISER_NOTES_UPDATED_AT_KEY, now); } catch { /* private mode / quota */ }
+    setAdviserNotesUpdatedAt(now);
   };
 
   const updateBranding = (patch) => {
@@ -87,6 +96,7 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
     const plan = readPlan();
     if (Object.keys(plan).length > 0) setSnapshot(plan);
     try { setAdviserNotes(localStorage.getItem(ADVISER_NOTES_KEY) || ''); } catch { /* ignore */ }
+    try { setAdviserNotesUpdatedAt(localStorage.getItem(ADVISER_NOTES_UPDATED_AT_KEY) || null); } catch { /* ignore */ }
     try { setCompliance(localStorage.getItem(COMPLIANCE_KEY) || ''); } catch { /* ignore */ }
     try { setPreparedBy(localStorage.getItem(PREPARED_BY_KEY) || ''); } catch { /* ignore */ }
     try { setClientName(localStorage.getItem(CLIENT_NAME_KEY) || ''); } catch { /* ignore */ }
@@ -384,7 +394,12 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
 
       {canAdviserNotes ? (
         <div className="plan-adviser-notes">
-          <h3>🗒️ Adviser Notes <span className="plan-adviser-badge">Enterprise</span></h3>
+          <h3>
+            🗒️ Adviser Notes <span className="plan-adviser-badge">Enterprise</span>
+            {adviserNotesUpdatedAt && (
+              <span className="plan-adviser-updated">last edited {fmtDaysAgo(daysBetween(adviserNotesUpdatedAt))}</span>
+            )}
+          </h3>
           <textarea
             value={adviserNotes}
             onChange={(e) => updateAdviserNotes(e.target.value)}

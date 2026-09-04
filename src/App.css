@@ -324,6 +324,11 @@ body {
   font-weight: 500;
 }
 
+.years-to-grow-date {
+  font-size: 0.74rem;
+  color: var(--mut2);
+}
+
 .form-group input, .form-group select {
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid var(--border);

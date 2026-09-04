@@ -35,6 +35,11 @@ export const isValidDebtHistoryEntry = (h) => Number.isFinite(h.total);
 
 const HISTORY_SERIES = [{ key: 'total', label: 'Total Debt Balance' }];
 
+// "Debt-free by March 2029" reads more concretely than "in 41 months" -- same touch as
+// the Calculator tab's own years-to-grow date hint.
+const monthsFromNowLabel = (months) =>
+  new Date(new Date().setMonth(new Date().getMonth() + months)).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+
 const downloadTemplate = () => {
   downloadCSV('wts-compoundiq-debts-template.csv', [
     ['name', 'balance', 'rate', 'minPayment'],
@@ -287,6 +292,7 @@ const DebtPayoff = ({ country }) => {
             <h3><Term k="avalanche">Avalanche</Term></h3>
             <span className="debt-result-label">Debt-free in</span>
             <strong>{avalanche.reachable ? `${avalanche.months} months` : `50+ years`}</strong>
+            {avalanche.reachable && <span className="debt-result-date">around {monthsFromNowLabel(avalanche.months)}</span>}
             <span className="debt-result-label">Total interest paid</span>
             <strong className="interest-figure">{country.symbol} {Math.round(avalanche.totalInterest).toLocaleString()}</strong>
             <div className="debt-order">
@@ -298,6 +304,7 @@ const DebtPayoff = ({ country }) => {
             <h3><Term k="snowball">Snowball</Term></h3>
             <span className="debt-result-label">Debt-free in</span>
             <strong>{snowball.reachable ? `${snowball.months} months` : `50+ years`}</strong>
+            {snowball.reachable && <span className="debt-result-date">around {monthsFromNowLabel(snowball.months)}</span>}
             <span className="debt-result-label">Total interest paid</span>
             <strong className="interest-figure">{country.symbol} {Math.round(snowball.totalInterest).toLocaleString()}</strong>
             <div className="debt-order">

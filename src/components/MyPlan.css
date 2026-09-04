@@ -96,6 +96,15 @@
   border-radius: 999px;
   padding: 2px 7px;
 }
+
+.plan-adviser-updated {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--mut2);
+}
 .plan-adviser-notes textarea {
   width: 100%;
   resize: vertical;

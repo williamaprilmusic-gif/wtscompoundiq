@@ -551,6 +551,11 @@ export default function App() {
                 <div className="form-group">
                   <label>{t('calculator.yearsToGrow')} (max {MAX_YEARS})</label>
                   <input type="number" min="1" max={MAX_YEARS} value={years} onChange={(e) => setYearsClamped(e.target.value)} />
+                  {years >= 1 && (
+                    <span className="years-to-grow-date">
+                      = around {new Date(new Date().setFullYear(new Date().getFullYear() + years)).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+                    </span>
+                  )}
                 </div>
                 <div className="form-group">
                   <label><Term k="inflation">{t('calculator.inflation')}</Term> (%/yr)</label>

@@ -95,6 +95,11 @@ const BASE_SUB_TABS = [
 // (the FX case additionally covers landing here after the tab itself has disappeared
 // from the bar -- see its call site below). Factored out so the three near-identical
 // blocks this used to be can't drift out of sync with each other.
+// The full range at a glance, alongside the slider -- a viewer shouldn't have to drag
+// through every level themselves to see the worst/best case (same reasoning as the
+// Calculator tab's own rate-sensitivity band).
+const FX_SHOCK_LEVELS = [-20, -10, 0, 10, 20];
+
 const NwTabEmpty = ({ message, onGoToTracker }) => (
   <div className="nw-tab-empty">
     <p>{message}</p>
@@ -227,13 +232,19 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
   // shocking one currency pair at a time.
   const hasForeignCurrencyItems = items.some(i => (i.currency || country.code) !== country.code);
   const [fxShockPct, setFxShockPct] = useState(0);
-  const valueInShocked = (item) => {
-    const base = valueIn(item);
-    return (item.currency || country.code) === country.code ? base : base * (1 + fxShockPct / 100);
+  // Parameterized so both the slider-driven single figure below AND the fixed-level
+  // range table (FX_SHOCK_LEVELS) can reuse the identical calculation instead of two
+  // copies of the same shock math drifting apart.
+  const netWorthAtShock = (shockPct) => {
+    const valueInShocked = (item) => {
+      const base = valueIn(item);
+      return (item.currency || country.code) === country.code ? base : base * (1 + shockPct / 100);
+    };
+    const assets = items.filter(i => i.type === 'asset').reduce((s, i) => s + valueInShocked(i), 0);
+    const debts = items.filter(i => i.type === 'debt').reduce((s, i) => s + valueInShocked(i), 0);
+    return assets - debts;
   };
-  const shockedTotalAssets = items.filter(i => i.type === 'asset').reduce((s, i) => s + valueInShocked(i), 0);
-  const shockedTotalDebts = items.filter(i => i.type === 'debt').reduce((s, i) => s + valueInShocked(i), 0);
-  const shockedNetWorth = shockedTotalAssets - shockedTotalDebts;
+  const shockedNetWorth = netWorthAtShock(fxShockPct);
 
   // Converted once and reused by the delta below, the chart, and the list further down
   // instead of calling convertAmount three times per snapshot. Memoized on
@@ -495,6 +506,24 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
               />
               <span className="nw-fx-stress-pct">{fxShockPct > 0 ? '+' : ''}{fxShockPct}%</span>
             </div>
+
+            <div className="nw-fx-shock-range">
+              {FX_SHOCK_LEVELS.map((lvl) => {
+                const value = netWorthAtShock(lvl);
+                return (
+                  <button
+                    type="button"
+                    key={lvl}
+                    className={`nw-fx-shock-cell ${lvl === fxShockPct ? 'active' : ''} ${lvl === 0 ? 'baseline' : ''}`}
+                    onClick={() => setFxShockPct(lvl)}
+                  >
+                    <span>{lvl > 0 ? '+' : ''}{lvl}%</span>
+                    <strong className={value >= 0 ? 'positive' : 'negative'}>{country.symbol} {Math.round(value).toLocaleString()}</strong>
+                  </button>
+                );
+              })}
+            </div>
+
             <div className="nw-fx-stress-grid">
               <div className="nw-fx-stress-stat">
                 <span>Net Worth at {fxShockPct > 0 ? '+' : ''}{fxShockPct}%</span>
