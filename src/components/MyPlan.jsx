@@ -10,6 +10,7 @@ const REMINDER_DAYS = 30;
 const ADVISER_NOTES_KEY = 'wts_compoundiq_adviser_notes';
 const BRANDING_KEY = 'wts_compoundiq_plan_branding';
 const COMPLIANCE_KEY = 'wts_compoundiq_plan_compliance';
+const PREPARED_BY_KEY = 'wts_compoundiq_plan_prepared_by';
 
 const monthsBetween = (isoDate) => daysBetween(isoDate) / 30.44;
 
@@ -36,6 +37,9 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
   // Enterprise: a custom compliance/disclosure line (e.g. FAIS / FSP wording) appended
   // to the plan and always included in print.
   const [compliance, setCompliance] = useState('');
+  // Enterprise: the adviser's name, shown as "Prepared by X on <date>" under the
+  // branded header (and in print).
+  const [preparedBy, setPreparedBy] = useState('');
 
   const updateAdviserNotes = (value) => {
     setAdviserNotes(value);
@@ -55,11 +59,17 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
     try { localStorage.setItem(COMPLIANCE_KEY, value); } catch { /* private mode / quota */ }
   };
 
+  const updatePreparedBy = (value) => {
+    setPreparedBy(value);
+    try { localStorage.setItem(PREPARED_BY_KEY, value); } catch { /* private mode / quota */ }
+  };
+
   useEffect(() => {
     const plan = readPlan();
     if (Object.keys(plan).length > 0) setSnapshot(plan);
     try { setAdviserNotes(localStorage.getItem(ADVISER_NOTES_KEY) || ''); } catch { /* ignore */ }
     try { setCompliance(localStorage.getItem(COMPLIANCE_KEY) || ''); } catch { /* ignore */ }
+    try { setPreparedBy(localStorage.getItem(PREPARED_BY_KEY) || ''); } catch { /* ignore */ }
     setBranding(readBranding());
 
     const storedReminder = localStorage.getItem(REMINDER_KEY);
@@ -106,10 +116,15 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
   };
 
 
-  const brandingBanner = branding.firm.trim() ? (
+  const brandingBanner = (branding.firm.trim() || preparedBy.trim()) ? (
     <div className="plan-branding">
-      <span className="plan-branding-firm">{branding.firm.trim()}</span>
+      {branding.firm.trim() && <span className="plan-branding-firm">{branding.firm.trim()}</span>}
       {branding.tagline.trim() && <span className="plan-branding-tagline">{branding.tagline.trim()}</span>}
+      {preparedBy.trim() && (
+        <span className="plan-branding-prepared">
+          Prepared by {preparedBy.trim()} · {new Date().toLocaleDateString()}
+        </span>
+      )}
     </div>
   ) : null;
 
@@ -130,6 +145,13 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
           onChange={(e) => updateBranding({ tagline: e.target.value })}
           placeholder="Tagline or licence line (optional)"
           maxLength={120}
+        />
+        <input
+          type="text"
+          value={preparedBy}
+          onChange={(e) => updatePreparedBy(e.target.value)}
+          placeholder='Prepared by (adviser name) — shows "Prepared by X on <today>"'
+          maxLength={80}
         />
       </div>
     </div>

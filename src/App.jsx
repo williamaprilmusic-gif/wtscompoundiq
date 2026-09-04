@@ -36,6 +36,7 @@ import { downloadCSV } from './utils/csv';
 import { uniqueId } from './utils/uniqueId';
 import { readEntitlement, refreshEntitlement, clearEntitlement, consumePaystackRedirect } from './utils/entitlement';
 import { projectionMilestones } from './projectionMilestones';
+import { solveMonthlyForGoal } from './goalSolver';
 
 const THEME_KEY = 'wts_compoundiq_theme';
 const REPORTING_CURRENCY_KEY = 'wts_compoundiq_reporting_currency';
@@ -136,6 +137,7 @@ export default function App() {
   const [otherTaxableIncome, setOtherTaxableIncome] = useState(0);
   const [waitYears, setWaitYears] = useState(5); // "cost of waiting" on the Calculator (Basic tier)
   const [bumpAmount, setBumpAmount] = useState(500); // "what one bump does" on the Calculator (Basic tier)
+  const [targetAmount, setTargetAmount] = useState(0); // "reach this by the target year" goal-seek (Basic tier)
   const hasTaxBrackets = !!country.taxBrackets;
   const effectiveTaxBrackets = (progressiveTax && hasTaxBrackets) ? country.taxBrackets : null;
 
@@ -334,6 +336,19 @@ export default function App() {
     ? calculateCompoundInterest({ ...rateBandParams, rate, monthly: monthly + effBump }).finalBalance
     : results.finalBalance;
   const bumpGain = bumpedFinal - results.finalBalance;
+
+  // "To have R X by year N, save about R Y/month" -- the inverse question, solved with
+  // the same engine every goal calculator in the app uses. Only when the user has typed
+  // a target above what the starting amount alone would already reach.
+  const showTargetSolve = targetAmount > 0 && years >= 1 && targetAmount > (results.yearlyData[0]?.balance ?? initial);
+  const targetMonthly = showTargetSolve
+    ? solveMonthlyForGoal({
+        startingAmount: initial, rate, years, inflation, taxRate: country.taxRate, wrapper,
+        goalAmount: targetAmount, compoundFrequency,
+        annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit,
+        contributionIncreaseRate: contributionIncrease
+      })
+    : null;
 
   // "Cost of waiting" -- same plan against the same target date, started `waitYears`
   // later (fewer compounding years). A free-tier nudge shown under the result.
@@ -605,6 +620,40 @@ export default function App() {
                 <div className="result-item">
                   <span><Term k="realValue">{t('calculator.realValue')}</Term> {t('calculator.todaysMoney')}</span>
                   <strong style={{ color: 'var(--mut)' }}>{country.symbol} {(results.yearlyData[results.yearlyData.length - 1]?.realValue ?? 0).toLocaleString()}</strong>
+                </div>
+              </div>
+
+              <div className="target-seek">
+                <label htmlFor="target-amount">Aim for a number</label>
+                <div className="target-seek-body">
+                  <span>
+                    To have {country.symbol}{' '}
+                    <input
+                      id="target-amount"
+                      type="number"
+                      min="0"
+                      step="100000"
+                      placeholder="target"
+                      value={targetAmount || ''}
+                      onChange={(e) => setTargetAmount(Number(e.target.value))}
+                    />{' '}
+                    in {years} year{years === 1 ? '' : 's'}
+                    {targetMonthly != null ? (
+                      <>
+                        , you'd save about <strong>{country.symbol} {Math.round(targetMonthly).toLocaleString()}/month</strong>
+                        {monthly > 0 && (
+                          Math.abs(targetMonthly - monthly) < 1
+                            ? ' — right on your current plan.'
+                            : targetMonthly > monthly
+                              ? ` — ${country.symbol}${Math.round(targetMonthly - monthly).toLocaleString()} more than your current ${country.symbol}${monthly.toLocaleString()}/month.`
+                              : ` — ${country.symbol}${Math.round(monthly - targetMonthly).toLocaleString()} less than your current ${country.symbol}${monthly.toLocaleString()}/month; you're ahead of this goal.`
+                        )}
+                        {monthly === 0 && '.'}
+                      </>
+                    ) : (
+                      targetAmount > 0 ? ' — already covered by your starting amount alone.' : '.'
+                    )}
+                  </span>
                 </div>
               </div>
 

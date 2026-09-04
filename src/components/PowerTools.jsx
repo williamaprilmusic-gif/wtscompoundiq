@@ -48,6 +48,8 @@ import { compareLoanOffers } from '../loanComparison';
 import { subscriptionCost } from '../subscriptionCost';
 import { analysePayback } from '../paybackPeriod';
 import { compareBuyCashVsFinance } from '../buyCashVsFinance';
+import { compareFundFees } from '../fundFeeComparison';
+import { contractorRate } from '../contractorRate';
 import { readJSONArray } from '../utils/storage';
 import { convertAmount, countriesData } from '../data/countries';
 import { DEBTS_KEY } from './DebtPayoff';
@@ -104,7 +106,9 @@ const SUB_TABS = [
   { key: 'loanCompare', label: '⚖️ Loan Offer Compare' },
   { key: 'subCost', label: '🔁 Subscription Cost' },
   { key: 'payback', label: '☀️ Big-Purchase Payback' },
-  { key: 'cashVsFinance', label: '💳 Cash vs. Finance' }
+  { key: 'cashVsFinance', label: '💳 Cash vs. Finance' },
+  { key: 'fundFees', label: '⚖️ Fund Fee Face-off' },
+  { key: 'contractRate', label: '🧑‍💻 Contractor Rate' }
 ];
 
 const ULTRA_SUB_TAB_KEYS = new Set(SUB_TABS.filter(t => t.tier === 'Ultra').map(t => t.key));
@@ -114,11 +118,11 @@ const EMPTY_SET = new Set();
 // key must appear exactly once; any that's missed drops into a "More" catch-all in
 // SubTabs rather than vanishing.
 const SUB_TAB_GROUPS = [
-  { label: 'Retire & Financial Independence', keys: ['fire', 'coastFire', 'baristaFire', 'savingsRate', 'drawdown', 'pretaxRA', 'dividend', 'feeDrag', 'retireGap', 'seqRisk', 'twoPot'] },
+  { label: 'Retire & Financial Independence', keys: ['fire', 'coastFire', 'baristaFire', 'savingsRate', 'drawdown', 'pretaxRA', 'dividend', 'feeDrag', 'fundFees', 'retireGap', 'seqRisk', 'twoPot'] },
   { label: 'Debt & Credit', keys: ['debtVsInvest', 'dti', 'cardTrap', 'debtConsol', 'loanCompare', 'cashVsFinance'] },
   { label: 'Property & Big Purchases', keys: ['affordability', 'rentVsBuy', 'carCost', 'leaseVsBuy', 'depositTimeline', 'homeCosts', 'payback', 'rateShock'] },
   { label: 'Saving for a Goal', keys: ['savings', 'education', 'sinkingFund', 'efRunway', 'insurance', 'windfall'] },
-  { label: 'Income & Tax', keys: ['salary', 'raiseValue', 'bonusTax', 'raOptimizer', 'budgetRule', 'marginalTax', 'raiseInflation'] },
+  { label: 'Income & Tax', keys: ['salary', 'raiseValue', 'bonusTax', 'raOptimizer', 'contractRate', 'budgetRule', 'marginalTax', 'raiseInflation'] },
   { label: 'Money Basics', keys: ['futureCost', 'fxConvert', 'rule72', 'freqCompare', 'effRate', 'realReturn', 'subCost'] }
 ];
 
@@ -381,6 +385,21 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const [cfTerm, setCfTerm] = useState(5);
   const [cfReturn, setCfReturn] = useState(rate || 8);
 
+  const [ffInitial, setFfInitial] = useState(0);
+  const [ffMonthly, setFfMonthly] = useState(0);
+  const [ffYears, setFfYears] = useState(30);
+  const [ffGrossA, setFfGrossA] = useState(rate || 9);
+  const [ffTerA, setFfTerA] = useState(0.5);
+  const [ffGrossB, setFfGrossB] = useState(rate || 9);
+  const [ffTerB, setFfTerB] = useState(1.5);
+
+  const [crTakeHome, setCrTakeHome] = useState(0);
+  const [crTaxRate, setCrTaxRate] = useState(country.taxRate);
+  const [crBenefits, setCrBenefits] = useState(12);
+  const [crWeeks, setCrWeeks] = useState(46);
+  const [crHours, setCrHours] = useState(40);
+  const [crUtil, setCrUtil] = useState(80);
+
   const safeWithdrawalRate = withdrawalRate > 0 ? withdrawalRate : 0.01;
   const fireNumber = annualExpenses / (safeWithdrawalRate / 100);
   const yearsToFire = yearsToReachTarget({
@@ -633,6 +652,17 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
   const cashVsFinance = compareBuyCashVsFinance({
     price: cfPrice, deposit: cfDeposit, financeRate: cfRate, financeTermYears: cfTerm, investReturnPct: cfReturn
+  });
+
+  const fundFees = compareFundFees({
+    initial: ffInitial, monthly: ffMonthly, years: ffYears, contributionIncreaseRate: contributionIncrease,
+    fundA: { grossReturn: ffGrossA, ter: ffTerA },
+    fundB: { grossReturn: ffGrossB, ter: ffTerB }
+  });
+
+  const contractRate = contractorRate({
+    targetAnnualTakeHome: crTakeHome, taxRatePct: crTaxRate, benefitsLoadingPct: crBenefits,
+    billableWeeksPerYear: crWeeks, billableHoursPerWeek: crHours, utilisationPct: crUtil
   });
 
   const saveFirePlan = () => {
@@ -2886,6 +2916,122 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
             </div>
             <p className="power-tool-note">
               Both paths end owning the same asset, so its value cancels — this compares only the money. Break-even is roughly when your return equals the finance rate ({cashVsFinance.breakEvenReturnApprox}%). Ignores initiation fees and any cash-price discount a dealer might give.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'fundFees' && (
+      <div className="power-tool-card">
+        <h3>⚖️ Fund Fee Face-off</h3>
+        <p className="power-tool-desc">Two funds, head to head, over your contribution schedule. A half-percent of annual fee looks trivial; over decades it quietly compounds into a real gap. Distinct from Fee Drag, which compares one fund against a zero-fee ideal.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Starting Amount ({country.symbol})</label>
+            <input type="number" min="0" step="10000" value={ffInitial} onChange={(e) => setFfInitial(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Monthly Contribution ({country.symbol})</label>
+            <input type="number" min="0" step="500" value={ffMonthly} onChange={(e) => setFfMonthly(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Years</label>
+            <input type="number" min="1" max="60" step="1" value={ffYears} onChange={(e) => setFfYears(Number(e.target.value))} />
+          </div>
+        </div>
+        <div className="dc-rows">
+          <div className="dc-row">
+            <span className="dc-row-num">A</span>
+            <div className="form-group"><label>Gross return (%/yr)</label><input type="number" step="0.1" value={ffGrossA} onChange={(e) => setFfGrossA(Number(e.target.value))} /></div>
+            <div className="form-group"><label>Total fee / TER (%/yr)</label><input type="number" min="0" step="0.05" value={ffTerA} onChange={(e) => setFfTerA(Number(e.target.value))} /></div>
+          </div>
+          <div className="dc-row">
+            <span className="dc-row-num">B</span>
+            <div className="form-group"><label>Gross return (%/yr)</label><input type="number" step="0.1" value={ffGrossB} onChange={(e) => setFfGrossB(Number(e.target.value))} /></div>
+            <div className="form-group"><label>Total fee / TER (%/yr)</label><input type="number" min="0" step="0.05" value={ffTerB} onChange={(e) => setFfTerB(Number(e.target.value))} /></div>
+          </div>
+        </div>
+        {(ffInitial > 0 || ffMonthly > 0) && (
+          <>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Fund A ends with</span>
+                <strong className={fundFees.winner === 'A' ? 'positive' : ''}>{country.symbol} {Math.round(fundFees.a.finalBalance).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Fund B ends with</span>
+                <strong className={fundFees.winner === 'B' ? 'positive' : ''}>{country.symbol} {Math.round(fundFees.b.finalBalance).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Gap after {Math.round(ffYears)} yrs</span>
+                <strong className="warn">{country.symbol} {Math.round(fundFees.endingGap).toLocaleString()}</strong>
+              </div>
+            </div>
+            <div className={`power-verdict ${fundFees.winner === 'tie' ? 'neutral' : 'invest'}`}>
+              {fundFees.winner === 'tie'
+                ? 'The two funds land in the same place — decide on tracking quality, spread, or provider.'
+                : `Fund ${fundFees.winner} ends about ${country.symbol} ${Math.round(fundFees.endingGap).toLocaleString()} ahead over ${Math.round(ffYears)} years. Fund A hands over ${country.symbol} ${Math.round(fundFees.a.feeCost).toLocaleString()} in fees along the way vs Fund B's ${country.symbol} ${Math.round(fundFees.b.feeCost).toLocaleString()}.`}
+            </div>
+            <p className="power-tool-note">
+              Net return = gross − TER, run through the app's compounding engine, pre-tax / in a wrapper. "Fee cost" is each fund vs a zero-TER version of itself. Real funds also differ on tracking error, bid-offer spread, and platform fees — fold those into the TER to compare fairly.
+            </p>
+          </>
+        )}
+      </div>
+      )}
+
+      {activeSubTab === 'contractRate' && (
+      <div className="power-tool-card">
+        <h3>🧑‍💻 Contractor / Freelance Rate</h3>
+        <p className="power-tool-desc">Thinking of going independent? A contractor gives up paid leave, sick days, and benefits, pays their own tax, and can't bill every hour. This works your target take-home back up into the rate you'd need to charge.</p>
+        <div className="power-form">
+          <div className="form-group">
+            <label>Target Take-Home ({country.symbol}/yr)</label>
+            <input type="number" min="0" step="20000" value={crTakeHome} onChange={(e) => setCrTakeHome(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Your Tax Rate (%)</label>
+            <input type="number" min="0" max="60" step="1" value={crTaxRate} onChange={(e) => setCrTaxRate(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Benefits to Self-Fund (% of pay)</label>
+            <input type="number" min="0" max="50" step="1" value={crBenefits} onChange={(e) => setCrBenefits(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Billable Weeks / Year</label>
+            <input type="number" min="1" max="52" step="1" value={crWeeks} onChange={(e) => setCrWeeks(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Hours / Week</label>
+            <input type="number" min="1" max="80" step="1" value={crHours} onChange={(e) => setCrHours(Number(e.target.value))} />
+          </div>
+          <div className="form-group">
+            <label>Utilisation (% of hours billed)</label>
+            <input type="number" min="1" max="100" step="5" value={crUtil} onChange={(e) => setCrUtil(Number(e.target.value))} />
+          </div>
+        </div>
+        {crTakeHome > 0 && (
+          <>
+            <div className="power-verdict-grid">
+              <div className="power-stat">
+                <span>Rate you'd charge</span>
+                <strong className="positive">{country.symbol} {Math.round(contractRate.hourlyRate).toLocaleString()}/hr</strong>
+              </div>
+              <div className="power-stat">
+                <span>Roughly per day</span>
+                <strong>{country.symbol} {Math.round(contractRate.dailyRate).toLocaleString()}</strong>
+              </div>
+              <div className="power-stat">
+                <span>Revenue you need</span>
+                <strong>{country.symbol} {Math.round(contractRate.grossRevenueNeeded).toLocaleString()}/yr</strong>
+              </div>
+            </div>
+            <div className="power-verdict invest">
+              To take home {country.symbol} {Math.round(crTakeHome).toLocaleString()} you'd need to bill about <strong>{country.symbol} {Math.round(contractRate.hourlyRate).toLocaleString()}/hour</strong> ({country.symbol} {Math.round(contractRate.dailyRate).toLocaleString()}/day) across {Math.round(contractRate.billableHoursPerYear).toLocaleString()} billable hours a year — roughly {(contractRate.upliftVsNaive * 100).toFixed(0)}% more than a naive "salary ÷ 2,080 hours" rate, which is the cost of leave, bench time, and self-funded overhead.
+            </div>
+            <p className="power-tool-note">
+              Tax rate is your effective rate on gross (income tax plus any self-paid contributions). Benefits loading covers a pension match, medical subsidy, and insurance you'd now pay yourself. Doesn't model VAT registration, a company structure, or provisional-tax timing. Not advice.
             </p>
           </>
         )}

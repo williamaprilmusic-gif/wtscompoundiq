@@ -543,6 +543,39 @@ body {
   text-align: center;
 }
 
+/* Goal-seek: "to have R X by year N, save R Y/month". Blue/accent tint. */
+.target-seek {
+  margin: -8px 0 22px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+.target-seek > label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.target-seek-body {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--mut);
+}
+.target-seek-body strong { color: var(--text); }
+.target-seek-body input {
+  width: 120px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
 /* Encouraging mirror of .cost-of-waiting -- same layout, green tint. */
 .bump-nudge {
   margin: -8px 0 22px;
@@ -1048,6 +1081,8 @@ body {
 
   .cost-of-waiting { margin: -6px 0 22px; padding: 12px 14px; }
   .bump-nudge { margin: -6px 0 22px; padding: 12px 14px; }
+  .target-seek { margin: -6px 0 22px; padding: 12px 14px; }
+  .target-seek-body input { width: 100px; }
   .rate-band-cells { grid-template-columns: 1fr; }
   .split-bar-legend { font-size: 0.76rem; }
 

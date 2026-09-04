@@ -5,6 +5,7 @@ import { calculateCompoundInterest } from '../engine';
 import { RETURN_MODELS } from '../data/historicalReturns';
 import Term from './Term';
 import FanChart from './FanChart';
+import { worstHistoricalWindow, projectThroughSequence } from '../worstHistoricalWindow';
 
 const NUM_SIMULATIONS = 1000;
 
@@ -189,6 +190,20 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
   const [isSolvingWithdrawal, setIsSolvingWithdrawal] = useState(false);
 
   const activeHistoricalModel = RETURN_MODELS.find(m => m.key === historicalModelKey) || RETURN_MODELS[0];
+
+  // Historical mode resamples years independently, which shuffles real crash-then-
+  // recovery sequences apart. This puts one genuinely bad *ordered* run back in view:
+  // the worst contiguous window of the chosen benchmark over the plan's horizon, and
+  // what the plan would actually have ended with living through it.
+  const worstWindow = returnModel === 'historical'
+    ? worstHistoricalWindow(activeHistoricalModel.data, years)
+    : null;
+  const worstWindowOutcome = worstWindow
+    ? projectThroughSequence({
+        initial, monthly,
+        returnsPct: activeHistoricalModel.data.slice(worstWindow.startIndex, worstWindow.startIndex + worstWindow.windowYears)
+      })
+    : null;
 
   const handleRun = () => {
     // years is capped app-wide (see App.jsx's MAX_YEARS) so 1,000 simulated paths never
@@ -406,6 +421,19 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
           tails come from actual market history instead of a smooth bell curve. Figures are illustrative/approximate,
           not a live data feed, and no single benchmark is necessarily representative of {country.name} or of the future.
         </p>
+      )}
+
+      {worstWindow && worstWindowOutcome && (
+        <div className="mc-worst-window">
+          <span className="mc-worst-window-label">Your plan through history's worst {worstWindow.windowYears}-year stretch</span>
+          <p>
+            The weakest run of {worstWindow.windowYears} straight years in the {activeHistoricalModel.label} data compounded to
+            just <strong>{worstWindow.growthMultiple.toFixed(2)}×</strong> ({worstWindow.annualisedReturnPct.toFixed(1)}%/yr).
+            Living straight through it, your plan would have gone in {country.symbol}{Math.round(worstWindowOutcome.totalContributed).toLocaleString()} of contributions
+            and come out with about <strong>{country.symbol}{Math.round(worstWindowOutcome.finalBalance).toLocaleString()}</strong>.
+            The resampled cloud above smooths sequences like this apart — this is one real, ordered bad case for contrast.
+          </p>
+        </div>
       )}
 
       {hasWrapper && (

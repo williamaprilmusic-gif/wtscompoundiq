@@ -30,7 +30,8 @@ const tiers = [
       'Rate-sensitivity band (±2% on every projection)',
       'Milestone pacing — "you reach R1m in year 18"',
       'Deposits vs. compound-growth split of every result',
-      '"One small bump" nudge — what an extra R500/mo is worth'
+      '"One small bump" nudge — what an extra R500/mo is worth',
+      'Goal seek — "to have R2m in 20 years, save R X/month"'
     ],
     cta: 'Downgrade to Basic',
     highlighted: false
@@ -51,7 +52,7 @@ const tiers = [
       'My Plan (save a snapshot, check in on progress later, with reminders)',
       'Goal-based Invest planner (multiple goals at once)',
       'Tax Optimizer, including a retirement fund comparison',
-      'Power Tools — 37 focused calculators (FIRE, Debt Consolidation, Home-Buying Costs, Big-Purchase Payback, Cash vs. Finance, and more)',
+      'Power Tools — 39 focused calculators (FIRE, Home-Buying Costs, Big-Purchase Payback, Fund Fee Face-off, Contractor Rate, and more)',
       'Net Worth tracker with asset allocation, forecast & balance-sheet ratios',
       'Dashboard with Financial Health Score, milestones & PDF export',
       'Financial Snapshot export (print / PDF / CSV)',
@@ -77,6 +78,7 @@ const tiers = [
       'Monte Carlo retirement drawdown — how often the pot survives being lived off',
       'Monte Carlo safe-withdrawal solver — the year-1 draw the pot survives',
       'Monte Carlo goal-timeline — your odds of being there by year 5, 10, 15…',
+      "Monte Carlo history's-worst-window — your plan through the worst real stretch",
       'FX stress test for Net Worth (offshore holdings)',
       'AI Wealth Coach (Step 1-3 planner)',
       'AI Investment Advisor (personalized recommendations)'
@@ -94,6 +96,7 @@ const tiers = [
       'White-label branding (your own logo)',
       'Branded plan header — firm name & tagline on every client plan and printout',
       'Custom compliance / FSP disclosure line on printed plans',
+      '"Prepared by [adviser] on [date]" line on client plans',
       'Adviser notes on client plans',
       'Bulk user management & admin dashboard',
       'API access for external integrations',
