@@ -80,6 +80,13 @@
 .growth-chart-endpoint.balance { fill: var(--chart-green); }
 .growth-chart-endpoint.real { fill: var(--chart-blue); }
 
+.growth-chart-milestone {
+  fill: var(--accent-yellow, #fbbf24);
+  stroke: var(--chart-surface);
+  stroke-width: 1.5;
+  cursor: default;
+}
+
 .growth-chart-crosshair {
   stroke: var(--mut);
   stroke-width: 1;

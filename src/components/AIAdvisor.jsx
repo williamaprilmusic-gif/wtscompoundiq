@@ -1,22 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './AIAdvisor.css';
+import { readPlan } from '../utils/planStorage';
 
 const AIAdvisor = ({ country, profile, onProfileUpdate }) => {
   const [advice, setAdvice] = useState(null);
   const [loading, setLoading] = useState(false);
+  // Emergency Fund's own saved plan (if any) -- read once on mount, same pattern
+  // Dashboard/My Plan use, so a recommendation below can reflect it without asking the
+  // user to re-enter numbers already saved elsewhere in the app.
+  const [savedEfPlan, setSavedEfPlan] = useState(null);
+
+  useEffect(() => {
+    const plan = readPlan();
+    if (plan?.emergencyFund) setSavedEfPlan(plan.emergencyFund);
+  }, []);
 
   const generateAdvice = () => {
     setLoading(true);
-    
+
     // Simulate AI processing
     setTimeout(() => {
-      const recommendations = generateRecommendations(country, profile);
+      const recommendations = generateRecommendations(country, profile, savedEfPlan);
       setAdvice(recommendations);
       setLoading(false);
     }, 2000);
   };
 
-  const generateRecommendations = (country, profile) => {
+  const generateRecommendations = (country, profile, efPlan) => {
     const recommendations = [];
     
     // Age-based advice
@@ -93,6 +103,25 @@ const AIAdvisor = ({ country, profile, onProfileUpdate }) => {
         strategy: "Put spare cash toward the highest-rate balance before increasing contributions elsewhere",
         color: "#ef4444"
       });
+    }
+
+    // Emergency Fund-based advice: reuses the target/currentSavings saved on the
+    // Emergency Fund tab, rather than asking for a third copy of these numbers. Only
+    // fires when there's an actual saved plan (never invents a target from nothing),
+    // and stays quiet once it's funded -- consistent with milestones.js's
+    // detectEfFundedMilestone/financialHealthScore.js's scoreEmergencyFund treating
+    // "no plan saved" and "plan saved and funded" as two different, non-alarming states.
+    if (efPlan && efPlan.targetAmount > 0) {
+      const fundedPct = Math.min(100, (efPlan.currentSavings / efPlan.targetAmount) * 100);
+      if (fundedPct < 100) {
+        recommendations.push({
+          type: "safety-net",
+          title: "🧱 Build Your Safety Net First",
+          message: `Your saved Emergency Fund plan is ${fundedPct.toFixed(0)}% funded (${country.symbol} ${Math.round(efPlan.currentSavings).toLocaleString()} of ${country.symbol} ${Math.round(efPlan.targetAmount).toLocaleString()}). Most guidance treats a full emergency fund as the foundation to build before increasing investment risk.`,
+          strategy: "Prioritize monthly contributions to the emergency fund until it's fully funded, then redirect that amount to investing",
+          color: "#3b82f6"
+        });
+      }
     }
 
     return recommendations;

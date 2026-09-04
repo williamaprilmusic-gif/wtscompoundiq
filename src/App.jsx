@@ -783,7 +783,7 @@ export default function App() {
               )}
               </div>
 
-              <GrowthChart yearlyData={results.yearlyData} initial={initial} symbol={country.symbol} />
+              <GrowthChart yearlyData={results.yearlyData} initial={initial} symbol={country.symbol} milestones={balanceMilestones} />
 
               <button className="share-plan-btn" onClick={shareCurrentPlan}>
                 {shareLinkCopied ? t('calculator.linkCopied') : t('calculator.sharePlan')}

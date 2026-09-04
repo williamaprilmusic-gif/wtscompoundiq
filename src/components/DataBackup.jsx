@@ -8,7 +8,14 @@ import { FLUSH_EVENT } from '../utils/usePersistedState';
 import { HISTORY_KEY as NETWORTH_HISTORY_KEY } from './NetWorth';
 import { HISTORY_KEY as DEBTPAYOFF_HISTORY_KEY, EXTRA_KEY as DEBTPAYOFF_EXTRA_KEY } from './DebtPayoff';
 import { HISTORY_KEY as EMERGENCYFUND_HISTORY_KEY } from './EmergencyFund';
-import { BUDGET_ITEMS_KEY } from '../budgetEngine';
+import { BUDGET_ITEMS_KEY, BUDGET_HISTORY_KEY } from '../budgetEngine';
+import {
+  ADVISER_NOTES_KEY as MYPLAN_ADVISER_NOTES_KEY,
+  BRANDING_KEY as MYPLAN_BRANDING_KEY,
+  COMPLIANCE_KEY as MYPLAN_COMPLIANCE_KEY,
+  PREPARED_BY_KEY as MYPLAN_PREPARED_BY_KEY,
+  CLIENT_NAME_KEY as MYPLAN_CLIENT_NAME_KEY
+} from './MyPlan';
 
 const ALL_STORAGE_KEYS = [
   'wts_compoundiq_tier',
@@ -36,7 +43,17 @@ const ALL_STORAGE_KEYS = [
   // drop them).
   'wts_compoundiq_scenario_a',
   'wts_compoundiq_scenario_b',
-  'wts_compoundiq_report_branding'
+  'wts_compoundiq_report_branding',
+  // Budget's surplus history (added alongside its "Log This Month's Surplus" feature),
+  // and My Plan's adviser notes / Enterprise practice branding, compliance line,
+  // prepared-by, and client name -- all added well after this list existed, and all
+  // just as real to lose on a restore as anything else here.
+  BUDGET_HISTORY_KEY,
+  MYPLAN_ADVISER_NOTES_KEY,
+  MYPLAN_BRANDING_KEY,
+  MYPLAN_COMPLIANCE_KEY,
+  MYPLAN_PREPARED_BY_KEY,
+  MYPLAN_CLIENT_NAME_KEY
 ];
 
 const exportData = () => {

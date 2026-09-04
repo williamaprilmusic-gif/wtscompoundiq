@@ -29,6 +29,7 @@ const tiers = [
       'Cost-of-waiting projection',
       'Rate-sensitivity band (±2% on every projection)',
       'Doubling-time fact (Rule of 72) for every rate you enter',
+      'Milestone markers plotted directly on the growth chart',
       'Milestone pacing — "you reach R1m in year 18"',
       'Deposits vs. compound-growth split of every result',
       '"One small bump" nudge — what an extra R500/mo is worth',
@@ -55,7 +56,7 @@ const tiers = [
       'Tax Optimizer, including a retirement fund comparison',
       'Power Tools — 41 focused calculators (FIRE, Fund Fee Face-off, Contractor Rate, VAT Calculator, Capital Gains Tax, and more)',
       'Net Worth tracker with asset allocation, forecast & balance-sheet ratios',
-      'Dashboard with Financial Health Score, milestones & PDF export',
+      'Dashboard with Financial Health Score, Budget surplus trend, milestones & PDF export',
       'Financial Snapshot export (print / PDF / CSV)',
       'Side-by-side country comparison tool, plus compare your own plans',
       'Priority support'
@@ -82,7 +83,7 @@ const tiers = [
       "Monte Carlo history's-worst-window — your plan through the worst real stretch",
       'FX stress test for Net Worth (offshore holdings)',
       'AI Wealth Coach (4-step planner: wrapper, contribution boost, extra years, contribution escalation)',
-      'AI Investment Advisor (personalized recommendations, incl. high-interest debt priority)'
+      'AI Investment Advisor (personalized recommendations, incl. debt priority & your saved Emergency Fund status)'
     ],
     cta: 'Upgrade to Ultra',
     highlighted: false

@@ -1,8 +1,8 @@
 // src/components/Dashboard.jsx
 // A single glance at everything else in the app already tracks, instead of having to
-// visit five separate tabs to piece it together. Purely a read-only view over what's
-// already saved in localStorage by Net Worth, Debt Payoff, Emergency Fund, Loan &
-// Bond, and Power Tools -- it doesn't compute anything new.
+// visit six separate tabs to piece it together. Purely a read-only view over what's
+// already saved in localStorage by Net Worth, Budget, Debt Payoff, Emergency Fund,
+// Loan & Bond, and Power Tools -- it doesn't compute anything new.
 import React, { useState, useEffect, useMemo } from 'react';
 import './Dashboard.css';
 import { convertAmount } from '../data/countries';
@@ -13,6 +13,7 @@ import HealthScoreGauge from './HealthScoreGauge';
 import { HISTORY_KEY as NETWORTH_HISTORY_KEY, isValidNetWorthEntry } from './NetWorth';
 import { HISTORY_KEY as DEBTPAYOFF_HISTORY_KEY, isValidDebtHistoryEntry } from './DebtPayoff';
 import { HISTORY_KEY as EMERGENCYFUND_HISTORY_KEY, isValidEfHistoryEntry } from './EmergencyFund';
+import { BUDGET_HISTORY_KEY, isValidBudgetHistoryEntry } from '../budgetEngine';
 import { scoreEmergencyFund, scoreDebtPayoff, scoreNetWorthTrend, scoreFireProgress, computeHealthScore } from '../financialHealthScore';
 import { detectNetWorthMilestones, detectDebtClearedMilestone, detectEfFundedMilestone, sortMilestones } from '../milestones';
 import { buildNextSteps } from '../nextSteps';
@@ -24,6 +25,7 @@ const DEBT_SERIES = [{ key: 'total', label: 'Total Debt Balance' }];
 // Payoff's field name (colored debt-red), but a growing EF balance is the opposite
 // semantic, so this needs its own colorKey rather than inheriting that color.
 const EF_SERIES = [{ key: 'total', label: 'Emergency Fund Balance', colorKey: 'efBalance' }];
+const BUDGET_SERIES = [{ key: 'surplus', label: 'Monthly Surplus' }];
 
 // reportingCountry: the currency Net Worth's own tab currently displays in (see
 // App.jsx) -- independent of `country` (the Calculator scenario's country), since Net
@@ -38,12 +40,14 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
   const [netWorthHistory, setNetWorthHistory] = useState([]);
   const [debtHistory, setDebtHistory] = useState([]);
   const [efHistory, setEfHistory] = useState([]);
+  const [budgetHistory, setBudgetHistory] = useState([]);
 
   useEffect(() => {
     setPlan(readPlan());
     setNetWorthHistory(readJSONArray(NETWORTH_HISTORY_KEY));
     setDebtHistory(readJSONArray(DEBTPAYOFF_HISTORY_KEY));
     setEfHistory(readJSONArray(EMERGENCYFUND_HISTORY_KEY));
+    setBudgetHistory(readJSONArray(BUDGET_HISTORY_KEY));
   }, []);
 
   // Same non-numeric guard NetWorth.jsx applies to this same history key (imported
@@ -54,7 +58,6 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
   // chart's min/max scaling (every point on the line, not just the bad one).
   const validNetWorthHistory = useMemo(() => netWorthHistory.filter(isValidNetWorthEntry), [netWorthHistory]);
   const netWorthEntry = validNetWorthHistory.length > 0 ? validNetWorthHistory[validNetWorthHistory.length - 1] : null;
-  const hasAnything = !!plan?.debt || !!plan?.emergencyFund || !!plan?.loan || !!plan?.fire || !!netWorthEntry;
 
   // Same currency-conversion handling as each source tab's own convertedHistory --
   // a snapshot saved under a different currency gets converted, not relabeled.
@@ -82,7 +85,14 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
     .map(h => ({ date: h.date, total: convertAmount(h.total, h.displayCurrency || country.code, country.code) })),
   [efHistory, country.code]);
 
-  const hasTrends = netWorthPoints.length > 1 || debtPoints.length > 1 || efPoints.length > 1;
+  const budgetPoints = useMemo(() => budgetHistory
+    .filter(isValidBudgetHistoryEntry)
+    .map(h => ({ date: h.date, surplus: convertAmount(h.surplus, h.displayCurrency || country.code, country.code) })),
+  [budgetHistory, country.code]);
+  const lastBudgetEntry = budgetPoints.length > 0 ? budgetPoints[budgetPoints.length - 1] : null;
+  const hasAnything = !!plan?.debt || !!plan?.emergencyFund || !!plan?.loan || !!plan?.fire || !!netWorthEntry || !!lastBudgetEntry;
+
+  const hasTrends = netWorthPoints.length > 1 || debtPoints.length > 1 || efPoints.length > 1 || budgetPoints.length > 1;
 
   // Financial Health Score: one composite number built from whatever's already saved
   // above -- see financialHealthScore.js for why each component is optional (null when
@@ -139,7 +149,7 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
 
       {!hasAnything && (
         <div className="dashboard-empty">
-          <p>Nothing saved yet. Visit Net Worth, Debt Payoff, Emergency Fund, Loan & Bond, or Power Tools and look for "Save Snapshot" / "Save This Plan" -- come back here afterward to see it all in one place.</p>
+          <p>Nothing saved yet. Visit Net Worth, Budget, Debt Payoff, Emergency Fund, Loan & Bond, or Power Tools and look for "Save Snapshot" / "Log This Month's Surplus" / "Save This Plan" -- come back here afterward to see it all in one place.</p>
         </div>
       )}
 
@@ -215,6 +225,26 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
             <h3>💰 Net Worth</h3>
             <p>No snapshot saved yet.</p>
             <button className="dashboard-card-link" onClick={() => onNavigate('Net Worth')}>Set it up →</button>
+          </div>
+        )}
+
+        {lastBudgetEntry ? (
+          <div className="dashboard-card">
+            <div className="dashboard-card-header">
+              <h3>🧮 Budget Surplus</h3>
+              <span className="dashboard-card-meta">as of {fmtDaysAgo(daysBetween(lastBudgetEntry.date))}</span>
+            </div>
+            <strong className={`dashboard-card-value ${lastBudgetEntry.surplus >= 0 ? 'positive' : 'negative'}`}>
+              {lastBudgetEntry.surplus >= 0 ? '' : '−'}{country.symbol} {Math.abs(Math.round(lastBudgetEntry.surplus)).toLocaleString()}/mo
+            </strong>
+            <span className="dashboard-card-sub">{lastBudgetEntry.surplus >= 0 ? 'monthly surplus, last logged' : 'monthly deficit, last logged'}</span>
+            <button className="dashboard-card-link" onClick={() => onNavigate('Budget')}>Open Budget →</button>
+          </div>
+        ) : (
+          <div className="dashboard-card empty">
+            <h3>🧮 Budget Surplus</h3>
+            <p>No snapshot logged yet.</p>
+            <button className="dashboard-card-link" onClick={() => onNavigate('Budget')}>Set it up →</button>
           </div>
         )}
 
@@ -320,6 +350,12 @@ const Dashboard = ({ country, reportingCountry, onNavigate }) => {
             <div className="dashboard-trend-card">
               <span className="dashboard-trend-label">🛟 Emergency Fund</span>
               <SnapshotChart points={efPoints} series={EF_SERIES} symbol={country.symbol} />
+            </div>
+          )}
+          {budgetPoints.length > 1 && (
+            <div className="dashboard-trend-card">
+              <span className="dashboard-trend-label">🧮 Budget Surplus</span>
+              <SnapshotChart points={budgetPoints} series={BUDGET_SERIES} symbol={country.symbol} />
             </div>
           )}
         </div>

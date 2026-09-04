@@ -7,13 +7,17 @@ import { PLAN_STORAGE_KEY, readPlan, loanEffectiveMonthlyPayment, loanEffectiveT
 const REMINDER_KEY = 'wts_compoundiq_reminder_at';
 const REMINDER_NOTIFIED_KEY = 'wts_compoundiq_reminder_notified_at';
 const REMINDER_DAYS = 30;
-const ADVISER_NOTES_KEY = 'wts_compoundiq_adviser_notes';
-const BRANDING_KEY = 'wts_compoundiq_plan_branding';
+// All five exported so DataBackup.jsx's Export/Import Backup can carry an adviser's
+// notes and Enterprise branding along with everything else -- these were added across
+// several rounds after that list was first written and, like the scenario/report-
+// branding keys already on it, would otherwise silently vanish on a restore.
+export const ADVISER_NOTES_KEY = 'wts_compoundiq_adviser_notes';
+export const BRANDING_KEY = 'wts_compoundiq_plan_branding';
 // Exported so Snapshot.jsx's client report can surface the same firm disclosure text
 // an adviser already set here, rather than asking them to type it twice in two places.
 export const COMPLIANCE_KEY = 'wts_compoundiq_plan_compliance';
-const PREPARED_BY_KEY = 'wts_compoundiq_plan_prepared_by';
-const CLIENT_NAME_KEY = 'wts_compoundiq_plan_client_name';
+export const PREPARED_BY_KEY = 'wts_compoundiq_plan_prepared_by';
+export const CLIENT_NAME_KEY = 'wts_compoundiq_plan_client_name';
 
 const monthsBetween = (isoDate) => daysBetween(isoDate) / 30.44;
 

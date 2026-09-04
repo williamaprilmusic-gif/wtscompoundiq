@@ -15,7 +15,12 @@ const PAD_RIGHT = 16;
 const PAD_TOP = 16;
 const PAD_BOTTOM = 30;
 
-const GrowthChart = ({ yearlyData, initial = 0, symbol = '' }) => {
+// milestones (optional): [{ year, amount }] -- the round-number crossings
+// projectionMilestones.js already computed for the text strip above this chart. Marked
+// on the balance line as small diamonds with a native tooltip, so the two features (the
+// text list and the chart) visibly agree rather than living as two disconnected views
+// of the same numbers.
+const GrowthChart = ({ yearlyData, initial = 0, symbol = '', milestones = [] }) => {
   const svgRef = useRef(null);
   const [hoverIdx, setHoverIdx] = useState(null);
 
@@ -25,6 +30,19 @@ const GrowthChart = ({ yearlyData, initial = 0, symbol = '' }) => {
     const base = yearlyData.map(d => ({ year: d.year, balance: d.balance, realValue: d.realValue }));
     return [{ year: 0, balance: initial, realValue: initial }, ...base];
   }, [yearlyData, initial]);
+
+  // Position each milestone at its exact saved balance for that year when the row is
+  // still in range (it always should be -- projectionMilestones.js reads the same
+  // yearlyData this chart does); the milestone's own threshold amount is a safe
+  // fallback rather than dropping the marker if a row is ever missing. Computed before
+  // the early return below so this hook always runs, regardless of how few points there
+  // are (Rules of Hooks -- no hook after a conditional return).
+  const milestonePoints = useMemo(() => milestones
+    .map(m => {
+      const row = points.find(p => p.year === m.year);
+      return row ? { year: m.year, balance: row.balance, amount: m.amount } : null;
+    })
+    .filter(Boolean), [milestones, points]);
 
   if (points.length < 2) return null;
 
@@ -127,6 +145,19 @@ const GrowthChart = ({ yearlyData, initial = 0, symbol = '' }) => {
         {/* End markers + direct end-labels */}
         <circle cx={xScale(points[points.length - 1].year)} cy={yScale(points[points.length - 1].realValue)} r="4" className="growth-chart-endpoint real" />
         <circle cx={xScale(points[points.length - 1].year)} cy={yScale(points[points.length - 1].balance)} r="4" className="growth-chart-endpoint balance" />
+
+        {/* Milestone markers -- round-number crossings, same figures as the text strip
+            above this chart. A native <title> gives a hover tooltip without any of the
+            positioning/flip logic the main crosshair tooltip below needs. */}
+        {milestonePoints.map((m) => (
+          <path
+            key={m.year}
+            d={`M ${xScale(m.year).toFixed(2)} ${(yScale(m.balance) - 5).toFixed(2)} l 5 5 l -5 5 l -5 -5 z`}
+            className="growth-chart-milestone"
+          >
+            <title>{symbol}{Math.round(m.amount).toLocaleString()} in year {m.year}</title>
+          </path>
+        ))}
 
         {/* Crosshair + hover markers */}
         {hover && (
