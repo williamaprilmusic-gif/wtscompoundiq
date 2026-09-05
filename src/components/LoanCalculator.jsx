@@ -25,7 +25,16 @@ const formatYearTooltip = (year) => `Year ${year}`;
 
 const INPUTS_KEY = 'wts_compoundiq_loancalc_inputs';
 const LUMPSUMS_KEY = 'wts_compoundiq_loancalc_lumpsums';
-const DEFAULT_INPUTS = { loanType: 'bond', principal: 0, annualRate: 0, termYears: 20, extraMonthly: 0 };
+const DEFAULT_INPUTS = {
+  loanType: 'bond', principal: 0, annualRate: 0, termYears: 20, extraMonthly: 0,
+  // South African bonds and vehicle finance are commonly quoted as "prime + N%"
+  // rather than a flat rate -- lets someone punch in exactly what their offer letter
+  // says (e.g. "prime + 1%") instead of doing that addition by hand first. Deliberately
+  // starts blank like every other field here, not a guessed "current prime rate" --
+  // prime moves with SARB policy and guessing it risks being wrong the moment it's
+  // typed, unlike this app's other "illustrative, periodically re-verified" figures.
+  quotedAsPrimePlus: false, primeRate: 0, margin: 0
+};
 
 // Term is a sensible starting default per type -- not a rate estimate (rates vary too
 // much by lender, credit profile, and country to guess responsibly), just how long
@@ -79,11 +88,16 @@ const TYPE_TIPS = {
 
 const LoanCalculator = ({ country }) => {
   const [inputs, setInputs] = usePersistedState(INPUTS_KEY, DEFAULT_INPUTS);
-  const { loanType, principal, annualRate, termYears, extraMonthly } = inputs;
+  const { loanType, principal, annualRate, termYears, extraMonthly, quotedAsPrimePlus, primeRate, margin } = inputs;
+  // The rate actually fed to every calculation below -- prime + margin when quoted that
+  // way, otherwise the flat rate typed directly. Toggling the mode doesn't lose either
+  // side's numbers; they're both still stored in `inputs`, just not the one in use.
+  const effectiveAnnualRate = quotedAsPrimePlus ? (Number(primeRate) || 0) + (Number(margin) || 0) : annualRate;
   const [lumpSums, setLumpSums] = usePersistedState(LUMPSUMS_KEY, []);
   const [saved, setSaved] = useState(false);
 
   const updateInput = (field, value) => setInputs(prev => ({ ...prev, [field]: Number(value) }));
+  const toggleQuotedAsPrimePlus = () => setInputs(prev => ({ ...prev, quotedAsPrimePlus: !prev.quotedAsPrimePlus }));
 
   const selectLoanType = (type) => {
     setInputs(prev => ({ ...prev, loanType: type.key, termYears: type.defaultTermYears }));
@@ -97,7 +111,7 @@ const LoanCalculator = ({ country }) => {
   // failure mode (and fix) as Debt Payoff's lump sums.
   const safeLumpSums = lumpSums.map(l => ({ ...l, month: l.month > 0 ? l.month : 1 }));
 
-  const result = calculateLoanAmortization({ principal, annualRate, termYears, extraMonthly, lumpSums: safeLumpSums });
+  const result = calculateLoanAmortization({ principal, annualRate: effectiveAnnualRate, termYears, extraMonthly, lumpSums: safeLumpSums });
   const repaymentMultiple = principal > 0 ? result.totalRepayment / principal : 0;
   const activeType = LOAN_TYPES.find(t => t.key === loanType) || LOAN_TYPES[0];
 
@@ -108,7 +122,7 @@ const LoanCalculator = ({ country }) => {
   // year, reusing the exact same engine as the Extra Monthly Payment field above.
   const biweeklyExtra = result.monthlyPayment / 12;
   const biweeklyResult = (principal > 0 && termYears > 0)
-    ? calculateLoanAmortization({ principal, annualRate, termYears, extraMonthly: biweeklyExtra, lumpSums: safeLumpSums })
+    ? calculateLoanAmortization({ principal, annualRate: effectiveAnnualRate, termYears, extraMonthly: biweeklyExtra, lumpSums: safeLumpSums })
     : null;
 
   // Visualizes the same standard-vs-extra comparison as the callout below it, in a
@@ -150,7 +164,7 @@ const LoanCalculator = ({ country }) => {
       loanType,
       loanTypeLabel: activeType.label,
       principal,
-      annualRate,
+      annualRate: effectiveAnnualRate,
       termYears,
       extraMonthly,
       monthlyPayment: result.monthlyPayment,
@@ -180,15 +194,36 @@ const LoanCalculator = ({ country }) => {
         ))}
       </div>
 
+      <label className="loan-prime-toggle">
+        <input type="checkbox" checked={quotedAsPrimePlus} onChange={toggleQuotedAsPrimePlus} />
+        My rate is quoted as "prime + %" (common for SA bonds and vehicle finance)
+      </label>
+
       <div className="loan-form">
         <div className="form-group">
           <label>Loan Amount ({country.symbol})</label>
           <input type="number" min="0" step="10000" value={principal} onChange={(e) => updateInput('principal', e.target.value)} />
         </div>
-        <div className="form-group">
-          <label>Interest Rate (% per year)</label>
-          <input type="number" min="0" step="0.1" value={annualRate} onChange={(e) => updateInput('annualRate', e.target.value)} />
-        </div>
+        {quotedAsPrimePlus ? (
+          <>
+            <div className="form-group">
+              <label>Prime Rate (%/yr)</label>
+              <input type="number" min="0" step="0.1" value={primeRate} onChange={(e) => updateInput('primeRate', e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label>Margin Above Prime (%)</label>
+              <input type="number" step="0.1" value={margin} onChange={(e) => updateInput('margin', e.target.value)} />
+              {(primeRate > 0 || margin !== 0) && (
+                <span className="loan-prime-effective">= {effectiveAnnualRate.toFixed(2)}%/yr effective</span>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="form-group">
+            <label>Interest Rate (% per year)</label>
+            <input type="number" min="0" step="0.1" value={annualRate} onChange={(e) => updateInput('annualRate', e.target.value)} />
+          </div>
+        )}
         <div className="form-group">
           <label>Loan Term (years)</label>
           <input type="number" min="1" max="50" value={termYears} onChange={(e) => updateInput('termYears', e.target.value)} />

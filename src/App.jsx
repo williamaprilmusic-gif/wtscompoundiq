@@ -39,6 +39,7 @@ import { solveMonthlyForGoal } from './goalSolver';
 import { ruleOf72 } from './ruleOf72';
 import { coastContributionShare } from './coastContributionShare';
 import { withdrawalIncomeEstimate } from './withdrawalIncomeEstimate';
+import { sarsTaxYear } from './sarsTaxYear';
 import { usePersistedState } from './utils/usePersistedState';
 
 const THEME_KEY = 'wts_compoundiq_theme';
@@ -325,6 +326,7 @@ export default function App() {
   };
 
   const verification = getVerificationInfo(country.code);
+  const taxYear = sarsTaxYear();
 
   const results = calculateCompoundInterest({
     initial,
@@ -643,6 +645,11 @@ export default function App() {
                 {verification.date
                   ? `${verification.stale ? '⚠️ ' : '✓ '}${country.name}'s tax rate & wrapper data last verified ${verification.date} (${verification.daysAgo} day${verification.daysAgo === 1 ? '' : 's'} ago)${verification.stale ? ' -- overdue for a recheck' : ''}`
                   : '⚠️ Verification date unknown for this country'}
+              </span>
+
+              <span className="tax-verification sars-tax-year">
+                📅 Current SARS tax year: {taxYear.label} (ends {taxYear.endDate.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}, {taxYear.daysLeft} day{taxYear.daysLeft === 1 ? '' : 's'} left) --
+                your {country.wrapperLabel} annual limit resets on this cycle, not on 1 January.
               </span>
 
               {wrapper && results.wrapperCapExceeded && (

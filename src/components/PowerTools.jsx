@@ -44,6 +44,7 @@ import { bonusTakeHome } from '../bonusTax';
 import { optimiseRaContribution } from '../raOptimizer';
 import { analyseSequenceRisk } from '../sequenceRisk';
 import { analyseTwoPotWithdrawal } from '../twoPotWithdrawal';
+import { sarsTaxYear } from '../sarsTaxYear';
 import { compareLoanOffers } from '../loanComparison';
 import { subscriptionCost } from '../subscriptionCost';
 import { analysePayback } from '../paybackPeriod';
@@ -647,6 +648,12 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
     taxBrackets: (tpProgressive && country.taxBrackets) ? country.taxBrackets : null,
     yearsToRetirement: tpYearsToRetire, growthRate: tpGrowth
   });
+  // The two-pot rules set a R2,000 minimum per savings-pot withdrawal, and only allow
+  // one such withdrawal per tax year -- a real gotcha worth flagging directly against
+  // whatever amount is typed in, using the same SARS tax-year cycle the Calculator
+  // tab's own reminder is built on.
+  const TWO_POT_MIN_WITHDRAWAL = 2000;
+  const tpTaxYear = sarsTaxYear();
 
   const loanCompare = compareLoanOffers({
     amount: lcAmount,
@@ -2681,7 +2688,12 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
             Use {country.name}'s progressive brackets for the tax figure
           </label>
         )}
-        {tpAmount > 0 && (
+        {tpAmount > 0 && tpAmount < TWO_POT_MIN_WITHDRAWAL && (
+          <div className="power-verdict danger">
+            ⚠️ Below the R{TWO_POT_MIN_WITHDRAWAL.toLocaleString()} minimum -- the two-pot rules don't allow a savings-pot withdrawal smaller than this.
+          </div>
+        )}
+        {tpAmount >= TWO_POT_MIN_WITHDRAWAL && (
           <>
             <div className="power-verdict-grid">
               <div className="power-stat">
@@ -2701,7 +2713,7 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
               Withdrawing {country.symbol} {Math.round(tpAmount).toLocaleString()} nets you {country.symbol} {Math.round(twoPot.netCashNow).toLocaleString()} after {twoPot.marginalRatePct.toFixed(0)}% tax — but that money would have grown to about <strong>{country.symbol} {Math.round(twoPot.futureValueForgone).toLocaleString()}</strong> by retirement. Every spendable rand today costs roughly {country.symbol}{twoPot.costPerRandTaken.toFixed(2)} of future retirement money.
             </div>
             <p className="power-tool-note">
-              SA two-pot rules. Tax is at your marginal rate (the withdrawal stacks on your income), not the retirement lump-sum tables. "Value given up" grows the gross amount at {tpGrowth}%/yr for {Math.round(tpYearsToRetire)} years with no further contributions. Ignores any SARS admin fee on the withdrawal. Not advice — dipping in during genuine hardship can still be the right call.
+              SA two-pot rules. Tax is at your marginal rate (the withdrawal stacks on your income), not the retirement lump-sum tables. "Value given up" grows the gross amount at {tpGrowth}%/yr for {Math.round(tpYearsToRetire)} years with no further contributions. Ignores any SARS admin fee on the withdrawal. Only one savings-pot withdrawal is allowed per tax year -- the current one ({tpTaxYear.label}) ends {tpTaxYear.endDate.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}. Not advice — dipping in during genuine hardship can still be the right call.
             </p>
           </>
         )}

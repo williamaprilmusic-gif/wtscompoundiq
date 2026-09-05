@@ -380,6 +380,15 @@ body {
   border-color: rgba(251, 191, 36, 0.25);
 }
 
+/* Neutral/informational, not a "confirmed good" green like the verification pill above --
+   this is just a date fact, not a data-freshness check. */
+.tax-verification.sars-tax-year {
+  color: var(--accent);
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.25);
+  margin-left: 8px;
+}
+
 /* Results Summary */
 .results-summary {
   display: grid;
