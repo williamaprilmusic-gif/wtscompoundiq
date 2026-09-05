@@ -13,6 +13,12 @@ import FAQHelper from './FAQHelper';
 // the wrong checkout price, or drop a tier's price entirely by returning null.
 const formatTierPrice = (value) => typeof value === 'number' ? `R${value.toLocaleString()}` : value;
 
+// Low -> high. Drives whether a card's button reads "Upgrade to X" or "Downgrade to X"
+// relative to the tier the user is currently on -- kept in sync with `tiers` order.
+// Exported so App.jsx can label the checkout screen the same way (upgrade vs downgrade).
+export const TIER_ORDER = ['Basic', 'Pro', 'Ultra'];
+const tierRank = (name) => TIER_ORDER.indexOf(name);
+
 const tiers = [
   {
     name: 'Basic',
@@ -39,7 +45,6 @@ const tiers = [
       '"As retirement income" — your projected balance reframed at a 4% safe withdrawal rate',
       'Current SARS tax year shown at a glance — your TFSA limit resets 1 March, not 1 January'
     ],
-    cta: 'Downgrade to Basic',
     highlighted: false
   },
   {
@@ -66,7 +71,6 @@ const tiers = [
       'Compare your own plans side by side (e.g. contribute more vs. wait 5 years)',
       'Priority support'
     ],
-    cta: 'Upgrade to Pro',
     highlighted: true
   },
   {
@@ -95,7 +99,6 @@ const tiers = [
       'Firm contact info and FSP (FAIS licence) number on the Snapshot report and Dashboard PDF footers',
       'Plan notes with a last-edited timestamp'
     ],
-    cta: 'Upgrade to Ultra',
     highlighted: false
   }
 ];
@@ -116,17 +119,26 @@ export default function TierPricing({ currentTier, onUpgrade, onClose }) {
   // Only Pro/Ultra carry an annual option -- Basic is free, so this toggle only ever
   // changes what those two cards show.
   const [billingPeriod, setBillingPeriod] = useState('monthly');
-  // Two-tap confirm for the downgrade, in place of a window.confirm() the browser can
-  // suppress. Only the Basic card ever reads this.
-  const [confirmingDowngrade, setConfirmingDowngrade] = useState(false);
+  // Two-tap confirm for a downgrade, in place of a window.confirm() the browser can
+  // suppress. Holds the name of the tier whose downgrade is pending confirmation, or
+  // null -- a string (not a boolean) so that when the user is on Ultra and BOTH the
+  // Basic and Pro cards are downgrades, tapping one doesn't put the other into the
+  // "tap again" state too.
+  const [confirmingTier, setConfirmingTier] = useState(null);
+
+  const isDowngrade = (tierName) => tierRank(tierName) < tierRank(currentTier);
+  const ctaFor = (tierName) => `${isDowngrade(tierName) ? 'Downgrade' : 'Upgrade'} to ${tierName}`;
+
+  const resetConfirm = () => setConfirmingTier(null);
 
   const handleUpgrade = (tier) => {
-    // App.jsx branches: Basic downgrades directly (it's free, no payment flow), anything
-    // else goes through checkout. Only pass 'annual' for a tier that actually has one --
-    // Basic ignores the toggle so it should never carry it through.
-    if (tier.name === 'Basic') {
-      if (!confirmingDowngrade) { setConfirmingDowngrade(true); return; }
-      setConfirmingDowngrade(false);
+    // Any downgrade gets the two-tap confirm (you're giving up features either way).
+    // App.jsx then branches: Basic downgrades directly (free, no payment flow),
+    // anything else routes through the checkout for the target tier's price. Only pass
+    // 'annual' for a tier that actually has an annual price.
+    if (isDowngrade(tier.name)) {
+      if (confirmingTier !== tier.name) { setConfirmingTier(tier.name); return; }
+      setConfirmingTier(null);
     }
     onUpgrade(tier.name, tier.priceAnnual ? billingPeriod : 'monthly');
   };
@@ -141,13 +153,13 @@ export default function TierPricing({ currentTier, onUpgrade, onClose }) {
         <div className="billing-toggle" role="group" aria-label="Billing period">
           <button
             className={billingPeriod === 'monthly' ? 'active' : ''}
-            onClick={() => { setBillingPeriod('monthly'); setConfirmingDowngrade(false); }}
+            onClick={() => { setBillingPeriod('monthly'); resetConfirm(); }}
           >
             Monthly
           </button>
           <button
             className={billingPeriod === 'annual' ? 'active' : ''}
-            onClick={() => { setBillingPeriod('annual'); setConfirmingDowngrade(false); }}
+            onClick={() => { setBillingPeriod('annual'); resetConfirm(); }}
           >
             Annual <span className="save-badge">Save up to 33%</span>
           </button>
@@ -171,18 +183,18 @@ export default function TierPricing({ currentTier, onUpgrade, onClose }) {
                   ))}
                 </ul>
                 <button
-                  className={`upgrade-btn ${currentTier === tier.name ? 'current' : ''} ${tier.name === 'Basic' && confirmingDowngrade ? 'confirming' : ''}`}
+                  className={`upgrade-btn ${currentTier === tier.name ? 'current' : ''} ${confirmingTier === tier.name ? 'confirming' : ''}`}
                   onClick={() => handleUpgrade(tier)}
                   disabled={currentTier === tier.name}
                 >
                   {currentTier === tier.name
                     ? 'Active Plan'
-                    : tier.name === 'Basic' && confirmingDowngrade
+                    : confirmingTier === tier.name
                       ? 'Tap again to confirm downgrade'
-                      : tier.cta}
+                      : ctaFor(tier.name)}
                 </button>
-                {tier.name === 'Basic' && confirmingDowngrade && currentTier !== 'Basic' && (
-                  <button type="button" className="downgrade-cancel-btn" onClick={() => setConfirmingDowngrade(false)}>
+                {confirmingTier === tier.name && (
+                  <button type="button" className="downgrade-cancel-btn" onClick={resetConfirm}>
                     Keep {currentTier}
                   </button>
                 )}

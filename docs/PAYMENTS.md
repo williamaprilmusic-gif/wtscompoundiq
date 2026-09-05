@@ -55,10 +55,11 @@ stays demo-only, etc.
 
 1. Create a Paystack account, complete business verification (FICA/KYC), add your SA
    bank account for settlement.
-2. **Plans**: Paystack Dashboard → Plans → create four — Pro monthly (R199), Pro annual
-   (R1,499), Ultra monthly (R299), Ultra annual (R2,499), currency ZAR. Copy each
-   `PLN_…` code into the env vars above. (Keep the amounts in sync with
-   `src/components/TierPricing.jsx`.)
+2. **Plans**: Paystack Dashboard → Plans → create four — Pro monthly (R149), Pro annual
+   (R1,199), Ultra monthly (R249), Ultra annual (R1,999), currency ZAR, billing
+   interval monthly / annually respectively. Copy each `PLN_…` code into the env vars
+   above. (Keep the amounts in sync with `src/components/TierPricing.jsx` — the numeric
+   `price` / `priceAnnual` fields there are the source of truth for what's advertised.)
 3. **Webhook**: Dashboard → Settings → API Keys & Webhooks → set the webhook URL to
    `https://<your-domain>/api/paystack/webhook`.
 4. Deploy. Confirm `GET /api/config` returns `"paymentsMode":"live"`.

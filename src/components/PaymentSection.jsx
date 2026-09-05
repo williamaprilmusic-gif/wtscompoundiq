@@ -21,7 +21,10 @@ const SA_BANKS = [
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function PaymentSection({ tier, price, period = 'monthly', country, onSuccess, onClose }) {
+export default function PaymentSection({ tier, price, period = 'monthly', country, onSuccess, onClose, action = 'Upgrade' }) {
+  // 'Upgrade' or 'Downgrade' -- App.jsx sets it from the current vs. target tier rank so
+  // this screen's wording matches the pricing card the user just clicked.
+  const actioning = `${action.slice(0, -1)}ing…`; // "Upgrading…" / "Downgrading…"
   const bankRedirectAvailable = country?.code === 'za';
   const [processing, setProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('card');
@@ -101,7 +104,7 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
       <div className="payment-overlay">
         <div className="payment-card">
           <button className="close-btn" onClick={onClose} aria-label="Close">&times;</button>
-          <h3>Upgrade to {tier}</h3>
+          <h3>{action} to {tier}</h3>
           <p className="payment-sub">
             <strong>{priceLabel}</strong>, billed {period === 'annual' ? 'yearly' : 'every 30 days'} via Paystack.
             You can cancel anytime from the app.
@@ -134,7 +137,7 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
     <div className="payment-overlay">
       <div className="payment-card">
         <button className="close-btn" onClick={onClose} aria-label="Close">&times;</button>
-        <h3>Demo Upgrade <span className="demo-badge">No Charge</span></h3>
+        <h3>Demo {action} <span className="demo-badge">No Charge</span></h3>
         <p className="payment-sub">You are previewing <strong>{tier}</strong> (normally <strong>{priceLabel}</strong>). This is a demo checkout -- no card is charged and no payment is processed.</p>
 
         <input
@@ -185,7 +188,7 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
           <div id="payment-container"></div>
 
           <button className="btn-pay now" onClick={simulateLocalPayment} disabled={processing}>
-            {processing ? 'Upgrading…' : `Simulate Upgrade (No Charge)`}
+            {processing ? actioning : `Simulate ${action} (No Charge)`}
           </button>
           <small className="secure-note">⚠️ Demo mode: no real payment processor is connected. No card details are collected, validated, or stored.</small>
         </div>

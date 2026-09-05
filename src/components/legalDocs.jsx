@@ -8,12 +8,17 @@
 // position (1..N), so reordering or inserting a section renumbers everything automatically
 // and the "Section N" cross-references in the prose stay the single thing to keep in sync.
 //
-// <Fill> marks a detail the business owner must still supply (company name, registration
-// number, addresses, support emails, effective dates, and the few numbers left as a
-// business call). It renders as a visibly distinct token, not plain text, so nothing
-// here reads as finished when it isn't. This content is a substantive review against
-// POPIA / the CPA / ECTA / GDPR / PAIA -- not a formal legal opinion; the inline
-// "[Flag for counsel: ...]" notes are genuine judgement calls for an admitted attorney.
+// The operating company is Warrr Tech Solutions (trading as WTS CompoundIQ). Its
+// registration number and physical/business address are deliberately NOT stated, at the
+// operator's instruction -- see the [Flag for counsel] notes in Terms Section 1 and
+// Section 8 about the ECTA s43(1) e-commerce disclosure implication.
+//
+// <Fill> marks a detail still to be supplied (support emails, effective dates, the
+// Information Officer's name, and the few numbers left as a business call). It renders
+// as a visibly distinct token, not plain text, so nothing here reads as finished when it
+// isn't. This content is a substantive review against POPIA / the CPA / ECTA / GDPR /
+// PAIA -- not a formal legal opinion; the inline "[Flag for counsel: ...]" notes are
+// genuine judgement calls for an admitted attorney.
 
 import React from 'react';
 
@@ -60,11 +65,17 @@ export const LEGAL_DOCS = [
             <p>
               These Terms &amp; Conditions ("<strong>Terms</strong>") are a binding
               agreement between you ("<strong>you</strong>," "<strong>User</strong>") and{' '}
-              <Fill>[Company Legal Name]</Fill> (Pty) Ltd, registration number{' '}
-              <Fill>[Registration Number]</Fill>, of <Fill>[Registered Business Address]</Fill>{' '}
-              ("<strong>we</strong>," "<strong>us</strong>," "<strong>the Company</strong>"),
-              governing your access to and use of WTS CompoundIQ, including its website,
-              calculators, and any related tools (together, the "<strong>Service</strong>").
+              <strong>Warrr Tech Solutions</strong> ("<strong>we</strong>,"
+              "<strong>us</strong>," "<strong>the Company</strong>"), the operator of
+              WTS CompoundIQ, governing your access to and use of WTS CompoundIQ,
+              including its website, calculators, and any related tools (together, the
+              "<strong>Service</strong>").{' '}
+              <Fill>[Flag for counsel: ECTA s43(1) requires an e-commerce supplier to
+              disclose its legal status, registration number (if registered), and
+              physical/business address. Those are deliberately omitted here at the
+              operator's instruction -- confirm whether a registered address must still be
+              added before the checkout goes live, or whether a trading name + email
+              contact is sufficient for how this Service actually operates.]</Fill>
             </p>
             <p>
               By creating a plan, upgrading to a paid tier, or otherwise using the Service,
@@ -240,8 +251,12 @@ export const LEGAL_DOCS = [
               having to piece it together from the rest of the document:
             </p>
             <ul>
-              <li><strong>Supplier:</strong> full legal name, status, registration number,
-                and address are in Section 1.</li>
+              <li><strong>Supplier:</strong> Warrr Tech Solutions, the operator of WTS
+                CompoundIQ (Section 1); contactable at the email address in Section 23.
+                <Fill>[Flag for counsel: a registration number and physical address are
+                omitted at the operator's instruction -- see the note in Section 1 on
+                whether ECTA s43(1)(a)-(c) still needs them added before checkout goes
+                live.]</Fill></li>
               <li><strong>Main characteristics of the Service:</strong> Section 2.</li>
               <li><strong>Full price</strong>, including VAT where applicable, and no
                 undisclosed charges: Section 6. Prices shown at checkout are VAT-inclusive
@@ -341,7 +356,7 @@ export const LEGAL_DOCS = [
         body: (
           <p>
             The Service, its design, calculators, country tax datasets, and underlying code
-            are owned by <Fill>[Company Legal Name]</Fill> or its licensors and protected by
+            are owned by Warrr Tech Solutions or its licensors and protected by
             copyright and other intellectual property laws. Your subscription grants you a
             personal, non-exclusive, non-transferable license to use the Service for your own
             financial planning — it does not transfer ownership of anything. Numbers and
@@ -419,7 +434,7 @@ export const LEGAL_DOCS = [
           <p>
             To the maximum extent permitted by law, and regardless of the legal theory
             asserted (contract, delict/tort, negligence, strict liability, or otherwise),{' '}
-            <Fill>[Company Legal Name]</Fill> will not be liable for any indirect, incidental,
+            Warrr Tech Solutions will not be liable for any indirect, incidental,
             special, punitive, or consequential loss — including lost profits, lost revenue,
             lost or corrupted data, loss of goodwill, or investment losses — arising from your
             use of, or reliance on, the Service, even if we've been advised of the
@@ -642,8 +657,8 @@ export const LEGAL_DOCS = [
         heading: 'Contact',
         body: (
           <p>
-            Questions about these Terms: <Fill>[legal@wtscompoundiq.co.za]</Fill> ·{' '}
-            <Fill>[Registered Business Address]</Fill>.
+            Questions about these Terms: Warrr Tech Solutions ·{' '}
+            <Fill>[legal@wtscompoundiq.co.za]</Fill>.
           </p>
         )
       }
@@ -694,11 +709,10 @@ export const LEGAL_DOCS = [
         heading: 'Who We Are',
         body: (
           <p>
-            <Fill>[Company Legal Name]</Fill> (Pty) Ltd, registration number{' '}
-            <Fill>[Registration Number]</Fill>, of <Fill>[Registered Business Address]</Fill>,
-            is the responsible party (POPIA) / data controller (GDPR) for the limited data
-            described in this policy. Our Information Officer, registered with the Information
-            Regulator as required by POPIA section 55, is named in Section 16.
+            Warrr Tech Solutions, the operator of WTS CompoundIQ, is the responsible party
+            (POPIA) / data controller (GDPR) for the limited data described in this policy.
+            Our Information Officer, registered with the Information Regulator as required
+            by POPIA section 55, is named in Section 16.
           </p>
         )
       },
@@ -910,9 +924,9 @@ export const LEGAL_DOCS = [
         heading: 'Contact / Information Officer',
         body: (
           <p>
+            Warrr Tech Solutions · Information Officer:{' '}
             <Fill>[Information Officer Name]</Fill> ·{' '}
-            <Fill>[privacy@wtscompoundiq.co.za]</Fill> ·{' '}
-            <Fill>[Registered Business Address]</Fill> · registered with the Information
+            <Fill>[privacy@wtscompoundiq.co.za]</Fill> · registered with the Information
             Regulator under POPIA §55.
           </p>
         )

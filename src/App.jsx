@@ -1,7 +1,7 @@
 // src/App.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import './App.css';
-import TierPricing, { UPGRADE_PRICES } from './components/TierPricing';
+import TierPricing, { UPGRADE_PRICES, TIER_ORDER } from './components/TierPricing';
 import PaymentSection from './components/PaymentSection';
 import { calculateCompoundInterest } from './engine';
 import { costOfWaiting } from './costOfWaiting';
@@ -1090,6 +1090,7 @@ export default function App() {
           price={UPGRADE_PRICES[selectedUpgradeTier]?.[selectedBillingPeriod] ?? UPGRADE_PRICES[selectedUpgradeTier]?.monthly ?? 0}
           period={selectedBillingPeriod}
           country={country}
+          action={TIER_ORDER.indexOf(selectedUpgradeTier) < TIER_ORDER.indexOf(userTier) ? 'Downgrade' : 'Upgrade'}
           onSuccess={processSuccessfulPayment}
           onClose={() => { setShowPayment(false); setPendingTab(null); }}
         />

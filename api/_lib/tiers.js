@@ -6,8 +6,9 @@
 //   PAYSTACK_PLAN_PRO_MONTHLY, PAYSTACK_PLAN_PRO_ANNUAL,
 //   PAYSTACK_PLAN_ULTRA_MONTHLY, PAYSTACK_PLAN_ULTRA_ANNUAL
 //
-// Enterprise is deliberately absent: it's a custom per-seat licence closed by an order
-// form (Terms' "Enterprise Licensing" section), not a self-service Paystack plan.
+// Pro and Ultra are the only paid, self-service tiers. (There was briefly an
+// "Enterprise" tier; it was removed and its keepable features folded into Ultra --
+// nothing here ever referenced it as a Paystack plan.)
 
 export const PAID_TIERS = ['Pro', 'Ultra'];
 export const PERIODS = ['monthly', 'annual'];
