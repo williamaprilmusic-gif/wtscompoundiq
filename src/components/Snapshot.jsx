@@ -28,7 +28,7 @@ const exportProjectionCSV = (results, country) => downloadCSV(
   ]
 );
 
-const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, compoundFrequency, contributionIncrease = 0, lumpSums = [], userTier, onOpenPricing }) => {
+const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, compoundFrequency, contributionIncrease = 0, lumpSums = [], canWhiteLabel = false, onOpenPricing }) => {
   const [plan, setPlan] = useState(null);
   const [branding, setBranding] = usePersistedState(BRANDING_KEY, DEFAULT_BRANDING);
   const [brandingError, setBrandingError] = useState(null);
@@ -43,10 +43,10 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
   }, []);
 
   // White-label branding (firm/advisor/client name, logo) is an Ultra feature -- see
-  // TierPricing.jsx. A lower tier's already-saved branding is kept in storage but not
-  // applied to the report, so downgrading doesn't silently delete it -- re-upgrading
-  // brings it straight back.
-  const canWhiteLabel = userTier === 'Ultra';
+  // TierPricing.jsx. `canWhiteLabel` is passed in as canAccess('Ultra') (same as
+  // MyPlan). A lower tier's already-saved branding is kept in storage but not applied
+  // to the report, so downgrading doesn't silently delete it -- re-upgrading brings it
+  // straight back.
 
   const updateBranding = (field, value) => setBranding(prev => ({ ...prev, [field]: value }));
 

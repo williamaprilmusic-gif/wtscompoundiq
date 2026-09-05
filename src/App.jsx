@@ -44,6 +44,14 @@ import { usePersistedState } from './utils/usePersistedState';
 
 const THEME_KEY = 'wts_compoundiq_theme';
 const REPORTING_CURRENCY_KEY = 'wts_compoundiq_reporting_currency';
+
+// 'Enterprise' was removed as a tier -- its keepable features (white-label / branded
+// plan exports, compliance line, plan notes) folded into Ultra. Anyone previously on
+// it (a stored string, or a still-valid signed entitlement the server keeps honouring)
+// is mapped to Ultra everywhere a tier enters the app: the mount effect, setTier(), and
+// the post-refresh re-read. tierLevels also maps 'Enterprise' -> 2 as a last-resort
+// backstop, but with this in place it should never be reached.
+const normalizeTier = (tier) => (tier === 'Enterprise' ? 'Ultra' : tier);
 // Generous enough for any realistic plan (a 20-year-old projecting to age 100+), but
 // bounded -- an unbounded "years" value feeds every per-year loop in the app (the
 // yearly table, the growth chart, and especially Monte Carlo's 1,000-path simulation),
@@ -251,10 +259,6 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
 
-    // 'Enterprise' no longer exists as a tier -- anyone previously on it (stored string
-    // or a still-valid signed entitlement) lands on Ultra, which now carries every
-    // feature Enterprise had that survived the cut.
-    const normalizeTier = (tier) => (tier === 'Enterprise' ? 'Ultra' : tier);
     const savedTier = (() => { try { return normalizeTier(localStorage.getItem('wts_compoundiq_tier')); } catch { return null; } })();
     const ent = readEntitlement();
     if (ent) setUserTier(normalizeTier(ent.tier));
@@ -280,7 +284,7 @@ export default function App() {
           }
         } else {
           const fresh = readEntitlement();
-          if (fresh) setUserTier(fresh.tier);
+          if (fresh) setUserTier(normalizeTier(fresh.tier));
         }
       }
     })();
@@ -305,7 +309,8 @@ export default function App() {
     setShowPayment(true);
   };
 
-  const setTier = (tier) => {
+  const setTier = (rawTier) => {
+    const tier = normalizeTier(rawTier);
     setUserTier(tier);
     try { localStorage.setItem('wts_compoundiq_tier', tier); } catch { /* private mode / quota */ }
     setTierChangeMsg(tier === 'Basic' ? "You're now on the free Basic plan." : `You're now on ${tier} — premium features unlocked.`);
@@ -466,10 +471,8 @@ export default function App() {
 
   const tabs = tabGroups.flatMap(g => g.tabs);
 
-  // 'Enterprise' was removed -- its keepable features (white-label / branded plan
-  // exports, compliance line, plan notes) folded into Ultra. A stale stored/entitlement
-  // 'Enterprise' is coerced to 'Ultra' on load (see the tier-load effect), so it should
-  // never reach here, but map it defensively too.
+  // 'Enterprise': 2 is a last-resort backstop only -- normalizeTier (module scope)
+  // already maps a stale 'Enterprise' to 'Ultra' everywhere a tier value enters the app.
   const tierLevels = { 'Basic': 0, 'Pro': 1, 'Ultra': 2, 'Enterprise': 2 };
   const userLevel = tierLevels[userTier] || 0;
 
@@ -969,7 +972,7 @@ export default function App() {
 
         {activeTab === 'Dashboard' && canAccess('Pro') && (
           <div className="tab-pane active">
-            <Dashboard country={country} reportingCountry={reportingCountry} onNavigate={setActiveTab} userTier={userTier} />
+            <Dashboard country={country} reportingCountry={reportingCountry} onNavigate={setActiveTab} canWhiteLabel={canAccess('Ultra')} />
           </div>
         )}
 
@@ -1018,7 +1021,7 @@ export default function App() {
 
         {activeTab === 'Snapshot' && canAccess('Pro') && (
           <div className="tab-pane active">
-            <Snapshot country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} userTier={userTier} onOpenPricing={() => setShowPricing(true)} />
+            <Snapshot country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} canWhiteLabel={canAccess('Ultra')} onOpenPricing={() => setShowPricing(true)} />
           </div>
         )}
 
@@ -1078,10 +1081,13 @@ export default function App() {
         />
       )}
 
+      {/* selectedUpgradeTier is only ever 'Pro' or 'Ultra' now (Basic returns early,
+          Enterprise is gone), so UPGRADE_PRICES always has an entry -- the last ?? on
+          price is a defensive floor, not a real "Custom" path any more. */}
       {showPayment && selectedUpgradeTier && (
         <PaymentSection
           tier={selectedUpgradeTier}
-          price={UPGRADE_PRICES[selectedUpgradeTier]?.[selectedBillingPeriod] ?? UPGRADE_PRICES[selectedUpgradeTier]?.monthly ?? 'Custom'}
+          price={UPGRADE_PRICES[selectedUpgradeTier]?.[selectedBillingPeriod] ?? UPGRADE_PRICES[selectedUpgradeTier]?.monthly ?? 0}
           period={selectedBillingPeriod}
           country={country}
           onSuccess={processSuccessfulPayment}

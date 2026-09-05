@@ -37,7 +37,7 @@ const BUDGET_SERIES = [{ key: 'surplus', label: 'Monthly Surplus' }];
 // Debt/Emergency Fund/Loan/FIRE below intentionally still use `country` -- their saved
 // figures are raw numbers with no conversion pipeline behind them, so relabeling their
 // symbol without converting the number would misrepresent the amount.
-const Dashboard = ({ country, reportingCountry, onNavigate, userTier }) => {
+const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = false }) => {
   const netWorthCountry = reportingCountry || country;
   const [plan, setPlan] = useState(null);
   const [netWorthHistory, setNetWorthHistory] = useState([]);
@@ -45,14 +45,14 @@ const Dashboard = ({ country, reportingCountry, onNavigate, userTier }) => {
   const [efHistory, setEfHistory] = useState([]);
   const [budgetHistory, setBudgetHistory] = useState([]);
   const [investGoals, setInvestGoals] = useState([]);
-  // Ultra white-label: read-only here too (same reuse as Snapshot's own compliance
-  // text on the flip side -- see MyPlan.jsx's BRANDING_KEY note) so the Dashboard PDF
-  // export carries the same firm details as the client report, not a blank masthead.
+  // Ultra white-label (canWhiteLabel is passed in as canAccess('Ultra'), same as
+  // Snapshot/MyPlan): read-only here too (same reuse as Snapshot's own compliance text
+  // on the flip side -- see MyPlan.jsx's BRANDING_KEY note) so the Dashboard PDF export
+  // carries the same firm details as the client report, not a blank masthead.
   const [reportBranding, setReportBranding] = useState(DEFAULT_BRANDING);
   // Read-only reuse of the same compliance text set once on My Plan (see Snapshot.jsx's
   // identical reuse) -- one field, now three documents.
   const [compliance, setCompliance] = useState('');
-  const canWhiteLabel = userTier === 'Ultra';
 
   useEffect(() => {
     setPlan(readPlan());

@@ -178,13 +178,13 @@ export const LEGAL_DOCS = [
                     <td>Calculator, South African tax rules, TFSA wrapper comparison</td>
                   </tr>
                   <tr>
-                    <td>Pro</td><td>R199</td><td>R1,499</td>
+                    <td>Pro</td><td>R149</td><td>R1,199</td>
                     <td>Full planning toolkit (Dashboard, Budget, Emergency Fund, Debt
                       Payoff, Loan &amp; Bond, My Plan, Net Worth, Snapshot export, Invest,
                       Tax Optimizer, the core Power Tools calculators, Compare)</td>
                   </tr>
                   <tr>
-                    <td>Ultra</td><td>R299</td><td>R2,499</td>
+                    <td>Ultra</td><td>R249</td><td>R1,999</td>
                     <td>Everything in Pro, plus the advanced Power Tools (retirement
                       drawdown and tax-strategy set), Monte Carlo, FX Stress Test, AI
                       Wealth Coach, AI Investment Advisor, and white-label / branded plan

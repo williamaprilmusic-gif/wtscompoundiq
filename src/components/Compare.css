@@ -11,34 +11,6 @@
   font-size: 0.95rem;
 }
 
-.compare-mode-toggle {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 22px;
-  background: var(--raise-05);
-  border: 1px solid var(--raise-1);
-  border-radius: 12px;
-  padding: 4px;
-  width: fit-content;
-}
-
-.compare-mode-toggle button {
-  background: none;
-  border: none;
-  color: var(--mut);
-  font-weight: 600;
-  font-size: 0.85rem;
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.compare-mode-toggle button.active {
-  background: var(--accent);
-  color: var(--bg);
-}
-
 .compare-scenario-name {
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid var(--raise-1);
@@ -133,27 +105,6 @@
   margin-bottom: 16px;
 }
 
-.compare-pickers {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 25px;
-}
-
-.compare-pickers .country-select {
-  flex: 1;
-  min-width: 0; /* flex items don't shrink past their content's intrinsic width by
-    default -- a country name ("South Africa") otherwise overflows a narrow flex row
-    instead of actually shrinking to fit it */
-}
-
-.compare-vs {
-  color: var(--mut2);
-  font-weight: 700;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-}
-
 .compare-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -176,19 +127,6 @@
   background: rgba(74, 222, 128, 0.06);
 }
 
-.compare-card h3 {
-  margin: 0;
-  font-size: 1.1rem;
-  color: var(--text);
-}
-
-.compare-tax {
-  font-size: 0.78rem;
-  color: var(--mut);
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-}
-
 .compare-value {
   font-size: 1.6rem;
   color: var(--text);
@@ -197,12 +135,6 @@
 
 .compare-card.winner .compare-value {
   color: var(--accent-green);
-}
-
-.compare-converted {
-  font-size: 0.8rem;
-  color: var(--accent);
-  margin-bottom: 4px;
 }
 
 .compare-details {

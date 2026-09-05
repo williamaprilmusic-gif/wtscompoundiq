@@ -171,11 +171,11 @@ const DebtPayoff = ({ country }) => {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  // Snapshots record which currency they were saved in (the country selector is
-  // global and can change between snapshots) and get converted to the currently
-  // selected currency before use here -- same fix NetWorth.jsx applies to its own
-  // history, so switching currency doesn't silently mislabel old totals as if they
-  // were already in the new currency. Older snapshots saved before this had no
+  // Snapshots record which currency they were saved in and get converted to the
+  // currently displayed currency before use here -- same fix NetWorth.jsx applies to
+  // its own history. The app is South Africa only now, so this is a no-op in practice
+  // (always ZAR), but it still guards an imported backup that carried a foreign
+  // displayCurrency. Older snapshots saved before this had no
   // displayCurrency -- treat those as already being in the current display currency,
   // matching this app's previous (single-currency) behavior.
   // A hand-edited/corrupt entry with a non-numeric `total` (or an incompatible

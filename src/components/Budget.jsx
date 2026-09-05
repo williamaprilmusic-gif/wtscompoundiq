@@ -78,8 +78,10 @@ const Budget = ({ country }) => {
   const expenseItems = items.filter(i => i.kind === 'expense');
 
   // Same currency-tagged snapshot pattern as EmergencyFund/NetWorth/DebtPayoff: record
-  // which currency each entry was saved in and convert through a memo before use, so
-  // switching the global country selector doesn't mislabel an old surplus.
+  // which currency each entry was saved in and convert through a memo before use, so a
+  // change to the Net Worth "display currency" doesn't mislabel an old surplus. (The
+  // app is South Africa only now, so in practice `country.code` is always 'za' -- the
+  // conversion is a no-op unless an imported backup carried a foreign displayCurrency.)
   const convertedHistory = useMemo(() => history
     .filter(isValidBudgetHistoryEntry)
     .map(h => ({ date: h.date, surplus: convertAmount(h.surplus, h.displayCurrency || country.code, country.code) })),

@@ -4,10 +4,10 @@ import './TierPricing.css';
 import FAQHelper from './FAQHelper';
 
 // Renders a tier's `price`/`priceAnnual` field for display -- a plain ZAR number
-// (199, 1499) for a priced tier, formatted here; Basic instead carries the literal
+// (149, 1199) for a priced tier, formatted here; Basic instead carries the literal
 // string 'Free' straight through, since it has no numeric checkout price. The number is
 // the source of truth (see UPGRADE_PRICES below, exported straight from these same
-// fields) -- previously it was the other way around: a display string like 'R1,499' got
+// fields) -- previously it was the other way around: a display string like 'R1,199' got
 // parsed back into a number with a regex, which meant a purely cosmetic copy change (a
 // different currency symbol placement, an unexpected separator) could silently compute
 // the wrong checkout price, or drop a tier's price entirely by returning null.
@@ -44,11 +44,11 @@ const tiers = [
   },
   {
     name: 'Pro',
-    price: 199,
+    price: 149,
     billing: '/ month',
-    // Annual = ~24% off the R199 x 12 = R2,388 monthly run rate.
-    priceAnnual: 1499,
-    billingAnnual: '/ year (~R125/mo)',
+    // Annual = ~33% off the R149 x 12 = R1,788 monthly run rate.
+    priceAnnual: 1199,
+    billingAnnual: '/ year (~R100/mo)',
     description: 'The full planning toolkit, beyond the calculator.',
     features: [
       'Everything in Basic, plus:',
@@ -71,11 +71,11 @@ const tiers = [
   },
   {
     name: 'Ultra',
-    price: 299,
+    price: 249,
     billing: '/ month',
-    // Annual = ~30% off the R299 x 12 = R3,588 monthly run rate.
-    priceAnnual: 2499,
-    billingAnnual: '/ year (~R208/mo)',
+    // Annual = ~33% off the R249 x 12 = R2,988 monthly run rate.
+    priceAnnual: 1999,
+    billingAnnual: '/ year (~R167/mo)',
     description: 'Every scenario tool, plus AI-powered guidance -- on top of Pro.',
     features: [
       'Everything in Pro, plus:',
@@ -149,7 +149,7 @@ export default function TierPricing({ currentTier, onUpgrade, onClose }) {
             className={billingPeriod === 'annual' ? 'active' : ''}
             onClick={() => { setBillingPeriod('annual'); setConfirmingDowngrade(false); }}
           >
-            Annual <span className="save-badge">Save up to 30%</span>
+            Annual <span className="save-badge">Save up to 33%</span>
           </button>
         </div>
 
