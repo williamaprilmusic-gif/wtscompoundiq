@@ -565,6 +565,11 @@ export default function App() {
                 <div className="form-group">
                   <label>{t('calculator.monthlyContribution')} ({country.symbol})</label>
                   <input type="number" value={monthly} onChange={(e) => setMonthly(Number(e.target.value))} />
+                  {monthly > 0 && (
+                    <span className="years-to-grow-date">
+                      ≈ {country.symbol}{Math.round(monthly / 4.345)}/week or {country.symbol}{Math.round(monthly / 30.44)}/day
+                    </span>
+                  )}
                 </div>
                 <div className="form-group">
                   <label>{t('calculator.annualRate')}</label>

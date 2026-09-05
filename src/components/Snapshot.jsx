@@ -77,7 +77,13 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
   });
   const wrapperBenefit = wrapperResults.finalBalance - taxableResults.finalBalance;
 
-  const today = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+  const now = new Date();
+  const today = now.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+  // A stable-per-day reference an adviser can quote when filing a client report. Not a
+  // security token -- just "which printout is this". Regenerates each render, so it
+  // moves with the wall clock; that's fine for a "generated at" style stamp.
+  const pad = (n) => String(n).padStart(2, '0');
+  const reportRef = `WTS-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
 
   return (
     <div className="card snapshot-page">
@@ -150,6 +156,7 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
             {country.name} · Generated {today}
             {canWhiteLabel && branding.advisorName && ` · Prepared by ${branding.advisorName}`}
             {canWhiteLabel && branding.clientName && ` · Prepared for ${branding.clientName}`}
+            {canWhiteLabel && ` · Ref ${reportRef}`}
           </p>
         </div>
 

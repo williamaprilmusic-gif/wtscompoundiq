@@ -20,6 +20,14 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
   const [withdrawalTaxRate, setWithdrawalTaxRate] = useState(Math.round(country.taxRate / 2));
   const [lossAmount, setLossAmount] = useState(0);
   const [lossMarginalRate, setLossMarginalRate] = useState(country.taxRate);
+  // "How much of my TFSA lifetime allowance have I already used?" -- a real SA planning
+  // constraint (R500,000 lifetime, and you can't reclaim room by withdrawing).
+  const [tfsaContributed, setTfsaContributed] = useState(0);
+  const lifetimeLimit = country.lifetimeWrapperLimit || 0;
+  const annualLimit = country.annualWrapperLimit || 0;
+  const tfsaUsedPct = lifetimeLimit > 0 ? Math.min(100, Math.max(0, (tfsaContributed / lifetimeLimit) * 100)) : 0;
+  const tfsaRemaining = Math.max(0, lifetimeLimit - tfsaContributed);
+  const tfsaYearsLeft = annualLimit > 0 ? tfsaRemaining / annualLimit : null;
 
   const taxableResults = calculateCompoundInterest({
     initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper: false, compoundFrequency,
@@ -89,6 +97,27 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
                 ⚠️ Your contribution plan exceeds this wrapper's real-world annual or lifetime limit in at least one year --
                 the figures above assume full shelter, but the portion over the cap would actually be taxed like a normal account.
               </p>
+            )}
+            {lifetimeLimit > 0 && (
+              <div className="tfsa-lifetime-tracker">
+                <div className="form-group">
+                  <label>{country.wrapperLabel} contributed so far, lifetime ({country.symbol})</label>
+                  <input type="number" min="0" step="5000" value={tfsaContributed} onChange={(e) => setTfsaContributed(Number(e.target.value))} />
+                </div>
+                {tfsaContributed > 0 && (
+                  <>
+                    <div className="tfsa-lifetime-bar" role="img" aria-label={`${Math.round(tfsaUsedPct)} percent of the lifetime limit used`}>
+                      <div className="tfsa-lifetime-fill" style={{ width: `${tfsaUsedPct}%` }} />
+                    </div>
+                    <p className="tfsa-lifetime-note">
+                      {country.symbol}{Math.round(tfsaContributed).toLocaleString()} of the {country.symbol}{lifetimeLimit.toLocaleString()} lifetime limit used ({Math.round(tfsaUsedPct)}%).{' '}
+                      {tfsaRemaining > 0
+                        ? <>{country.symbol}{Math.round(tfsaRemaining).toLocaleString()} of room left{tfsaYearsLeft != null && annualLimit > 0 ? ` — about ${tfsaYearsLeft.toFixed(1)} more years at the full ${country.symbol}${annualLimit.toLocaleString()}/year` : ''}. Withdrawals don't give the room back.</>
+                        : <>You've used your entire lifetime allowance — further contributions to this wrapper would be taxed like a normal account.</>}
+                    </p>
+                  </>
+                )}
+              </div>
             )}
           </div>
         )}

@@ -288,3 +288,31 @@
   color: var(--mut2);
   line-height: 1.5;
 }
+
+.tfsa-lifetime-tracker {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.tfsa-lifetime-bar {
+  height: 12px;
+  background: var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 10px 0;
+}
+
+.tfsa-lifetime-fill {
+  height: 100%;
+  background: linear-gradient(to right, var(--accent-green), var(--accent-yellow));
+  border-radius: 6px;
+  transition: width 0.4s ease;
+}
+
+.tfsa-lifetime-note {
+  font-size: 0.82rem;
+  color: var(--mut);
+  line-height: 1.5;
+  margin: 0;
+}

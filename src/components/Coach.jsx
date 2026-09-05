@@ -54,6 +54,15 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
   const surplusApplied = calculateCompoundInterest({ ...base, monthly: budgetSurplus ?? monthly });
   const surplusGain = surplusApplied.finalBalance - baseline.finalBalance;
 
+  // TFSA step: contribute exactly the annual tax-free allowance (R46,000/yr in SA ->
+  // ~R3,833/mo) inside the wrapper, so none of this year's allowance is wasted. Only
+  // offered when there's a wrapper with a real annual cap and the current monthly
+  // contribution is below it.
+  const tfsaMonthlyMax = country.annualWrapperLimit ? country.annualWrapperLimit / 12 : 0;
+  const tfsaMaxApplied = calculateCompoundInterest({ ...base, wrapper: true, monthly: tfsaMonthlyMax });
+  const tfsaMaxGain = tfsaMaxApplied.finalBalance - baseline.finalBalance;
+  const tfsaStepDone = !hasWrapper || tfsaMonthlyMax === 0 || monthly >= tfsaMonthlyMax;
+
   const flashApplied = (key) => {
     setApplied(key);
     setTimeout(() => setApplied(null), 2000);
@@ -64,6 +73,7 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
   const applyYears = () => { onSetYears(extendedYears); flashApplied('years'); };
   const applyEscalate = () => { onSetContributionIncrease(escalatePercent); flashApplied('escalate'); };
   const applySurplus = () => { onSetMonthly(Math.round(budgetSurplus)); flashApplied('surplus'); };
+  const applyTfsaMax = () => { onSetWrapper(true); onSetMonthly(Math.round(tfsaMonthlyMax)); flashApplied('tfsaMax'); };
 
   const steps = [
     {
@@ -134,9 +144,21 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
       onApply: applyEscalate,
       applyLabel: `Set contribution growth to ${escalatePercent}%/yr`
     }] : []),
+    ...(hasWrapper && tfsaMonthlyMax > 0 ? [{
+      key: 'tfsaMax',
+      number: canEscalate ? 5 : 4,
+      title: `Use Your Full ${country.wrapperLabel} Allowance`,
+      done: tfsaStepDone,
+      body: tfsaStepDone
+        ? `You're already contributing at or above the ${country.symbol}${Math.round(tfsaMonthlyMax).toLocaleString()}/month (${country.symbol}${country.annualWrapperLimit.toLocaleString()}/yr) ${country.wrapperLabel} cap -- every rand of this year's tax-free allowance is being used.`
+        : `Contributing the full ${country.symbol}${Math.round(tfsaMonthlyMax).toLocaleString()}/month (${country.symbol}${country.annualWrapperLimit.toLocaleString()}/yr) into your ${country.wrapperLabel}, instead of ${country.symbol}${monthly.toLocaleString()}/month, adds ${country.symbol} ${Math.round(tfsaMaxGain).toLocaleString()} over ${years} years -- all of it sheltered from tax. Unused allowance each year is gone for good; it doesn't carry forward.`,
+      interactive: !tfsaStepDone,
+      onApply: applyTfsaMax,
+      applyLabel: `Set monthly to ${country.symbol}${Math.round(tfsaMonthlyMax).toLocaleString()} + turn on ${country.wrapperLabel}`
+    }] : []),
     ...(budgetSurplus != null ? [{
       key: 'surplus',
-      number: canEscalate ? 5 : 4,
+      number: (canEscalate ? 5 : 4) + (hasWrapper && tfsaMonthlyMax > 0 ? 1 : 0),
       title: 'Put Your Budget Surplus to Work',
       done: !hasUnusedSurplus,
       body: hasUnusedSurplus

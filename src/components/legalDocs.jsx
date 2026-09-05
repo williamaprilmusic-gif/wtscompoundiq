@@ -16,9 +16,11 @@
 // <Fill> marks a detail still to be supplied (support emails, effective dates, the
 // Information Officer's name, and the few numbers left as a business call). It renders
 // as a visibly distinct token, not plain text, so nothing here reads as finished when it
-// isn't. This content is a substantive review against POPIA / the CPA / ECTA / GDPR /
-// PAIA -- not a formal legal opinion; the inline "[Flag for counsel: ...]" notes are
-// genuine judgement calls for an admitted attorney.
+// isn't. These documents are scoped to South Africa only (POPIA / the CPA / ECTA /
+// PAIA) -- the earlier GDPR / EU-UK / cross-border content was removed at the operator's
+// instruction. This is a substantive review of that SA framework, not a formal legal
+// opinion; the inline "[Flag for counsel: ...]" notes are genuine judgement calls for an
+// admitted attorney.
 
 import React from 'react';
 
@@ -51,8 +53,9 @@ export const LEGAL_DOCS = [
           attorney: a few calls below (flagged inline) are genuine judgment territory — most
           notably whether monthly plans count as a CPA §14 "fixed-term" agreement, the exact
           ECTA §44 cooling-off exemption boundary for a non-financial digital service, and
-          whether the class-action waiver holds in every jurisdiction you reach. Have an
-          admitted attorney confirm those before publishing. Fields shown as{' '}
+          whether the class-action waiver holds up under South African law. These documents
+          are written for South Africa only. Have an admitted attorney confirm those points
+          before publishing. Fields shown as{' '}
           <Fill>[like this]</Fill> still need your real company details.
         </p>
       )
@@ -559,11 +562,11 @@ export const LEGAL_DOCS = [
             </p>
             <h4>No Class Actions</h4>
             <p>
-              To the extent permitted by applicable law, any dispute must be brought in your
-              individual capacity, not as a plaintiff or class member in any purported class,
-              collective, or representative proceeding. <Fill>[Flag for counsel: class-action
-              waivers are not uniformly enforceable across every jurisdiction this Service
-              reaches — confirm this holds where you're most exposed.]</Fill>
+              To the extent permitted by South African law, any dispute must be brought in
+              your individual capacity, not as a plaintiff or class member in any purported
+              class, collective, or representative proceeding. <Fill>[Flag for counsel:
+              confirm how far a class-action waiver is enforceable under South African law
+              and the CPA before relying on it.]</Fill>
             </p>
             <h4>Feedback</h4>
             <p>
@@ -673,15 +676,19 @@ export const LEGAL_DOCS = [
     effective: <Fill>[Effective Date]</Fill>,
     updated: <Fill>[Last Updated Date]</Fill>,
     callout: {
-      tag: 'Reviewed against POPIA, GDPR & PAIA — read this first',
+      tag: 'Reviewed against POPIA & PAIA — read this first',
       body: (
         <p>
-          Sections 6, 7, 10, and 11 were added specifically to satisfy POPIA's
-          notification-at-collection and security-safeguard conditions, GDPR's rights list
-          for EU/UK users, and PAIA's access-request obligation, respectively. This is a
-          substantive review based on knowledge of these frameworks, not a formal legal
-          opinion — have your Information Officer registration and this document confirmed by
-          an admitted attorney before publishing.
+          Sections 6, 7, and 10 were added specifically to satisfy POPIA's
+          notification-at-collection and security-safeguard conditions and PAIA's
+          access-request obligation, respectively. This policy is written for South Africa
+          only. This is a substantive review based on knowledge of these frameworks, not a
+          formal legal opinion — have your Information Officer registration and this document
+          confirmed by an admitted attorney before publishing.{' '}
+          <Fill>[Flag for counsel: the GDPR / EU-UK section was removed at the operator's
+          instruction. If EU or UK residents subscribe through the public web checkout, the
+          GDPR/UK GDPR may still reach their payment data by its own extraterritorial scope
+          regardless of this SA-only framing — the operator has accepted that.]</Fill>
         </p>
       )
     },
@@ -710,9 +717,9 @@ export const LEGAL_DOCS = [
         body: (
           <p>
             Warrr Tech Solutions, the operator of WTS CompoundIQ, is the responsible party
-            (POPIA) / data controller (GDPR) for the limited data described in this policy.
-            Our Information Officer, registered with the Information Regulator as required
-            by POPIA section 55, is named in Section 16.
+            under POPIA for the limited data described in this policy. Our Information
+            Officer, registered with the Information Regulator as required by POPIA section
+            55, is named in Section 14.
           </p>
         )
       },
@@ -805,7 +812,11 @@ export const LEGAL_DOCS = [
             which is restricted to <Fill>[e.g. the founder / named staff]</Fill>. Because the
             Service itself has no backend, there is no central database of user planning data
             that could be breached — the largest practical privacy risk this architecture
-            avoids entirely.
+            avoids entirely. If Paystack processes any of the narrow transaction data in
+            Section 4 on infrastructure outside South Africa, POPIA section 72's cross-border
+            safeguards are met through Paystack's own contractual terms and your consent
+            given by proceeding with payment; your planning data never leaves your device,
+            so no transfer of it arises.
           </p>
         )
       },
@@ -835,30 +846,11 @@ export const LEGAL_DOCS = [
               on each tool.
             </p>
             <p>
-              To exercise a right, contact our Information Officer (Section 16). You may also
+              To exercise a right, contact our Information Officer (Section 14). You may also
               lodge a complaint with the <strong>Information Regulator (South Africa)</strong>{' '}
-              — <a href="https://inforegulator.org.za" target="_blank" rel="noopener noreferrer">inforegulator.org.za</a>{' '}
-              — or your own country's data protection authority.
+              — <a href="https://inforegulator.org.za" target="_blank" rel="noopener noreferrer">inforegulator.org.za</a>.
             </p>
           </>
-        )
-      },
-      {
-        heading: 'Rights for EU/UK Users (GDPR)',
-        body: (
-          <p>
-            If you're in the EU or UK, we process your payment data under Article 6(1)(b)
-            GDPR — it's necessary to perform the subscription contract you asked us for. In
-            addition to the POPIA rights above, you have the right to: data portability
-            (receive your transaction data in a structured, machine-readable format);
-            restrict processing; withdraw consent at any time where processing is
-            consent-based; and lodge a complaint with your local supervisory authority (e.g.
-            the ICO in the UK, or your national Data Protection Authority in the EU) as well
-            as, or instead of, South Africa's Information Regulator. We don't process
-            special-category data and haven't appointed an EU representative under Article 27{' '}
-            <Fill>[confirm this is still accurate as your EU user base grows — Article 27 has
-            its own size/scale thresholds]</Fill>.
-          </p>
         )
       },
       {
@@ -871,7 +863,7 @@ export const LEGAL_DOCS = [
             from having to proactively publish a full PAIA manual under the Information
             Regulator's exemption notices — confirm this still applies to your business size
             before relying on it.]</Fill> Submit a PAIA request to the Information Officer in
-            Section 16.
+            Section 14.
           </p>
         )
       },
@@ -883,22 +875,6 @@ export const LEGAL_DOCS = [
             South African tax and accounting record-keeping requirements, then deleted. Your
             local planning data is retained on your own device for as long as you keep it
             there — we have no ability to delete it remotely, because we never had it.
-          </p>
-        )
-      },
-      {
-        heading: 'International Users & Cross-Border Transfers',
-        body: (
-          <p>
-            The Service is built for South African residents, though nothing technically
-            prevents access from elsewhere. Payment data may be processed by Paystack in
-            South Africa or another jurisdiction where it operates. Where that involves a
-            cross-border transfer of your personal
-            information, we rely on Paystack's own contractual safeguards and/or your consent
-            (given by proceeding with payment) to meet POPIA section 72 and, for EU/UK users,
-            GDPR Chapter V. Because your planning data never leaves your device, there is no
-            cross-border transfer of it to worry about — this section is entirely about the
-            narrow payment-transaction data in Section 4.
           </p>
         )
       },

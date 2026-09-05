@@ -43,7 +43,8 @@ const tiers = [
       'Goal seek — "to have R2m in 20 years, save R X/month"',
       '"If you stopped contributing today" — how much of your result is already locked in',
       '"As retirement income" — your projected balance reframed at a 4% safe withdrawal rate',
-      'Current SARS tax year shown at a glance — your TFSA limit resets 1 March, not 1 January'
+      'Current SARS tax year shown at a glance — your TFSA limit resets 1 March, not 1 January',
+      'Your monthly contribution shown as a per-week / per-day figure'
     ],
     highlighted: false
   },
@@ -63,7 +64,7 @@ const tiers = [
       'Loan & Bond Calculator (home/vehicle/personal/student loans, "prime + margin" rate quoting, extra & bi-weekly payments, one-off lump sums, all with a payoff-by calendar date)',
       'My Plan (save a snapshot, check in on progress later, with reminders)',
       'Goal-based Invest planner (multiple goals at once, checked against your saved Budget surplus)',
-      'Tax Optimizer, including a retirement fund comparison & a tax-loss harvesting calculator',
+      'Tax Optimizer — retirement fund comparison, tax-loss harvesting calculator, and a TFSA lifetime-limit (R500k) progress tracker',
       'Power Tools — 40 focused calculators (FIRE, Fund Fee Face-off, Contractor Rate, VAT Calculator, Capital Gains Tax, and more)',
       'Net Worth tracker with asset allocation, forecast & balance-sheet ratios',
       'Dashboard with Financial Health Score, Budget & Invest Goals summaries, milestones & PDF export',
@@ -91,12 +92,13 @@ const tiers = [
       'Monte Carlo goal-timeline — your odds of being there by year 5, 10, 15…',
       "Monte Carlo history's-worst-window — your plan through the worst real stretch",
       'FX stress test for Net Worth (offshore holdings), with a full shock-level range and how your leverage ratio itself shifts under each shock',
-      'AI Wealth Coach (5-step planner: wrapper, contribution boost, extra years, contribution escalation, unused Budget surplus)',
+      'AI Wealth Coach (step-by-step planner: wrapper, contribution boost, extra years, contribution escalation, using your full TFSA allowance, unused Budget surplus)',
       'AI Investment Advisor (personalized recommendations, incl. debt priority, saved Emergency Fund status & Net Worth leverage)',
       'White-label / branded plan exports — your firm name, logo & tagline on the My Plan, Snapshot, and Dashboard PDF printouts',
       'Custom compliance / FSP disclosure line, shared across My Plan, Snapshot, and the Dashboard PDF',
       '"Prepared by [adviser] for [client] on [date]" line on client plans',
       'Firm contact info and FSP (FAIS licence) number on the Snapshot report and Dashboard PDF footers',
+      'Auto report reference (e.g. Ref WTS-20260906-1423) in the Snapshot report header',
       'Plan notes with a last-edited timestamp'
     ],
     highlighted: false
