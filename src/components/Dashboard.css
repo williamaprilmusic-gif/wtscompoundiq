@@ -196,6 +196,9 @@
   line-height: 1.4;
 }
 
+.dashboard-card-sub.positive { color: var(--accent-green); }
+.dashboard-card-sub.warn { color: var(--accent-yellow); }
+
 .dashboard-card.empty p {
   font-size: 0.82rem;
   color: var(--mut2);

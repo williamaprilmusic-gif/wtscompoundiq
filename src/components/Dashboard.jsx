@@ -13,7 +13,7 @@ import HealthScoreGauge from './HealthScoreGauge';
 import { HISTORY_KEY as NETWORTH_HISTORY_KEY, isValidNetWorthEntry } from './NetWorth';
 import { HISTORY_KEY as DEBTPAYOFF_HISTORY_KEY, isValidDebtHistoryEntry } from './DebtPayoff';
 import { HISTORY_KEY as EMERGENCYFUND_HISTORY_KEY, isValidEfHistoryEntry } from './EmergencyFund';
-import { BUDGET_HISTORY_KEY, isValidBudgetHistoryEntry } from '../budgetEngine';
+import { BUDGET_HISTORY_KEY, BUDGET_ITEMS_KEY, isValidBudgetHistoryEntry, computeBudgetSummary } from '../budgetEngine';
 import { BRANDING_KEY as REPORT_BRANDING_KEY, DEFAULT_BRANDING } from './Snapshot';
 import { GOALS_KEY as INVEST_GOALS_KEY } from './Invest';
 import { COMPLIANCE_KEY } from './MyPlan';
@@ -45,6 +45,9 @@ const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = fals
   const [efHistory, setEfHistory] = useState([]);
   const [budgetHistory, setBudgetHistory] = useState([]);
   const [investGoals, setInvestGoals] = useState([]);
+  // Live Budget items (not the surplus-history snapshots) -- so the card can show a
+  // savings rate (surplus / income), which the history entries don't carry.
+  const [budgetSummary, setBudgetSummary] = useState(null);
   // Ultra white-label (canWhiteLabel is passed in as canAccess('Ultra'), same as
   // Snapshot/MyPlan): read-only here too (same reuse as Snapshot's own compliance text
   // on the flip side -- see MyPlan.jsx's BRANDING_KEY note) so the Dashboard PDF export
@@ -61,6 +64,8 @@ const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = fals
     setEfHistory(readJSONArray(EMERGENCYFUND_HISTORY_KEY));
     setBudgetHistory(readJSONArray(BUDGET_HISTORY_KEY));
     setInvestGoals(readJSONArray(INVEST_GOALS_KEY));
+    const bs = computeBudgetSummary(readJSONArray(BUDGET_ITEMS_KEY));
+    if (bs.totalIncome > 0) setBudgetSummary(bs);
     try {
       const stored = JSON.parse(localStorage.getItem(REPORT_BRANDING_KEY) || '{}');
       setReportBranding({ ...DEFAULT_BRANDING, ...stored });
@@ -283,6 +288,14 @@ const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = fals
               {lastBudgetEntry.surplus >= 0 ? '' : '−'}{country.symbol} {Math.abs(Math.round(lastBudgetEntry.surplus)).toLocaleString()}/mo
             </strong>
             <span className="dashboard-card-sub">{lastBudgetEntry.surplus >= 0 ? 'monthly surplus, last logged' : 'monthly deficit, last logged'}</span>
+            {budgetSummary && (() => {
+              const rate = (budgetSummary.surplus / budgetSummary.totalIncome) * 100;
+              return (
+                <span className={`dashboard-card-sub ${rate >= 15 ? 'positive' : 'warn'}`}>
+                  Savings rate: {rate.toFixed(0)}% of income{rate >= 15 ? ' — solid' : ' (15%+ is a common target)'}
+                </span>
+              );
+            })()}
             <button className="dashboard-card-link" onClick={() => onNavigate('Budget')}>Open Budget →</button>
           </div>
         ) : (

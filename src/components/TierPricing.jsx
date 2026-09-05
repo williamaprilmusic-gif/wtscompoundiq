@@ -44,7 +44,8 @@ const tiers = [
       '"If you stopped contributing today" — how much of your result is already locked in',
       '"As retirement income" — your projected balance reframed at a 4% safe withdrawal rate',
       'Current SARS tax year shown at a glance — your TFSA limit resets 1 March, not 1 January',
-      'Your monthly contribution shown as a per-week / per-day figure'
+      'Your monthly contribution shown as a per-week / per-day figure',
+      'Inflation-eroded contribution warning — what a flat monthly amount is worth in future money'
     ],
     highlighted: false
   },
@@ -67,7 +68,7 @@ const tiers = [
       'Tax Optimizer — retirement fund comparison, tax-loss harvesting calculator, and a TFSA lifetime-limit (R500k) progress tracker',
       'Power Tools — 40 focused calculators (FIRE, Fund Fee Face-off, Contractor Rate, VAT Calculator, Capital Gains Tax, and more)',
       'Net Worth tracker with asset allocation, forecast & balance-sheet ratios',
-      'Dashboard with Financial Health Score, Budget & Invest Goals summaries, milestones & PDF export',
+      'Dashboard with Financial Health Score, Budget & Invest Goals summaries, a savings-rate readout, milestones & PDF export',
       'Financial Snapshot export (print / PDF / CSV)',
       'Compare your own plans side by side (e.g. contribute more vs. wait 5 years)',
       'Priority support'
@@ -85,7 +86,7 @@ const tiers = [
     features: [
       'Everything in Pro, plus:',
       '8 advanced Power Tools — Drawdown, Coast & Barista FIRE, Retirement Income Gap (now with a "how long to close it" timeline), Pre-Tax & RA Tax Optimizer, Two-Pot Withdrawal (flags the R2,000 minimum and once-per-tax-year rule), Sequence-of-Returns Risk',
-      'Monte Carlo simulation (1,000-path outcome range)',
+      'Monte Carlo simulation (1,000-path outcome range), showing where your straight-line projection sits in the spread',
       'Monte Carlo solvers — contribution OR years to hit a target success probability',
       'Monte Carlo retirement drawdown — how often the pot survives being lived off',
       'Monte Carlo safe-withdrawal solver — the year-1 draw the pot survives',

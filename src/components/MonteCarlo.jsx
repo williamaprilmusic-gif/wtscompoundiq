@@ -150,6 +150,14 @@ export const runSimulation = ({
     };
   }
 
+  // Percentile rank (0-100) of an arbitrary value against this run's sorted final
+  // balances -- lets the UI show where a straight-line projection sits in the spread.
+  const percentileRankOf = (value) => {
+    if (!Number.isFinite(value) || finalBalances.length === 0) return null;
+    const below = finalBalances.filter((b) => b <= value).length;
+    return (below / finalBalances.length) * 100;
+  };
+
   return {
     p10: percentileOf(finalBalances, 0.10),
     p25: percentileOf(finalBalances, 0.25),
@@ -159,6 +167,7 @@ export const runSimulation = ({
     min: finalBalances[0],
     max: finalBalances[finalBalances.length - 1],
     probabilityOfGoal: (successCount / finalBalances.length) * 100,
+    percentileRankOf,
     goalProbByYear,
     yearlyPercentiles,
     drawdown
@@ -568,6 +577,18 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
             <div className="mc-stat"><span>75th percentile</span><strong>{country.symbol} {Math.round(result.p75).toLocaleString()}</strong></div>
             <div className="mc-stat"><span>90th percentile</span><strong>{country.symbol} {Math.round(result.p90).toLocaleString()}</strong></div>
           </div>
+
+          {(() => {
+            const rank = result.percentileRankOf(deterministic.finalBalance);
+            if (rank == null) return null;
+            const optimism = rank >= 65 ? 'optimistic' : rank <= 35 ? 'conservative' : 'middle-of-the-road';
+            return (
+              <p className="mc-model-note">
+                📍 Your Calculator tab's straight-line projection ({country.symbol}{Math.round(deterministic.finalBalance).toLocaleString()} at a flat {rate}%/yr) lands around the{' '}
+                <strong>{Math.round(rank)}th percentile</strong> of these {NUM_SIMULATIONS.toLocaleString()} runs — a {optimism} assumption. {rank >= 65 ? 'Real markets underperform it more often than not.' : rank <= 35 ? 'Most runs beat it.' : 'It sits close to the median.'}
+              </p>
+            );
+          })()}
 
           {result.drawdown && (
             <div className="mc-drawdown-result">

@@ -778,6 +778,17 @@ export default function App() {
                 </p>
               )}
 
+              {inflation > 0 && monthly > 0 && contributionIncrease === 0 && years >= 5 && (() => {
+                const realMonthlyAtEnd = monthly / Math.pow(1 + inflation / 100, years);
+                const lostBuyingPower = monthly - realMonthlyAtEnd;
+                return (
+                  <p className="doubling-time-note">
+                    📉 At {inflation}%/yr inflation, a flat {country.symbol}{monthly.toLocaleString()}/month is worth only about{' '}
+                    <strong>{country.symbol}{Math.round(realMonthlyAtEnd).toLocaleString()}</strong> in year {years}'s money — {country.symbol}{Math.round(lostBuyingPower).toLocaleString()} less buying power. Growing your contribution (the "annual contribution increase" field) keeps it level.
+                  </p>
+                );
+              })()}
+
               {balanceMilestones.length > 0 && (
                 <div className="milestone-strip">
                   <span className="milestone-strip-label">On track to reach</span>
