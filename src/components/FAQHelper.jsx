@@ -20,12 +20,12 @@ const FAQ_DATA = [
   },
   {
     question: 'How accurate are the interest rates and tax figures?',
-    answer: 'They are indicative simplifications for education, not verified current tax law. Each of the 36 supported countries is reduced to a single tax rate and one tax-free wrapper, and real tax rules have brackets, thresholds, and change yearly. Do not treat this as your only source before making real financial decisions.',
+    answer: 'They are indicative simplifications for education, not verified current tax law. South Africa\'s tax system is reduced to a flat approximate rate (with an opt-in progressive-bracket mode) and the TFSA wrapper, and real tax rules have thresholds, rebates, and change yearly. Do not treat this as your only source before making real financial decisions.',
     keywords: ['accurate', 'accuracy', 'correct', 'real', 'tax rate', 'reliable', 'trust']
   },
   {
     question: 'What is the difference between Basic, Pro, Ultra, and Enterprise?',
-    answer: 'Basic is free and covers Start Here and the Calculator (all 36 countries, tax-free wrapper comparison). Pro unlocks the full planning toolkit: Budget tracker, Emergency Fund tracker, Debt Payoff planner, My Plan (with reminders), multi-goal Invest planner, Tax Optimizer, Power Tools, Net Worth tracker, Dashboard, Financial Snapshot export, and country comparison. Ultra adds the Monte Carlo simulator, a Net Worth FX stress test, plus the AI Wealth Coach and AI Investment Advisor. Enterprise is licensed software for financial advisors and firms: white-label branding, bulk user management, and API access, priced per seat or firm license.',
+    answer: 'Basic is free and covers Start Here and the Calculator (South African tax rules, TFSA wrapper comparison). Pro unlocks the full planning toolkit: Budget tracker, Emergency Fund tracker, Debt Payoff planner, My Plan (with reminders), multi-goal Invest planner, Tax Optimizer, Power Tools, Net Worth tracker, Dashboard, Financial Snapshot export, and plan comparison. Ultra adds the Monte Carlo simulator, a Net Worth FX stress test, plus the AI Wealth Coach and AI Investment Advisor. Enterprise is licensed software for financial advisors and firms: white-label branding, bulk user management, and API access, priced per seat or firm license.',
     keywords: ['tier', 'plan', 'basic', 'pro', 'ultra', 'enterprise', 'difference', 'compare plans', 'free']
   },
   {
@@ -49,9 +49,9 @@ const FAQ_DATA = [
     keywords: ['advice', 'financial advisor', 'licensed', 'recommendation']
   },
   {
-    question: 'Which countries are supported?',
-    answer: '36 countries across 6 continents, each with a simplified tax rate and its own tax-free wrapper. Pick yours from the Country dropdown on the Calculator tab.',
-    keywords: ['country', 'countries', 'supported', 'currency', 'list']
+    question: 'Is this only for South Africa?',
+    answer: 'Yes -- this app models South African tax rules and the TFSA wrapper specifically. If you hold offshore/foreign-currency assets, the Net Worth tracker still lets you enter items in another currency and see them converted to Rand, and its FX Stress Test shows how a Rand move affects your total.',
+    keywords: ['country', 'countries', 'supported', 'south africa', 'currency', 'offshore']
   }
 ];
 

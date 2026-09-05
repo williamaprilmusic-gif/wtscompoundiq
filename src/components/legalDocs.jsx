@@ -81,14 +81,14 @@ export const LEGAL_DOCS = [
           <>
             <p>
               WTS CompoundIQ is an educational financial-planning and compound-interest
-              modeling tool covering 36 countries. Its Tools include a calculator, tax-free
+              modeling tool for South Africa. Its Tools include a calculator, tax-free
               wrapper comparisons, a debt payoff planner, an emergency fund planner, a
               loan/bond calculator, a net worth tracker with an FX stress test for offshore
               holdings, a budget tracker, goal-based investing tools, a consolidated plan
               tracker, a tax optimizer, a dashboard with a financial health score and
               milestones, a suite of "Power Tools" (FIRE number, home affordability,
               education savings, insurance needs, debt-vs-invest and more), side-by-side
-              country and plan comparison, Monte Carlo simulation, and the rule-based
+              plan comparison, Monte Carlo simulation, and the rule-based
               "AI Coach" and "AI Advisor" features described in Section 13 (collectively,
               the "<strong>Tools</strong>"), available across the free and paid subscription
               tiers described in Section 6.
@@ -175,7 +175,7 @@ export const LEGAL_DOCS = [
                 <tbody>
                   <tr>
                     <td>Basic</td><td>Free</td><td>—</td>
-                    <td>Calculator, all 36 countries, wrapper comparison</td>
+                    <td>Calculator, South African tax rules, TFSA wrapper comparison</td>
                   </tr>
                   <tr>
                     <td>Pro</td><td>R199</td><td>R1,499</td>
@@ -878,9 +878,10 @@ export const LEGAL_DOCS = [
         heading: 'International Users & Cross-Border Transfers',
         body: (
           <p>
-            The Service is used globally across the 36 countries it models. Payment data may
-            be processed by Paystack in South Africa or another jurisdiction where it
-            operates. Where that involves a cross-border transfer of your personal
+            The Service is built for South African residents, though nothing technically
+            prevents access from elsewhere. Payment data may be processed by Paystack in
+            South Africa or another jurisdiction where it operates. Where that involves a
+            cross-border transfer of your personal
             information, we rely on Paystack's own contractual safeguards and/or your consent
             (given by proceeding with payment) to meet POPIA section 72 and, for EU/UK users,
             GDPR Chapter V. Because your planning data never leaves your device, there is no

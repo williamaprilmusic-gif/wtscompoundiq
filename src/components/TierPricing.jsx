@@ -22,7 +22,7 @@ const tiers = [
     description: 'Get oriented and run the numbers -- no signup required.',
     features: [
       'Start Here guided quiz',
-      'Compound interest calculator, all 36 countries',
+      'Compound interest calculator, built for South African tax rules',
       'Tax-free wrapper vs. taxable comparison',
       'Compounding frequency control',
       'Year-by-year growth data table',
@@ -59,11 +59,11 @@ const tiers = [
       'My Plan (save a snapshot, check in on progress later, with reminders)',
       'Goal-based Invest planner (multiple goals at once, checked against your saved Budget surplus)',
       'Tax Optimizer, including a retirement fund comparison & a tax-loss harvesting calculator',
-      'Power Tools — 41 focused calculators (FIRE, Fund Fee Face-off, Contractor Rate, VAT Calculator, Capital Gains Tax, and more)',
+      'Power Tools — 40 focused calculators (FIRE, Fund Fee Face-off, Contractor Rate, VAT Calculator, Capital Gains Tax, and more)',
       'Net Worth tracker with asset allocation, forecast & balance-sheet ratios',
       'Dashboard with Financial Health Score, Budget & Invest Goals summaries, milestones & PDF export',
       'Financial Snapshot export (print / PDF / CSV)',
-      'Side-by-side country comparison tool, plus compare your own plans',
+      'Compare your own plans side by side (e.g. contribute more vs. wait 5 years)',
       'Priority support'
     ],
     cta: 'Upgrade to Pro',

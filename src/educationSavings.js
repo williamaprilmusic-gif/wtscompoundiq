@@ -1,6 +1,6 @@
 // src/educationSavings.js
 // Projects a future education cost using education-specific inflation (school/university
-// fees have historically outpaced general CPI in most of this app's 36 countries), then
+// fees have historically outpaced general CPI in South Africa), then
 // hands that total to goalSolver.js to work out the required monthly contribution --
 // same "how much do I need to save" shape as Invest.jsx's goals, but with the target
 // amount itself derived from a cost-inflation projection instead of typed in directly.

@@ -1,9 +1,12 @@
 // src/components/CountrySelect.jsx
-// A type-to-filter country picker -- the plain <select> this replaces works fine for
-// the first handful of the app's 36 countries, but scanning a flat alphabetical list
-// for, say, "Poland" gets tedious past that. Same value/onChange(code) contract as a
-// native select so it drops into any existing `<select value={x} onChange={...}>` call
-// site with the props swapped, not a UI rewrite.
+// A type-to-filter picker over the currency reference list in data/countries.js (see
+// that file's header note -- this app's tax logic only runs against South Africa now;
+// what's left here is a currency/symbol lookup, used by Net Worth's per-item and
+// display-currency pickers). The plain <select> this replaces works fine for a
+// handful of options, but scanning a flat alphabetical list of ~36 for, say, "Poland's
+// currency" gets tedious past that. Same value/onChange(code) contract as a native
+// select so it drops into any existing `<select value={x} onChange={...}>` call site
+// with the props swapped, not a UI rewrite.
 import React, { useState, useRef, useEffect, useId } from 'react';
 import './CountrySelect.css';
 

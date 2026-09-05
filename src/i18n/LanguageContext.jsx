@@ -5,13 +5,13 @@ import { translations, LANGUAGES } from './translations';
 const LANGUAGE_KEY = 'wts_compoundiq_language';
 const DEFAULT_LANGUAGE = 'en';
 
-// Right-to-left scripts among LANGUAGES -- everything else is left-to-right. Only
-// affects the document-level `dir` attribute (paragraph/block reading direction and
-// native browser bidi handling for inline text); this app's CSS itself still uses
-// physical properties throughout (margin-left, flex-direction: row, icon ordering,
-// etc.), so this is correct text direction inside a layout that isn't mirrored --
-// not a full RTL redesign.
-const RTL_LANGUAGES = new Set(['ar', 'ur']);
+// Right-to-left scripts among LANGUAGES -- empty now that this build only carries
+// English and Afrikaans (both left-to-right). Kept as a set (rather than removed
+// outright) since re-adding a RTL language later is just one more entry here, not a
+// redesign -- this app's CSS uses physical properties throughout (margin-left,
+// flex-direction: row, icon ordering, etc.), so `dir` alone gets reading direction
+// right without mirroring the layout.
+const RTL_LANGUAGES = new Set();
 
 const LanguageContext = createContext(null);
 

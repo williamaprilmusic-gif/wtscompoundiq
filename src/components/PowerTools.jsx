@@ -53,7 +53,7 @@ import { contractorRate } from '../contractorRate';
 import { addVat, extractVat } from '../vatCalculator';
 import { estimateCapitalGainsTax, CGT_ANNUAL_EXCLUSION, CGT_INCLUSION_RATE_INDIVIDUAL } from '../capitalGainsTax';
 import { readJSONArray } from '../utils/storage';
-import { convertAmount, countriesData } from '../data/countries';
+import { convertAmount } from '../data/countries';
 import { DEBTS_KEY } from './DebtPayoff';
 import { HISTORY_KEY as NETWORTH_HISTORY_KEY, isValidNetWorthEntry } from './NetWorth';
 
@@ -78,7 +78,6 @@ const SUB_TABS = [
   { key: 'coastFire', label: '🌴 Coast FIRE', tier: 'Ultra' },
   { key: 'savingsRate', label: '⏱️ Savings Rate' },
   { key: 'cardTrap', label: '💳 Card Min. Trap' },
-  { key: 'fxConvert', label: '💱 Currency Convert' },
   { key: 'rule72', label: '⏳ Rule of 72' },
   { key: 'dividend', label: '💵 Dividend Income' },
   { key: 'carCost', label: '🚗 Cost of a Car' },
@@ -127,7 +126,7 @@ const SUB_TAB_GROUPS = [
   { label: 'Property & Big Purchases', keys: ['affordability', 'rentVsBuy', 'carCost', 'leaseVsBuy', 'depositTimeline', 'homeCosts', 'payback', 'rateShock'] },
   { label: 'Saving for a Goal', keys: ['savings', 'education', 'sinkingFund', 'efRunway', 'insurance', 'windfall'] },
   { label: 'Income & Tax', keys: ['salary', 'raiseValue', 'bonusTax', 'raOptimizer', 'contractRate', 'cgt', 'budgetRule', 'marginalTax', 'raiseInflation'] },
-  { label: 'Money Basics', keys: ['futureCost', 'fxConvert', 'rule72', 'freqCompare', 'effRate', 'realReturn', 'subCost', 'vat'] }
+  { label: 'Money Basics', keys: ['futureCost', 'rule72', 'freqCompare', 'effRate', 'realReturn', 'subCost', 'vat'] }
 ];
 
 const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [], canUltra = true, onOpenPricing }) => {
@@ -222,9 +221,6 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const [cardMinFloor, setCardMinFloor] = useState(0);
   const [cardFixedPayment, setCardFixedPayment] = useState(0);
 
-  const [fxAmount, setFxAmount] = useState(0);
-  const [fxFrom, setFxFrom] = useState(country.code);
-  const [fxTo, setFxTo] = useState(country.code === 'us' ? 'gb' : 'us');
 
   const [r72Rate, setR72Rate] = useState(rate || 7);
   const [r72Years, setR72Years] = useState(20);
@@ -558,10 +554,6 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
     balance: cardBalance, apr: cardApr, minPercent: cardMinPercent, minFloor: cardMinFloor,
     fixedPayment: cardFixedPayment > 0 ? cardFixedPayment : undefined
   });
-
-  const fxConverted = convertAmount(fxAmount, fxFrom, fxTo);
-  const fxSymbol = (code) => (countriesData.find(c => c.code === code) || country).symbol;
-  const fxCurrency = (code) => (countriesData.find(c => c.code === code) || country).currency;
 
   const r72 = ruleOf72({ annualRate: r72Rate, years: r72Years });
 
@@ -1444,43 +1436,6 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
               The minimum is modeled as the greater of {cardMinPercent}% of the current balance and the {country.symbol}{Math.round(cardMinFloor).toLocaleString()} floor,
               recalculated every month as the balance falls. Real card terms vary (some add a fixed fee, some a flat
               1% + interest) — check your statement. For juggling several debts at once, use the Debt Payoff tab.
-            </p>
-          </>
-        )}
-      </div>
-      )}
-
-      {activeSubTab === 'fxConvert' && (
-      <div className="power-tool-card">
-        <h3>💱 Currency Converter</h3>
-        <p className="power-tool-desc">A quick conversion between any two of the {countriesData.length} currencies this app models — using the same indicative rate table the Net Worth FX tools use.</p>
-        <div className="power-form">
-          <div className="form-group">
-            <label>Amount</label>
-            <input type="number" min="0" step="100" value={fxAmount} onChange={(e) => setFxAmount(Number(e.target.value))} />
-          </div>
-          <div className="form-group">
-            <label>From</label>
-            <select value={fxFrom} onChange={(e) => setFxFrom(e.target.value)}>
-              {countriesData.map(c => <option key={c.code} value={c.code}>{c.currency} — {c.name}</option>)}
-            </select>
-          </div>
-          <div className="form-group">
-            <label>To</label>
-            <select value={fxTo} onChange={(e) => setFxTo(e.target.value)}>
-              {countriesData.map(c => <option key={c.code} value={c.code}>{c.currency} — {c.name}</option>)}
-            </select>
-          </div>
-        </div>
-        {fxAmount > 0 && (
-          <>
-            <div className="power-verdict invest">
-              {fxSymbol(fxFrom)}{Math.round(fxAmount).toLocaleString()} {fxCurrency(fxFrom)} ≈ {fxSymbol(fxTo)}{Math.round(fxConverted).toLocaleString()} {fxCurrency(fxTo)}
-            </div>
-            <p className="power-tool-note">
-              Indicative only. The exchange-rate table in this app is spot-checked periodically, not live — FX moves
-              constantly, so treat this as an order-of-magnitude comparison, never a dealing rate. Banks and money
-              transfer services also add a spread and fees this doesn't model.
             </p>
           </>
         )}
@@ -2628,7 +2583,7 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
                 : `Contributing another ${country.symbol} ${Math.round(raResult.roomRemaining).toLocaleString()} this year gets you to the ceiling and cuts your tax by about ${country.symbol} ${Math.round(raResult.taxSavingIfMaxed).toLocaleString()} — an effective ${raResult.effectiveReliefPct.toFixed(0)}% discount, so the real out-of-pocket cost is about ${country.symbol} ${Math.round(raResult.netCostIfMaxed).toLocaleString()}.`}
             </div>
             <p className="power-tool-note">
-              Limit is 27.5% of the greater of taxable income or remuneration, capped at {country.symbol}350,000 — here bound by the {raResult.limitedBy === 'cap' ? `${country.symbol}350k cap` : '27.5% rate'}. SA-specific rules; other countries' figures are illustrative. Doesn't model the tax on the eventual retirement income (see the Pre-Tax Retirement tool for that side). Not advice.
+              Limit is 27.5% of the greater of taxable income or remuneration, capped at {country.symbol}350,000 — here bound by the {raResult.limitedBy === 'cap' ? `${country.symbol}350k cap` : '27.5% rate'}. Doesn't model the tax on the eventual retirement income (see the Pre-Tax Retirement tool for that side). Not advice.
             </p>
           </>
         )}

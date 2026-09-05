@@ -1,5 +1,13 @@
 // src/data/countries.js
-// Simplified database of global tax profiles and local interest benchmarks.
+// South Africa is the only entry this app actually runs its tax/wrapper calculations
+// against (WTS_COUNTRIES[0] in App.jsx -- there's no country picker any more). The other
+// 35 entries below are kept, unused for tax purposes, purely as a currency reference
+// table: Net Worth's per-item and "display currency" pickers and the FX Stress Test
+// (tracking offshore/foreign-currency holdings against the Rand) need a list of
+// currencies+symbols+FX rates, and it was simpler to keep the existing dataset for that
+// than build a second, smaller one. Their taxRate/wrapperLabel/taxBrackets fields are
+// dead weight for every country but South Africa -- don't wire a new feature to them.
+//
 // Figures are indicative/illustrative for an educational calculator, not tax advice --
 // they drift over time and vary by individual bracket, so treat them as ballpark defaults.
 // Wrapper contribution limits spot-checked against current sources: 2026-08-26
@@ -10,8 +18,8 @@
 // Argentina, Pakistan, Ghana, Vietnam, Indonesia added and verified 2026-08-26 -- picked
 // specifically for notably high nominal savings/deposit rates (several of which mostly
 // compensate for high local inflation rather than real growth -- see per-country notes) --
-// all 36 countries now individually spot-checked, though figures still drift and should be
-// periodically re-verified).
+// all 36 countries individually spot-checked at the time, though only South Africa's own
+// figures still need periodic re-verification now that the rest are currency-only.
 
 export const countriesData = [
   {
@@ -701,7 +709,8 @@ export const countriesData = [
       capitalGains: 'Sales of Indonesian-listed shares are subject to a final 0.1% tax on the gross transaction value rather than a tax on the gain itself.'
     }
   }
-  // 36 countries total -- matches the "Full 36-country currency & tax database" Pro feature.
+  // 36 countries total -- see the header note: South Africa (first entry) is the only
+  // one this app's tax/wrapper logic actually runs against; the rest are currency-only.
 ];
 
 export const getCountryByCode = (code) => countriesData.find(c => c.code === code) || countriesData[0];

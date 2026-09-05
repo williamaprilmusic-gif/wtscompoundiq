@@ -30,7 +30,6 @@ import OnboardingTour, { TOUR_SEEN_KEY } from './components/OnboardingTour';
 import { useLanguage } from './i18n/LanguageContext';
 import Term from './components/Term';
 import GrowthChart from './components/GrowthChart';
-import CountrySelect from './components/CountrySelect';
 import { buildShareUrl, parseShareParams, clearShareParamsFromUrl } from './utils/shareLink';
 import { downloadCSV } from './utils/csv';
 import { uniqueId } from './utils/uniqueId';
@@ -98,11 +97,16 @@ export default function App() {
   // making the whole thing look like it did nothing).
   const [tierChangeMsg, setTierChangeMsg] = useState(null);
 
-  // Calculator state -- starts blank; every number here should come from the user, not
-  // a placeholder scenario. The one exception is a shared plan link: if the URL carries
-  // valid share params (see utils/shareLink.js), those seed these fields instead so a
-  // link someone sends actually opens showing their plan.
-  const [country, setCountry] = useState(() => shareParams?.countryCode ? getCountryByCode(shareParams.countryCode) : WTS_COUNTRIES[0]);
+  // This build is South Africa only -- see the removed CountrySelect/handleCountryChange
+  // below and Compare.jsx's dropped "Compare Countries" mode for the rest of this pass.
+  // `country` is now a constant, not state: WTS_COUNTRIES[0] is South Africa (see
+  // src/data/countries.js), and getCountryByCode's own fallback would resolve to the
+  // same entry anyway, so an old share link carrying a stale non-'za' countryCode can't
+  // land you in a different tax jurisdiction. The other 35 entries in WTS_COUNTRIES
+  // stay in the data file -- Net Worth's per-item/display-currency pickers (tracking
+  // Rand-hedge or other offshore holdings) and the FX Stress Test still need that
+  // currency list; only the "pick your tax country" UI is gone.
+  const country = WTS_COUNTRIES.find(c => c.code === 'za') || WTS_COUNTRIES[0];
 
   // Net Worth, Debt Payoff, and Emergency Fund each convert their saved history
   // through the currently selected country's currency (see their own convertedHistory
@@ -193,15 +197,6 @@ export default function App() {
     }
     setSummaryCopied(true);
     setTimeout(() => setSummaryCopied(false), 2000);
-  };
-
-  const handleCountryChange = (code) => {
-    const c = getCountryByCode(code);
-    setCountry(c);
-    // Prefill inflation with this country's typical rate -- a convenience default the
-    // user can still overwrite, not a substitute for the blank-until-entered calculator
-    // inputs above (those come from the user, this is a starting point tied to the country).
-    setInflation(c.typicalInflation ?? 0);
   };
 
   // Single clamp for every path that can set `years`. The Calculator input below and the
@@ -550,10 +545,6 @@ export default function App() {
               <p className="card-subtitle">{t('calculator.subtitle')}</p>
 
               <div className="form-grid">
-                <div className="form-group">
-                  <label>{t('calculator.country')}</label>
-                  <CountrySelect countries={WTS_COUNTRIES} value={country.code} onChange={handleCountryChange} ariaLabel={t('calculator.country')} />
-                </div>
                 <div className="form-group">
                   <label>{t('calculator.initialAmount')} ({country.symbol})</label>
                   <input type="number" value={initial} onChange={(e) => setInitial(Number(e.target.value))} />
@@ -1042,7 +1033,7 @@ export default function App() {
 
         {activeTab === 'Compare' && canAccess('Pro') && (
           <div className="tab-pane active">
-            <Compare country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} lumpSums={lumpSums} />
+            <Compare country={country} initial={initial} monthly={monthly} rate={rate} years={years} inflation={inflation} wrapper={wrapper} compoundFrequency={compoundFrequency} contributionIncrease={contributionIncrease} />
           </div>
         )}
 
