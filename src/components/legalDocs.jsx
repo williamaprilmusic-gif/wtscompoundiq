@@ -39,7 +39,7 @@ export const LEGAL_DOCS = [
           and 18, adds the boilerplate that protects <em>you</em> as the operator —
           severability, entire agreement, no waiver, force majeure, assignment, a
           class-action waiver, a feedback license, sanctions compliance, fraud/abuse
-          termination grounds, and Enterprise white-label indemnification — the kind of
+          termination grounds, and white-label indemnification — the kind of
           clauses a first draft usually leaves out
           and a counterparty's lawyer usually notices. This is a substantive review based on
           knowledge of these frameworks, not a formal legal opinion from a practicing
@@ -187,12 +187,8 @@ export const LEGAL_DOCS = [
                     <td>Ultra</td><td>R299</td><td>R2,499</td>
                     <td>Everything in Pro, plus the advanced Power Tools (retirement
                       drawdown and tax-strategy set), Monte Carlo, FX Stress Test, AI
-                      Wealth Coach, AI Investment Advisor</td>
-                  </tr>
-                  <tr>
-                    <td>Enterprise</td><td colSpan="2">Custom, per seat/firm license</td>
-                    <td>White-label branding, bulk user management, API access — governed by
-                      a separate order form or master agreement</td>
+                      Wealth Coach, AI Investment Advisor, and white-label / branded plan
+                      exports with your own compliance line and notes</td>
                   </tr>
                 </tbody>
               </table>
@@ -332,7 +328,7 @@ export const LEGAL_DOCS = [
               <li>Use the Service to build a competing product from its content, country tax
                 data, or Tool logic;</li>
               <li>Misrepresent the Service's projections as verified financial advice to a
-                third party (e.g. a client, if you're an Enterprise licensee) without the
+                third party (e.g. a client you hand a white-labelled plan to) without the
                 disclaimers in Section 3 intact;</li>
               <li>Interfere with the Service's operation, probe its infrastructure for
                 vulnerabilities without authorization, or use it to transmit malware.</li>
@@ -452,13 +448,16 @@ export const LEGAL_DOCS = [
         )
       },
       {
-        heading: 'Enterprise Licensing',
+        heading: 'Business & Multi-Seat Use',
         body: (
           <p>
-            Enterprise tier access — including white-label branding, bulk user management,
-            and API access — is governed by these Terms plus a separate written order form or
-            master license agreement between you and us. Where the two conflict on
-            Enterprise-specific terms, the order form controls.
+            The Service is sold as an individual subscription. A business may buy more than
+            one subscription for its staff, but there is no separate bulk-management,
+            reseller, or API arrangement — each subscription is a separate account bound by
+            these Terms, billed and cancellable on its own. If you use a paid tier's
+            white-label / branded-plan features to produce documents you hand to your own
+            clients, the Indemnification section below and the disclaimer requirements in
+            Section 3 apply to you.
           </p>
         )
       },
@@ -470,12 +469,12 @@ export const LEGAL_DOCS = [
             employees harmless from any claim, loss, liability, or expense (including
             reasonable legal fees) arising from: your breach of these Terms; your misuse of
             the Service; your violation of any law or a third party's rights; content or data
-            you input into the Service; or, if you're an Enterprise licensee, any
-            representation your organization makes to your own end clients using the
-            white-labeled Service — including a client's reliance on projections your
-            organization presented as its own advice without carrying forward the disclaimers
-            in Section 3. We're not a party to, and accept no liability for, your relationship
-            with your own end clients.
+            you input into the Service; or, if you use the white-label / branded-plan
+            features, any representation you or your organization makes to your own end
+            clients using the white-labelled Service — including a client's reliance on
+            projections you presented as your own advice without carrying forward the
+            disclaimers in Section 3. We're not a party to, and accept no liability for,
+            your relationship with your own end clients.
           </p>
         )
       },
@@ -498,9 +497,8 @@ export const LEGAL_DOCS = [
             Consumer Protection Act, which applies only to "consumers" as the Act defines
             them — broadly, natural persons, and juristic persons below an asset/turnover
             threshold the Minister sets from time to time. If you're subscribing as, or on
-            behalf of, a larger juristic person — the typical case for an Enterprise licensee
-            — those specific CPA-sourced protections may not apply to you by law, and your
-            Enterprise order form governs instead.
+            behalf of, a larger juristic person, those specific CPA-sourced protections may
+            not apply to you by law.
           </p>
         )
       },
@@ -516,8 +514,8 @@ export const LEGAL_DOCS = [
             </p>
             <h4>Entire Agreement</h4>
             <p>
-              These Terms (together with the Privacy Policy, the Refund &amp; Cancellation
-              Policy, and — for Enterprise — the relevant order form) are the entire
+              These Terms (together with the Privacy Policy and the Refund &amp; Cancellation
+              Policy) are the entire
               agreement between you and us regarding the Service, and supersede any prior
               discussion, marketing material, or informal representation, whether written or
               oral. You confirm you haven't relied on anything outside these documents in
@@ -576,8 +574,8 @@ export const LEGAL_DOCS = [
 
             <h4>No Third-Party Beneficiaries</h4>
             <p>
-              These Terms are between you and us alone. No other person — including, where you
-              are an Enterprise licensee, your own end clients — has any right to enforce any
+              These Terms are between you and us alone. No other person — including any end
+              client you hand a white-labelled plan to — has any right to enforce any
               part of them.
             </p>
 
@@ -724,7 +722,7 @@ export const LEGAL_DOCS = [
         body: (
           <>
             <p>
-              If you subscribe to Pro, Ultra, or Enterprise, you type your email address
+              If you subscribe to Pro or Ultra, you type your email address
               directly into our own checkout screen — it's the one piece of personal
               information our own code ever touches, and it exists only to pass straight
               through to our payment processor, Paystack, which needs it to process the
@@ -954,8 +952,8 @@ export const LEGAL_DOCS = [
               refunds will work once live payment processing is enabled.
             </p>
             <p>
-              This policy covers cancelling a subscription and requesting a refund for Pro,
-              Ultra, and Enterprise tiers. The Basic tier is free and has nothing to cancel or
+              This policy covers cancelling a subscription and requesting a refund for the
+              Pro and Ultra tiers. The Basic tier is free and has nothing to cancel or
               refund.
             </p>
           </>
@@ -1029,12 +1027,12 @@ export const LEGAL_DOCS = [
         )
       },
       {
-        heading: 'Enterprise Plans',
+        heading: 'Multiple Subscriptions',
         body: (
           <p>
-            Enterprise/custom licensing is billed and refunded per the terms of its separate
-            order form or master agreement, not this policy — check that document, or contact{' '}
-            <Fill>[sales@wtscompoundiq.co.za]</Fill>.
+            If a business has bought more than one subscription for its staff, each one is a
+            separate account: cancellation and refunds are handled per subscription, under
+            exactly the rules above, not as a single bulk arrangement.
           </p>
         )
       },

@@ -9,6 +9,9 @@
 // behaves exactly as before (demo upgrades, manually-set tier).
 
 const KEY = 'wts_compoundiq_entitlement';
+// 'Enterprise' is kept here only so an already-issued Enterprise entitlement token still
+// reads as valid (paid) rather than being silently voided -- the tier itself is gone,
+// and App.jsx maps a returned 'Enterprise' to 'Ultra' on load.
 const PAID = new Set(['Pro', 'Ultra', 'Enterprise']);
 
 const b64urlToJson = (part) => {

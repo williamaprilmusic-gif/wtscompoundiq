@@ -8,7 +8,7 @@ const REMINDER_KEY = 'wts_compoundiq_reminder_at';
 const REMINDER_NOTIFIED_KEY = 'wts_compoundiq_reminder_notified_at';
 const REMINDER_DAYS = 30;
 // All five exported so DataBackup.jsx's Export/Import Backup can carry an adviser's
-// notes and Enterprise branding along with everything else -- these were added across
+// notes and Ultra white-label branding along with everything else -- these were added across
 // several rounds after that list was first written and, like the scenario/report-
 // branding keys already on it, would otherwise silently vanish on a restore.
 export const ADVISER_NOTES_KEY = 'wts_compoundiq_adviser_notes';
@@ -38,26 +38,26 @@ const readBranding = () => {
   } catch { return { firm: '', tagline: '' }; }
 };
 
-const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
+const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
   const [snapshot, setSnapshot] = useState(null);
   const [currentDebtBalance, setCurrentDebtBalance] = useState('');
   const [currentEfBalance, setCurrentEfBalance] = useState('');
   const [currentLoanBalance, setCurrentLoanBalance] = useState('');
   const [reminderAt, setReminderAt] = useState(null);
   const [reminderDue, setReminderDue] = useState(false);
-  // Enterprise-tier adviser annotation, persisted locally. Kept in storage even when
+  // Ultra-tier plan annotation, persisted locally. Kept in storage even when
   // the tier can't currently see it, so a downgrade doesn't destroy typed notes.
   const [adviserNotes, setAdviserNotes] = useState('');
-  // Enterprise white-label: a firm name/tagline shown atop the plan and carried into
+  // Ultra white-label: a firm name/tagline shown atop the plan and carried into
   // print. Persisted locally like the adviser notes, and kept through a downgrade.
   const [branding, setBranding] = useState({ firm: '', tagline: '' });
-  // Enterprise: a custom compliance/disclosure line (e.g. FAIS / FSP wording) appended
+  // Ultra: a custom compliance/disclosure line (e.g. FAIS / FSP wording) appended
   // to the plan and always included in print.
   const [compliance, setCompliance] = useState('');
-  // Enterprise: the adviser's name, shown as "Prepared by X on <date>" under the
+  // Ultra: the adviser's name, shown as "Prepared by X on <date>" under the
   // branded header (and in print).
   const [preparedBy, setPreparedBy] = useState('');
-  // Enterprise: which client this printed plan is for, e.g. "Prepared by X for Y".
+  // Ultra: which client this printed plan is for, e.g. "Prepared by X for Y".
   const [clientName, setClientName] = useState('');
   const [adviserNotesUpdatedAt, setAdviserNotesUpdatedAt] = useState(null);
 
@@ -158,9 +158,9 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
     </div>
   ) : null;
 
-  const brandingEditor = canAdviserNotes ? (
+  const brandingEditor = canWhiteLabel ? (
     <div className="plan-branding-editor no-print">
-      <h3>🏷️ Practice Branding <span className="plan-adviser-badge">Enterprise</span></h3>
+      <h3>🏷️ Practice Branding <span className="plan-adviser-badge">Ultra</span></h3>
       <div className="plan-branding-fields">
         <input
           type="text"
@@ -194,9 +194,9 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
     </div>
   ) : null;
 
-  const complianceEditor = canAdviserNotes ? (
+  const complianceEditor = canWhiteLabel ? (
     <div className="plan-branding-editor no-print">
-      <h3>⚖️ Compliance Line <span className="plan-adviser-badge">Enterprise</span></h3>
+      <h3>⚖️ Compliance Line <span className="plan-adviser-badge">Ultra</span></h3>
       <textarea
         className="plan-compliance-input"
         value={compliance}
@@ -392,10 +392,10 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
       {brandingEditor}
       {complianceEditor}
 
-      {canAdviserNotes ? (
+      {canWhiteLabel ? (
         <div className="plan-adviser-notes">
           <h3>
-            🗒️ Adviser Notes <span className="plan-adviser-badge">Enterprise</span>
+            🗒️ Adviser Notes <span className="plan-adviser-badge">Ultra</span>
             {adviserNotesUpdatedAt && (
               <span className="plan-adviser-updated">last edited {fmtDaysAgo(daysBetween(adviserNotesUpdatedAt))}</span>
             )}
@@ -410,7 +410,7 @@ const MyPlan = ({ country, canAdviserNotes = false, onOpenPricing }) => {
       ) : adviserNotes.trim() ? null : (
         <div className="plan-adviser-upsell no-print">
           <p>
-            🗒️ <strong>Adviser Notes</strong> — attach context and recommendations to a client's plan. Included on Enterprise.
+            🗒️ <strong>Adviser Notes</strong> — attach context and recommendations to a client's plan. Included on Ultra.
             {onOpenPricing && <button type="button" className="plan-adviser-upsell-btn" onClick={onOpenPricing}>View Pricing</button>}
           </p>
         </div>

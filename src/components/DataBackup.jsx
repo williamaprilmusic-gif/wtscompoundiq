@@ -38,7 +38,7 @@ const ALL_STORAGE_KEYS = [
   'wts_compoundiq_loancalc_inputs',
   'wts_compoundiq_loancalc_lumpsums',
   BUDGET_ITEMS_KEY,
-  // Compare tab's "Compare My Plans" scenarios, and Snapshot's Enterprise report
+  // Compare tab's "Compare My Plans" scenarios, and Snapshot's white-label report
   // branding -- both added after this list was first written; included here for the
   // same reason as everything else on it (an export/restore cycle shouldn't silently
   // drop them).
@@ -46,7 +46,7 @@ const ALL_STORAGE_KEYS = [
   'wts_compoundiq_scenario_b',
   'wts_compoundiq_report_branding',
   // Budget's surplus history (added alongside its "Log This Month's Surplus" feature),
-  // and My Plan's adviser notes / Enterprise practice branding, compliance line,
+  // and My Plan's adviser notes / Ultra practice branding, compliance line,
   // prepared-by, and client name -- all added well after this list existed, and all
   // just as real to lose on a restore as anything else here.
   BUDGET_HISTORY_KEY,

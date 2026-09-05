@@ -15,12 +15,12 @@ const STEPS = [
   {
     selector: '.tabs-nav',
     title: 'Your toolkit',
-    body: "Everything lives here -- free tools first, then Planning and AI-powered tools as you go Pro, Ultra or Enterprise. Click any tab to jump straight in."
+    body: "Everything lives here -- free tools first, then Planning and AI-powered tools as you go Pro or Ultra. Click any tab to jump straight in."
   },
   {
     selector: '.header-actions .btn-upgrade',
     title: 'See what unlocks what',
-    body: 'A locked tab shows 🔒 until your plan covers it -- tap this anytime to compare Free, Pro, Ultra and Enterprise side by side.'
+    body: 'A locked tab shows 🔒 until your plan covers it -- tap this anytime to compare Free, Pro and Ultra side by side.'
   },
   {
     selector: '.language-switcher',

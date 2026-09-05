@@ -251,9 +251,13 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
 
-    const savedTier = (() => { try { return localStorage.getItem('wts_compoundiq_tier'); } catch { return null; } })();
+    // 'Enterprise' no longer exists as a tier -- anyone previously on it (stored string
+    // or a still-valid signed entitlement) lands on Ultra, which now carries every
+    // feature Enterprise had that survived the cut.
+    const normalizeTier = (tier) => (tier === 'Enterprise' ? 'Ultra' : tier);
+    const savedTier = (() => { try { return normalizeTier(localStorage.getItem('wts_compoundiq_tier')); } catch { return null; } })();
     const ent = readEntitlement();
-    if (ent) setUserTier(ent.tier);
+    if (ent) setUserTier(normalizeTier(ent.tier));
     else if (savedTier) setUserTier(savedTier);
 
     (async () => {
@@ -462,7 +466,11 @@ export default function App() {
 
   const tabs = tabGroups.flatMap(g => g.tabs);
 
-  const tierLevels = { 'Basic': 0, 'Pro': 1, 'Ultra': 2, 'Enterprise': 3 };
+  // 'Enterprise' was removed -- its keepable features (white-label / branded plan
+  // exports, compliance line, plan notes) folded into Ultra. A stale stored/entitlement
+  // 'Enterprise' is coerced to 'Ultra' on load (see the tier-load effect), so it should
+  // never reach here, but map it defensively too.
+  const tierLevels = { 'Basic': 0, 'Pro': 1, 'Ultra': 2, 'Enterprise': 2 };
   const userLevel = tierLevels[userTier] || 0;
 
   const canAccess = (requiredTier) => {
@@ -991,7 +999,7 @@ export default function App() {
 
         {activeTab === 'My Plan' && canAccess('Pro') && (
           <div className="tab-pane active">
-            <MyPlan country={country} canAdviserNotes={canAccess('Enterprise')} onOpenPricing={() => setShowPricing(true)} />
+            <MyPlan country={country} canWhiteLabel={canAccess('Ultra')} onOpenPricing={() => setShowPricing(true)} />
           </div>
         )}
 
@@ -1057,17 +1065,6 @@ export default function App() {
           onUpgrade={(tier, period = 'monthly') => {
             if (tier === userTier) return;
             if (tier === 'Basic') { downgradeToBasic(); return; }
-            // Enterprise is a custom, per-seat quote -- there's no self-serve price, so
-            // routing it through the (fake) checkout for a "Custom" amount is nonsense.
-            // Unlock the features for preview and say plainly that a real licence goes
-            // through sales.
-            if (tier === 'Enterprise') {
-              setUserTier('Enterprise');
-              try { localStorage.setItem('wts_compoundiq_tier', 'Enterprise'); } catch { /* private mode / quota */ }
-              setTierChangeMsg('Enterprise features unlocked for preview — a live Enterprise licence is a custom, per-seat quote arranged with sales.');
-              setShowPricing(false);
-              return;
-            }
             setSelectedUpgradeTier(tier);
             setSelectedBillingPeriod(period);
             // This path isn't tied to any specific locked tab, so don't let a stale

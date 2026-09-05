@@ -24,9 +24,9 @@ const FAQ_DATA = [
     keywords: ['accurate', 'accuracy', 'correct', 'real', 'tax rate', 'reliable', 'trust']
   },
   {
-    question: 'What is the difference between Basic, Pro, Ultra, and Enterprise?',
-    answer: 'Basic is free and covers Start Here and the Calculator (South African tax rules, TFSA wrapper comparison). Pro unlocks the full planning toolkit: Budget tracker, Emergency Fund tracker, Debt Payoff planner, My Plan (with reminders), multi-goal Invest planner, Tax Optimizer, Power Tools, Net Worth tracker, Dashboard, Financial Snapshot export, and plan comparison. Ultra adds the Monte Carlo simulator, a Net Worth FX stress test, plus the AI Wealth Coach and AI Investment Advisor. Enterprise is licensed software for financial advisors and firms: white-label branding, bulk user management, and API access, priced per seat or firm license.',
-    keywords: ['tier', 'plan', 'basic', 'pro', 'ultra', 'enterprise', 'difference', 'compare plans', 'free']
+    question: 'What is the difference between Basic, Pro, and Ultra?',
+    answer: 'Basic is free and covers Start Here and the Calculator (South African tax rules, TFSA wrapper comparison). Pro unlocks the full planning toolkit: Budget tracker, Emergency Fund tracker, Debt Payoff planner, My Plan (with reminders), multi-goal Invest planner, Tax Optimizer, Power Tools, Net Worth tracker, Dashboard, Financial Snapshot export, and plan comparison. Ultra adds the Monte Carlo simulator, a Net Worth FX stress test, the AI Wealth Coach and AI Investment Advisor, plus white-label / branded plan exports with your own compliance line, FSP number, and plan notes.',
+    keywords: ['tier', 'plan', 'basic', 'pro', 'ultra', 'difference', 'compare plans', 'free']
   },
   {
     question: 'Is my data safe? Is this app secure?',

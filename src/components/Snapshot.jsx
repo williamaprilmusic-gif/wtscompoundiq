@@ -9,7 +9,7 @@ import { downloadCSV } from '../utils/csv';
 import { COMPLIANCE_KEY } from './MyPlan';
 
 // Exported so Dashboard.jsx's own print masthead can read the same firm/advisor/client
-// details and logo an Enterprise user already set here, rather than a third place to
+// details and logo an Ultra user already set here, rather than a third place to
 // set them (My Plan has its own, separate, lighter branding store -- see MyPlan.jsx's
 // BRANDING_KEY for why that isn't unified into this one).
 export const BRANDING_KEY = 'wts_compoundiq_report_branding';
@@ -42,11 +42,11 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
     try { setCompliance(localStorage.getItem(COMPLIANCE_KEY) || ''); } catch { /* ignore */ }
   }, []);
 
-  // White-label branding (firm/advisor/client name, logo) is an Enterprise perk -- see
-  // TierPricing.jsx. A lower tier's already-saved branding (e.g. from a past Enterprise
-  // trial) is kept in storage but not applied to the report, so downgrading doesn't
-  // silently delete it -- re-upgrading brings it straight back.
-  const canWhiteLabel = userTier === 'Enterprise';
+  // White-label branding (firm/advisor/client name, logo) is an Ultra feature -- see
+  // TierPricing.jsx. A lower tier's already-saved branding is kept in storage but not
+  // applied to the report, so downgrading doesn't silently delete it -- re-upgrading
+  // brings it straight back.
+  const canWhiteLabel = userTier === 'Ultra';
 
   const updateBranding = (field, value) => setBranding(prev => ({ ...prev, [field]: value }));
 
@@ -95,7 +95,7 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
       {canWhiteLabel ? (
         <div className="snapshot-branding no-print">
           <h3>🏷️ Client Report Branding</h3>
-          <p className="snapshot-branding-desc">Enterprise perk -- add your firm's details below and they'll appear on the report header instead of WTS CompoundIQ's own, ready to hand to a client.</p>
+          <p className="snapshot-branding-desc">Ultra feature -- add your firm's details below and they'll appear on the report header instead of WTS CompoundIQ's own, ready to hand to a client.</p>
           <div className="snapshot-branding-form">
             <div className="form-group">
               <label>Firm Name</label>
@@ -134,7 +134,7 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
         <div className="snapshot-branding-upsell no-print">
           <p>
             🏷️ <strong>White-label this report</strong> -- add your firm's name, logo, and client details to the header
-            instead of WTS CompoundIQ's own. Included on Enterprise.{' '}
+            instead of WTS CompoundIQ's own. Included on Ultra.{' '}
             {onOpenPricing && <button type="button" className="snapshot-branding-upsell-btn" onClick={onOpenPricing}>View Pricing</button>}
           </p>
         </div>

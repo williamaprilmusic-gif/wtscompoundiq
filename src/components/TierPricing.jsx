@@ -4,14 +4,13 @@ import './TierPricing.css';
 import FAQHelper from './FAQHelper';
 
 // Renders a tier's `price`/`priceAnnual` field for display -- a plain ZAR number
-// (199, 1499) for any priced tier, formatted here; Basic and Enterprise instead carry
-// the literal display string ('Free', 'Custom') straight through, since neither has a
-// real numeric checkout price. The number is the source of truth (see UPGRADE_PRICES
-// below, exported straight from these same fields) -- previously it was the other way
-// around: a display string like 'R1,499' got parsed back into a number with a regex,
-// which meant a purely cosmetic copy change (a different currency symbol placement, an
-// unexpected separator) could silently compute the wrong checkout price, or drop a
-// tier's price entirely by returning null.
+// (199, 1499) for a priced tier, formatted here; Basic instead carries the literal
+// string 'Free' straight through, since it has no numeric checkout price. The number is
+// the source of truth (see UPGRADE_PRICES below, exported straight from these same
+// fields) -- previously it was the other way around: a display string like 'R1,499' got
+// parsed back into a number with a regex, which meant a purely cosmetic copy change (a
+// different currency symbol placement, an unexpected separator) could silently compute
+// the wrong checkout price, or drop a tier's price entirely by returning null.
 const formatTierPrice = (value) => typeof value === 'number' ? `R${value.toLocaleString()}` : value;
 
 const tiers = [
@@ -89,30 +88,14 @@ const tiers = [
       "Monte Carlo history's-worst-window — your plan through the worst real stretch",
       'FX stress test for Net Worth (offshore holdings), with a full shock-level range and how your leverage ratio itself shifts under each shock',
       'AI Wealth Coach (5-step planner: wrapper, contribution boost, extra years, contribution escalation, unused Budget surplus)',
-      'AI Investment Advisor (personalized recommendations, incl. debt priority, saved Emergency Fund status & Net Worth leverage)'
-    ],
-    cta: 'Upgrade to Ultra',
-    highlighted: false
-  },
-  {
-    name: 'Enterprise',
-    price: 'Custom',
-    billing: 'per seat or firm license',
-    description: 'Licensed software for independent financial advisors (IFAs), debt counsellors, and wealth management boutiques -- typically R1,500-R3,500+/month depending on seats and branding.',
-    features: [
-      'Everything in Ultra, plus:',
-      'White-label branding (your own logo)',
-      'Branded plan header — firm name, logo & tagline on My Plan, Snapshot, and Dashboard printouts',
+      'AI Investment Advisor (personalized recommendations, incl. debt priority, saved Emergency Fund status & Net Worth leverage)',
+      'White-label / branded plan exports — your firm name, logo & tagline on the My Plan, Snapshot, and Dashboard PDF printouts',
       'Custom compliance / FSP disclosure line, shared across My Plan, Snapshot, and the Dashboard PDF',
       '"Prepared by [adviser] for [client] on [date]" line on client plans',
-      'Firm contact info and FSP (FAIS licence) number on both the Snapshot report and Dashboard PDF footers, alongside the compliance line',
-      'Adviser notes on client plans, with a last-edited timestamp',
-      'Bulk user management & admin dashboard',
-      'API access for external integrations',
-      'Dedicated tax specialist consultation',
-      'Priority support & custom hosting'
+      'Firm contact info and FSP (FAIS licence) number on the Snapshot report and Dashboard PDF footers',
+      'Plan notes with a last-edited timestamp'
     ],
-    cta: 'Contact Sales',
+    cta: 'Upgrade to Ultra',
     highlighted: false
   }
 ];
@@ -121,9 +104,8 @@ const tiers = [
 // format for display -- the single source of truth for checkout pricing, imported by
 // App.jsx for PaymentSection instead of a second hardcoded copy of these figures (see
 // App.jsx's own note on why that mattered: a price changed here and forgotten there
-// would advertise one number and charge another). Basic ('Free') and Enterprise
-// ('Custom') carry a string, not a number, and are intentionally absent -- App.jsx's
-// own fallback covers both.
+// would advertise one number and charge another). Basic ('Free') carries a string, not
+// a number, and is intentionally absent -- App.jsx's own fallback covers it.
 export const UPGRADE_PRICES = tiers.reduce((acc, tier) => {
   if (typeof tier.price !== 'number') return acc;
   acc[tier.name] = typeof tier.priceAnnual === 'number' ? { monthly: tier.price, annual: tier.priceAnnual } : { monthly: tier.price };
@@ -131,8 +113,8 @@ export const UPGRADE_PRICES = tiers.reduce((acc, tier) => {
 }, {});
 
 export default function TierPricing({ currentTier, onUpgrade, onClose }) {
-  // Only Pro/Ultra carry an annual option -- Basic is free and Enterprise is a direct
-  // quote, so this toggle only ever changes what those two cards show.
+  // Only Pro/Ultra carry an annual option -- Basic is free, so this toggle only ever
+  // changes what those two cards show.
   const [billingPeriod, setBillingPeriod] = useState('monthly');
   // Two-tap confirm for the downgrade, in place of a window.confirm() the browser can
   // suppress. Only the Basic card ever reads this.
@@ -141,7 +123,7 @@ export default function TierPricing({ currentTier, onUpgrade, onClose }) {
   const handleUpgrade = (tier) => {
     // App.jsx branches: Basic downgrades directly (it's free, no payment flow), anything
     // else goes through checkout. Only pass 'annual' for a tier that actually has one --
-    // Basic/Enterprise ignore the toggle so they should never carry it through.
+    // Basic ignores the toggle so it should never carry it through.
     if (tier.name === 'Basic') {
       if (!confirmingDowngrade) { setConfirmingDowngrade(true); return; }
       setConfirmingDowngrade(false);

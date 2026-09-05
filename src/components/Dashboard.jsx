@@ -45,14 +45,14 @@ const Dashboard = ({ country, reportingCountry, onNavigate, userTier }) => {
   const [efHistory, setEfHistory] = useState([]);
   const [budgetHistory, setBudgetHistory] = useState([]);
   const [investGoals, setInvestGoals] = useState([]);
-  // Enterprise white-label: read-only here too (same reuse as Snapshot's own compliance
+  // Ultra white-label: read-only here too (same reuse as Snapshot's own compliance
   // text on the flip side -- see MyPlan.jsx's BRANDING_KEY note) so the Dashboard PDF
   // export carries the same firm details as the client report, not a blank masthead.
   const [reportBranding, setReportBranding] = useState(DEFAULT_BRANDING);
   // Read-only reuse of the same compliance text set once on My Plan (see Snapshot.jsx's
   // identical reuse) -- one field, now three documents.
   const [compliance, setCompliance] = useState('');
-  const canWhiteLabel = userTier === 'Enterprise';
+  const canWhiteLabel = userTier === 'Ultra';
 
   useEffect(() => {
     setPlan(readPlan());
