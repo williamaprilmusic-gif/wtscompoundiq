@@ -20,18 +20,20 @@
 // South Africa (Spanish, Japanese, Arabic, Swahili, and so on), added back when the
 // app modeled 36 countries' worth of markets -- dropped when that dataset was (see
 // data/countries.js), then replaced with this actually-South-African set.
+// No `flag` field: every language here is South African, so LanguageSwitcher shows the
+// name alone rather than the same 🇿🇦 eleven times.
 export const LANGUAGES = [
-  { code: 'en', label: 'English', flag: '🇿🇦' },
-  { code: 'af', label: 'Afrikaans', flag: '🇿🇦' },
-  { code: 'zu', label: 'isiZulu', flag: '🇿🇦' },
-  { code: 'xh', label: 'isiXhosa', flag: '🇿🇦' },
-  { code: 'nso', label: 'Sepedi', flag: '🇿🇦' },
-  { code: 'tn', label: 'Setswana', flag: '🇿🇦' },
-  { code: 'st', label: 'Sesotho', flag: '🇿🇦' },
-  { code: 'ts', label: 'Xitsonga', flag: '🇿🇦' },
-  { code: 'ss', label: 'siSwati', flag: '🇿🇦' },
-  { code: 've', label: 'Tshivenda', flag: '🇿🇦' },
-  { code: 'nr', label: 'isiNdebele', flag: '🇿🇦' }
+  { code: 'en', label: 'English' },
+  { code: 'af', label: 'Afrikaans' },
+  { code: 'zu', label: 'isiZulu' },
+  { code: 'xh', label: 'isiXhosa' },
+  { code: 'nso', label: 'Sepedi' },
+  { code: 'tn', label: 'Setswana' },
+  { code: 'st', label: 'Sesotho' },
+  { code: 'ts', label: 'Xitsonga' },
+  { code: 'ss', label: 'siSwati' },
+  { code: 've', label: 'Tshivenda' },
+  { code: 'nr', label: 'isiNdebele' }
 ];
 
 export const translations = {

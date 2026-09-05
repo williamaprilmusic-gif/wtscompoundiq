@@ -7,7 +7,9 @@
 // Wrapped in a pill with a 🌐 glyph and its own caret so a non-English speaker can
 // spot it at a glance rather than hunting through identical-looking header controls;
 // the element is still a native <select> (best keyboard + mobile picker behaviour),
-// just restyled. Its rendered text shows the current flag + language name.
+// just restyled. Options show the language name only -- every language here is South
+// African, so a per-option flag would be the same 🇿🇦 eleven times over and just
+// collide visually with the 🌐 pill icon.
 import React from 'react';
 import './LanguageSwitcher.css';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -25,7 +27,7 @@ const LanguageSwitcher = () => {
         aria-label={t('header.language')}
       >
         {languages.map((l) => (
-          <option key={l.code} value={l.code}>{l.flag} {l.label}</option>
+          <option key={l.code} value={l.code}>{l.label}</option>
         ))}
       </select>
       <span className="language-switcher-caret" aria-hidden="true">▾</span>
