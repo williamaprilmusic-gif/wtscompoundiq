@@ -582,6 +582,20 @@ body {
 }
 .doubling-time-note strong { color: var(--text); }
 
+/* "If you stopped contributing today" -- same boxed treatment as the split-bar it
+   follows, since it's a second angle on the same question rather than a new topic. */
+.coast-callout {
+  margin: -8px 0 22px;
+  padding: 12px 18px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--border);
+  font-size: 0.82rem;
+  color: var(--mut);
+  line-height: 1.5;
+}
+.coast-callout strong { color: var(--text); }
+
 /* Goal-seek: "to have R X by year N, save R Y/month". Blue/accent tint. */
 .target-seek {
   margin: -8px 0 22px;

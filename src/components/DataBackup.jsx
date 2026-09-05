@@ -1,10 +1,11 @@
 // src/components/DataBackup.jsx
 // Always reachable regardless of tier -- this is the one place that can rescue a lost
 // tier/plan if browser data is cleared, so it can't itself live behind a paywall.
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './DataBackup.css';
 import { PLAN_STORAGE_KEY } from '../utils/planStorage';
 import { FLUSH_EVENT } from '../utils/usePersistedState';
+import { daysBetween, fmtDaysAgo } from '../utils/dateAgo';
 import { HISTORY_KEY as NETWORTH_HISTORY_KEY } from './NetWorth';
 import { HISTORY_KEY as DEBTPAYOFF_HISTORY_KEY, EXTRA_KEY as DEBTPAYOFF_EXTRA_KEY } from './DebtPayoff';
 import { HISTORY_KEY as EMERGENCYFUND_HISTORY_KEY } from './EmergencyFund';
@@ -56,7 +57,14 @@ const ALL_STORAGE_KEYS = [
   MYPLAN_CLIENT_NAME_KEY
 ];
 
-const exportData = () => {
+// Deliberately NOT included in ALL_STORAGE_KEYS -- like THEME_KEY and the adviser-notes
+// "updated at" stamp, this is a display nicety derived from the act of backing up
+// itself, not data worth restoring. Restoring an old backup shouldn't also roll back
+// how recently a *newer* backup was actually taken.
+const LAST_BACKUP_AT_KEY = 'wts_compoundiq_last_backup_at';
+const LAST_BACKUP_WARN_DAYS = 30;
+
+const exportData = (onExported) => {
   // usePersistedState debounces its localStorage writes, so a field edited moments ago
   // may not have landed in localStorage yet. Force every mounted instance to flush its
   // latest value synchronously before reading, or the export can silently miss it.
@@ -66,7 +74,8 @@ const exportData = () => {
     const value = localStorage.getItem(key);
     if (value !== null) data[key] = value;
   });
-  const payload = { app: 'WTS CompoundIQ', exportedAt: new Date().toISOString(), data };
+  const now = new Date().toISOString();
+  const payload = { app: 'WTS CompoundIQ', exportedAt: now, data };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -76,6 +85,8 @@ const exportData = () => {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  try { localStorage.setItem(LAST_BACKUP_AT_KEY, now); } catch { /* private mode / quota */ }
+  onExported?.(now);
 };
 
 const importData = (file, onDone) => {
@@ -100,6 +111,17 @@ const importData = (file, onDone) => {
 };
 
 const DataBackup = () => {
+  const [lastBackupAt, setLastBackupAt] = useState(null);
+
+  useEffect(() => {
+    try { setLastBackupAt(localStorage.getItem(LAST_BACKUP_AT_KEY) || null); } catch { /* ignore */ }
+  }, []);
+
+  const handleExport = () => exportData(setLastBackupAt);
+
+  const backupDaysAgo = lastBackupAt ? daysBetween(lastBackupAt) : null;
+  const backupStale = backupDaysAgo === null || backupDaysAgo > LAST_BACKUP_WARN_DAYS;
+
   const handleImportFile = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -124,12 +146,17 @@ const DataBackup = () => {
         Your data (tier, saved plans, net worth/debts/goals) lives only in this browser.
       </span>
       <div className="data-backup-buttons">
-        <button className="data-backup-btn" onClick={exportData}>⬇️ Export Backup</button>
+        <button className="data-backup-btn" onClick={handleExport}>⬇️ Export Backup</button>
         <label className="data-backup-btn secondary">
           ⬆️ Import Backup
           <input type="file" accept="application/json" onChange={handleImportFile} hidden />
         </label>
       </div>
+      <span className={`data-backup-last ${backupStale ? 'stale' : ''}`}>
+        {lastBackupAt
+          ? `Last backup: ${fmtDaysAgo(backupDaysAgo)}${backupStale ? ' -- consider exporting a fresh one' : ''}`
+          : "You haven't exported a backup yet in this browser -- clearing browser data without one loses everything above."}
+      </span>
     </div>
   );
 };

@@ -4,7 +4,7 @@ import './PowerTools.css';
 import Term from './Term';
 import SubTabs from './SubTabs';
 import { MAX_YEARS_TO_SEARCH, yearsToReachTarget, simulateDebtFirst, simulateInvestFirst, simulateDrawdown } from '../powerToolsEngine';
-import { savePlanSection } from '../utils/planStorage';
+import { savePlanSection, monthsToYearsLabel } from '../utils/planStorage';
 import { calculateCompoundInterest } from '../engine';
 import { calculateLoanAmortization } from '../loanAmortization';
 import { maxLoanForPayment, estimateZaTransferDuty } from '../homeAffordability';
@@ -35,7 +35,7 @@ import { feeDragAnalysis } from '../feeDrag';
 import { nominalToEffective, effectiveToNominal } from '../effectiveRate';
 import { leaseVsBuy } from '../leaseVsBuy';
 import { baristaFireNumber } from '../baristaFire';
-import { retirementIncomeGap } from '../retirementGap';
+import { retirementIncomeGap, monthsToCloseGap } from '../retirementGap';
 import { depositSavingsTimeline } from '../depositTimeline';
 import { realReturn } from '../realReturn';
 import { compareDebtConsolidation } from '../debtConsolidation';
@@ -313,6 +313,8 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const [rgPot, setRgPot] = useState(0);
   const [rgTarget, setRgTarget] = useState(0);
   const [rgSwr, setRgSwr] = useState(4);
+  const [rgExtraMonthly, setRgExtraMonthly] = useState(0);
+  const [rgCloseRate, setRgCloseRate] = useState(rate);
 
   const [dtPrice, setDtPrice] = useState(0);
   const [dtPercent, setDtPercent] = useState(10);
@@ -611,6 +613,12 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   // The engine floors the rate at 0.01% and falls back to 4% for a 0 -- show the rate
   // it actually used, not the raw (possibly cleared/negative) field value.
   const rgSwrShown = Math.max(0.01, rgSwr || 4);
+  // "Another 11 years of saving R6,000/month would close it" -- turns the capital gap
+  // above into a concrete timeline, the same way Coast FIRE and Sinking Fund give their
+  // own shortfalls a horizon instead of leaving it as a bare rand figure.
+  const rgCloseGap = (!retireGap.onTrack && retireGap.capitalGap > 0)
+    ? monthsToCloseGap({ capitalGap: retireGap.capitalGap, extraMonthly: rgExtraMonthly, rate: rgCloseRate })
+    : null;
   const depositTimeline = depositSavingsTimeline({ homePrice: dtPrice, depositPercent: dtPercent, monthlySaving: dtMonthly, alreadySaved: dtSaved, annualSavingsRate: dtRate });
   const realRet = realReturn({ nominalRate: rrNominal, inflationRate: rrInflation, taxRate: rrTax });
 
@@ -2302,6 +2310,30 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
               Calculator tab or the FIRE / Coast FIRE tools. Doesn't model tax on withdrawals or any state/employer
               pension you'll also receive — subtract those from the income you want first.
             </p>
+
+            {!retireGap.onTrack && (
+              <div className="power-subsection">
+                <h4>How long to close it?</h4>
+                <p className="power-tool-desc">If you saved extra on top of what's already projected, growing at some rate, how long until it makes up the {country.symbol} {Math.round(retireGap.capitalGap).toLocaleString()} shortfall?</p>
+                <div className="power-form">
+                  <div className="form-group">
+                    <label>Extra Savings ({country.symbol}/mo)</label>
+                    <input type="number" min="0" step="500" value={rgExtraMonthly} onChange={(e) => setRgExtraMonthly(Number(e.target.value))} />
+                  </div>
+                  <div className="form-group">
+                    <label>Growth Rate (%/yr)</label>
+                    <input type="number" step="0.1" value={rgCloseRate} onChange={(e) => setRgCloseRate(Number(e.target.value))} />
+                  </div>
+                </div>
+                {rgExtraMonthly > 0 && rgCloseGap && (
+                  <div className={`power-verdict ${rgCloseGap.reachable ? 'invest' : 'danger'}`}>
+                    {rgCloseGap.reachable
+                      ? `About ${monthsToYearsLabel(rgCloseGap.months)} (${rgCloseGap.months} months) of saving an extra ${country.symbol}${rgExtraMonthly.toLocaleString()}/month at ${rgCloseRate}%/yr would close the gap.`
+                      : `At ${country.symbol}${rgExtraMonthly.toLocaleString()}/month and ${rgCloseRate}%/yr, this doesn't close the gap within 100 years — a bigger monthly amount, a higher return, or a lower target income is needed.`}
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>

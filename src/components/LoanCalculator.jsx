@@ -12,6 +12,12 @@ import { uniqueId } from '../utils/uniqueId';
 import Term from './Term';
 import SnapshotChart from './SnapshotChart';
 
+// "Clears this loan around March 2029" reads more concretely than "in 41 months" --
+// same touch as Debt Payoff's own payoff-date hint and the Calculator tab's
+// years-to-grow date.
+const monthsFromNowLabel = (months) =>
+  new Date(new Date().setMonth(new Date().getMonth() + months)).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+
 const SINGLE_BALANCE_SERIES = [{ key: 'debts', label: 'Loan Balance' }];
 const COMPARISON_BALANCE_SERIES = [{ key: 'standard', label: 'Standard Payment' }, { key: 'plan', label: 'With Extra Payments' }];
 const formatYearAxis = (year) => `Yr ${year}`;
@@ -250,7 +256,8 @@ const LoanCalculator = ({ country }) => {
           {extraMonthly > 0 && result.extra && (
             <div className="loan-extra-callout">
               Paying an extra {country.symbol}{extraMonthly.toLocaleString()}/month clears this {activeType.shortLabel} in{' '}
-              <strong>{monthsToYearsLabel(result.extra.payoffMonths)}</strong> instead of {monthsToYearsLabel(result.payoffMonths)} --
+              <strong>{monthsToYearsLabel(result.extra.payoffMonths)}</strong> instead of {monthsToYearsLabel(result.payoffMonths)}{' '}
+              (<span className="loan-result-date">around {monthsFromNowLabel(result.extra.payoffMonths)}</span>) --
               saving <strong className="positive">{country.symbol} {result.extra.interestSaved.toLocaleString()}</strong> in interest
               and {Math.floor(result.extra.monthsSaved / 12)} years {result.extra.monthsSaved % 12} months off the term.
             </div>
@@ -260,7 +267,8 @@ const LoanCalculator = ({ country }) => {
             <div className="loan-extra-callout biweekly">
               💡 Switching to bi-weekly payments (half your {country.symbol}{result.monthlyPayment.toLocaleString()} instalment, paid every 2
               weeks instead of once a month) works out to one extra payment a year. That alone would clear this {activeType.shortLabel} in{' '}
-              <strong>{monthsToYearsLabel(biweeklyResult.extra.payoffMonths)}</strong> instead of {monthsToYearsLabel(result.payoffMonths)},
+              <strong>{monthsToYearsLabel(biweeklyResult.extra.payoffMonths)}</strong> instead of {monthsToYearsLabel(result.payoffMonths)}{' '}
+              (<span className="loan-result-date">around {monthsFromNowLabel(biweeklyResult.extra.payoffMonths)}</span>),
               saving <strong className="positive">{country.symbol} {biweeklyResult.extra.interestSaved.toLocaleString()}</strong> in interest.
               You do pay one extra instalment's worth per year in total -- but if you're paid weekly or bi-weekly yourself, it often lines up
               with your paycheck rhythm instead of feeling like a separate decision (confirm your lender actually applies bi-weekly payments

@@ -237,6 +237,11 @@
   border-color: rgba(56, 189, 248, 0.3);
 }
 
+.loan-result-date {
+  color: var(--mut);
+  font-size: 0.85em;
+}
+
 .loan-tips-section {
   margin: 28px 0 20px;
 }

@@ -38,6 +38,7 @@ import { readEntitlement, refreshEntitlement, clearEntitlement, consumePaystackR
 import { projectionMilestones } from './projectionMilestones';
 import { solveMonthlyForGoal } from './goalSolver';
 import { ruleOf72 } from './ruleOf72';
+import { coastContributionShare } from './coastContributionShare';
 import { usePersistedState } from './utils/usePersistedState';
 
 const THEME_KEY = 'wts_compoundiq_theme';
@@ -387,6 +388,17 @@ export default function App() {
   // alongside the other free-tier insights, reusing the same Rule of 72 engine the
   // dedicated Power Tools version uses.
   const doublingTime = rate > 0 ? ruleOf72({ annualRate: rate, years }) : null;
+
+  // "If you stopped contributing today" -- reruns the same plan with monthly set to 0,
+  // so the split-bar's "your deposits vs compound growth" question gets a second angle:
+  // how much of the final balance is already locked in from what's saved so far (the
+  // starting amount alone, still compounding) versus how much depends on continuing to
+  // contribute. Only shown when there's actually a monthly contribution to stop --
+  // otherwise this is exactly the split-bar with an extra step.
+  const coastFinalBalance = monthly > 0
+    ? calculateCompoundInterest({ ...rateBandParams, rate, monthly: 0 }).finalBalance
+    : results.finalBalance;
+  const coastShare = coastContributionShare(results.finalBalance, coastFinalBalance);
 
   // "Cost of waiting" -- same plan against the same target date, started `waitYears`
   // later (fewer compounding years). A free-tier nudge shown under the result.
@@ -769,6 +781,15 @@ export default function App() {
                   </div>
                 );
               })()}
+
+              {monthly > 0 && coastShare.dependsOnContributing > 0 && (
+                <p className="coast-callout">
+                  🛑 If you stopped contributing today, your {country.symbol}{initial.toLocaleString()} starting amount
+                  alone would still grow to about <strong>{country.symbol} {Math.round(coastShare.coastFinalBalance).toLocaleString()}</strong> by
+                  year {years} ({coastShare.coastSharePct.toFixed(0)}% of the projected total) -- continuing to contribute {country.symbol}{monthly.toLocaleString()}/month
+                  accounts for the other {country.symbol} {Math.round(coastShare.dependsOnContributing).toLocaleString()} ({(100 - coastShare.coastSharePct).toFixed(0)}%).
+                </p>
+              )}
 
               {years > 1 && effBump > 0 && Number.isFinite(bumpGain) && bumpGain > 0 && (
                 <div className="bump-nudge">

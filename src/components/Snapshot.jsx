@@ -13,7 +13,7 @@ import { COMPLIANCE_KEY } from './MyPlan';
 // set them (My Plan has its own, separate, lighter branding store -- see MyPlan.jsx's
 // BRANDING_KEY for why that isn't unified into this one).
 export const BRANDING_KEY = 'wts_compoundiq_report_branding';
-export const DEFAULT_BRANDING = { firmName: '', advisorName: '', clientName: '', logoDataUrl: '' };
+export const DEFAULT_BRANDING = { firmName: '', advisorName: '', clientName: '', logoDataUrl: '', contactInfo: '' };
 // Keeps a data-URL logo (base64-encoded in localStorage alongside everything else this
 // app persists) from silently eating a meaningful chunk of the shared ~5-10MB
 // localStorage quota -- a compressed PNG/JPG a firm would actually use for a report
@@ -108,6 +108,10 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
             <div className="form-group">
               <label>Client Name</label>
               <input type="text" value={branding.clientName} onChange={(e) => updateBranding('clientName', e.target.value)} placeholder="e.g. John Doe" />
+            </div>
+            <div className="form-group">
+              <label>Contact Info (for the report footer)</label>
+              <input type="text" value={branding.contactInfo} onChange={(e) => updateBranding('contactInfo', e.target.value)} placeholder="e.g. 011 123 4567 · jane@acmefinancial.co.za" />
             </div>
           </div>
           <div className="snapshot-branding-logo-row">
@@ -244,6 +248,9 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
         </p>
         {canWhiteLabel && compliance.trim() && (
           <p className="snapshot-disclaimer snapshot-compliance">{compliance.trim()}</p>
+        )}
+        {canWhiteLabel && (branding.contactInfo || '').trim() && (
+          <p className="snapshot-disclaimer snapshot-contact">{(branding.firmName || '').trim() || 'Contact'}: {branding.contactInfo.trim()}</p>
         )}
       </div>
 

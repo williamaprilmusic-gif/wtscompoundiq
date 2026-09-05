@@ -76,6 +76,20 @@
   gap: 24px;
 }
 
+/* A smaller, secondary question nested inside a power-tool-card -- e.g. Retirement
+   Income Gap's "how long to close it?" follow-up to the main shortfall verdict. */
+.power-subsection {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.power-subsection h4 {
+  font-size: 0.92rem;
+  color: var(--text);
+  margin: 0 0 6px;
+}
+
 .power-stat {
   display: flex;
   flex-direction: column;

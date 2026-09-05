@@ -35,7 +35,8 @@ const tiers = [
       'Milestone pacing — "you reach R1m in year 18"',
       'Deposits vs. compound-growth split of every result',
       '"One small bump" nudge — what an extra R500/mo is worth',
-      'Goal seek — "to have R2m in 20 years, save R X/month"'
+      'Goal seek — "to have R2m in 20 years, save R X/month"',
+      '"If you stopped contributing today" — how much of your result is already locked in'
     ],
     cta: 'Downgrade to Basic',
     highlighted: false
@@ -53,6 +54,7 @@ const tiers = [
       'Budget / Cash Flow tracker, with a monthly surplus history & trend chart',
       'Emergency Fund tracker',
       'Debt Payoff planner (Avalanche & Snowball with a debt-free-by date, plus a consolidation analyzer)',
+      'Loan & Bond Calculator (home/vehicle/personal/student loans, extra & bi-weekly payments, one-off lump sums, all with a payoff-by calendar date)',
       'My Plan (save a snapshot, check in on progress later, with reminders)',
       'Goal-based Invest planner (multiple goals at once)',
       'Tax Optimizer, including a retirement fund comparison & a tax-loss harvesting calculator',
@@ -76,7 +78,7 @@ const tiers = [
     description: 'Every scenario tool, plus AI-powered guidance -- on top of Pro.',
     features: [
       'Everything in Pro, plus:',
-      '8 advanced Power Tools — Drawdown, Coast & Barista FIRE, Retirement Income Gap, Pre-Tax & RA Tax Optimizer, Two-Pot Withdrawal, Sequence-of-Returns Risk',
+      '8 advanced Power Tools — Drawdown, Coast & Barista FIRE, Retirement Income Gap (now with a "how long to close it" timeline), Pre-Tax & RA Tax Optimizer, Two-Pot Withdrawal, Sequence-of-Returns Risk',
       'Monte Carlo simulation (1,000-path outcome range)',
       'Monte Carlo solvers — contribution OR years to hit a target success probability',
       'Monte Carlo retirement drawdown — how often the pot survives being lived off',
@@ -101,6 +103,7 @@ const tiers = [
       'Branded plan header — firm name, logo & tagline on My Plan, Snapshot, and Dashboard printouts',
       'Custom compliance / FSP disclosure line, shared across My Plan, Snapshot, and the Dashboard PDF',
       '"Prepared by [adviser] for [client] on [date]" line on client plans',
+      'Firm contact info on the Snapshot report footer, alongside the compliance line',
       'Adviser notes on client plans, with a last-edited timestamp',
       'Bulk user management & admin dashboard',
       'API access for external integrations',

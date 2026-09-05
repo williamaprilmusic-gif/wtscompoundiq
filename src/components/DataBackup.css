@@ -38,3 +38,14 @@
   border-color: var(--border);
   color: var(--mut);
 }
+
+.data-backup-last {
+  flex-basis: 100%;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--mut);
+}
+
+.data-backup-last.stale {
+  color: var(--accent-yellow, #eab308);
+}

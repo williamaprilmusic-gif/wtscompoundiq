@@ -21,3 +21,25 @@ export const retirementIncomeGap = ({ projectedPot, targetAnnualIncome, withdraw
     coverageRatio: target > 0 ? (incomeFromPot / target) * 100 : 100
   };
 };
+
+// How long, saving `extraMonthly` on top of what's already projected, until a plain
+// monthly-compounding pot growing at `rate`%/yr reaches `capitalGap` -- turns "you're
+// short by R2.3m" into "another 11 years of saving R6,000/month would close it", the
+// same kind of concrete timeline the Sinking Fund and Deposit Timeline tools give their
+// own targets. Deliberately simple compounding (no contribution escalation, no tax) --
+// this is a rough "how long" answer, not a re-run of the full Calculator engine.
+const MAX_CLOSE_GAP_MONTHS = 100 * 12;
+export const monthsToCloseGap = ({ capitalGap, extraMonthly, rate }) => {
+  const gap = Math.max(0, capitalGap || 0);
+  const monthly = Math.max(0, extraMonthly || 0);
+  if (gap <= 0) return { months: 0, reachable: true };
+  if (monthly <= 0) return { months: null, reachable: false };
+
+  const monthlyRate = Math.max(-0.99, (rate || 0) / 100) / 12;
+  let balance = 0;
+  for (let m = 1; m <= MAX_CLOSE_GAP_MONTHS; m++) {
+    balance = balance * (1 + monthlyRate) + monthly;
+    if (balance >= gap) return { months: m, reachable: true };
+  }
+  return { months: null, reachable: false };
+};
