@@ -234,17 +234,27 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
   const [fxShockPct, setFxShockPct] = useState(0);
   // Parameterized so both the slider-driven single figure below AND the fixed-level
   // range table (FX_SHOCK_LEVELS) can reuse the identical calculation instead of two
-  // copies of the same shock math drifting apart.
-  const netWorthAtShock = (shockPct) => {
+  // copies of the same shock math drifting apart. Returns the shocked assets/debts
+  // too (not just net worth) so the leverage-under-shock stat below can feed them
+  // straight into balanceSheetRatios instead of a third copy of this same math.
+  const balanceSheetAtShock = (shockPct) => {
     const valueInShocked = (item) => {
       const base = valueIn(item);
       return (item.currency || country.code) === country.code ? base : base * (1 + shockPct / 100);
     };
     const assets = items.filter(i => i.type === 'asset').reduce((s, i) => s + valueInShocked(i), 0);
     const debts = items.filter(i => i.type === 'debt').reduce((s, i) => s + valueInShocked(i), 0);
-    return assets - debts;
+    return { assets, debts, netWorth: assets - debts };
   };
+  const netWorthAtShock = (shockPct) => balanceSheetAtShock(shockPct).netWorth;
   const shockedNetWorth = netWorthAtShock(fxShockPct);
+  // Leverage doesn't move in lockstep with net worth under an FX shock -- a weaker
+  // currency can inflate offshore-denominated debt just as much as offshore assets, so
+  // the debt-to-asset ratio can worsen even in a scenario where net worth itself rises.
+  // Worth surfacing on its own rather than assuming the headline net-worth number tells
+  // the whole leverage story.
+  const shockedBalanceSheet = balanceSheetAtShock(fxShockPct);
+  const shockedRatios = balanceSheetRatios({ totalAssets: shockedBalanceSheet.assets, totalDebts: shockedBalanceSheet.debts });
 
   // Converted once and reused by the delta below, the chart, and the list further down
   // instead of calling convertAmount three times per snapshot. Memoized on
@@ -533,6 +543,12 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
                 <span>Change from Today</span>
                 <strong className={shockedNetWorth - netWorth >= 0 ? 'positive' : 'negative'}>
                   {shockedNetWorth - netWorth >= 0 ? '+' : '-'}{country.symbol} {Math.abs(Math.round(shockedNetWorth - netWorth)).toLocaleString()}
+                </strong>
+              </div>
+              <div className="nw-fx-stress-stat">
+                <span>Leverage at {fxShockPct > 0 ? '+' : ''}{fxShockPct}% (vs {bsRatios.debtToAsset == null ? '—' : `${bsRatios.debtToAsset.toFixed(0)}%`} today)</span>
+                <strong className={shockedRatios.band === 'strong' || shockedRatios.band === 'ok' ? 'positive' : 'warn'}>
+                  {shockedRatios.debtToAsset == null ? '—' : `${shockedRatios.debtToAsset.toFixed(0)}%`}
                 </strong>
               </div>
             </div>

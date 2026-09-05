@@ -36,7 +36,8 @@ const tiers = [
       'Deposits vs. compound-growth split of every result',
       '"One small bump" nudge — what an extra R500/mo is worth',
       'Goal seek — "to have R2m in 20 years, save R X/month"',
-      '"If you stopped contributing today" — how much of your result is already locked in'
+      '"If you stopped contributing today" — how much of your result is already locked in',
+      '"As retirement income" — your projected balance reframed at a 4% safe withdrawal rate'
     ],
     cta: 'Downgrade to Basic',
     highlighted: false
@@ -56,7 +57,7 @@ const tiers = [
       'Debt Payoff planner (Avalanche & Snowball with a debt-free-by date, plus a consolidation analyzer)',
       'Loan & Bond Calculator (home/vehicle/personal/student loans, extra & bi-weekly payments, one-off lump sums, all with a payoff-by calendar date)',
       'My Plan (save a snapshot, check in on progress later, with reminders)',
-      'Goal-based Invest planner (multiple goals at once)',
+      'Goal-based Invest planner (multiple goals at once, checked against your saved Budget surplus)',
       'Tax Optimizer, including a retirement fund comparison & a tax-loss harvesting calculator',
       'Power Tools — 41 focused calculators (FIRE, Fund Fee Face-off, Contractor Rate, VAT Calculator, Capital Gains Tax, and more)',
       'Net Worth tracker with asset allocation, forecast & balance-sheet ratios',
@@ -85,7 +86,7 @@ const tiers = [
       'Monte Carlo safe-withdrawal solver — the year-1 draw the pot survives',
       'Monte Carlo goal-timeline — your odds of being there by year 5, 10, 15…',
       "Monte Carlo history's-worst-window — your plan through the worst real stretch",
-      'FX stress test for Net Worth (offshore holdings), with a full shock-level range at a glance',
+      'FX stress test for Net Worth (offshore holdings), with a full shock-level range and how your leverage ratio itself shifts under each shock',
       'AI Wealth Coach (5-step planner: wrapper, contribution boost, extra years, contribution escalation, unused Budget surplus)',
       'AI Investment Advisor (personalized recommendations, incl. debt priority, saved Emergency Fund status & Net Worth leverage)'
     ],
@@ -103,7 +104,7 @@ const tiers = [
       'Branded plan header — firm name, logo & tagline on My Plan, Snapshot, and Dashboard printouts',
       'Custom compliance / FSP disclosure line, shared across My Plan, Snapshot, and the Dashboard PDF',
       '"Prepared by [adviser] for [client] on [date]" line on client plans',
-      'Firm contact info on the Snapshot report footer, alongside the compliance line',
+      'Firm contact info on both the Snapshot report and Dashboard PDF footers, alongside the compliance line',
       'Adviser notes on client plans, with a last-edited timestamp',
       'Bulk user management & admin dashboard',
       'API access for external integrations',

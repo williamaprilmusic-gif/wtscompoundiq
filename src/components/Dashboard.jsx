@@ -438,6 +438,9 @@ const Dashboard = ({ country, reportingCountry, onNavigate, userTier }) => {
       {canWhiteLabel && compliance.trim() && (
         <p className="dashboard-note dashboard-print-compliance">{compliance.trim()}</p>
       )}
+      {canWhiteLabel && (reportBranding.contactInfo || '').trim() && (
+        <p className="dashboard-note dashboard-print-compliance">{(reportBranding.firmName || '').trim() || 'Contact'}: {reportBranding.contactInfo.trim()}</p>
+      )}
     </div>
   );
 };

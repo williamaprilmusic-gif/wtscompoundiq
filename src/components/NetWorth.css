@@ -416,6 +416,10 @@
   color: var(--accent-red);
 }
 
+.nw-fx-stress-stat strong.warn {
+  color: var(--accent-yellow);
+}
+
 .nw-fx-stress-note {
   font-size: 0.78rem;
   color: var(--mut2);

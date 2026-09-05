@@ -1,5 +1,5 @@
 // src/components/Invest.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Invest.css';
 import { calculateCompoundInterest } from '../engine';
 import { solveMonthlyForGoal } from '../goalSolver';
@@ -8,6 +8,8 @@ import { confirmRemoval } from '../utils/confirmRemoval';
 import { parseCSV, downloadCSV, cleanCSVNumber } from '../utils/csv';
 import { uniqueId } from '../utils/uniqueId';
 import { safeTrim } from '../utils/safeTrim';
+import { computeBudgetSummary, BUDGET_ITEMS_KEY } from '../budgetEngine';
+import { readJSONArray } from '../utils/storage';
 
 // Exported so Dashboard.jsx can read the same live goal list and show a combined-
 // monthly-needed card, and so DataBackup.jsx's existing entry for this key (it was
@@ -32,6 +34,17 @@ const downloadTemplate = () => {
 const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0 }) => {
   const [goals, setGoals] = usePersistedState(GOALS_KEY, []);
   const [importError, setImportError] = useState(null);
+
+  // Read-only reuse of the Budget tab's own saved surplus (same
+  // computeBudgetSummary(readJSONArray(...)) call Coach.jsx's own "unused surplus"
+  // step and Budget.jsx's "send to Debt Payoff" button use) -- so "can I actually
+  // afford all these goals' required contributions" has a real number to check
+  // against instead of the user doing that math themselves.
+  const [budgetSurplus, setBudgetSurplus] = useState(null);
+  useEffect(() => {
+    const summary = computeBudgetSummary(readJSONArray(BUDGET_ITEMS_KEY));
+    if (summary.totalIncome > 0 || summary.totalExpenses > 0) setBudgetSurplus(summary.surplus);
+  }, []);
 
   const addGoal = (preset) => {
     setGoals(prev => [...prev, {
@@ -221,6 +234,16 @@ const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12, con
               <strong className="positive">{country.symbol} {Math.round(combinedInterest).toLocaleString()}</strong>
             </div>
           </div>
+        </div>
+      )}
+
+      {goals.length > 0 && budgetSurplus != null && (
+        <div className={`invest-budget-check ${combinedMonthly <= budgetSurplus ? 'covered' : 'short'}`}>
+          {combinedMonthly <= budgetSurplus
+            ? `✅ Covered by your Budget: your saved Budget plan shows a ${country.symbol}${Math.round(budgetSurplus).toLocaleString()}/month surplus -- enough for the ${country.symbol}${Math.round(combinedMonthly).toLocaleString()}/month these goal${goals.length === 1 ? '' : 's'} need, with ${country.symbol}${Math.round(budgetSurplus - combinedMonthly).toLocaleString()}/month left over.`
+            : budgetSurplus <= 0
+              ? `⚠️ Your saved Budget plan shows no surplus right now, but these goals need ${country.symbol}${Math.round(combinedMonthly).toLocaleString()}/month -- revisit the Budget tab, or these contributions aren't coming from spare cash flow.`
+              : `⚠️ Short by ${country.symbol}${Math.round(combinedMonthly - budgetSurplus).toLocaleString()}/month: these goal${goals.length === 1 ? '' : 's'} need ${country.symbol}${Math.round(combinedMonthly).toLocaleString()}/month, but your saved Budget plan only shows a ${country.symbol}${Math.round(budgetSurplus).toLocaleString()}/month surplus.`}
         </div>
       )}
 

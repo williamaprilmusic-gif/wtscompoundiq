@@ -582,6 +582,14 @@ body {
 }
 .doubling-time-note strong { color: var(--text); }
 
+.withdrawal-income-note {
+  margin: -8px 0 22px;
+  font-size: 0.82rem;
+  color: var(--mut);
+  line-height: 1.5;
+}
+.withdrawal-income-note strong { color: var(--text); }
+
 /* "If you stopped contributing today" -- same boxed treatment as the split-bar it
    follows, since it's a second angle on the same question rather than a new topic. */
 .coast-callout {

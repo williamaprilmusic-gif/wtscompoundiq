@@ -39,6 +39,7 @@ import { projectionMilestones } from './projectionMilestones';
 import { solveMonthlyForGoal } from './goalSolver';
 import { ruleOf72 } from './ruleOf72';
 import { coastContributionShare } from './coastContributionShare';
+import { withdrawalIncomeEstimate } from './withdrawalIncomeEstimate';
 import { usePersistedState } from './utils/usePersistedState';
 
 const THEME_KEY = 'wts_compoundiq_theme';
@@ -359,6 +360,11 @@ export default function App() {
   };
   const rateBandLow = calculateCompoundInterest({ ...rateBandParams, rate: rate - RATE_BAND }).finalBalance;
   const rateBandHigh = calculateCompoundInterest({ ...rateBandParams, rate: rate + RATE_BAND }).finalBalance;
+
+  // "As retirement income" -- the same headline final balance, reframed through a 4%
+  // safe withdrawal rate (the FIRE Number / Retirement Income Gap tools' own default)
+  // so a plain lump sum also reads as roughly what it could pay out per year/month.
+  const withdrawalIncome = withdrawalIncomeEstimate({ finalBalance: results.finalBalance, withdrawalRate: 4 });
 
   // "You cross R1,000,000 in year 18" -- pace for the headline figure, from the same
   // projection. A free-tier touch like the rate band and cost-of-waiting.
@@ -746,6 +752,15 @@ export default function App() {
               {doublingTime && (
                 <p className="doubling-time-note">
                   🔁 At {rate}%/yr, money roughly doubles every <strong>{doublingTime.exactDoublingYears.toFixed(1)} years</strong> — over your {years}-year horizon that's about {doublingTime.doublingsOverPeriod.toFixed(1)} doublings.
+                </p>
+              )}
+
+              {results.finalBalance > 0 && (
+                <p className="withdrawal-income-note">
+                  💰 As retirement income: at a 4% safe withdrawal rate, {country.symbol} {results.finalBalance.toLocaleString()} could support about{' '}
+                  <strong>{country.symbol} {Math.round(withdrawalIncome.annualIncome).toLocaleString()}/year</strong>{' '}
+                  ({country.symbol} {Math.round(withdrawalIncome.monthlyIncome).toLocaleString()}/month), in today's money -- see the Retirement Income Gap
+                  and FIRE Number Power Tools to check that against what you'd actually want to spend.
                 </p>
               )}
 
