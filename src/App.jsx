@@ -367,6 +367,15 @@ export default function App() {
   const rateBandLow = calculateCompoundInterest({ ...rateBandParams, rate: rate - RATE_BAND }).finalBalance;
   const rateBandHigh = calculateCompoundInterest({ ...rateBandParams, rate: rate + RATE_BAND }).finalBalance;
 
+  // "...vs leaving it in a savings account": the same plan run at the country's typical
+  // bank rate (data/countries.js -- ~6.8% for SA). Surfaces the cost of playing it too
+  // safe, and puts a number on why the growth rate assumption matters. Only shown when
+  // the entered rate is meaningfully above cash (otherwise there's nothing to contrast).
+  const bankRate = country.typicalBankRate ?? 0;
+  const savingsAccountFinal = bankRate > 0 && rate > bankRate + 0.5
+    ? calculateCompoundInterest({ ...rateBandParams, rate: bankRate }).finalBalance
+    : null;
+
   // "As retirement income" -- the same headline final balance, reframed through a 4%
   // safe withdrawal rate (the FIRE Number / Retirement Income Gap tools' own default)
   // so a plain lump sum also reads as roughly what it could pay out per year/month.
@@ -799,6 +808,13 @@ export default function App() {
               {crossoverYear && crossoverYear <= years && (
                 <p className="doubling-time-note">
                   🔀 The crossover point: in <strong>year {crossoverYear}</strong>, the growth your money earns that year first overtakes what you pay in that year — after that, your money is doing more of the work than you are.
+                </p>
+              )}
+
+              {savingsAccountFinal != null && results.finalBalance > 0 && (
+                <p className="doubling-time-note">
+                  🏦 vs. a savings account: at South Africa's typical ~{bankRate}% deposit rate instead of your {rate}%, the same plan would reach only about{' '}
+                  <strong>{country.symbol}{Math.round(savingsAccountFinal).toLocaleString()}</strong> — {country.symbol}{Math.round(results.finalBalance - savingsAccountFinal).toLocaleString()} less. That gap is what the growth-rate assumption is really worth.
                 </p>
               )}
 

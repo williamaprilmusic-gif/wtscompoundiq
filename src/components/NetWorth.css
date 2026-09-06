@@ -192,6 +192,18 @@
 .nw-ratio strong.positive { color: var(--accent-green); }
 .nw-ratio strong.warn { color: var(--accent-yellow); }
 
+.nw-concentration {
+  font-size: 0.82rem;
+  color: var(--mut);
+  line-height: 1.5;
+  margin: -6px 0 16px;
+}
+.nw-concentration.warn {
+  color: var(--accent-yellow);
+}
+.nw-concentration strong { color: var(--text); }
+.nw-concentration.warn strong { color: var(--accent-yellow); }
+
 .nw-result.positive {
   border-color: rgba(74, 222, 128, 0.3);
 }

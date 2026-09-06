@@ -463,6 +463,20 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
         </div>
       )}
 
+      {totalAssets > 0 && (() => {
+        const top = [...assetSegments].filter(s => s.value > 0).sort((a, b) => b.value - a.value)[0];
+        if (!top) return null;
+        const pct = (top.value / totalAssets) * 100;
+        const concentrated = pct >= 50;
+        return (
+          <p className={`nw-concentration ${concentrated ? 'warn' : ''}`}>
+            {concentrated ? '⚠️ ' : '📊 '}
+            Your biggest asset class, <strong>{top.label}</strong>, is <strong>{pct.toFixed(0)}%</strong> of your total assets.
+            {concentrated ? ' That\'s a concentrated position — a hit to that one category moves most of your net worth.' : ' Reasonably spread across categories.'}
+          </p>
+        );
+      })()}
+
       <button className="nw-save-btn" onClick={saveSnapshot}>📸 Save Snapshot</button>
       </>
       )}

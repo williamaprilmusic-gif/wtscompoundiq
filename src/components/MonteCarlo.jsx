@@ -598,6 +598,17 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
             </p>
           )}
 
+          {(() => {
+            const rank = result.percentileRankOf(deterministic.totalDeposited);
+            if (rank == null) return null;
+            const breakEvenProb = 100 - rank;
+            return (
+              <p className="mc-model-note">
+                💧 Break-even: in <strong>{Math.round(breakEvenProb)}%</strong> of the {NUM_SIMULATIONS.toLocaleString()} runs you at least get back the {country.symbol}{Math.round(deterministic.totalDeposited).toLocaleString()} you put in (before inflation). In the other {Math.round(rank)}% the final pot is below total contributions.
+              </p>
+            );
+          })()}
+
           {result.drawdown && (
             <div className="mc-drawdown-result">
               <div className="mc-probability">
