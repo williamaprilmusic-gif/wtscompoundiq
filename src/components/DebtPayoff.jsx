@@ -165,7 +165,11 @@ const DebtPayoff = ({ country }) => {
       // Persisted so Dashboard/Snapshot can render the unreachable case the same way this
       // tab does ("50+ years") instead of quoting the MAX_MONTHS cap as a real horizon.
       avalancheReachable: avalanche.reachable,
-      avalancheInterest: avalanche.totalInterest
+      avalancheInterest: avalanche.totalInterest,
+      // The full amount currently going to debt every month (every minimum payment plus
+      // the extra). Persisted so the AI Coach can model redirecting that whole cash flow
+      // into investing once the debt is clear -- the single highest-impact lever it has.
+      combinedMonthly: currentCombinedMonthly
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -319,6 +323,16 @@ const DebtPayoff = ({ country }) => {
           Avalanche saves you roughly {country.symbol} {Math.round(interestSaved).toLocaleString()} in interest over Snowball here --
           but Snowball clears your first debt faster, which many people find easier to stick with. Pick whichever you'll
           actually follow through on.
+        </p>
+      )}
+
+      {validDebts.length > 0 && avalanche.reachable && avalanche.totalInterest > 0 && totalBalance > 0 && (
+        <p className="debt-verdict">
+          💸 The Avalanche plan repays {country.symbol} {Math.round(totalBalance + avalanche.totalInterest).toLocaleString()} in
+          total to clear {country.symbol} {Math.round(totalBalance).toLocaleString()} of debt — that means{' '}
+          <strong>{Math.round((avalanche.totalInterest / (totalBalance + avalanche.totalInterest)) * 100)}% of what you pay from
+          here is interest</strong>, not the amount you actually borrowed. Every extra rand aimed at the highest-rate debt
+          drops that share.
         </p>
       )}
 

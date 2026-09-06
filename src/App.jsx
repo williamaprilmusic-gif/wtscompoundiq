@@ -403,6 +403,19 @@ export default function App() {
     return null;
   })();
 
+  // "When compounding takes over": the first year the compound growth accumulated so
+  // far exceeds everything paid in so far -- i.e. more than half of the balance is now
+  // growth, not deposits. Distinct from crossoverYear above (that's a per-year
+  // comparison; this is cumulative).
+  const compoundingTakesOverYear = (() => {
+    const yd = results.yearlyData;
+    for (const row of yd) {
+      const growth = row.balance - row.deposited;
+      if (row.deposited > 0 && growth > row.deposited) return row.year;
+    }
+    return null;
+  })();
+
   // "Adding R500/month gets you R X more" -- the encouraging mirror of cost-of-waiting.
   const effBump = Math.max(0, Math.round(bumpAmount || 0));
   const bumpedFinal = effBump > 0
@@ -808,6 +821,12 @@ export default function App() {
               {crossoverYear && crossoverYear <= years && (
                 <p className="doubling-time-note">
                   🔀 The crossover point: in <strong>year {crossoverYear}</strong>, the growth your money earns that year first overtakes what you pay in that year — after that, your money is doing more of the work than you are.
+                </p>
+              )}
+
+              {compoundingTakesOverYear && compoundingTakesOverYear <= years && (
+                <p className="doubling-time-note">
+                  🌱 By <strong>year {compoundingTakesOverYear}</strong>, compound growth has added more to your balance than every deposit you've made combined — from then on, most of your money was earned, not saved.
                 </p>
               )}
 

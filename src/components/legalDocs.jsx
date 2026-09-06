@@ -120,11 +120,12 @@ export const LEGAL_DOCS = [
         body: (
           <>
             <p>
-              The Tools are illustrative and educational. Tax rates, contribution limits,
-              exchange rates, and wrapper rules for each of the 36 supported countries are
-              simplified, indicative, and shown with a "last verified" date — they drift out
-              of date and are not a substitute for the current rules published by the
-              relevant tax authority (e.g. SARS, IRS, HMRC).
+              The Tools are illustrative and educational. South African tax rates, the TFSA
+              and retirement-fund contribution limits, indicative interest rates, and the
+              illustrative exchange rates used for any offshore-currency figures are
+              simplified and shown with a "last verified" date — they drift out of date and
+              are not a substitute for the current rules published by SARS or your financial
+              services provider.
             </p>
             <p>
               Nothing produced by the Service — including output from the AI Coach and AI
@@ -132,7 +133,7 @@ export const LEGAL_DOCS = [
               it constitutes a personalized recommendation. Projections assume constant rates
               and no volatility unless a tool explicitly models a range of outcomes (e.g. the
               Monte Carlo simulator). Before acting on anything the Service shows you, verify
-              it with a licensed financial adviser, accountant, or the relevant tax authority.
+              it with a licensed financial adviser, accountant, or SARS.
             </p>
           </>
         )
@@ -343,7 +344,7 @@ export const LEGAL_DOCS = [
             <ul>
               <li>Attempt to reverse-engineer, scrape at scale, or circumvent the
                 tier/paywall logic of the Service;</li>
-              <li>Use the Service to build a competing product from its content, country tax
+              <li>Use the Service to build a competing product from its content, tax
                 data, or Tool logic;</li>
               <li>Misrepresent the Service's projections as verified financial advice to a
                 third party (e.g. a client you hand a white-labelled plan to) without the
@@ -358,7 +359,7 @@ export const LEGAL_DOCS = [
         heading: 'Intellectual Property',
         body: (
           <p>
-            The Service, its design, calculators, country tax datasets, and underlying code
+            The Service, its design, calculators, tax datasets, and underlying code
             are owned by Warrr Tech Solutions or its licensors and protected by
             copyright and other intellectual property laws. Your subscription grants you a
             personal, non-exclusive, non-transferable license to use the Service for your own

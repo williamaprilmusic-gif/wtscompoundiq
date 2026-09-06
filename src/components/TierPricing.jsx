@@ -47,6 +47,7 @@ const tiers = [
       'Your monthly contribution shown as a per-week / per-day figure',
       'Inflation-eroded contribution warning — what a flat monthly amount is worth in future money',
       'The "crossover point" — the year your money\'s growth first out-earns your contributions',
+      'The tipping point — the year your total growth to date overtakes every rand you\'ve deposited',
       'Side-by-side vs. a savings account — what a low deposit rate would cost you over the same plan'
     ],
     highlighted: false
@@ -63,7 +64,7 @@ const tiers = [
       'Everything in Basic, plus:',
       'Budget / Cash Flow tracker, with a monthly surplus history & trend chart',
       'Emergency Fund tracker',
-      'Debt Payoff planner (Avalanche & Snowball with a debt-free-by date, plus a consolidation analyzer)',
+      'Debt Payoff planner (Avalanche & Snowball with a debt-free-by date, the interest share of everything you\'ll repay, plus a consolidation analyzer)',
       'Loan & Bond Calculator (home/vehicle/personal/student loans, "prime + margin" rate quoting, a rate-shock table for variable-rate bonds, extra & bi-weekly payments, one-off lump sums, all with a payoff-by calendar date)',
       'My Plan (save a snapshot, check in on progress later, with reminders)',
       'Goal-based Invest planner (multiple goals at once, checked against your saved Budget surplus)',
@@ -95,7 +96,7 @@ const tiers = [
       'Monte Carlo goal-timeline — your odds of being there by year 5, 10, 15…',
       "Monte Carlo history's-worst-window — your plan through the worst real stretch",
       'FX stress test for Net Worth (offshore holdings), with a full shock-level range and how your leverage ratio itself shifts under each shock',
-      'AI Wealth Coach (step-by-step planner: wrapper, contribution boost, extra years, contribution escalation, using your full TFSA allowance, unused Budget surplus)',
+      'AI Wealth Coach (step-by-step planner: wrapper, contribution boost, extra years, contribution escalation, full TFSA allowance, unused Budget surplus, and redirecting debt payments once you\'re debt-free)',
       'AI Investment Advisor (personalized recommendations, incl. debt priority, saved Emergency Fund status & Net Worth leverage)',
       'White-label / branded plan exports — your firm name, logo & tagline on the My Plan, Snapshot, and Dashboard PDF printouts',
       'Custom compliance / FSP disclosure line, shared across My Plan, Snapshot, and the Dashboard PDF',

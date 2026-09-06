@@ -4,6 +4,7 @@ import './Coach.css';
 import { calculateCompoundInterest } from '../engine';
 import { computeBudgetSummary, BUDGET_ITEMS_KEY } from '../budgetEngine';
 import { readJSONArray } from '../utils/storage';
+import { readPlan } from '../utils/planStorage';
 
 const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [], maxYears = Infinity, onSetWrapper, onSetMonthly, onSetYears, onSetContributionIncrease }) => {
   const base = { initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper, compoundFrequency, annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit, contributionIncreaseRate: contributionIncrease, lumpSums };
@@ -22,7 +23,7 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
   const boostGain = boosted.finalBalance - baseline.finalBalance;
 
   // Room left below the Calculator's own MAX_YEARS (passed in). When years is already at
-  // the ceiling this is 0 and step 3 has nothing to offer (marked done below); otherwise
+  // the ceiling this is 0 and the "stay invested" step has nothing to offer (marked done below); otherwise
   // it caps both the slider and the value actually applied, so the "+N years" label can't
   // advertise more runway than the Calculator input would accept.
   const maxExtraYears = Math.max(0, maxYears - years);
@@ -31,7 +32,7 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
   const extended = calculateCompoundInterest({ ...base, years: extendedYears });
   const extendGain = extended.finalBalance - baseline.finalBalance;
 
-  // Step 4: growing the monthly contribution itself by a %/yr (matching a raise or
+  // Contribution-escalation step: growing the monthly contribution itself by a %/yr (matching a raise or
   // inflation) rather than a one-off bump -- a flat contribution quietly shrinks in
   // real terms every year it doesn't move. Suggest a couple of points above whatever
   // escalation is already set, floored at 5%, so there's always real room to show.
@@ -41,7 +42,7 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
   const escalateGain = escalated.finalBalance - baseline.finalBalance;
   const escalateDone = contributionIncrease >= escalatePercent;
 
-  // Step 5: an unused Budget surplus is money already free to invest, read straight
+  // Budget-surplus step: an unused Budget surplus is money already free to invest, read straight
   // from what's saved on the Budget tab (same computeBudgetSummary(readJSONArray(...))
   // call Budget.jsx's own "send to Debt Payoff" button uses) -- no new number to type
   // in, and no advice invented from nothing.
@@ -63,6 +64,26 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
   const tfsaMaxGain = tfsaMaxApplied.finalBalance - baseline.finalBalance;
   const tfsaStepDone = !hasWrapper || tfsaMonthlyMax === 0 || monthly >= tfsaMonthlyMax;
 
+  // Debt-payoff redirect step: read the saved Debt Payoff plan (the same 'debt' section
+  // Dashboard/Snapshot read). Once the Avalanche plan clears the debt, the whole cash
+  // flow that was servicing it -- every minimum plus the extra -- is free to invest.
+  // Model adding that on top of the current contribution for whatever runway is left
+  // after the debt-free date, against investing the current contribution alone over the
+  // same window. Only offered when a reachable debt plan is saved and it clears with at
+  // least a year of the plan's horizon still to run.
+  const [debtPlan, setDebtPlan] = useState(null);
+  useEffect(() => {
+    const plan = readPlan();
+    if (plan.debt && plan.debt.avalancheReachable && plan.debt.combinedMonthly > 0) setDebtPlan(plan.debt);
+  }, []);
+  const debtFreeYears = debtPlan ? Math.round(debtPlan.avalancheMonths / 12) : 0;
+  const debtFreeLabel = debtFreeYears < 1 ? 'under a year' : `about ${debtFreeYears} year${debtFreeYears === 1 ? '' : 's'}`;
+  const postDebtYears = debtPlan ? Math.max(0, years - debtFreeYears) : 0;
+  const postDebtBaseline = debtPlan ? calculateCompoundInterest({ ...base, years: postDebtYears }) : null;
+  const redirectApplied = debtPlan ? calculateCompoundInterest({ ...base, years: postDebtYears, monthly: monthly + debtPlan.combinedMonthly }) : null;
+  const redirectGain = debtPlan ? redirectApplied.finalBalance - postDebtBaseline.finalBalance : 0;
+  const hasDebtRedirect = debtPlan != null && postDebtYears >= 1;
+
   const flashApplied = (key) => {
     setApplied(key);
     setTimeout(() => setApplied(null), 2000);
@@ -74,11 +95,11 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
   const applyEscalate = () => { onSetContributionIncrease(escalatePercent); flashApplied('escalate'); };
   const applySurplus = () => { onSetMonthly(Math.round(budgetSurplus)); flashApplied('surplus'); };
   const applyTfsaMax = () => { onSetWrapper(true); onSetMonthly(Math.round(tfsaMonthlyMax)); flashApplied('tfsaMax'); };
+  const applyDebtRedirect = () => { onSetMonthly(Math.round(monthly + debtPlan.combinedMonthly)); flashApplied('debtRedirect'); };
 
   const steps = [
     {
       key: 'wrapper',
-      number: 1,
       title: 'Build Your Foundation',
       done: !hasWrapper || wrapper,
       body: !hasWrapper
@@ -94,7 +115,6 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
     },
     {
       key: 'boost',
-      number: 2,
       title: 'Accelerate Your Growth',
       done: false,
       body: `Bumping your monthly contribution from ${country.symbol} ${monthly.toLocaleString()} to ${country.symbol} ${Math.round(boostedMonthly).toLocaleString()} (+${boostPercent}%) would grow your final balance by ${country.symbol} ${Math.round(boostGain).toLocaleString()} over ${years} years.`,
@@ -110,7 +130,6 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
     },
     {
       key: 'years',
-      number: 3,
       title: 'Stay The Course',
       done: maxExtraYears === 0,
       body: maxExtraYears === 0
@@ -128,7 +147,6 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
     },
     ...(canEscalate ? [{
       key: 'escalate',
-      number: 4,
       title: 'Make Contributions Keep Pace',
       done: escalateDone,
       body: escalateDone
@@ -146,7 +164,6 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
     }] : []),
     ...(hasWrapper && tfsaMonthlyMax > 0 ? [{
       key: 'tfsaMax',
-      number: canEscalate ? 5 : 4,
       title: `Use Your Full ${country.wrapperLabel} Allowance`,
       done: tfsaStepDone,
       body: tfsaStepDone
@@ -158,7 +175,6 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
     }] : []),
     ...(budgetSurplus != null ? [{
       key: 'surplus',
-      number: (canEscalate ? 5 : 4) + (hasWrapper && tfsaMonthlyMax > 0 ? 1 : 0),
       title: 'Put Your Budget Surplus to Work',
       done: !hasUnusedSurplus,
       body: hasUnusedSurplus
@@ -169,8 +185,22 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
       interactive: hasUnusedSurplus,
       onApply: applySurplus,
       applyLabel: `Set monthly to ${country.symbol}${Math.round(budgetSurplus).toLocaleString()}`
+    }] : []),
+    ...(hasDebtRedirect ? [{
+      key: 'debtRedirect',
+      title: 'Redirect Debt Payments Once You Are Clear',
+      done: false,
+      body: `Your saved Debt Payoff plan clears the debt in ${debtFreeLabel} on the Avalanche method, freeing up the ${country.symbol}${Math.round(debtPlan.combinedMonthly).toLocaleString()}/month you're putting toward it. Rolling that straight into this plan from then on -- on top of your current ${country.symbol}${monthly.toLocaleString()}/month -- adds ${country.symbol} ${Math.round(redirectGain).toLocaleString()} over the remaining ${postDebtYears} year${postDebtYears === 1 ? '' : 's'}, versus letting that cash flow drift into everyday spending.`,
+      interactive: true,
+      onApply: applyDebtRedirect,
+      applyLabel: `Set monthly to ${country.symbol}${Math.round(monthly + debtPlan.combinedMonthly).toLocaleString()}`
     }] : [])
   ];
+
+  // Step numbers are display-only and every conditional block above made its own
+  // fragile "base + escalate? + tfsa? ..." arithmetic to stay in sequence. Normalise
+  // once here instead, so adding or gating a step can't leave a gap or a repeat.
+  steps.forEach((step, i) => { step.number = i + 1; });
 
   return (
     <div className="card wealth-coach">
@@ -181,7 +211,7 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
 
       <div className="coach-steps">
         {steps.map((step) => (
-          <div key={step.number} className={`coach-step ${step.done ? 'done' : ''}`}>
+          <div key={step.key} className={`coach-step ${step.done ? 'done' : ''}`}>
             <div className="coach-step-number">{step.done ? '✓' : step.number}</div>
             <div className="coach-step-content">
               <h3>{step.title}</h3>
