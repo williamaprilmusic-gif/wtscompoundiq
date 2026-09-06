@@ -45,7 +45,8 @@ const tiers = [
       '"As retirement income" — your projected balance reframed at a 4% safe withdrawal rate',
       'Current SARS tax year shown at a glance — your TFSA limit resets 1 March, not 1 January',
       'Your monthly contribution shown as a per-week / per-day figure',
-      'Inflation-eroded contribution warning — what a flat monthly amount is worth in future money'
+      'Inflation-eroded contribution warning — what a flat monthly amount is worth in future money',
+      'The "crossover point" — the year your money\'s growth first out-earns your contributions'
     ],
     highlighted: false
   },
@@ -62,7 +63,7 @@ const tiers = [
       'Budget / Cash Flow tracker, with a monthly surplus history & trend chart',
       'Emergency Fund tracker',
       'Debt Payoff planner (Avalanche & Snowball with a debt-free-by date, plus a consolidation analyzer)',
-      'Loan & Bond Calculator (home/vehicle/personal/student loans, "prime + margin" rate quoting, extra & bi-weekly payments, one-off lump sums, all with a payoff-by calendar date)',
+      'Loan & Bond Calculator (home/vehicle/personal/student loans, "prime + margin" rate quoting, a rate-shock table for variable-rate bonds, extra & bi-weekly payments, one-off lump sums, all with a payoff-by calendar date)',
       'My Plan (save a snapshot, check in on progress later, with reminders)',
       'Goal-based Invest planner (multiple goals at once, checked against your saved Budget surplus)',
       'Tax Optimizer — retirement fund comparison, tax-loss harvesting calculator, and a TFSA lifetime-limit (R500k) progress tracker',
@@ -86,7 +87,7 @@ const tiers = [
     features: [
       'Everything in Pro, plus:',
       '8 advanced Power Tools — Drawdown, Coast & Barista FIRE, Retirement Income Gap (now with a "how long to close it" timeline), Pre-Tax & RA Tax Optimizer, Two-Pot Withdrawal (flags the R2,000 minimum and once-per-tax-year rule), Sequence-of-Returns Risk',
-      'Monte Carlo simulation (1,000-path outcome range), showing where your straight-line projection sits in the spread',
+      'Monte Carlo simulation (1,000-path outcome range), showing where your straight-line projection sits in the spread and how far a bad run falls short of the median',
       'Monte Carlo solvers — contribution OR years to hit a target success probability',
       'Monte Carlo retirement drawdown — how often the pot survives being lived off',
       'Monte Carlo safe-withdrawal solver — the year-1 draw the pot survives',

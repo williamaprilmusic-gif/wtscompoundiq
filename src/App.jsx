@@ -376,6 +376,24 @@ export default function App() {
   // projection. A free-tier touch like the rate band and cost-of-waiting.
   const balanceMilestones = projectionMilestones(results.yearlyData, country.code, 4);
 
+  // "The crossover point" (Your Money or Your Life): the first year the growth earned
+  // in that year alone exceeds what you paid in that year -- the moment your money
+  // starts doing more of the work than you do. yearlyData's `interest`/`deposited` are
+  // cumulative, so diff consecutive years; year 1's "previous deposited" is `initial`.
+  // Only meaningful while contributions are ongoing.
+  const crossoverYear = (() => {
+    if (monthly <= 0) return null;
+    const yd = results.yearlyData;
+    for (let i = 0; i < yd.length; i++) {
+      const prevInt = i === 0 ? 0 : yd[i - 1].interest;
+      const prevDep = i === 0 ? initial : yd[i - 1].deposited;
+      const yrInterest = yd[i].interest - prevInt;
+      const yrDeposit = yd[i].deposited - prevDep;
+      if (yrDeposit > 0 && yrInterest > yrDeposit) return yd[i].year;
+    }
+    return null;
+  })();
+
   // "Adding R500/month gets you R X more" -- the encouraging mirror of cost-of-waiting.
   const effBump = Math.max(0, Math.round(bumpAmount || 0));
   const bumpedFinal = effBump > 0
@@ -775,6 +793,12 @@ export default function App() {
                   <strong>{country.symbol} {Math.round(withdrawalIncome.annualIncome).toLocaleString()}/year</strong>{' '}
                   ({country.symbol} {Math.round(withdrawalIncome.monthlyIncome).toLocaleString()}/month), in today's money -- see the Retirement Income Gap
                   and FIRE Number Power Tools to check that against what you'd actually want to spend.
+                </p>
+              )}
+
+              {crossoverYear && crossoverYear <= years && (
+                <p className="doubling-time-note">
+                  🔀 The crossover point: in <strong>year {crossoverYear}</strong>, the growth your money earns that year first overtakes what you pay in that year — after that, your money is doing more of the work than you are.
                 </p>
               )}
 

@@ -5,6 +5,52 @@
   color: var(--text);
 }
 
+.loan-rate-shock {
+  margin: 20px 0;
+}
+.loan-rate-shock h3 {
+  font-size: 1rem;
+  color: var(--text);
+  margin: 0 0 10px;
+}
+.loan-rate-shock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 8px;
+}
+.loan-rate-shock-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 6px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--border);
+  text-align: center;
+}
+.loan-rate-shock-cell.baseline {
+  border-color: var(--accent);
+  background: rgba(56, 189, 248, 0.08);
+}
+.loan-rate-shock-cell.up strong {
+  color: var(--accent-yellow);
+}
+.loan-rate-shock-cell span {
+  font-size: 0.7rem;
+  color: var(--mut);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.loan-rate-shock-cell strong {
+  font-size: 0.88rem;
+}
+.loan-rate-shock-diff {
+  font-size: 0.72rem;
+  color: var(--mut2) !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+
 .loan-header p {
   color: var(--mut);
   margin-bottom: 22px;

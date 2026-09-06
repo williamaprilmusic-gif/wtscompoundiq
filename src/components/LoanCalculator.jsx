@@ -115,6 +115,20 @@ const LoanCalculator = ({ country }) => {
   const repaymentMultiple = principal > 0 ? result.totalRepayment / principal : 0;
   const activeType = LOAN_TYPES.find(t => t.key === loanType) || LOAN_TYPES[0];
 
+  // Rate-shock table: South African home loans (and most vehicle finance) are
+  // variable-rate, prime-linked -- the payment moves whenever the Reserve Bank moves.
+  // Same "show the range, don't make them drag a slider" idea as the Calculator's
+  // rate-sensitivity band and Net Worth's FX shock table.
+  const RATE_SHOCKS = [-1, 0, 1, 2, 3];
+  const isVariableRateType = loanType === 'bond' || loanType === 'vehicle';
+  const rateShockRows = (isVariableRateType && principal > 0 && termYears > 0)
+    ? RATE_SHOCKS.map((delta) => ({
+        delta,
+        rate: effectiveAnnualRate + delta,
+        payment: calculateLoanAmortization({ principal, annualRate: Math.max(0, effectiveAnnualRate + delta), termYears, lumpSums: safeLumpSums }).monthlyPayment
+      }))
+    : null;
+
   // Bi-weekly payments (half the monthly instalment, every 2 weeks) work out to 26
   // half-payments a year -- 13 full monthly-equivalent payments instead of 12. That
   // "extra month" a year is the standard simplified way this trick is explained, so
@@ -286,6 +300,28 @@ const LoanCalculator = ({ country }) => {
               ⚠️ At this rate, the required monthly payment barely covers (or doesn't cover) the interest --
               this loan wouldn't actually pay itself off within a normal term. Double-check the rate and term.
             </p>
+          )}
+
+          {rateShockRows && (
+            <div className="loan-rate-shock">
+              <h3>If the rate moves (variable-rate loan)</h3>
+              <div className="loan-rate-shock-grid">
+                {rateShockRows.map((row) => (
+                  <div key={row.delta} className={`loan-rate-shock-cell ${row.delta === 0 ? 'baseline' : ''} ${row.delta > 0 ? 'up' : ''}`}>
+                    <span>{row.delta === 0 ? 'now' : `${row.delta > 0 ? '+' : ''}${row.delta}%`}</span>
+                    <strong>{country.symbol} {Math.round(row.payment).toLocaleString()}/mo</strong>
+                    {row.delta !== 0 && (
+                      <span className="loan-rate-shock-diff">
+                        {row.payment >= result.monthlyPayment ? '+' : '−'}{country.symbol} {Math.abs(Math.round(row.payment - result.monthlyPayment)).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="loan-note" style={{ marginTop: '8px' }}>
+                {activeType.shortLabel === 'home loan' ? 'SA home loans' : 'Most SA vehicle finance'} track the prime rate, so the instalment changes each time the Reserve Bank does. This shows the new payment at {effectiveAnnualRate.toFixed(2)}% ± a few points, same principal and term.
+              </p>
+            </div>
           )}
 
           {extraMonthly > 0 && result.extra && (

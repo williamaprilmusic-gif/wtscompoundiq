@@ -590,6 +590,14 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
             );
           })()}
 
+          {result.p50 > 0 && (
+            <p className="mc-model-note">
+              ⚠️ Downside exposure: a bad run (10th percentile, {country.symbol}{Math.round(result.p10).toLocaleString()}) ends up{' '}
+              <strong>{country.symbol}{Math.round(result.p50 - result.p10).toLocaleString()} short of the median</strong>{' '}
+              ({Math.round(((result.p50 - result.p10) / result.p50) * 100)}% less) — that's the size of the shortfall a plan needs a buffer for, not just the average outcome.
+            </p>
+          )}
+
           {result.drawdown && (
             <div className="mc-drawdown-result">
               <div className="mc-probability">
