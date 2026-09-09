@@ -1086,46 +1086,6 @@ body {
   transform: scale(1.05);
 }
 
-/* Bottom-of-app FAQ -- collapsed by default, sits between the last tab and the footer
-   on every screen. When open it renders the shared <FAQHelper> (search + full list). */
-.app-faq-section {
-  margin-top: 50px;
-}
-
-.app-faq-toggle {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  background: var(--raise-02);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px 20px;
-  color: var(--text);
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.app-faq-toggle:hover {
-  border-color: var(--accent);
-}
-
-.app-faq-toggle-icon {
-  color: var(--mut2);
-  font-size: 1.2rem;
-  flex-shrink: 0;
-}
-
-/* The FAQ component brings its own top border/margin; drop the doubled rule when it's
-   nested straight under the toggle. */
-.app-faq-section .faq-section {
-  margin-top: 18px;
-  padding-top: 0;
-  border-top: none;
-}
-
 /* Footer */
 .app-footer {
   margin-top: 50px;

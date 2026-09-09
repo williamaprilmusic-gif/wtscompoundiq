@@ -24,7 +24,7 @@ import Snapshot from './components/Snapshot';
 import NetWorth from './components/NetWorth';
 import Budget from './components/Budget';
 import DataBackup from './components/DataBackup';
-import FAQHelper from './components/FAQHelper';
+import FAQModal from './components/FAQModal';
 import LegalModal from './components/LegalModal';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import OnboardingTour, { TOUR_SEEN_KEY } from './components/OnboardingTour';
@@ -86,9 +86,7 @@ export default function App() {
   const [showPricing, setShowPricing] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [showLegal, setShowLegal] = useState(false);
-  // Collapsed by default -- the full FAQ (search box + every question) is long, and it
-  // sits at the very bottom of every tab, so it opens on demand rather than pushing the
-  // footer down on first paint.
+  // Opened from the footer link, next to Privacy & Terms / Take the Tour.
   const [showFaq, setShowFaq] = useState(false);
   // Auto-shows once per browser on first visit; the footer's "Take the Tour" link
   // (see below) can always replay it on demand afterwards.
@@ -1196,23 +1194,11 @@ export default function App() {
         />
       )}
 
-      <section className="app-faq-section">
-        <button
-          type="button"
-          className="app-faq-toggle"
-          onClick={() => setShowFaq(v => !v)}
-          aria-expanded={showFaq}
-        >
-          ❓ Frequently Asked Questions
-          <span className="app-faq-toggle-icon">{showFaq ? '−' : '+'}</span>
-        </button>
-        {showFaq && <FAQHelper />}
-      </section>
-
       <footer className="app-footer">
         <p>
           WTS CompoundIQ · {t('footer.tagline')}
           {' '}· <button className="footer-link-btn" onClick={() => setShowLegal(true)}>{t('footer.privacyTerms')}</button>
+          {' '}· <button className="footer-link-btn" onClick={() => setShowFaq(true)}>❓ FAQ</button>
           {' '}· <button className="footer-link-btn" onClick={() => setShowTour(true)}>🧭 Take the Tour</button>
         </p>
         {/* Restates the tagline's "not financial advice" in its own full sentence, with
@@ -1224,6 +1210,7 @@ export default function App() {
       </footer>
 
       {showLegal && <LegalModal onClose={() => setShowLegal(false)} />}
+      {showFaq && <FAQModal onClose={() => setShowFaq(false)} />}
       {showTour && <OnboardingTour onClose={closeTour} />}
     </div>
   );

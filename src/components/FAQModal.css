@@ -1,0 +1,75 @@
+/* src/components/FAQModal.css */
+/* Same shell as LegalModal -- full-screen dimmed overlay, centred scrollable panel,
+   click-outside to close. */
+.faq-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.faq-modal {
+  position: relative;
+  background: var(--bg);
+  border: 1px solid var(--raise-1);
+  border-radius: 20px;
+  padding: 32px 36px 36px;
+  max-width: 760px;
+  width: 100%;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+.faq-modal-title {
+  margin: 0 44px 4px 0;
+  font-size: 1.4rem;
+  color: var(--text);
+}
+
+/* FAQHelper carries its own big top margin/border-top for when it sits at the end of
+   the pricing screen; inside this modal it follows the title directly. */
+.faq-modal .faq-section {
+  margin-top: 16px;
+  padding-top: 0;
+  border-top: none;
+}
+
+.faq-modal .close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: var(--mut);
+  font-size: 32px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.faq-modal .close-btn:hover {
+  color: var(--text);
+}
+
+@media (max-width: 640px) {
+  .faq-modal {
+    padding: 26px 18px 24px;
+    border-radius: 14px;
+  }
+  .faq-modal-title {
+    font-size: 1.15rem;
+    margin-right: 40px;
+  }
+  .faq-modal .close-btn {
+    top: 12px;
+    right: 14px;
+    font-size: 26px;
+  }
+}
