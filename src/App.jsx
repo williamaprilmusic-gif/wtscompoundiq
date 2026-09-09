@@ -416,6 +416,20 @@ export default function App() {
     return null;
   })();
 
+  // "The back half does the heavy lifting": the year the running balance first passes
+  // half the final balance. Because growth compounds, this lands well past the halfway
+  // year -- the closing stretch of the plan builds as much as everything before it,
+  // which is why giving up near the end is so much more costly than a slow start.
+  const halfBalanceYear = (() => {
+    const yd = results.yearlyData;
+    if (!yd.length || results.finalBalance <= 0) return null;
+    const half = results.finalBalance / 2;
+    for (const row of yd) {
+      if (row.balance >= half) return row.year;
+    }
+    return null;
+  })();
+
   // "Adding R500/month gets you R X more" -- the encouraging mirror of cost-of-waiting.
   const effBump = Math.max(0, Math.round(bumpAmount || 0));
   const bumpedFinal = effBump > 0
@@ -827,6 +841,12 @@ export default function App() {
               {compoundingTakesOverYear && compoundingTakesOverYear <= years && (
                 <p className="doubling-time-note">
                   🌱 By <strong>year {compoundingTakesOverYear}</strong>, compound growth has added more to your balance than every deposit you've made combined — from then on, most of your money was earned, not saved.
+                </p>
+              )}
+
+              {halfBalanceYear && years >= 4 && halfBalanceYear > years / 2 && (
+                <p className="doubling-time-note">
+                  ⏳ You only pass <strong>half your final balance</strong> in year {halfBalanceYear} of {years} — the last {years - halfBalanceYear} year{years - halfBalanceYear === 1 ? '' : 's'} build as much as the first {halfBalanceYear} put together. Stopping a few years early near the end costs far more than a slow start did.
                 </p>
               )}
 

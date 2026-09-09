@@ -63,6 +63,27 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
   const scenarioRunnerUpGap = scenarioRanked[0].value - scenarioRanked[1].value;
   const scenarioWinner = scenarioRunnerUpGap > 0 ? scenarioRanked[0].label : null;
 
+  // When does the winning plan actually pull ahead of the runner-up? A plan that wins
+  // on the final balance can spend years behind -- a later start, a lower early
+  // contribution, a slower rate that only tells over a longer horizon. Walk both
+  // plans' annual yearlyData over the years they share and find the first year the
+  // winner is level or ahead. yearlyData is 1-indexed by `year` and always annual.
+  const resultsByLabel = { A: resultsScenarioA, B: resultsScenarioB, C: resultsScenarioC };
+  const overtake = (() => {
+    if (!scenarioWinner) return null;
+    const win = resultsByLabel[scenarioRanked[0].label].yearlyData;
+    const run = resultsByLabel[scenarioRanked[1].label].yearlyData;
+    const n = Math.min(win.length, run.length);
+    if (n === 0) return null;
+    if (win[0].balance >= run[0].balance) return { type: 'always' };
+    for (let i = 0; i < n; i++) {
+      if (win[i].balance >= run[i].balance) return { type: 'year', year: win[i].year };
+    }
+    return { type: 'never' }; // runner-up leads the whole shared span; winner only takes it on a longer timeframe
+  })();
+  const winnerName = scenarioWinner ? (scenarioRanked[0].scenario.name || `Plan ${scenarioRanked[0].label}`) : '';
+  const runnerUpName = scenarioWinner ? (scenarioRanked[1].scenario.name || `Plan ${scenarioRanked[1].label}`) : '';
+
   const exportScenarioCSV = () => {
     const header = ['Year',
       `${scenarioA.name} Balance (${country.currency})`, `${scenarioA.name} Interest`,
@@ -155,6 +176,21 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
           {country.symbol} {Math.round(scenarioRunnerUpGap).toLocaleString()} more than{' '}
           {scenarioRanked[1].scenario.name || `Plan ${scenarioRanked[1].label}`}, driven by whatever's different
           between the plans (contribution, rate, timeframe, or wrapper use).
+        </p>
+      )}
+
+      {overtake && overtake.type === 'year' && overtake.year > 1 && (
+        <p className="compare-scenario-verdict compare-overtake">
+          ⏱️ It starts behind: {winnerName} doesn't overtake {runnerUpName} until{' '}
+          <strong>year {overtake.year}</strong>. Up to then the other plan is worth more — the lead above is the
+          finish line, not the whole race.
+        </p>
+      )}
+
+      {overtake && overtake.type === 'never' && (
+        <p className="compare-scenario-verdict compare-overtake">
+          ⏱️ Across the years these two plans share, {runnerUpName} stays ahead the whole way — {winnerName} only
+          wins on its longer timeframe. Set both plans to the same number of years to compare like with like.
         </p>
       )}
 

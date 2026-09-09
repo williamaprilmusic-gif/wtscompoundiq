@@ -105,6 +105,14 @@
   margin-bottom: 16px;
 }
 
+/* The "when does it overtake" note -- a caveat on the verdict above, tinted amber to
+   read as a qualifier rather than a second headline result. */
+.compare-scenario-verdict.compare-overtake {
+  background: rgba(251, 191, 36, 0.06);
+  border-color: rgba(251, 191, 36, 0.22);
+  margin-top: -6px;
+}
+
 .compare-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));

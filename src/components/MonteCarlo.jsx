@@ -609,6 +609,13 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
             );
           })()}
 
+          {result.p10 > 0 && result.p90 > result.p10 && (
+            <p className="mc-model-note">
+              🎲 The luck spread: same contributions and the same {rate}% average return, but a top-decile run ({country.symbol}{Math.round(result.p90).toLocaleString()}) finishes with{' '}
+              <strong>{(result.p90 / result.p10).toFixed(1)}× more</strong> than a bottom-decile one ({country.symbol}{Math.round(result.p10).toLocaleString()}) — the difference is purely the order the good and bad years happen to fall in. It's why the plan you can actually stick to beats the optimistic one you can't.
+            </p>
+          )}
+
           {result.drawdown && (
             <div className="mc-drawdown-result">
               <div className="mc-probability">

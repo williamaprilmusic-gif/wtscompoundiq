@@ -48,6 +48,7 @@ const tiers = [
       'Inflation-eroded contribution warning — what a flat monthly amount is worth in future money',
       'The "crossover point" — the year your money\'s growth first out-earns your contributions',
       'The tipping point — the year your total growth to date overtakes every rand you\'ve deposited',
+      'The back-half rule — the year you cross half your final balance, and how much the closing years really build',
       'Side-by-side vs. a savings account — what a low deposit rate would cost you over the same plan'
     ],
     highlighted: false
@@ -73,7 +74,7 @@ const tiers = [
       'Net Worth tracker with asset allocation, forecast, balance-sheet ratios & a concentration flag for an over-weighted asset class',
       'Dashboard with Financial Health Score, Budget & Invest Goals summaries, a savings-rate readout, milestones & PDF export',
       'Financial Snapshot export (print / PDF / CSV)',
-      'Compare your own plans side by side (e.g. contribute more vs. wait 5 years)',
+      'Compare your own plans side by side (e.g. contribute more vs. wait 5 years), including the year the winning plan actually overtakes the runner-up',
       'Priority support'
     ],
     highlighted: true
@@ -89,7 +90,7 @@ const tiers = [
     features: [
       'Everything in Pro, plus:',
       '8 advanced Power Tools — Drawdown, Coast & Barista FIRE, Retirement Income Gap (now with a "how long to close it" timeline), Pre-Tax & RA Tax Optimizer, Two-Pot Withdrawal (flags the R2,000 minimum and once-per-tax-year rule), Sequence-of-Returns Risk',
-      'Monte Carlo simulation (1,000-path outcome range) — where your straight-line projection sits in the spread, how far a bad run falls short of the median, and the odds you at least break even',
+      'Monte Carlo simulation (1,000-path outcome range) — where your straight-line projection sits in the spread, how far a bad run falls short of the median, the odds you at least break even, and the luck gap between a top- and bottom-decile run',
       'Monte Carlo solvers — contribution OR years to hit a target success probability',
       'Monte Carlo retirement drawdown — how often the pot survives being lived off',
       'Monte Carlo safe-withdrawal solver — the year-1 draw the pot survives',
