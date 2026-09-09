@@ -72,6 +72,31 @@ export const refreshEntitlement = async () => {
   }
 };
 
+// Recover a paid tier on a browser that has no token -- after clearing site data, or
+// on a new device. The subscription still exists on Paystack keyed by the payer's
+// email; the server checks it and re-issues a token. Returns
+// { status, tier?, period? }: 'restored' (token stored), 'none' (no active
+// subscription for that email), 'unconfigured' (payments off / demo mode),
+// 'bad_email', or 'error'.
+export const restoreEntitlement = async (email) => {
+  try {
+    const res = await fetch('/api/entitlement/restore', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: String(email || '').trim() })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.status === 'restored' && data.entitlement) {
+      storeEntitlement(data.entitlement);
+      return { status: 'restored', tier: data.tier, period: data.period };
+    }
+    if (['none', 'unconfigured', 'bad_email'].includes(data.status)) return { status: data.status };
+    return { status: 'error' };
+  } catch {
+    return { status: 'error' };
+  }
+};
+
 // One-time capture of ?reference= / ?trxref= after a Paystack redirect. Verifies with
 // the server, stores the returned entitlement, and cleans the URL. Returns the granted
 // { tier, period } on success, or null.

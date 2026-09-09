@@ -1,0 +1,253 @@
+/* src/components/WealthPath.css */
+.wealth-path .wp-header h2 {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  color: var(--text);
+}
+
+.wealth-path .wp-header p {
+  color: var(--mut);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  margin: 0 0 20px;
+}
+
+/* --- progress summary --- */
+.wp-progress {
+  background: var(--raise-02);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+
+.wp-progress-headline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.wp-progress-headline strong {
+  font-size: 0.95rem;
+  color: var(--accent);
+}
+
+.wp-progress-headline span {
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.wp-progress-bar,
+.wp-fi-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.wp-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.wp-progress-sub,
+.wp-fi-sub {
+  font-size: 0.78rem;
+  color: var(--mut2);
+  margin: 8px 0 0;
+  line-height: 1.5;
+}
+
+/* --- FI progress --- */
+.wp-fi {
+  background: rgba(74, 222, 128, 0.06);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+}
+
+.wp-fi-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.wp-fi-head strong {
+  color: var(--accent-green);
+  font-size: 1rem;
+}
+
+.wp-fi-fill {
+  height: 100%;
+  background: var(--accent-green);
+  transition: width 0.3s ease;
+}
+
+/* --- steps --- */
+.wp-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.wp-step {
+  display: flex;
+  gap: 14px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+}
+
+.wp-step:first-child {
+  border-top: none;
+}
+
+.wp-step-num {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--mut);
+  border: 1px solid var(--border);
+}
+
+.wp-step.done .wp-step-num {
+  background: rgba(74, 222, 128, 0.15);
+  color: var(--accent-green);
+  border-color: rgba(74, 222, 128, 0.4);
+}
+
+.wp-step.now .wp-step-num {
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--accent);
+  border-color: rgba(56, 189, 248, 0.5);
+}
+
+.wp-step-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.wp-step-titlerow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 6px;
+}
+
+.wp-step-titlerow h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.wp-pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.wp-pill.done { background: rgba(74, 222, 128, 0.15); color: var(--accent-green); }
+.wp-pill.now { background: rgba(56, 189, 248, 0.15); color: var(--accent); }
+.wp-pill.todo { background: rgba(255, 255, 255, 0.08); color: var(--mut); }
+.wp-pill.unknown { background: rgba(250, 204, 21, 0.14); color: var(--accent-yellow); }
+.wp-pill.info { background: rgba(255, 255, 255, 0.06); color: var(--mut2); }
+
+.wp-step-what {
+  margin: 0 0 5px;
+  font-size: 0.88rem;
+  color: var(--text-soft, var(--mut));
+  line-height: 1.55;
+}
+
+.wp-step-why {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--mut);
+  line-height: 1.5;
+}
+
+.wp-step-target {
+  margin: 8px 0 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.wp-step-open {
+  margin-top: 10px;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: var(--accent);
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wp-step-open:hover {
+  background: rgba(56, 189, 248, 0.18);
+}
+
+/* --- finish line --- */
+.wp-finish {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-top: 18px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  border: 1px dashed var(--border);
+  background: var(--raise-02);
+}
+
+.wp-finish.reached {
+  border-style: solid;
+  border-color: rgba(74, 222, 128, 0.4);
+  background: rgba(74, 222, 128, 0.06);
+}
+
+.wp-finish-flag {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.wp-finish strong {
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.wp-finish p {
+  margin: 4px 0 0;
+  font-size: 0.84rem;
+  color: var(--mut);
+  line-height: 1.5;
+}
+
+.wp-note {
+  margin: 18px 0 0;
+  font-size: 0.76rem;
+  color: var(--mut2);
+  line-height: 1.55;
+}
+
+@media (max-width: 480px) {
+  .wp-step { gap: 10px; }
+  .wp-step-num { width: 26px; height: 26px; font-size: 0.8rem; }
+}

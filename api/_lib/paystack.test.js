@@ -1,7 +1,7 @@
 // api/_lib/paystack.test.js
 import { describe, it, expect } from 'vitest';
 import { createHmac } from 'node:crypto';
-import { verifyWebhookSignature, subscriptionIsActive } from './paystack.js';
+import { verifyWebhookSignature, subscriptionIsActive, pickBestSubscriptionTier } from './paystack.js';
 
 const KEY = 'sk_test_webhook_key';
 
@@ -40,5 +40,39 @@ describe('subscriptionIsActive', () => {
   it('is false for junk input', () => {
     expect(subscriptionIsActive(null, now)).toBe(false);
     expect(subscriptionIsActive('nope', now)).toBe(false);
+  });
+});
+
+describe('pickBestSubscriptionTier', () => {
+  const now = Date.parse('2026-06-01T00:00:00Z');
+  // A tiny stand-in for tierForPlanCode(code, env).
+  const resolve = (code) => ({
+    PLN_pro_m: { tier: 'Pro', period: 'monthly' },
+    PLN_pro_a: { tier: 'Pro', period: 'annual' },
+    PLN_ultra_m: { tier: 'Ultra', period: 'monthly' }
+  }[code] || null);
+
+  const sub = (email, plan_code, status = 'active') => ({ customer: { email }, plan: { plan_code }, status });
+
+  it('returns the active subscription tier for a matching email', () => {
+    expect(pickBestSubscriptionTier([sub('a@b.com', 'PLN_pro_m')], 'a@b.com', resolve, now))
+      .toEqual({ tier: 'Pro', period: 'monthly' });
+  });
+  it('matches email case-insensitively', () => {
+    expect(pickBestSubscriptionTier([sub('A@B.com', 'PLN_pro_a')], 'a@b.com', resolve, now))
+      .toEqual({ tier: 'Pro', period: 'annual' });
+  });
+  it('picks the highest-ranked tier when two subs overlap (upgrade mid-cycle)', () => {
+    const list = [sub('a@b.com', 'PLN_pro_m'), sub('a@b.com', 'PLN_ultra_m')];
+    expect(pickBestSubscriptionTier(list, 'a@b.com', resolve, now)).toEqual({ tier: 'Ultra', period: 'monthly' });
+  });
+  it('ignores inactive subs, other emails, and unknown plan codes', () => {
+    expect(pickBestSubscriptionTier([sub('a@b.com', 'PLN_pro_m', 'cancelled')], 'a@b.com', resolve, now)).toBeNull();
+    expect(pickBestSubscriptionTier([sub('other@b.com', 'PLN_ultra_m')], 'a@b.com', resolve, now)).toBeNull();
+    expect(pickBestSubscriptionTier([sub('a@b.com', 'PLN_unknown')], 'a@b.com', resolve, now)).toBeNull();
+  });
+  it('returns null for an empty or missing list', () => {
+    expect(pickBestSubscriptionTier([], 'a@b.com', resolve, now)).toBeNull();
+    expect(pickBestSubscriptionTier(undefined, 'a@b.com', resolve, now)).toBeNull();
   });
 });

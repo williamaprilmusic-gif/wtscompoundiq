@@ -1,0 +1,97 @@
+/* src/components/RestorePlan.css */
+.restore-plan {
+  margin-top: 18px;
+  text-align: center;
+}
+
+.restore-plan-trigger {
+  background: none;
+  border: none;
+  color: var(--mut);
+  font-size: 0.82rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.restore-plan-trigger:hover {
+  color: var(--accent);
+}
+
+.restore-plan-form {
+  max-width: 420px;
+  margin: 0 auto;
+  text-align: left;
+  background: var(--raise-02);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.restore-plan-form label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--mut);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.restore-plan-row {
+  display: flex;
+  gap: 8px;
+}
+
+.restore-plan-row input {
+  flex: 1;
+  min-width: 0;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--raise-1);
+  color: var(--text);
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  outline: none;
+}
+
+.restore-plan-row input:focus {
+  border-color: var(--accent);
+}
+
+.restore-plan-row button {
+  background: var(--accent);
+  color: #06263a;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.restore-plan-row button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.restore-plan-msg {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  margin: 10px 0 0;
+}
+
+.restore-plan-msg.ok { color: var(--accent-green); }
+.restore-plan-msg.err { color: var(--accent-red); }
+
+.restore-plan-note {
+  font-size: 0.74rem;
+  color: var(--mut2);
+  line-height: 1.5;
+  margin: 10px 0 0;
+}
+
+@media (max-width: 480px) {
+  .restore-plan-row {
+    flex-direction: column;
+  }
+}

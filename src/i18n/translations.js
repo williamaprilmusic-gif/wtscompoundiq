@@ -55,6 +55,7 @@ export const translations = {
       groupAI: 'AI & Analysis',
       startHere: 'Start Here',
       calculator: 'Calculator',
+      wealthPath: 'Wealth Path',
       dashboard: 'Dashboard',
       budget: 'Budget',
       emergencyFund: 'Emergency Fund',

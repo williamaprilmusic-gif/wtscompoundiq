@@ -1,0 +1,10 @@
+/* src/components/InstallButton.css */
+/* Inherits .footer-link-btn from App.css; only the iOS help text needs its own rule. */
+.install-ios-help {
+  color: var(--mut2);
+  font-size: 0.78rem;
+}
+
+.install-ios-help strong {
+  color: var(--mut);
+}

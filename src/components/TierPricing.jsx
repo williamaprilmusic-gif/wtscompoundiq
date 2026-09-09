@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import './TierPricing.css';
 import FAQHelper from './FAQHelper';
+import RestorePlan from './RestorePlan';
 
 // Renders a tier's `price`/`priceAnnual` field for display -- a plain ZAR number
 // (149, 1199) for a priced tier, formatted here; Basic instead carries the literal
@@ -209,6 +210,8 @@ export default function TierPricing({ currentTier, onUpgrade, onClose }) {
             );
           })}
         </div>
+
+        <RestorePlan />
 
         <FAQHelper />
       </div>

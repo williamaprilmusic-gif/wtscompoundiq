@@ -25,12 +25,14 @@ import NetWorth from './components/NetWorth';
 import Budget from './components/Budget';
 import DataBackup from './components/DataBackup';
 import FAQModal from './components/FAQModal';
+import InstallButton from './components/InstallButton';
 import LegalModal from './components/LegalModal';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import OnboardingTour, { TOUR_SEEN_KEY } from './components/OnboardingTour';
 import { useLanguage } from './i18n/LanguageContext';
 import Term from './components/Term';
 import GrowthChart from './components/GrowthChart';
+import WealthPath from './components/WealthPath';
 import { buildShareUrl, parseShareParams, clearShareParamsFromUrl } from './utils/shareLink';
 import { downloadCSV } from './utils/csv';
 import { uniqueId } from './utils/uniqueId';
@@ -496,7 +498,8 @@ export default function App() {
       label: t('nav.groupFree'),
       tabs: [
         { name: 'Start Here', i18nKey: 'nav.startHere', tier: 'Basic' },
-        { name: 'Calculator', i18nKey: 'nav.calculator', tier: 'Basic' }
+        { name: 'Calculator', i18nKey: 'nav.calculator', tier: 'Basic' },
+        { name: 'Wealth Path', i18nKey: 'nav.wealthPath', tier: 'Basic' }
       ]
     },
     {
@@ -1068,6 +1071,12 @@ export default function App() {
           </div>
         )}
 
+        {activeTab === 'Wealth Path' && (
+          <div className="tab-pane active">
+            <WealthPath country={country} wrapper={wrapper} canAccess={canAccess} onNavigate={setActiveTab} />
+          </div>
+        )}
+
         {activeTab === 'Dashboard' && canAccess('Pro') && (
           <div className="tab-pane active">
             <Dashboard country={country} reportingCountry={reportingCountry} onNavigate={setActiveTab} canWhiteLabel={canAccess('Ultra')} />
@@ -1200,6 +1209,7 @@ export default function App() {
           {' '}· <button className="footer-link-btn" onClick={() => setShowLegal(true)}>{t('footer.privacyTerms')}</button>
           {' '}· <button className="footer-link-btn" onClick={() => setShowFaq(true)}>❓ FAQ</button>
           {' '}· <button className="footer-link-btn" onClick={() => setShowTour(true)}>🧭 Take the Tour</button>
+          <InstallButton />
         </p>
         {/* Restates the tagline's "not financial advice" in its own full sentence, with
             the explicit call to seek a professional -- deliberately its own line (not

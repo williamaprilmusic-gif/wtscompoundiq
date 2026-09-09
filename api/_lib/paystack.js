@@ -65,6 +65,31 @@ export const verifyWebhookSignature = (rawBody, signatureHeader, secretKey) => {
   return a.length === b.length && timingSafeEqual(a, b);
 };
 
+// From a list of Paystack subscription records, find the best still-active tier for a
+// given email. "Best" = highest rank, so someone who upgraded Pro -> Ultra mid-cycle
+// (two subscriptions briefly co-existing) restores as Ultra. `resolveTier(planCode)`
+// is injected (it needs the env-var plan-code map from tiers.js) so this stays a pure,
+// dependency-free function. Returns { tier, period } or null. Used by the restore
+// endpoint; kept here beside subscriptionIsActive and unit-tested the same way.
+export const pickBestSubscriptionTier = (subscriptions, email, resolveTier, now = Date.now()) => {
+  const clean = String(email || '').toLowerCase();
+  const RANK = { Pro: 1, Ultra: 2 };
+  let best = null;
+  for (const s of subscriptions || []) {
+    if (!s || !s.customer) continue;
+    if (String(s.customer.email || '').toLowerCase() !== clean) continue;
+    if (!subscriptionIsActive(s, now)) continue;
+    const planCode =
+      (s.plan && (s.plan.plan_code || s.plan)) ||
+      (s.plan_object && s.plan_object.plan_code) ||
+      null;
+    const mapped = resolveTier(planCode);
+    if (!mapped) continue;
+    if (!best || (RANK[mapped.tier] || 0) > (RANK[best.tier] || 0)) best = mapped;
+  }
+  return best;
+};
+
 // A subscription record counts as "still entitling" while Paystack reports it active
 // and not past its next payment date by more than a short grace. Kept pure/synchronous
 // so it's unit-testable; the endpoint feeds it Paystack's own subscription object.
