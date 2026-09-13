@@ -83,3 +83,24 @@ Two paragraphs are marked `[Remove this paragraph once live billing is switched 
 `/api/*`, and the Paystack hand-off is a full-page redirect. If you ever switch to
 Paystack's **inline** widget you'll need to add `https://checkout.paystack.com` to
 `script-src` and `frame-src`.
+
+## Optional: emailing yourself a backup
+
+Separate from payments, but the same "stays inert until configured" pattern:
+`POST /api/backup/email` lets a user send themselves a JSON copy of their own saved
+data (the same file "Save to Device" produces) as an email attachment. It routes
+through [Resend](https://resend.com), a transactional email provider — nothing is
+stored server-side either way.
+
+| Variable | Scope | What it is |
+| --- | --- | --- |
+| `RESEND_API_KEY` | server only | `re_…` from the Resend dashboard. |
+| `EMAIL_FROM` | server only | The verified sender address, e.g. `WTS CompoundIQ <backups@yourdomain.co.za>`. Resend requires the domain to be verified first. |
+
+Without both set, the endpoint returns `{ status: 'unconfigured' }` and the app's
+"Email a Copy" button tells the user to use "Save to Device" instead — no build or code
+change needed either way. The endpoint also caps the payload size and applies a
+best-effort per-IP+email rate limit (`api/_lib/rateLimit.js`) since it's unauthenticated
+by design (no accounts to authenticate against). `src/components/legalDocs.jsx` names
+Resend as the processor for this optional feature — update that paragraph if you switch
+providers.

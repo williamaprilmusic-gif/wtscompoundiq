@@ -160,15 +160,27 @@ export const LEGAL_DOCS = [
               storage — never on our servers, because we don't operate one for this data.
               Clearing your browser's site data, switching browsers, or switching devices
               will lose this information unless you've exported a backup using the in-app
-              Export/Import feature.
+              backup feature — either saving the file to your own device, or emailing a copy
+              to yourself (see the next paragraph).
+            </p>
+            <p>
+              The optional <strong>"email a copy"</strong> backup transmits your saved data,
+              as a JSON file, through a third-party transactional email provider (currently
+              Resend, resend.com) to the address you enter, solely to deliver that one
+              message. We do not store the file, keep a mailing list, or send anything you
+              did not ask for. A standard email is not encrypted end-to-end and will sit in
+              your mailbox and your mail provider's systems: only send it to an address you
+              control, and treat the resulting message as sensitive. The Privacy Policy
+              describes this processing further.
             </p>
             <p>
               Because there is no account, <strong>tier access after payment is tied to the
-              browser/device you paid from</strong>, restored via the backup file you export,
-              or reissued by us on request — using the contact details in Section 23 — if you
-              can show proof of payment, such as Paystack's emailed receipt or transaction
-              reference. See the Privacy Policy for exactly what limited data does pass
-              through a third party when you subscribe.
+              browser/device you paid from</strong>, restored via a backup file you saved or
+              emailed yourself, recovered with the in-app "Restore your plan" tool using the
+              email you paid with, or reissued by us on request — using the contact details
+              in Section 23 — if you can show proof of payment, such as Paystack's emailed
+              receipt or transaction reference. See the Privacy Policy for exactly what
+              limited data does pass through a third party when you subscribe.
             </p>
           </>
         )
@@ -727,16 +739,29 @@ export const LEGAL_DOCS = [
       {
         heading: 'Information We Do Not Collect',
         body: (
-          <p>
-            We do not collect, receive, or store: your name, financial figures, saved plans,
-            debts, net worth, goals, calculator inputs, browsing behavior inside the app, IP
-            address logs tied to your activity, or device fingerprints. There is no analytics
-            script, tracking pixel, or third-party script running in the Service beyond
-            what's listed in Sections 4 and 5. This is a verifiable architectural claim, not
-            boilerplate — the app's only outbound network calls are its own service worker
-            caching its own files for offline use, and (only if you subscribe) the payment
-            processor's own checkout.
-          </p>
+          <>
+            <p>
+              We do not collect, receive, or store: your name, financial figures, saved plans,
+              debts, net worth, goals, calculator inputs, browsing behavior inside the app, IP
+              address logs tied to your activity, or device fingerprints. There is no analytics
+              script, tracking pixel, or third-party script running in the Service beyond
+              what's listed in Sections 4 and 5. This is a verifiable architectural claim, not
+              boilerplate — the app's only outbound network calls are its own service worker
+              caching its own files for offline use, (only if you subscribe) the payment
+              processor's own checkout, and (only if you choose to use it) the optional
+              "email a copy" backup described in the next paragraph and in Section 5.
+            </p>
+            <p>
+              The one exception is deliberate and opt-in: if you use the <strong>"email a
+              copy"</strong> backup feature, the JSON file of your saved data is sent from your
+              browser to our serverless function and handed straight to a third-party email
+              provider (currently Resend) for delivery to the address you typed. It is held in
+              memory only for that moment, is never written to a database (we don't have one),
+              and is not retained by us afterwards. A short-lived, best-effort per-address rate
+              limit and a payload-size cap apply to discourage misuse. If you never use this
+              feature, none of your saved data ever leaves your device.
+            </p>
+          </>
         )
       },
       {
@@ -776,10 +801,14 @@ export const LEGAL_DOCS = [
           <p>
             The Service uses your browser's <strong>local storage</strong> (not cookies) to
             remember your plan, tier, and saved tools data on your own device — this never
-            leaves your browser except when you explicitly use the in-app Export Backup
-            feature, which saves a plain JSON file directly to your own filesystem. The
-            Service's service worker caches static files for offline use; it does not track
-            you. No advertising or analytics cookies are set.
+            leaves your browser except when you explicitly use the in-app backup feature:
+            "Save to Device" writes a plain JSON file straight to your own filesystem and
+            involves no server at all, while the optional "Email a Copy" sends that same JSON
+            file, via our serverless function, to a third-party transactional email provider
+            (currently Resend, resend.com) for delivery to the address you enter — held in
+            memory only, never stored by us. The Service's service worker caches static files
+            for offline use; it does not track you. No advertising or analytics cookies are
+            set.
           </p>
         )
       },

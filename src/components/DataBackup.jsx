@@ -64,29 +64,56 @@ const ALL_STORAGE_KEYS = [
 const LAST_BACKUP_AT_KEY = 'wts_compoundiq_last_backup_at';
 const LAST_BACKUP_WARN_DAYS = 30;
 
-const exportData = (onExported) => {
-  // usePersistedState debounces its localStorage writes, so a field edited moments ago
-  // may not have landed in localStorage yet. Force every mounted instance to flush its
-  // latest value synchronously before reading, or the export can silently miss it.
+// Gathers every backed-up localStorage key into one { app, exportedAt, data } object.
+// usePersistedState debounces its writes, so a field edited moments ago may not be in
+// localStorage yet -- force every mounted instance to flush synchronously first, or the
+// backup can silently miss it. Shared by both the "save to device" and "email a copy"
+// paths so they can never drift apart on what's included.
+const buildBackupPayload = () => {
   window.dispatchEvent(new Event(FLUSH_EVENT));
   const data = {};
   ALL_STORAGE_KEYS.forEach((key) => {
     const value = localStorage.getItem(key);
     if (value !== null) data[key] = value;
   });
-  const now = new Date().toISOString();
-  const payload = { app: 'WTS CompoundIQ', exportedAt: now, data };
+  return { app: 'WTS CompoundIQ', exportedAt: new Date().toISOString(), data };
+};
+
+const stampBackup = (now, onExported) => {
+  try { localStorage.setItem(LAST_BACKUP_AT_KEY, now); } catch { /* private mode / quota */ }
+  onExported?.(now);
+};
+
+const exportData = (onExported) => {
+  const payload = buildBackupPayload();
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `wts-compoundiq-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `wts-compoundiq-backup-${payload.exportedAt.slice(0, 10)}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  try { localStorage.setItem(LAST_BACKUP_AT_KEY, now); } catch { /* private mode / quota */ }
-  onExported?.(now);
+  stampBackup(payload.exportedAt, onExported);
+};
+
+// POSTs the same payload to the serverless email endpoint, which attaches it as a JSON
+// file and sends it to `email`. Returns a status string: 'sent' | 'unconfigured'
+// (no email provider set up) | 'bad_email' | 'too_large' | 'rate_limited' | 'error'.
+const emailData = async (email) => {
+  const payload = buildBackupPayload();
+  try {
+    const res = await fetch('/api/backup/email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: String(email || '').trim(), backup: payload })
+    });
+    const body = await res.json().catch(() => ({}));
+    return { status: body.status || 'error', exportedAt: payload.exportedAt };
+  } catch {
+    return { status: 'error' };
+  }
 };
 
 const importData = (file, onDone) => {
@@ -110,6 +137,74 @@ const importData = (file, onDone) => {
   reader.readAsText(file);
 };
 
+const EMAIL_MESSAGES = {
+  unconfigured: 'Emailing a backup isn\'t switched on for this app yet — use "Save to Device" instead.',
+  bad_email: 'That doesn\'t look like a valid email address.',
+  too_large: 'Your saved data is unexpectedly large to email — use "Save to Device" instead.',
+  rate_limited: 'You\'ve requested a few of these recently. Wait a little while and try again.',
+  error: 'Couldn\'t send it just now. Try again in a moment, or use "Save to Device".'
+};
+
+// Inline "email me a copy" form -- opens on demand so the footer stays a single line
+// until it's wanted. Mirrors RestorePlan's pattern.
+const EmailBackup = ({ onSent }) => {
+  const [open, setOpen] = useState(false);
+  const [email, setEmail] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState(null); // { ok } | { ok:false, message }
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setResult(null);
+    const r = await emailData(email);
+    setBusy(false);
+    if (r.status === 'sent') {
+      setResult({ ok: true });
+      if (r.exportedAt) onSent?.(r.exportedAt);
+    } else {
+      setResult({ ok: false, message: EMAIL_MESSAGES[r.status] || EMAIL_MESSAGES.error });
+    }
+  };
+
+  if (!open) {
+    return (
+      <button type="button" className="data-backup-btn secondary" onClick={() => setOpen(true)}>
+        📧 Email a Copy
+      </button>
+    );
+  }
+
+  return (
+    <form className="data-backup-email" onSubmit={submit}>
+      <div className="data-backup-email-row">
+        <input
+          type="email"
+          autoComplete="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={busy}
+          aria-label="Email address to send the backup to"
+        />
+        <button type="submit" disabled={busy || !email.trim()}>{busy ? 'Sending…' : 'Send'}</button>
+      </div>
+      {result && (
+        <p className={`data-backup-email-msg ${result.ok ? 'ok' : 'err'}`}>
+          {result.ok
+            ? 'Sent — check your inbox for a .json file you can Import on any device.'
+            : result.message}
+        </p>
+      )}
+      <p className="data-backup-email-note">
+        The file travels through a third-party email service and lands in your mailbox unencrypted — only send it to an
+        address you control. Nothing is stored on our side.
+      </p>
+    </form>
+  );
+};
+
 const DataBackup = () => {
   const [lastBackupAt, setLastBackupAt] = useState(null);
 
@@ -118,6 +213,8 @@ const DataBackup = () => {
   }, []);
 
   const handleExport = () => exportData(setLastBackupAt);
+  // An emailed backup is still a backup -- stamp the "last backup" time the same way.
+  const handleEmailed = (at) => stampBackup(at, setLastBackupAt);
 
   const backupDaysAgo = lastBackupAt ? daysBetween(lastBackupAt) : null;
   const backupStale = backupDaysAgo === null || backupDaysAgo > LAST_BACKUP_WARN_DAYS;
@@ -146,7 +243,8 @@ const DataBackup = () => {
         Your data (tier, saved plans, net worth/debts/goals) lives only in this browser.
       </span>
       <div className="data-backup-buttons">
-        <button className="data-backup-btn" onClick={handleExport}>⬇️ Export Backup</button>
+        <button className="data-backup-btn" onClick={handleExport}>⬇️ Save to Device</button>
+        <EmailBackup onSent={handleEmailed} />
         <label className="data-backup-btn secondary">
           ⬆️ Import Backup
           <input type="file" accept="application/json" onChange={handleImportFile} hidden />

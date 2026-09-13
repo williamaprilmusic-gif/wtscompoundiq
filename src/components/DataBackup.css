@@ -17,6 +17,8 @@
 
 .data-backup-buttons {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 8px;
 }
 
@@ -48,4 +50,65 @@
 
 .data-backup-last.stale {
   color: var(--accent-yellow, #eab308);
+}
+
+/* "Email a copy" inline form -- takes the full row when open. */
+.data-backup-email {
+  flex-basis: 100%;
+  max-width: 420px;
+  margin: 4px auto 0;
+}
+
+.data-backup-email-row {
+  display: flex;
+  gap: 8px;
+}
+
+.data-backup-email-row input {
+  flex: 1;
+  min-width: 0;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--raise-1);
+  color: var(--text);
+  padding: 7px 11px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  outline: none;
+}
+
+.data-backup-email-row input:focus {
+  border-color: var(--accent);
+}
+
+.data-backup-email-row button {
+  flex-shrink: 0;
+  background: var(--accent);
+  color: #06263a;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 15px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.data-backup-email-row button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.data-backup-email-msg {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  margin: 8px 0 0;
+}
+
+.data-backup-email-msg.ok { color: var(--accent-green); }
+.data-backup-email-msg.err { color: var(--accent-red); }
+
+.data-backup-email-note {
+  font-size: 0.7rem;
+  color: var(--mut2);
+  line-height: 1.5;
+  margin: 8px 0 0;
 }
