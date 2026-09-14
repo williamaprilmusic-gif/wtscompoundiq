@@ -445,7 +445,8 @@ const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = fals
 
       <p className="dashboard-note">
         Everything here lives only in your browser's local storage -- nothing is sent anywhere, and none of these
-        numbers recompute automatically. Revisit each tab and save again to refresh what's shown here.
+        numbers recompute automatically. Revisit each tab and save again to refresh what's shown here. Every figure
+        is one possible outcome if the plan you saved keeps running as entered, not a guaranteed result.
       </p>
 
       {canWhiteLabel && compliance.trim() && (

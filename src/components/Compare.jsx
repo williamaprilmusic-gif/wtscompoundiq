@@ -171,7 +171,7 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
 
       {scenarioWinner && (
         <p className="compare-scenario-verdict">
-          {scenarioRanked[0].scenario.name || `Plan ${scenarioRanked[0].label}`} comes out ahead at{' '}
+          If each plan runs exactly as entered, {scenarioRanked[0].scenario.name || `Plan ${scenarioRanked[0].label}`} would come out ahead at{' '}
           {country.symbol} {Math.round(scenarioRanked[0].value).toLocaleString()} —{' '}
           {country.symbol} {Math.round(scenarioRunnerUpGap).toLocaleString()} more than{' '}
           {scenarioRanked[1].scenario.name || `Plan ${scenarioRanked[1].label}`}, driven by whatever's different

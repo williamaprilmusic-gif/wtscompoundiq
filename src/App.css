@@ -591,6 +591,18 @@ body {
 }
 .doubling-time-note strong { color: var(--text); }
 
+/* Sits above every note in the Plan Insights panel -- one shared "these are
+   conditional, not promised" frame instead of repeating it in each note below. */
+.insights-frame-note {
+  margin: 0 0 18px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--border);
+  font-size: 0.78rem;
+  color: var(--mut2);
+  line-height: 1.5;
+}
+.insights-frame-note em { color: var(--mut); font-style: normal; font-weight: 600; }
+
 .withdrawal-income-note {
   margin: -8px 0 22px;
   font-size: 0.82rem;

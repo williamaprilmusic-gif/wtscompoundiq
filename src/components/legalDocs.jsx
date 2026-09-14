@@ -135,6 +135,15 @@ export const LEGAL_DOCS = [
               Monte Carlo simulator). Before acting on anything the Service shows you, verify
               it with a licensed financial adviser, accountant, or SARS.
             </p>
+            <p>
+              Every figure, note, and "you'd have"-style statement the Tools produce describes
+              a <strong>conditional possibility</strong> — what could follow <em>if</em> the
+              rate, contribution, timeframe, and other inputs you entered hold exactly as
+              entered for the whole period shown — not a prediction, commitment, or guarantee
+              of any actual future outcome. Markets, tax law, and your own circumstances will
+              not hold constant, so any real result may differ from, and could be materially
+              worse than, what a Tool displays.
+            </p>
           </>
         )
       },

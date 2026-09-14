@@ -25,7 +25,7 @@ const tiers = [
     name: 'Basic',
     price: 'Free',
     billing: 'forever',
-    description: 'Get oriented and run the numbers -- no signup required.',
+    description: 'If you just want to see what your own numbers could become, start here -- no signup required.',
     features: [
       'Start Here guided quiz',
       'Compound interest calculator, built for South African tax rules',
@@ -61,7 +61,7 @@ const tiers = [
     // Annual = ~33% off the R149 x 12 = R1,788 monthly run rate.
     priceAnnual: 1199,
     billingAnnual: '/ year (~R100/mo)',
-    description: 'The full planning toolkit, beyond the calculator.',
+    description: 'If one calculation isn\'t enough, this unlocks the full toolkit for exploring what your plan could do.',
     features: [
       'Everything in Basic, plus:',
       'Budget / Cash Flow tracker, with a monthly surplus history & trend chart',
@@ -87,7 +87,7 @@ const tiers = [
     // Annual = ~33% off the R249 x 12 = R2,988 monthly run rate.
     priceAnnual: 1999,
     billingAnnual: '/ year (~R167/mo)',
-    description: 'Every scenario tool, plus AI-powered guidance -- on top of Pro.',
+    description: 'If you want a range of possible outcomes rather than just one, this adds every scenario tool plus AI-powered guidance on top of Pro.',
     features: [
       'Everything in Pro, plus:',
       '8 advanced Power Tools — Drawdown, Coast & Barista FIRE, Retirement Income Gap (now with a "how long to close it" timeline), Pre-Tax & RA Tax Optimizer, Two-Pot Withdrawal (flags the R2,000 minimum and once-per-tax-year rule), Sequence-of-Returns Risk',
@@ -156,7 +156,7 @@ export default function TierPricing({ currentTier, onUpgrade, onClose }) {
       <div className="pricing-modal">
         <button className="close-btn" onClick={onClose} aria-label="Close">&times;</button>
         <h2 className="pricing-title">Choose Your Plan</h2>
-        <p className="pricing-subtitle">Unlock the full power of WTS CompoundIQ. Basic calculator is free; premium features require an active subscription.</p>
+        <p className="pricing-subtitle">See what's possible with your own numbers. The Basic calculator is free to explore; the tools that show more possibilities depend on an active subscription.</p>
 
         <div className="billing-toggle" role="group" aria-label="Billing period">
           <button

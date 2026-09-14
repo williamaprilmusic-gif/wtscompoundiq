@@ -117,7 +117,7 @@ const FAQ_DATA = [
   },
   {
     question: 'How accurate are the interest rates and tax figures?',
-    answer: 'They are indicative simplifications for education, not verified current tax law. South Africa\'s tax system is reduced to a flat approximate rate (with an opt-in progressive-bracket mode) and the TFSA wrapper, and real tax rules have thresholds, rebates, and change yearly. Do not treat this as your only source before making real financial decisions.',
+    answer: 'Every number the app shows is a conditional possibility, not a verified fact: it holds only if the rate, tax rule, and other inputs you see stay exactly as entered. South Africa\'s tax system is reduced to a flat approximate rate (with an opt-in progressive-bracket mode) and the TFSA wrapper, and real tax rules have thresholds, rebates, and change yearly. Do not treat this as your only source before making real financial decisions.',
     keywords: ['accurate', 'accuracy', 'correct', 'real', 'tax rate', 'reliable', 'trust']
   },
   {
@@ -142,7 +142,7 @@ const FAQ_DATA = [
   },
   {
     question: 'Is this financial advice?',
-    answer: 'No. WTS CompoundIQ is an educational calculator, not licensed financial advice. Speak with a qualified financial advisor before making real investment or tax decisions.',
+    answer: 'No. WTS CompoundIQ shows what could follow if your inputs held true -- an educational "what if", not licensed financial advice or a promised outcome. Speak with a qualified financial advisor before making real investment or tax decisions.',
     keywords: ['advice', 'financial advisor', 'licensed', 'recommendation']
   },
   {

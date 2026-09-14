@@ -769,6 +769,9 @@ export default function App() {
               </button>
 
               <div id="calc-insights-panel" hidden={!insightsOpen}>
+              <p className="insights-frame-note">
+                Everything below is one possible path, not a forecast — each note only holds <em>if</em> your rate, contribution, and inflation stay as entered. Change any input above and every figure updates to match.
+              </p>
               <div className="target-seek">
                 <label htmlFor="target-amount">Aim for a number</label>
                 <div className="target-seek-body">
@@ -840,19 +843,19 @@ export default function App() {
 
               {crossoverYear && crossoverYear <= years && (
                 <p className="doubling-time-note">
-                  🔀 The crossover point: in <strong>year {crossoverYear}</strong>, the growth your money earns that year first overtakes what you pay in that year — after that, your money is doing more of the work than you are.
+                  🔀 The crossover point: if this rate holds, <strong>year {crossoverYear}</strong> is when the growth your money earns that year would first overtake what you pay in that year — from then on your money would be doing more of the work than you are.
                 </p>
               )}
 
               {compoundingTakesOverYear && compoundingTakesOverYear <= years && (
                 <p className="doubling-time-note">
-                  🌱 By <strong>year {compoundingTakesOverYear}</strong>, compound growth has added more to your balance than every deposit you've made combined — from then on, most of your money was earned, not saved.
+                  🌱 Assuming you keep this up: by <strong>year {compoundingTakesOverYear}</strong>, compound growth would have added more to your balance than every deposit combined — from then on, most of the total would be earned, not saved.
                 </p>
               )}
 
               {halfBalanceYear && years >= 4 && halfBalanceYear > years / 2 && (
                 <p className="doubling-time-note">
-                  ⏳ You only pass <strong>half your final balance</strong> in year {halfBalanceYear} of {years} — the last {years - halfBalanceYear} year{years - halfBalanceYear === 1 ? '' : 's'} build as much as the first {halfBalanceYear} put together. Stopping a few years early near the end costs far more than a slow start did.
+                  ⏳ If the plan runs its full course: you'd only pass <strong>half your final balance</strong> in year {halfBalanceYear} of {years} — the last {years - halfBalanceYear} year{years - halfBalanceYear === 1 ? '' : 's'} would build as much as the first {halfBalanceYear} put together. Stopping a few years early near the end would cost far more than a slow start did.
                 </p>
               )}
 
