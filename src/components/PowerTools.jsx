@@ -524,7 +524,8 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const takeHome = calculateTakeHomePay({
     grossAnnual: salaryGross,
     taxRate: country.taxRate,
-    taxBrackets: (salaryProgressive && country.taxBrackets) ? country.taxBrackets : null
+    taxBrackets: (salaryProgressive && country.taxBrackets) ? country.taxBrackets : null,
+    rebate: salaryProgressive ? (country.primaryRebate || 0) : 0
   });
 
   const dti = calculateDTI({ monthlyDebtPayments: dtiDebt, grossMonthlyIncome: dtiIncome });
@@ -585,7 +586,8 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
   const marginalTax = marginalTaxAnalysis({
     income: mtIncome, taxRate: country.taxRate,
     taxBrackets: (mtProgressive && country.taxBrackets) ? country.taxBrackets : null,
-    deltaEarned: 1000, deductionAmount: mtDeduction
+    deltaEarned: 1000, deductionAmount: mtDeduction,
+    rebate: mtProgressive ? (country.primaryRebate || 0) : 0
   });
 
   const raiseInflation = raiseForInflation({ currentSalary: riSalary, inflationRate: riInflation, offeredRaisePercent: riOffered });
@@ -1141,9 +1143,9 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
             <p className="power-tool-note">
               {salaryProgressive && country.taxBrackets
                 ? (country.taxBracketsNote || `${country.name}'s progressive bracket schedule -- illustrative only.`)
-                : `Flat ${country.taxRate}% assumed on the full gross amount.`} Doesn't model deductions, rebates,
-              social security/pension contributions, or medical aid credits -- a real payslip's net figure will
-              differ. Not tax advice.
+                : `Flat ${country.taxRate}% assumed on the full gross amount, no rebate applied.`}{' '}
+              Doesn't model other deductions, UIF/social security or pension contributions, or medical aid tax
+              credits -- a real payslip's net figure will differ. Not tax advice.
             </p>
           </>
         )}

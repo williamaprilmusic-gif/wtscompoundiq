@@ -38,4 +38,31 @@ describe('calculateTakeHomePay', () => {
   it('effectiveRate is 0 when gross is 0 (no divide-by-zero NaN)', () => {
     expect(calculateTakeHomePay({ grossAnnual: 0, taxRate: 30 }).effectiveRate).toBe(0);
   });
+
+  it('subtracts a rebate (e.g. SARS primary rebate) from the bracket tax, lowering it and effectiveRate', () => {
+    const taxBrackets = [
+      { upTo: 250000, rate: 18 },
+      { upTo: 500000, rate: 26 },
+      { upTo: null, rate: 31 }
+    ];
+    const withoutRebate = calculateTakeHomePay({ grossAnnual: 300000, taxRate: 45, taxBrackets });
+    const withRebate = calculateTakeHomePay({ grossAnnual: 300000, taxRate: 45, taxBrackets, rebate: 17235 });
+    expect(withRebate.tax).toBeCloseTo(withoutRebate.tax - 17235, 5);
+    expect(withRebate.netAnnual).toBeCloseTo(withoutRebate.netAnnual + 17235, 5);
+    expect(withRebate.effectiveRate).toBeLessThan(withoutRebate.effectiveRate);
+  });
+
+  it('a rebate larger than the bracket tax floors take-home tax at 0, not negative', () => {
+    const taxBrackets = [{ upTo: null, rate: 18 }];
+    const result = calculateTakeHomePay({ grossAnnual: 50000, taxRate: 18, taxBrackets, rebate: 50000 });
+    expect(result.tax).toBe(0);
+    expect(result.netAnnual).toBe(50000);
+  });
+
+  it('omitting rebate defaults to 0, matching the pre-rebate result exactly', () => {
+    const taxBrackets = [{ upTo: null, rate: 25 }];
+    const withDefault = calculateTakeHomePay({ grossAnnual: 400000, taxRate: 25, taxBrackets });
+    const withExplicitZero = calculateTakeHomePay({ grossAnnual: 400000, taxRate: 25, taxBrackets, rebate: 0 });
+    expect(withDefault.tax).toBe(withExplicitZero.tax);
+  });
 });

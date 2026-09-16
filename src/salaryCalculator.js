@@ -5,10 +5,13 @@
 // its flat country.taxRate, the same split App.jsx's progressiveTax toggle already uses.
 import { taxOwedAtBrackets } from './engine';
 
-export const calculateTakeHomePay = ({ grossAnnual, taxRate, taxBrackets }) => {
+export const calculateTakeHomePay = ({ grossAnnual, taxRate, taxBrackets, rebate = 0 }) => {
   const safeGross = Math.max(0, grossAnnual || 0);
+  // Take-home pay reads a standalone total tax bill (not a difference of two totals),
+  // so unlike most other taxOwedAtBrackets() callers this one does need the rebate to
+  // show correctly -- see engine.js's note on why most callers can leave it at 0.
   const tax = (taxBrackets && taxBrackets.length)
-    ? taxOwedAtBrackets(safeGross, taxBrackets)
+    ? taxOwedAtBrackets(safeGross, taxBrackets, rebate)
     : safeGross * ((taxRate || 0) / 100);
   const netAnnual = Math.max(0, safeGross - tax);
   return {

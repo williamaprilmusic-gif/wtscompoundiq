@@ -4,7 +4,18 @@
 // Marginal tax owed on `income` given ascending brackets [{ upTo, rate }] (upTo: null
 // marks the top, unbounded bracket). Standard progressive-bracket math: each slice of
 // income is taxed at its own bracket's rate, not the whole amount at the top rate.
-export function taxOwedAtBrackets(income, brackets) {
+//
+// `rebate` is a flat, once-off amount subtracted from the bracket total before the
+// floor at zero -- SARS's primary rebate works this way: it isn't a bracket, it's a
+// fixed credit against whatever the brackets say you owe, which is why below a certain
+// income no tax is actually payable even though the brackets alone would show some.
+// It defaults to 0, which reproduces the exact pre-rebate result -- every existing
+// caller that computes a *difference* of two taxOwedAtBrackets() calls (marginal rate
+// on a raise, tax on a bonus/withdrawal/capital gain, the value of a deduction) is
+// unaffected either way, because a constant subtracted from both sides of a
+// subtraction cancels out; only a caller reading a single, standalone total (e.g. "tax
+// owed on this whole salary") actually needs to pass the real rebate to see it reflected.
+export function taxOwedAtBrackets(income, brackets, rebate = 0) {
   if (!brackets || !brackets.length || income <= 0) return 0;
   let tax = 0;
   let lower = 0;
@@ -16,7 +27,7 @@ export function taxOwedAtBrackets(income, brackets) {
     lower = upper;
     if (income <= upper) break;
   }
-  return tax;
+  return Math.max(0, tax - (rebate || 0));
 }
 
 export function calculateCompoundInterest({

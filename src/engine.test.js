@@ -168,6 +168,27 @@ describe('taxOwedAtBrackets -- progressive tax', () => {
     const marginalTax = taxOwedAtBrackets(500000 + 5000, brackets) - taxOwedAtBrackets(500000, brackets);
     expect(marginalTax).toBe(1500); // 5000 * 30%
   });
+
+  describe('rebate (a flat credit against the bracket total, e.g. SARS primary rebate)', () => {
+    it('subtracts the rebate from the bracket total', () => {
+      // 15000 @ brackets = 2000 (see above); a 500 rebate brings that to 1500.
+      expect(taxOwedAtBrackets(15000, brackets, 500)).toBe(1500);
+    });
+
+    it('floors at zero rather than going negative when the rebate exceeds the bracket total', () => {
+      expect(taxOwedAtBrackets(5000, brackets, 10000)).toBe(0);
+    });
+
+    it('defaults to 0 (no behaviour change) when omitted', () => {
+      expect(taxOwedAtBrackets(15000, brackets)).toBe(taxOwedAtBrackets(15000, brackets, 0));
+    });
+
+    it('cancels out of a marginal/difference calculation, so a rebate never changes a delta', () => {
+      const withoutRebate = taxOwedAtBrackets(500000 + 5000, brackets) - taxOwedAtBrackets(500000, brackets);
+      const withRebate = taxOwedAtBrackets(500000 + 5000, brackets, 20000) - taxOwedAtBrackets(500000, brackets, 20000);
+      expect(withRebate).toBe(withoutRebate);
+    });
+  });
 });
 
 describe('calculateCompoundInterest -- progressive brackets integration', () => {

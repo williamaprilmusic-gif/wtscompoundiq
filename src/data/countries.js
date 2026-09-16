@@ -52,7 +52,17 @@ export const countriesData = [
       { upTo: 1817000, rate: 41 },
       { upTo: null, rate: 45 }
     ],
-    taxBracketsNote: 'Individual (natural person) brackets, primary rebate/thresholds not modeled -- illustrative, not a SARS calculator.'
+    // The primary rebate: a flat once-off credit every natural-person taxpayer gets
+    // against the brackets' total, regardless of age -- it's why nobody actually pays
+    // tax at exactly the bracket table's numbers below a certain income. Passed as
+    // engine.js's taxOwedAtBrackets() third argument by the tools that show a
+    // standalone total tax bill (Take-Home Pay, Marginal Tax Rate); tools that only
+    // ever compute a *difference* of two bracket totals don't need it (it cancels).
+    // The age-based secondary (65+) and tertiary (75+) rebates are NOT modeled here --
+    // adding them would need an age input this app doesn't otherwise ask for, so every
+    // taxpayer is treated as under 65, which understates the true rebate for older users.
+    primaryRebate: 17235,
+    taxBracketsNote: 'Individual (natural person) brackets and the primary rebate, age-based secondary/tertiary rebates not modeled -- illustrative, not a SARS calculator.'
   },
   {
     code: 'us',

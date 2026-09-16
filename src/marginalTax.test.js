@@ -41,4 +41,21 @@ describe('marginalTaxAnalysis', () => {
     expect(result.totalTax).toBe(0);
     expect(Number.isFinite(result.marginalRate)).toBe(true);
   });
+
+  describe('rebate (a flat credit against the total bill, e.g. SARS primary rebate)', () => {
+    it('lowers totalTax but leaves the marginal-rate figures unchanged (a rebate cancels out of a difference)', () => {
+      const withoutRebate = marginalTaxAnalysis({ income: 600000, taxBrackets: BRACKETS, deltaEarned: 1000, deductionAmount: 50000 });
+      const withRebate = marginalTaxAnalysis({ income: 600000, taxBrackets: BRACKETS, deltaEarned: 1000, deductionAmount: 50000, rebate: 17235 });
+      expect(withRebate.totalTax).toBeCloseTo(withoutRebate.totalTax - 17235, 5);
+      expect(withRebate.marginalRate).toBeCloseTo(withoutRebate.marginalRate, 5);
+      expect(withRebate.keepsFromNext).toBeCloseTo(withoutRebate.keepsFromNext, 5);
+      expect(withRebate.deductionTaxSaved).toBeCloseTo(withoutRebate.deductionTaxSaved, 5);
+    });
+
+    it('defaults to 0 (no behaviour change) when omitted', () => {
+      const withDefault = marginalTaxAnalysis({ income: 400000, taxBrackets: BRACKETS });
+      const withExplicitZero = marginalTaxAnalysis({ income: 400000, taxBrackets: BRACKETS, rebate: 0 });
+      expect(withDefault.totalTax).toBe(withExplicitZero.totalTax);
+    });
+  });
 });
