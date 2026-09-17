@@ -5,6 +5,8 @@ import { calculateCompoundInterest } from '../engine';
 import { computeBudgetSummary, BUDGET_ITEMS_KEY } from '../budgetEngine';
 import { readJSONArray } from '../utils/storage';
 import { readPlan } from '../utils/planStorage';
+import { HISTORY_KEY as NETWORTH_HISTORY_KEY, isValidNetWorthEntry } from './NetWorth';
+import { balanceSheetRatios } from '../balanceSheetRatios';
 
 const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [], maxYears = Infinity, onSetWrapper, onSetMonthly, onSetYears, onSetContributionIncrease }) => {
   const base = { initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper, compoundFrequency, annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit, contributionIncreaseRate: contributionIncrease, lumpSums };
@@ -84,6 +86,29 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
   const redirectGain = debtPlan ? redirectApplied.finalBalance - postDebtBaseline.finalBalance : 0;
   const hasDebtRedirect = debtPlan != null && postDebtYears >= 1;
 
+  // Foundation checks folded in from the retired AI Advisor: an unfunded emergency
+  // fund or a stretched balance sheet outrank every growth lever above -- both read
+  // straight from what's already saved on the Emergency Fund and Net Worth tabs (same
+  // sources and thresholds AI Advisor used), so there's nothing new to type in.
+  const [savedEfPlan, setSavedEfPlan] = useState(null);
+  const [netWorthRatios, setNetWorthRatios] = useState(null);
+  useEffect(() => {
+    const plan = readPlan();
+    if (plan?.emergencyFund && plan.emergencyFund.targetAmount > 0) setSavedEfPlan(plan.emergencyFund);
+
+    const history = readJSONArray(NETWORTH_HISTORY_KEY).filter(isValidNetWorthEntry);
+    const latest = history.length > 0 ? history[history.length - 1] : null;
+    if (latest) {
+      setNetWorthRatios(balanceSheetRatios({ totalAssets: latest.totalAssets ?? latest.netWorth, totalDebts: latest.totalDebts ?? 0 }));
+    }
+  }, []);
+  const efFundedPct = savedEfPlan ? Math.min(100, (savedEfPlan.currentSavings / savedEfPlan.targetAmount) * 100) : null;
+  const efFunded = efFundedPct != null && efFundedPct >= 100;
+  // 'stretched'/'risky' are balanceSheetRatios.js's own two most-concerning bands
+  // (debt above 40% of assets) -- the same threshold AI Advisor used to decide this was
+  // worth flagging at all.
+  const leverageIsHigh = netWorthRatios && (netWorthRatios.band === 'stretched' || netWorthRatios.band === 'risky');
+
   const flashApplied = (key) => {
     setApplied(key);
     setTimeout(() => setApplied(null), 2000);
@@ -113,6 +138,22 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
       onApply: applyWrapper,
       applyLabel: `Turn on ${country.wrapperLabel}`
     },
+    ...(savedEfPlan ? [{
+      key: 'efPriority',
+      title: 'Fund Your Emergency Buffer First',
+      done: efFunded,
+      body: efFunded
+        ? `Your saved Emergency Fund plan is fully funded (${country.symbol}${Math.round(savedEfPlan.currentSavings).toLocaleString()} of ${country.symbol}${Math.round(savedEfPlan.targetAmount).toLocaleString()}) -- you're clear to prioritise the growth levers below.`
+        : `Your saved Emergency Fund plan is ${efFundedPct.toFixed(0)}% funded (${country.symbol}${Math.round(savedEfPlan.currentSavings).toLocaleString()} of ${country.symbol}${Math.round(savedEfPlan.targetAmount).toLocaleString()}). Most guidance treats a full emergency fund as the foundation to build before increasing investment risk -- consider directing new money there before applying the boosts below.`,
+      interactive: false
+    }] : []),
+    ...(leverageIsHigh ? [{
+      key: 'leverageCheck',
+      title: 'Check Your Leverage Before Adding Risk',
+      done: false,
+      body: `Your latest saved Net Worth snapshot puts debt at ${netWorthRatios.debtToAsset.toFixed(0)}% of assets -- "${netWorthRatios.bandLabel}". Before taking on more investment risk, consider whether reducing debt (or growing assets) would put you on steadier footing -- see the Net Worth tab's balance-sheet ratios, and Debt Payoff for a plan to bring it down.`,
+      interactive: false
+    }] : []),
     {
       key: 'boost',
       title: 'Accelerate Your Growth',
@@ -228,9 +269,11 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
       </div>
 
       <p className="coach-assumption-note">
-        These are rule-based, not AI-generated: each step recomputes your current plan through the same calculator
-        engine with one input changed, assuming a constant {rate}% return. Applying a step updates your actual
-        Calculator inputs -- it's a "what-if" comparison you can act on, not personalized financial advice.
+        These are rule-based, not AI-generated: most steps recompute your current plan through the same calculator
+        engine with one input changed, assuming a constant {rate}% return, and applying one updates your actual
+        Calculator inputs. The foundation checks (emergency fund, leverage) instead read your saved Emergency Fund
+        and Net Worth plans directly -- either way, it's a "what-if" comparison you can act on, not personalized
+        financial advice.
       </p>
     </div>
   );

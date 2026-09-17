@@ -6,7 +6,6 @@ import PaymentSection from './components/PaymentSection';
 import { calculateCompoundInterest } from './engine';
 import { costOfWaiting } from './costOfWaiting';
 import { countriesData as WTS_COUNTRIES, getCountryByCode, getVerificationInfo } from './data/countries';
-import AIAdvisor from './components/AIAdvisor';
 import TaxOptimizer from './components/TaxOptimizer';
 import Invest from './components/Invest';
 import Coach from './components/Coach';
@@ -223,9 +222,6 @@ export default function App() {
   const addLumpSum = () => setLumpSums(prev => [...prev, { id: uniqueId(), year: 1, amount: 0 }]);
   const updateLumpSum = (id, field, value) => setLumpSums(prev => prev.map(l => l.id === id ? { ...l, [field]: Number(value) } : l));
   const removeLumpSum = (id) => setLumpSums(prev => prev.filter(l => l.id !== id));
-
-  // AI Advisor profile state -- no assumed persona; blank until the user fills it in.
-  const [profile, setProfile] = useState({ age: 18, income: 0, savings: 0, debtRate: 0, riskTolerance: 'moderate' });
 
   // Calculator scenario comparison -- saved snapshots of the inputs/results above, side by side.
   const [scenarios, setScenarios] = useState([]);
@@ -523,8 +519,7 @@ export default function App() {
       label: t('nav.groupAI'),
       tabs: [
         { name: 'Coach', i18nKey: 'nav.coach', tier: 'Ultra' },
-        { name: 'Monte Carlo', i18nKey: 'nav.monteCarlo', tier: 'Ultra' },
-        { name: 'AI Advisor', i18nKey: 'nav.aiAdvisor', tier: 'Ultra' }
+        { name: 'Monte Carlo', i18nKey: 'nav.monteCarlo', tier: 'Ultra' }
       ]
     }
   ], [t]);
@@ -1059,12 +1054,6 @@ export default function App() {
                 View Pricing Plans & Upgrade
               </button>
             </div>
-          </div>
-        )}
-
-        {activeTab === 'AI Advisor' && canAccess('Ultra') && (
-          <div className="tab-pane active">
-            <AIAdvisor country={country} profile={profile} onProfileUpdate={setProfile} />
           </div>
         )}
 

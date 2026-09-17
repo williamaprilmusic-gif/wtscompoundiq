@@ -122,7 +122,7 @@ const FAQ_DATA = [
   },
   {
     question: 'What is the difference between Basic, Pro, and Ultra?',
-    answer: 'Basic is free and covers Start Here and the Calculator (South African tax rules, TFSA wrapper comparison). Pro unlocks the full planning toolkit: Budget tracker, Emergency Fund tracker, Debt Payoff planner, My Plan (with reminders), multi-goal Invest planner, Tax Optimizer, Power Tools, Net Worth tracker, Dashboard, Financial Snapshot export, and plan comparison. Ultra adds the Monte Carlo simulator, a Net Worth FX stress test, the AI Wealth Coach and AI Investment Advisor, plus white-label / branded plan exports with your own compliance line, FSP number, and plan notes.',
+    answer: 'Basic is free and covers Start Here, the Calculator, and Wealth Path (South African tax rules, TFSA wrapper comparison). Pro unlocks the full planning toolkit: Budget tracker, Emergency Fund tracker, Debt Payoff planner, My Plan (with reminders), multi-goal Invest planner, Tax Optimizer, Power Tools, Net Worth tracker, Dashboard, Financial Snapshot export, and plan comparison. Ultra adds the Monte Carlo simulator, a Net Worth FX stress test, the AI Wealth Coach, plus white-label / branded plan exports with your own compliance line, FSP number, and plan notes.',
     keywords: ['tier', 'plan', 'basic', 'pro', 'ultra', 'difference', 'compare plans', 'free']
   },
   {

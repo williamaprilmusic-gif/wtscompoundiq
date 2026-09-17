@@ -69,8 +69,7 @@ export const translations = {
       powerTools: 'Power Tools',
       compare: 'Compare',
       coach: 'Coach',
-      monteCarlo: 'Monte Carlo',
-      aiAdvisor: 'AI Advisor'
+      monteCarlo: 'Monte Carlo'
     },
     footer: {
       tagline: 'educational tool · indicative rates drift weekly · not financial advice',
@@ -162,8 +161,7 @@ export const translations = {
       powerTools: 'Kragmiddele',
       compare: 'Vergelyk',
       coach: 'Afrigter',
-      monteCarlo: 'Monte Carlo',
-      aiAdvisor: 'KI-Adviseur'
+      monteCarlo: 'Monte Carlo'
     },
     footer: {
       tagline: 'opvoedkundige hulpmiddel · aanwyserkoerse wissel weekliks · nie finansiële advies nie',
@@ -253,8 +251,7 @@ export const translations = {
       powerTools: 'Amathuluzi Amandla',
       compare: 'Qhathanisa',
       coach: 'Umqeqeshi',
-      monteCarlo: 'Monte Carlo',
-      aiAdvisor: 'Umeluleki we-AI'
+      monteCarlo: 'Monte Carlo'
     },
     footer: {
       tagline: 'ithuluzi lemfundo · amazinga abonisayo ayaguquka ngesonto · akusiyo iseluleko sezezimali',
@@ -346,8 +343,7 @@ export const translations = {
       powerTools: 'Izixhobo Ezinamandla',
       compare: 'Thelekisa',
       coach: 'Umqeqeshi',
-      monteCarlo: 'Monte Carlo',
-      aiAdvisor: 'Umcebisi we-AI'
+      monteCarlo: 'Monte Carlo'
     },
     footer: {
       tagline: 'isixhobo semfundo · iindleko ezibonisayo ziyatshintsha ngeveki · asilulo iingcebiso zezemali',
@@ -439,8 +435,7 @@ export const translations = {
       powerTools: 'Didirišwa tša Matla',
       compare: 'Bapetša',
       coach: 'Mohlahli',
-      monteCarlo: 'Monte Carlo',
-      aiAdvisor: 'Mogakolodi wa AI'
+      monteCarlo: 'Monte Carlo'
     },
     footer: {
       tagline: 'sedirišwa sa thuto · dipalopalo tše di bontšhago di a fetoga beke le beke · ga se keletšo ya ditšhelete',
@@ -532,8 +527,7 @@ export const translations = {
       powerTools: 'Didirisiwa tse di Maatla',
       compare: 'Bapisa',
       coach: 'Mothapisi',
-      monteCarlo: 'Monte Carlo',
-      aiAdvisor: 'Mogakolodi wa AI'
+      monteCarlo: 'Monte Carlo'
     },
     footer: {
       tagline: 'sedirisiwa sa thuto · dipalo tse di kaelang di fetoga beke le beke · ga se kgakololo ya madi',
@@ -625,8 +619,7 @@ export const translations = {
       powerTools: 'Lisebelisoa tse Matla',
       compare: 'Bapisa',
       coach: 'Mohlahlisi',
-      monteCarlo: 'Monte Carlo',
-      aiAdvisor: 'Moeletsi oa AI'
+      monteCarlo: 'Monte Carlo'
     },
     footer: {
       tagline: 'sesebelisoa sa thuto · litekanyetso tse bontšang lia fetoha beke le beke · hase keletso ea lichelete',
@@ -718,8 +711,7 @@ export const translations = {
       powerTools: 'Switirhisiwa swa Matimba',
       compare: 'Ringanisa',
       coach: 'Mugoxi',
-      monteCarlo: 'Monte Carlo',
-      aiAdvisor: 'Muxelamahlo wa AI'
+      monteCarlo: 'Monte Carlo'
     },
     footer: {
       tagline: 'xitirhisiwa xo dyondzisa · minxaba leyi kombisaka yi cinca vhiki na vhiki · a hi vutshila bya timali',
@@ -811,8 +803,7 @@ export const translations = {
       powerTools: 'Emathulusi Emandla',
       compare: 'Chatanisa',
       coach: 'Sifundzisi',
-      monteCarlo: 'Monte Carlo',
-      aiAdvisor: 'Umeluleki we-AI'
+      monteCarlo: 'Monte Carlo'
     },
     footer: {
       tagline: 'lithulusi lekufundzisa · emazinga labonisako liyaguca ngeliviki · akusiyo seluleko setimali',
@@ -904,8 +895,7 @@ export const translations = {
       powerTools: 'Zwishumiswa zwa Maanḓa',
       compare: 'Vhambedza',
       coach: 'Mugudisi',
-      monteCarlo: 'Monte Carlo',
-      aiAdvisor: 'Mueletshedzi wa AI'
+      monteCarlo: 'Monte Carlo'
     },
     footer: {
       tagline: 'tshishumiswa tsha pfunzo · zwiga zwine zwa sumbedza zwi shanduka vhege iṅwe na iṅwe · a si nyeletshedzo dza mali',
@@ -997,8 +987,7 @@ export const translations = {
       powerTools: 'Amathulusi Wamandla',
       compare: 'Qathanisa',
       coach: 'Umqeqetjhi',
-      monteCarlo: 'Monte Carlo',
-      aiAdvisor: 'Umeluleki we-AI'
+      monteCarlo: 'Monte Carlo'
     },
     footer: {
       tagline: 'isisetjenziswa sefundo · amazinga abonakalisako ayatjhentjha ngeveke · akusi kululeko yemali',

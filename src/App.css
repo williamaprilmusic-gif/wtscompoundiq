@@ -5,7 +5,7 @@
    .theme-toggle-btn below and App.jsx) overrides the same token set. Every color in
    every component .css file below is expressed as one of these tokens (or an
    intentionally fixed value -- print styles, the white logo badge, category colors
-   in AI Advisor) specifically so the toggle can flip the whole app from one place. */
+   in Net Worth/Budget) specifically so the toggle can flip the whole app from one place. */
 :root {
   --bg: #0f172a;
   --card-bg: rgba(30, 41, 59, 0.7);

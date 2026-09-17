@@ -103,7 +103,7 @@ export const LEGAL_DOCS = [
               milestones, a suite of "Power Tools" (FIRE number, home affordability,
               education savings, insurance needs, debt-vs-invest and more), side-by-side
               plan comparison, Monte Carlo simulation, and the rule-based
-              "AI Coach" and "AI Advisor" features described in Section 13 (collectively,
+              "AI Coach" feature described in Section 13 (collectively,
               the "<strong>Tools</strong>"), available across the free and paid subscription
               tiers described in Section 6.
             </p>
@@ -223,7 +223,7 @@ export const LEGAL_DOCS = [
                     <td>Ultra</td><td>R249</td><td>R1,999</td>
                     <td>Everything in Pro, plus the advanced Power Tools (retirement
                       drawdown and tax-strategy set), Monte Carlo, FX Stress Test, AI
-                      Wealth Coach, AI Investment Advisor, and white-label / branded plan
+                      Wealth Coach, and white-label / branded plan
                       exports with your own compliance line and notes</td>
                   </tr>
                 </tbody>
@@ -390,19 +390,20 @@ export const LEGAL_DOCS = [
         )
       },
       {
-        heading: '"AI" Coach & Advisor Features',
+        heading: '"AI" Coach Features',
         body: (
           <p>
-            <strong>The AI Coach and AI Investment Advisor Tools are rule-based, not powered
-            by a third-party generative AI model.</strong> Your inputs run through fixed
-            if/else decision logic built into the Service itself — the same calculator engine
-            used elsewhere in the app, re-run with one input changed — not a call to an
-            external AI provider. Both tools carry this same disclosure directly in-app.
-            Output is therefore deterministic and reproducible for the same inputs, not
-            generated text with the variability that implies; it can still be wrong,
-            oversimplified, or based on incomplete context, for the same reasons any of the
-            Service's other projections can be. Section 3's "not financial advice" disclaimer
-            applies with full force to anything these features produce.{' '}
+            <strong>The AI Coach Tool is rule-based, not powered by a third-party generative
+            AI model.</strong> Your inputs run through fixed if/else decision logic built
+            into the Service itself — the same calculator engine used elsewhere in the app,
+            re-run with one input changed, plus a couple of steps that simply read back a
+            saved Emergency Fund or Net Worth figure — not a call to an external AI provider.
+            It carries this same disclosure directly in-app. Output is therefore
+            deterministic and reproducible for the same inputs, not generated text with the
+            variability that implies; it can still be wrong, oversimplified, or based on
+            incomplete context, for the same reasons any of the Service's other projections
+            can be. Section 3's "not financial advice" disclaimer applies with full force to
+            anything this feature produces.{' '}
             <Fill>[If this Section is ever wired up to a real third-party AI/LLM provider,
             update this paragraph before that ships — it stops being accurate the moment a
             live model call is involved.]</Fill>
