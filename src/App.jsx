@@ -622,7 +622,7 @@ export default function App() {
                   <input type="number" value={monthly} onChange={(e) => setMonthly(Number(e.target.value))} />
                   {monthly > 0 && (
                     <span className="years-to-grow-date">
-                      ≈ {country.symbol}{Math.round(monthly / 4.345)}/week or {country.symbol}{Math.round(monthly / 30.44)}/day
+                      ≈ {t('calculator.perWeekOrDay', { symbol: country.symbol, week: Math.round(monthly / 4.345).toLocaleString(), day: Math.round(monthly / 30.44).toLocaleString() })}
                     </span>
                   )}
                 </div>
@@ -635,7 +635,7 @@ export default function App() {
                   <input type="number" min="1" max={MAX_YEARS} value={years} onChange={(e) => setYearsClamped(e.target.value)} />
                   {years >= 1 && (
                     <span className="years-to-grow-date">
-                      = around {new Date(new Date().setFullYear(new Date().getFullYear() + years)).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+                      = {t('calculator.yearsToGrowDate', { date: new Date(new Date().setFullYear(new Date().getFullYear() + years)).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) })}
                     </span>
                   )}
                 </div>
@@ -669,17 +669,16 @@ export default function App() {
                 <div className="bracket-section">
                   <label className="bracket-toggle">
                     <input type="checkbox" checked={progressiveTax} onChange={(e) => setProgressiveTax(e.target.checked)} />
-                    Use progressive tax brackets instead of the flat {country.taxRate}% estimate
+                    {t('calculator.useProgressiveBrackets', { rate: country.taxRate })}
                   </label>
                   {progressiveTax && (
                     <div className="bracket-form">
                       <div className="form-group">
-                        <label>Other Taxable Income ({country.symbol}/yr, excluding this plan's gains)</label>
+                        <label>{t('calculator.otherTaxableIncomeLabel', { symbol: country.symbol })}</label>
                         <input type="number" min="0" step="1000" value={otherTaxableIncome} onChange={(e) => setOtherTaxableIncome(Number(e.target.value))} />
                       </div>
                       <p className="bracket-note">
-                        Each year's investment gain is taxed at your marginal rate on top of this income, using{' '}
-                        {country.name}'s approximate brackets. {country.taxBracketsNote}
+                        {t('calculator.bracketNote', { country: country.name })} {country.taxBracketsNote}
                       </p>
                     </div>
                   )}
@@ -692,20 +691,20 @@ export default function App() {
                   <button className="lumpsum-add-btn" onClick={addLumpSum}>{t('calculator.addOneOff')}</button>
                 </div>
                 {lumpSums.length === 0 ? (
-                  <p className="lumpsum-empty">None added -- use this for a bonus, inheritance, tax refund, or any extra deposit landing in a specific year, on top of your regular monthly contribution above.</p>
+                  <p className="lumpsum-empty">{t('calculator.oneOffEmpty')}</p>
                 ) : (
                   <div className="lumpsum-list">
                     {lumpSums.map((l) => (
                       <div key={l.id} className="lumpsum-row">
                         <div className="lumpsum-field">
-                          <label>In year</label>
+                          <label>{t('calculator.inYear')}</label>
                           <input type="number" min="1" max={years} value={l.year} onChange={(e) => updateLumpSum(l.id, 'year', e.target.value)} />
                         </div>
                         <div className="lumpsum-field">
-                          <label>Amount ({country.symbol})</label>
+                          <label>{t('calculator.amountWithSymbol', { symbol: country.symbol })}</label>
                           <input type="number" min="0" step="1000" value={l.amount} onChange={(e) => updateLumpSum(l.id, 'amount', e.target.value)} />
                         </div>
-                        <button className="lumpsum-remove" onClick={() => removeLumpSum(l.id)} aria-label="Remove one-off contribution">&times;</button>
+                        <button className="lumpsum-remove" onClick={() => removeLumpSum(l.id)} aria-label={t('calculator.removeOneOffAria')}>&times;</button>
                       </div>
                     ))}
                   </div>
@@ -714,25 +713,37 @@ export default function App() {
 
               <span className={`tax-verification ${verification.stale ? 'stale' : ''}`}>
                 {verification.date
-                  ? `${verification.stale ? '⚠️ ' : '✓ '}${country.name}'s tax rate & wrapper data last verified ${verification.date} (${verification.daysAgo} day${verification.daysAgo === 1 ? '' : 's'} ago)${verification.stale ? ' -- overdue for a recheck' : ''}`
-                  : '⚠️ Verification date unknown for this country'}
+                  ? t('calculator.taxVerified', {
+                      icon: verification.stale ? '⚠️' : '✓',
+                      country: country.name,
+                      date: verification.date,
+                      days: verification.daysAgo,
+                      staleSuffix: verification.stale ? t('calculator.taxVerifiedStaleSuffix') : ''
+                    })
+                  : t('calculator.taxVerifiedUnknown')}
               </span>
 
               <span className="tax-verification sars-tax-year">
-                📅 Current SARS tax year: {taxYear.label} (ends {taxYear.endDate.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}, {taxYear.daysLeft} day{taxYear.daysLeft === 1 ? '' : 's'} left) --
-                your {country.wrapperLabel} annual limit resets on this cycle, not on 1 January.
+                {t('calculator.sarsTaxYearLine', {
+                  label: taxYear.label,
+                  endDate: taxYear.endDate.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }),
+                  days: taxYear.daysLeft,
+                  wrapper: country.wrapperLabel
+                })}
               </span>
 
-              {wrapper && results.wrapperCapExceeded && (
-                <span className="tax-verification stale">
-                  ⚠️ Your contributions exceed {country.wrapperLabel}'s limit
-                  {country.annualWrapperLimit != null ? ` (${country.symbol}${country.annualWrapperLimit.toLocaleString()}/year` : ''}
-                  {country.annualWrapperLimit != null && country.lifetimeWrapperLimit != null ? ', ' : ''}
-                  {country.lifetimeWrapperLimit != null ? `${country.symbol}${country.lifetimeWrapperLimit.toLocaleString()} lifetime` : ''}
-                  {(country.annualWrapperLimit != null || country.lifetimeWrapperLimit != null) ? ') -- ' : ' -- '}
-                  the portion over the limit is taxed like a normal account, not sheltered.
-                </span>
-              )}
+              {wrapper && results.wrapperCapExceeded && (() => {
+                const capParts = [
+                  country.annualWrapperLimit != null ? `${country.symbol}${country.annualWrapperLimit.toLocaleString()}/${t('calculator.perYearWord')}` : null,
+                  country.lifetimeWrapperLimit != null ? `${country.symbol}${country.lifetimeWrapperLimit.toLocaleString()} ${t('calculator.lifetimeWord')}` : null
+                ].filter(Boolean);
+                const detail = capParts.length > 0 ? ` (${capParts.join(', ')})` : '';
+                return (
+                  <span className="tax-verification stale">
+                    {t('calculator.wrapperCapExceeded', { wrapper: country.wrapperLabel, detail })}
+                  </span>
+                );
+              })()}
 
               <div className="results-summary">
                 <div className="result-item">
@@ -760,18 +771,18 @@ export default function App() {
                 aria-expanded={insightsOpen}
                 aria-controls="calc-insights-panel"
               >
-                💡 Plan Insights <span className="insights-toggle-chevron">{insightsOpen ? '▾' : '▸'}</span>
+                {t('calculator.insightsToggle')} <span className="insights-toggle-chevron">{insightsOpen ? '▾' : '▸'}</span>
               </button>
 
               <div id="calc-insights-panel" hidden={!insightsOpen}>
               <p className="insights-frame-note">
-                Everything below is one possible path, not a forecast — each note only holds <em>if</em> your rate, contribution, and inflation stay as entered. Change any input above and every figure updates to match.
+                {t('calculator.insightsFrameNote')}
               </p>
               <div className="target-seek">
-                <label htmlFor="target-amount">Aim for a number</label>
+                <label htmlFor="target-amount">{t('calculator.aimForNumber')}</label>
                 <div className="target-seek-body">
                   <span>
-                    To have {country.symbol}{' '}
+                    {t('calculator.targetSeekPrefix', { symbol: country.symbol })}{' '}
                     <input
                       id="target-amount"
                       type="number"
@@ -781,21 +792,21 @@ export default function App() {
                       value={targetAmount || ''}
                       onChange={(e) => setTargetAmount(Number(e.target.value))}
                     />{' '}
-                    in {years} year{years === 1 ? '' : 's'}
+                    {t('calculator.targetSeekSuffix', { years, plural: years === 1 ? '' : 's' })}
                     {targetMonthly != null ? (
                       <>
-                        , you'd save about <strong>{country.symbol} {Math.round(targetMonthly).toLocaleString()}/month</strong>
+                        {t('calculator.targetSeekResult', { amount: `${country.symbol} ${Math.round(targetMonthly).toLocaleString()}` })}
                         {monthly > 0 && (
                           Math.abs(targetMonthly - monthly) < 1
-                            ? ' — right on your current plan.'
+                            ? t('calculator.targetSeekOnTrack')
                             : targetMonthly > monthly
-                              ? ` — ${country.symbol}${Math.round(targetMonthly - monthly).toLocaleString()} more than your current ${country.symbol}${monthly.toLocaleString()}/month.`
-                              : ` — ${country.symbol}${Math.round(monthly - targetMonthly).toLocaleString()} less than your current ${country.symbol}${monthly.toLocaleString()}/month; you're ahead of this goal.`
+                              ? t('calculator.targetSeekMore', { amount: `${country.symbol}${Math.round(targetMonthly - monthly).toLocaleString()}`, current: `${country.symbol}${monthly.toLocaleString()}` })
+                              : t('calculator.targetSeekLess', { amount: `${country.symbol}${Math.round(monthly - targetMonthly).toLocaleString()}`, current: `${country.symbol}${monthly.toLocaleString()}` })
                         )}
                         {monthly === 0 && '.'}
                       </>
                     ) : (
-                      targetAmount > 0 ? ' — already covered by your starting amount alone.' : '.'
+                      targetAmount > 0 ? t('calculator.targetSeekCoveredByStart') : '.'
                     )}
                   </span>
                 </div>
@@ -803,7 +814,7 @@ export default function App() {
 
               {years >= 1 && (initial > 0 || monthly > 0) && Number.isFinite(rateBandLow) && Number.isFinite(rateBandHigh) && (
                 <div className="rate-band">
-                  <span className="rate-band-label">If the return runs ±{RATE_BAND}%/yr of your {rate}% estimate</span>
+                  <span className="rate-band-label">{t('calculator.rateBandLabel', { band: RATE_BAND, rate })}</span>
                   <div className="rate-band-cells">
                     <div>
                       <span>{(rate - RATE_BAND).toFixed(1)}%/yr</span>
@@ -823,41 +834,46 @@ export default function App() {
 
               {doublingTime && (
                 <p className="doubling-time-note">
-                  🔁 At {rate}%/yr, money roughly doubles every <strong>{doublingTime.exactDoublingYears.toFixed(1)} years</strong> — over your {years}-year horizon that's about {doublingTime.doublingsOverPeriod.toFixed(1)} doublings.
+                  {t('calculator.doublingNote', { rate, years: doublingTime.exactDoublingYears.toFixed(1), horizon: years, doublings: doublingTime.doublingsOverPeriod.toFixed(1) })}
                 </p>
               )}
 
               {results.finalBalance > 0 && (
                 <p className="withdrawal-income-note">
-                  💰 As retirement income: at a 4% safe withdrawal rate, {country.symbol} {results.finalBalance.toLocaleString()} could support about{' '}
-                  <strong>{country.symbol} {Math.round(withdrawalIncome.annualIncome).toLocaleString()}/year</strong>{' '}
-                  ({country.symbol} {Math.round(withdrawalIncome.monthlyIncome).toLocaleString()}/month), in today's money -- see the Retirement Income Gap
-                  and FIRE Number Power Tools to check that against what you'd actually want to spend.
+                  {t('calculator.withdrawalIncomeNote', {
+                    balance: `${country.symbol} ${results.finalBalance.toLocaleString()}`,
+                    annual: `${country.symbol} ${Math.round(withdrawalIncome.annualIncome).toLocaleString()}`,
+                    monthly: `${country.symbol} ${Math.round(withdrawalIncome.monthlyIncome).toLocaleString()}`
+                  })}
                 </p>
               )}
 
               {crossoverYear && crossoverYear <= years && (
                 <p className="doubling-time-note">
-                  🔀 The crossover point: if this rate holds, <strong>year {crossoverYear}</strong> is when the growth your money earns that year would first overtake what you pay in that year — from then on your money would be doing more of the work than you are.
+                  {t('calculator.crossoverNote', { year: crossoverYear })}
                 </p>
               )}
 
               {compoundingTakesOverYear && compoundingTakesOverYear <= years && (
                 <p className="doubling-time-note">
-                  🌱 Assuming you keep this up: by <strong>year {compoundingTakesOverYear}</strong>, compound growth would have added more to your balance than every deposit combined — from then on, most of the total would be earned, not saved.
+                  {t('calculator.takeoverNote', { year: compoundingTakesOverYear })}
                 </p>
               )}
 
               {halfBalanceYear && years >= 4 && halfBalanceYear > years / 2 && (
                 <p className="doubling-time-note">
-                  ⏳ If the plan runs its full course: you'd only pass <strong>half your final balance</strong> in year {halfBalanceYear} of {years} — the last {years - halfBalanceYear} year{years - halfBalanceYear === 1 ? '' : 's'} would build as much as the first {halfBalanceYear} put together. Stopping a few years early near the end would cost far more than a slow start did.
+                  {t('calculator.halfBalanceNote', { year: halfBalanceYear, total: years, remaining: years - halfBalanceYear })}
                 </p>
               )}
 
               {savingsAccountFinal != null && results.finalBalance > 0 && (
                 <p className="doubling-time-note">
-                  🏦 vs. a savings account: at South Africa's typical ~{bankRate}% deposit rate instead of your {rate}%, the same plan would reach only about{' '}
-                  <strong>{country.symbol}{Math.round(savingsAccountFinal).toLocaleString()}</strong> — {country.symbol}{Math.round(results.finalBalance - savingsAccountFinal).toLocaleString()} less. That gap is what the growth-rate assumption is really worth.
+                  {t('calculator.savingsAccountNote', {
+                    bankRate,
+                    rate,
+                    amount: `${country.symbol}${Math.round(savingsAccountFinal).toLocaleString()}`,
+                    diff: `${country.symbol}${Math.round(results.finalBalance - savingsAccountFinal).toLocaleString()}`
+                  })}
                 </p>
               )}
 
@@ -866,19 +882,24 @@ export default function App() {
                 const lostBuyingPower = monthly - realMonthlyAtEnd;
                 return (
                   <p className="doubling-time-note">
-                    📉 At {inflation}%/yr inflation, a flat {country.symbol}{monthly.toLocaleString()}/month is worth only about{' '}
-                    <strong>{country.symbol}{Math.round(realMonthlyAtEnd).toLocaleString()}</strong> in year {years}'s money — {country.symbol}{Math.round(lostBuyingPower).toLocaleString()} less buying power. Growing your contribution (the "annual contribution increase" field) keeps it level.
+                    {t('calculator.inflationErosionNote', {
+                      inflation,
+                      monthly: `${country.symbol}${monthly.toLocaleString()}`,
+                      realValue: `${country.symbol}${Math.round(realMonthlyAtEnd).toLocaleString()}`,
+                      years,
+                      lost: `${country.symbol}${Math.round(lostBuyingPower).toLocaleString()}`
+                    })}
                   </p>
                 );
               })()}
 
               {balanceMilestones.length > 0 && (
                 <div className="milestone-strip">
-                  <span className="milestone-strip-label">On track to reach</span>
+                  <span className="milestone-strip-label">{t('calculator.milestoneStripLabel')}</span>
                   <div className="milestone-strip-items">
                     {balanceMilestones.map((m) => (
                       <span className="milestone-chip" key={m.thresholdZar}>
-                        <strong>{country.symbol}{Math.round(m.amount).toLocaleString()}</strong> in year {m.year}
+                        {t('calculator.milestoneChip', { amount: `${country.symbol}${Math.round(m.amount).toLocaleString()}`, year: m.year })}
                       </span>
                     ))}
                   </div>
@@ -891,15 +912,15 @@ export default function App() {
                 const depPct = denom > 0 ? (results.totalDeposited / denom) * 100 : 100;
                 return (
                   <div className="split-bar">
-                    <span className="split-bar-label">What builds the final balance</span>
+                    <span className="split-bar-label">{t('calculator.splitBarLabel')}</span>
                     <div className="split-bar-track" role="img"
-                      aria-label={`Your deposits ${depPct.toFixed(0)} percent, compound growth ${(100 - depPct).toFixed(0)} percent`}>
+                      aria-label={t('calculator.splitBarAriaLabel', { depPct: depPct.toFixed(0), growPct: (100 - depPct).toFixed(0) })}>
                       <div className="split-bar-deposits" style={{ width: `${depPct}%` }} />
                       <div className="split-bar-growth" style={{ width: `${100 - depPct}%` }} />
                     </div>
                     <div className="split-bar-legend">
-                      <span><i className="dot dep" /> Your deposits — {country.symbol}{results.totalDeposited.toLocaleString()} ({depPct.toFixed(0)}%)</span>
-                      <span><i className="dot grow" /> Compound growth — {country.symbol}{Math.round(growth).toLocaleString()} ({(100 - depPct).toFixed(0)}%)</span>
+                      <span><i className="dot dep" /> {t('calculator.splitDepositsLegend', { amount: `${country.symbol}${results.totalDeposited.toLocaleString()}`, pct: depPct.toFixed(0) })}</span>
+                      <span><i className="dot grow" /> {t('calculator.splitGrowthLegend', { amount: `${country.symbol}${Math.round(growth).toLocaleString()}`, pct: (100 - depPct).toFixed(0) })}</span>
                     </div>
                   </div>
                 );
@@ -907,19 +928,24 @@ export default function App() {
 
               {monthly > 0 && coastShare.dependsOnContributing > 0 && (
                 <p className="coast-callout">
-                  🛑 If you stopped contributing today, your {country.symbol}{initial.toLocaleString()} starting amount
-                  alone would still grow to about <strong>{country.symbol} {Math.round(coastShare.coastFinalBalance).toLocaleString()}</strong> by
-                  year {years} ({coastShare.coastSharePct.toFixed(0)}% of the projected total) -- continuing to contribute {country.symbol}{monthly.toLocaleString()}/month
-                  accounts for the other {country.symbol} {Math.round(coastShare.dependsOnContributing).toLocaleString()} ({(100 - coastShare.coastSharePct).toFixed(0)}%).
+                  {t('calculator.coastCallout', {
+                    starting: `${country.symbol}${initial.toLocaleString()}`,
+                    coastBalance: `${country.symbol} ${Math.round(coastShare.coastFinalBalance).toLocaleString()}`,
+                    years,
+                    coastPct: coastShare.coastSharePct.toFixed(0),
+                    monthly: `${country.symbol}${monthly.toLocaleString()}`,
+                    remaining: `${country.symbol} ${Math.round(coastShare.dependsOnContributing).toLocaleString()}`,
+                    remainingPct: (100 - coastShare.coastSharePct).toFixed(0)
+                  })}
                 </p>
               )}
 
               {years > 1 && effBump > 0 && Number.isFinite(bumpGain) && bumpGain > 0 && (
                 <div className="bump-nudge">
-                  <label htmlFor="bump-amount">One small bump</label>
+                  <label htmlFor="bump-amount">{t('calculator.bumpLabel')}</label>
                   <div className="bump-nudge-body">
                     <span>
-                      Adding{' '}
+                      {t('calculator.bumpPrefix')}{' '}
                       <input
                         id="bump-amount"
                         type="number"
@@ -928,9 +954,14 @@ export default function App() {
                         value={effBump}
                         onChange={(e) => setBumpAmount(Number(e.target.value))}
                       />{' '}
-                      {country.symbol}/month more would leave you with about{' '}
-                      <strong>{country.symbol} {Math.round(bumpGain).toLocaleString()}</strong> extra at the end
-                      ({country.symbol} {Math.round(bumpedFinal).toLocaleString()} vs {country.symbol} {results.finalBalance.toLocaleString()}) — for {country.symbol}{(effBump * 12 * years).toLocaleString()} more paid in over {years} years.
+                      {t('calculator.bumpSuffix', {
+                        symbol: country.symbol,
+                        gain: `${country.symbol} ${Math.round(bumpGain).toLocaleString()}`,
+                        bumped: `${country.symbol} ${Math.round(bumpedFinal).toLocaleString()}`,
+                        current: `${country.symbol} ${results.finalBalance.toLocaleString()}`,
+                        total: `${country.symbol}${(effBump * 12 * years).toLocaleString()}`,
+                        years
+                      })}
                     </span>
                   </div>
                 </div>
@@ -938,10 +969,10 @@ export default function App() {
 
               {monthly > 0 && years > 1 && Number.isFinite(waitingCost.cost) && (
                 <div className="cost-of-waiting">
-                  <label htmlFor="wait-years">Cost of waiting</label>
+                  <label htmlFor="wait-years">{t('calculator.waitLabel')}</label>
                   <div className="cost-of-waiting-body">
                     <span>
-                      Starting{' '}
+                      {t('calculator.waitPrefix')}{' '}
                       <input
                         id="wait-years"
                         type="number"
@@ -950,9 +981,13 @@ export default function App() {
                         value={effWait}
                         onChange={(e) => setWaitYears(Number(e.target.value))}
                       />{' '}
-                      year{waitingCost.delayYears === 1 ? '' : 's'} later would leave you with about{' '}
-                      <strong>{country.symbol} {Math.round(waitingCost.cost).toLocaleString()}</strong> less at the end
-                      ({country.symbol} {Math.round(waitingCost.startLaterBalance).toLocaleString()} vs {country.symbol} {Math.round(waitingCost.startNowBalance).toLocaleString()}) — the same {country.symbol}{monthly.toLocaleString()}/month, just fewer years to compound.
+                      {t('calculator.waitSuffix', {
+                        plural: waitingCost.delayYears === 1 ? '' : 's',
+                        cost: `${country.symbol} ${Math.round(waitingCost.cost).toLocaleString()}`,
+                        later: `${country.symbol} ${Math.round(waitingCost.startLaterBalance).toLocaleString()}`,
+                        now: `${country.symbol} ${Math.round(waitingCost.startNowBalance).toLocaleString()}`,
+                        monthly: `${country.symbol}${monthly.toLocaleString()}`
+                      })}
                     </span>
                   </div>
                 </div>
@@ -969,27 +1004,27 @@ export default function App() {
                   {summaryCopied ? t('calculator.summaryCopied') : t('calculator.copySummary')}
                 </button>
               </div>
-              <p className="share-plan-note">The link opens with these exact inputs so someone else's browser can recompute them -- nothing is uploaded, the whole plan lives in the URL. The summary is just the finished numbers as plain text, for pasting into a message.</p>
+              <p className="share-plan-note">{t('calculator.sharePlanNote')}</p>
 
               <div className="scenario-section">
                 <div className="scenario-header">
                   <h3>{t('calculator.scenarioComparison')}</h3>
                   <div className="scenario-header-actions">
                     {scenarios.length > 0 && (
-                      <button className="scenario-export-btn" onClick={exportScenariosCSV}>⬇️ Export CSV</button>
+                      <button className="scenario-export-btn" onClick={exportScenariosCSV}>{t('calculator.exportCsv')}</button>
                     )}
                     <button
                       className="scenario-save-btn"
                       onClick={saveScenario}
                       disabled={scenarios.length >= MAX_SCENARIOS}
                     >
-                      {scenarios.length >= MAX_SCENARIOS ? `Max ${MAX_SCENARIOS} scenarios` : t('calculator.saveScenario')}
+                      {scenarios.length >= MAX_SCENARIOS ? t('calculator.maxScenarios', { max: MAX_SCENARIOS }) : t('calculator.saveScenario')}
                     </button>
                   </div>
                 </div>
 
                 {scenarios.length === 0 ? (
-                  <p className="scenario-empty">Change the inputs above and save a scenario to compare -- e.g. "current plan" vs. "with extra R500/mo" vs. "different country."</p>
+                  <p className="scenario-empty">{t('calculator.scenarioEmpty')}</p>
                 ) : (
                   <div className="scenario-grid">
                     {scenarios.map((s) => (
@@ -1001,12 +1036,12 @@ export default function App() {
                             value={s.label}
                             onChange={(e) => renameScenario(s.id, e.target.value)}
                           />
-                          <button className="scenario-remove" onClick={() => removeScenario(s.id)} aria-label="Remove scenario">&times;</button>
+                          <button className="scenario-remove" onClick={() => removeScenario(s.id)} aria-label={t('calculator.removeScenarioAria')}>&times;</button>
                         </div>
-                        <span className="scenario-meta">{s.countryName} · {s.symbol}{s.initial.toLocaleString()} + {s.symbol}{s.monthly.toLocaleString()}/mo · {s.rate}% · {s.years}yr{s.wrapper ? ' · wrapper' : ''}</span>
+                        <span className="scenario-meta">{s.countryName} · {s.symbol}{s.initial.toLocaleString()} + {s.symbol}{s.monthly.toLocaleString()}/mo · {s.rate}% · {s.years}yr{s.wrapper ? t('calculator.wrapperWordSuffix') : ''}</span>
                         <div className="scenario-values">
-                          <div><span>Balance</span><strong>{s.symbol} {s.finalBalance.toLocaleString()}</strong></div>
-                          <div><span>Interest</span><strong className="positive">{s.symbol} {s.totalInterest.toLocaleString()}</strong></div>
+                          <div><span>{t('calculator.scenarioBalance')}</span><strong>{s.symbol} {s.finalBalance.toLocaleString()}</strong></div>
+                          <div><span>{t('calculator.scenarioInterest')}</span><strong className="positive">{s.symbol} {s.totalInterest.toLocaleString()}</strong></div>
                         </div>
                       </div>
                     ))}
@@ -1048,10 +1083,10 @@ export default function App() {
           <div className="tab-pane locked">
             <div className="lock-card">
               <div className="lock-icon-large">🔒</div>
-              <h3>Premium Feature Locked</h3>
-              <p>The <strong>{activeTab}</strong> tool requires a <strong>{tabs.find(t => t.name === activeTab)?.tier}</strong> or higher subscription.</p>
+              <h3>{t('calculator.lockedTitle')}</h3>
+              <p>{t('calculator.lockedBody', { tab: activeTab, tier: tabs.find(tb => tb.name === activeTab)?.tier })}</p>
               <button className="btn-upgrade-lock" onClick={() => setShowPricing(true)}>
-                View Pricing Plans & Upgrade
+                {t('calculator.lockedButton')}
               </button>
             </div>
           </div>
