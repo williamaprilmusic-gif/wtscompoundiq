@@ -21,6 +21,7 @@ import { scoreEmergencyFund, scoreDebtPayoff, scoreNetWorthTrend, scoreFireProgr
 import { detectNetWorthMilestones, detectDebtClearedMilestone, detectEfFundedMilestone, sortMilestones } from '../milestones';
 import { buildNextSteps } from '../nextSteps';
 import { readJSONArray } from '../utils/storage';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const NETWORTH_SERIES = [{ key: 'assets', label: 'Assets' }, { key: 'debts', label: 'Debts' }, { key: 'net', label: 'Net Worth' }];
 const DEBT_SERIES = [{ key: 'total', label: 'Total Debt Balance' }];
@@ -38,6 +39,7 @@ const BUDGET_SERIES = [{ key: 'surplus', label: 'Monthly Surplus' }];
 // figures are raw numbers with no conversion pipeline behind them, so relabeling their
 // symbol without converting the number would misrepresent the amount.
 const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = false }) => {
+  const { t } = useLanguage();
   const netWorthCountry = reportingCountry || country;
   const [plan, setPlan] = useState(null);
   const [netWorthHistory, setNetWorthHistory] = useState([]);
@@ -139,15 +141,15 @@ const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = fals
     ? (plan.emergencyFund.targetAmount > 0 ? (plan.emergencyFund.currentSavings / plan.emergencyFund.targetAmount) * 100 : 0)
     : null;
   const healthScore = useMemo(() => computeHealthScore([
-    { key: 'ef', label: '🛟 Emergency Fund', score: scoreEmergencyFund(efFundedPct) },
-    { key: 'debt', label: '💳 Debt Payoff', score: scoreDebtPayoff(plan?.debt?.totalBalance, plan?.debt?.avalancheMonths) },
+    { key: 'ef', label: t('dashboard.healthEf'), score: scoreEmergencyFund(efFundedPct) },
+    { key: 'debt', label: t('dashboard.healthDebt'), score: scoreDebtPayoff(plan?.debt?.totalBalance, plan?.debt?.avalancheMonths) },
     {
       key: 'netWorth',
-      label: '💰 Net Worth Trend',
+      label: t('dashboard.healthNetWorth'),
       score: netWorthPoints.length > 1 ? scoreNetWorthTrend(netWorthPoints[0].net, netWorthPoints[netWorthPoints.length - 1].net) : null
     },
-    { key: 'fire', label: '🔥 FIRE Progress', score: scoreFireProgress(plan?.fire?.yearsToFire) }
-  ]), [efFundedPct, plan, netWorthPoints]);
+    { key: 'fire', label: t('dashboard.healthFire'), score: scoreFireProgress(plan?.fire?.yearsToFire) }
+  ]), [efFundedPct, plan, netWorthPoints, t]);
 
   // Milestones: pure pattern-matching over the same history/plan data above -- no new
   // inputs, nothing computed that isn't already implied by what's been saved elsewhere.
@@ -173,33 +175,33 @@ const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = fals
         {canWhiteLabel && reportBranding.logoDataUrl && (
           <img src={reportBranding.logoDataUrl} alt={`${reportBranding.firmName || 'Firm'} logo`} className="dashboard-print-logo" />
         )}
-        <h1>{canWhiteLabel && reportBranding.firmName ? reportBranding.firmName : 'WTS CompoundIQ'} -- Financial Dashboard</h1>
+        <h1>{t('dashboard.titleLine', { brand: canWhiteLabel && reportBranding.firmName ? reportBranding.firmName : 'WTS CompoundIQ' })}</h1>
         <p>
-          {netWorthCountry.name} · Generated {today}
-          {canWhiteLabel && reportBranding.advisorName && ` · Prepared by ${reportBranding.advisorName}`}
-          {canWhiteLabel && reportBranding.clientName && ` · Prepared for ${reportBranding.clientName}`}
+          {netWorthCountry.name} · {t('dashboard.printGenerated', { date: today })}
+          {canWhiteLabel && reportBranding.advisorName && t('dashboard.preparedBy', { name: reportBranding.advisorName })}
+          {canWhiteLabel && reportBranding.clientName && t('dashboard.preparedFor', { name: reportBranding.clientName })}
         </p>
       </div>
 
       <div className="dashboard-header">
         <div className="dashboard-header-text">
-          <h2>📊 Dashboard</h2>
-          <p>Everything you've saved elsewhere in the app, at a glance -- this is a read-only summary, not a new calculator. Save a plan from any tab below to see it show up here.</p>
+          <h2>{t('dashboard.heading')}</h2>
+          <p>{t('dashboard.subtitle')}</p>
         </div>
         {hasAnything && (
-          <button className="dashboard-print-btn no-print" onClick={() => window.print()}>🖨️ Print / Save as PDF</button>
+          <button className="dashboard-print-btn no-print" onClick={() => window.print()}>{t('dashboard.printButton')}</button>
         )}
       </div>
 
       {hasAnything && canWhiteLabel && !reportBranding.firmName && (
         <p className="dashboard-branding-hint no-print">
-          🏷️ This PDF export can carry your firm's name and logo -- set them up in the Snapshot tab's Client Report Branding section and they'll appear here too.
+          {t('dashboard.brandingHint')}
         </p>
       )}
 
       {!hasAnything && (
         <div className="dashboard-empty">
-          <p>Nothing saved yet. Visit Net Worth, Budget, Debt Payoff, Emergency Fund, Loan & Bond, or Power Tools and look for "Save Snapshot" / "Log This Month's Surplus" / "Save This Plan" -- come back here afterward to see it all in one place.</p>
+          <p>{t('dashboard.emptyState')}</p>
         </div>
       )}
 
@@ -207,21 +209,20 @@ const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = fals
         <>
           <HealthScoreGauge score={healthScore.score} grade={healthScore.grade} label={healthScore.label} components={healthScore.components} />
           <p className="dashboard-note dashboard-health-note">
-            A rough composite of what you've saved above ({healthScore.components.length} of 4 possible areas) -- not a credit
-            score or financial advice. Save a plan/snapshot in more tabs to bring the rest of it in.
+            {t('dashboard.healthScoreNote', { count: healthScore.components.length })}
           </p>
         </>
       )}
 
       {milestones.length > 0 && (
         <div className="dashboard-milestones">
-          <h3>🏆 Milestones</h3>
+          <h3>{t('dashboard.milestonesHeading')}</h3>
           <ul>
             {milestones.map(m => (
               <li key={m.key}>
                 <span className="dashboard-milestone-icon">{m.icon}</span>
                 <span className="dashboard-milestone-label">
-                  {m.label}{m.amount != null && ` ${netWorthCountry.symbol}${Math.round(m.amount).toLocaleString()}`}
+                  {m.labelKey ? t(m.labelKey) : m.label}{m.amount != null && ` ${netWorthCountry.symbol}${Math.round(m.amount).toLocaleString()}`}
                 </span>
                 <span className="dashboard-milestone-date">{fmtDaysAgo(daysBetween(m.date))}</span>
               </li>
@@ -232,18 +233,18 @@ const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = fals
 
       {nextSteps.length > 0 && (
         <div className="dashboard-nextsteps no-print">
-          <h3>✅ Suggested next steps</h3>
+          <h3>{t('dashboard.nextStepsHeading')}</h3>
           <ul>
             {nextSteps.map((s, i) => (
               <li key={i}>
-                <span className="dashboard-nextstep-text">{s.text}</span>
+                <span className="dashboard-nextstep-text">{s.key ? t(s.key, s.params) : s.text}</span>
                 {s.tab && (
-                  <button className="dashboard-card-link" onClick={() => onNavigate(s.tab)}>Open {s.tab} →</button>
+                  <button className="dashboard-card-link" onClick={() => onNavigate(s.tab)}>{t('dashboard.openTab', { tab: s.tab })}</button>
                 )}
               </li>
             ))}
           </ul>
-          <p className="dashboard-note">Pattern-matched from what you've saved so far — not advice, just the obvious gaps.</p>
+          <p className="dashboard-note">{t('dashboard.nextStepsNote')}</p>
         </div>
       )}
 
@@ -251,8 +252,8 @@ const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = fals
         {netWorthEntry ? (
           <div className="dashboard-card">
             <div className="dashboard-card-header">
-              <h3>💰 Net Worth</h3>
-              <span className="dashboard-card-meta">as of {fmtDaysAgo(daysBetween(netWorthEntry.date))}</span>
+              <h3>{t('dashboard.netWorthCard')}</h3>
+              <span className="dashboard-card-meta">{t('dashboard.asOf', { date: fmtDaysAgo(daysBetween(netWorthEntry.date)) })}</span>
             </div>
             {/* netWorthEntry was saved while a possibly-different currency was active --
                 convert from its saved displayCurrency into netWorthCountry (Net Worth's
@@ -266,171 +267,177 @@ const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = fals
               {/* A snapshot saved before totalAssets/totalDebts were tracked has neither
                   -- same fallback as netWorthPoints above, so this card shows a sane
                   figure instead of "NaN assets". */}
-              {netWorthCountry.symbol} {Math.round(convertAmount(netWorthEntry.totalAssets ?? netWorthEntry.netWorth, netWorthEntry.displayCurrency || netWorthCountry.code, netWorthCountry.code)).toLocaleString()} assets − {netWorthCountry.symbol} {Math.round(convertAmount(netWorthEntry.totalDebts ?? 0, netWorthEntry.displayCurrency || netWorthCountry.code, netWorthCountry.code)).toLocaleString()} debts
+              {t('dashboard.netWorthSub', {
+                assets: `${netWorthCountry.symbol} ${Math.round(convertAmount(netWorthEntry.totalAssets ?? netWorthEntry.netWorth, netWorthEntry.displayCurrency || netWorthCountry.code, netWorthCountry.code)).toLocaleString()}`,
+                debts: `${netWorthCountry.symbol} ${Math.round(convertAmount(netWorthEntry.totalDebts ?? 0, netWorthEntry.displayCurrency || netWorthCountry.code, netWorthCountry.code)).toLocaleString()}`
+              })}
             </span>
-            <button className="dashboard-card-link" onClick={() => onNavigate('Net Worth')}>Open Net Worth →</button>
+            <button className="dashboard-card-link" onClick={() => onNavigate('Net Worth')}>{t('dashboard.openTab', { tab: 'Net Worth' })}</button>
           </div>
         ) : (
           <div className="dashboard-card empty">
-            <h3>💰 Net Worth</h3>
-            <p>No snapshot saved yet.</p>
-            <button className="dashboard-card-link" onClick={() => onNavigate('Net Worth')}>Set it up →</button>
+            <h3>{t('dashboard.netWorthCard')}</h3>
+            <p>{t('dashboard.noSnapshotYet')}</p>
+            <button className="dashboard-card-link" onClick={() => onNavigate('Net Worth')}>{t('dashboard.setItUp')}</button>
           </div>
         )}
 
         {lastBudgetEntry ? (
           <div className="dashboard-card">
             <div className="dashboard-card-header">
-              <h3>🧮 Budget Surplus</h3>
-              <span className="dashboard-card-meta">as of {fmtDaysAgo(daysBetween(lastBudgetEntry.date))}</span>
+              <h3>{t('dashboard.budgetCard')}</h3>
+              <span className="dashboard-card-meta">{t('dashboard.asOf', { date: fmtDaysAgo(daysBetween(lastBudgetEntry.date)) })}</span>
             </div>
             <strong className={`dashboard-card-value ${lastBudgetEntry.surplus >= 0 ? 'positive' : 'negative'}`}>
               {lastBudgetEntry.surplus >= 0 ? '' : '−'}{country.symbol} {Math.abs(Math.round(lastBudgetEntry.surplus)).toLocaleString()}/mo
             </strong>
-            <span className="dashboard-card-sub">{lastBudgetEntry.surplus >= 0 ? 'monthly surplus, last logged' : 'monthly deficit, last logged'}</span>
+            <span className="dashboard-card-sub">{t(lastBudgetEntry.surplus >= 0 ? 'dashboard.budgetSurplusLogged' : 'dashboard.budgetDeficitLogged')}</span>
             {budgetSummary && (() => {
               const rate = (budgetSummary.surplus / budgetSummary.totalIncome) * 100;
               return (
                 <span className={`dashboard-card-sub ${rate >= 15 ? 'positive' : 'warn'}`}>
-                  Savings rate: {rate.toFixed(0)}% of income{rate >= 15 ? ' — solid' : ' (15%+ is a common target)'}
+                  {t('dashboard.savingsRateLine', { rate: rate.toFixed(0), note: t(rate >= 15 ? 'dashboard.savingsRateSolid' : 'dashboard.savingsRateTarget') })}
                 </span>
               );
             })()}
-            <button className="dashboard-card-link" onClick={() => onNavigate('Budget')}>Open Budget →</button>
+            <button className="dashboard-card-link" onClick={() => onNavigate('Budget')}>{t('dashboard.openTab', { tab: 'Budget' })}</button>
           </div>
         ) : (
           <div className="dashboard-card empty">
-            <h3>🧮 Budget Surplus</h3>
-            <p>No snapshot logged yet.</p>
-            <button className="dashboard-card-link" onClick={() => onNavigate('Budget')}>Set it up →</button>
+            <h3>{t('dashboard.budgetCard')}</h3>
+            <p>{t('dashboard.noSnapshotYet')}</p>
+            <button className="dashboard-card-link" onClick={() => onNavigate('Budget')}>{t('dashboard.setItUp')}</button>
           </div>
         )}
 
         {investSummary ? (
           <div className="dashboard-card">
             <div className="dashboard-card-header">
-              <h3>🎯 Invest Goals</h3>
-              <span className="dashboard-card-meta">{investSummary.count} goal{investSummary.count === 1 ? '' : 's'}</span>
+              <h3>{t('dashboard.investCard')}</h3>
+              <span className="dashboard-card-meta">{t(investSummary.count === 1 ? 'dashboard.goalCountOne' : 'dashboard.goalCountMany', { count: investSummary.count })}</span>
             </div>
             <strong className="dashboard-card-value">{country.symbol} {Math.round(investSummary.totalTarget).toLocaleString()}</strong>
-            <span className="dashboard-card-sub">combined target, {country.symbol} {Math.round(investSummary.totalSaved).toLocaleString()} already saved toward it</span>
-            <button className="dashboard-card-link" onClick={() => onNavigate('Invest')}>Open Invest →</button>
+            <span className="dashboard-card-sub">{t('dashboard.investSub', { saved: `${country.symbol} ${Math.round(investSummary.totalSaved).toLocaleString()}` })}</span>
+            <button className="dashboard-card-link" onClick={() => onNavigate('Invest')}>{t('dashboard.openTab', { tab: 'Invest' })}</button>
           </div>
         ) : (
           <div className="dashboard-card empty">
-            <h3>🎯 Invest Goals</h3>
-            <p>No goals added yet.</p>
-            <button className="dashboard-card-link" onClick={() => onNavigate('Invest')}>Set it up →</button>
+            <h3>{t('dashboard.investCard')}</h3>
+            <p>{t('dashboard.noGoalsYet')}</p>
+            <button className="dashboard-card-link" onClick={() => onNavigate('Invest')}>{t('dashboard.setItUp')}</button>
           </div>
         )}
 
         {plan?.emergencyFund ? (
           <div className="dashboard-card">
             <div className="dashboard-card-header">
-              <h3>🛟 Emergency Fund</h3>
-              <span className="dashboard-card-meta">saved {fmtDaysAgo(daysBetween(plan.emergencyFund.savedAt))}</span>
+              <h3>{t('dashboard.efCard')}</h3>
+              <span className="dashboard-card-meta">{t('dashboard.savedOn', { date: fmtDaysAgo(daysBetween(plan.emergencyFund.savedAt)) })}</span>
             </div>
             <strong className="dashboard-card-value">
-              {plan.emergencyFund.targetAmount > 0 ? Math.min(100, Math.round((plan.emergencyFund.currentSavings / plan.emergencyFund.targetAmount) * 100)) : 0}% funded
+              {t('dashboard.efFundedValue', { pct: plan.emergencyFund.targetAmount > 0 ? Math.min(100, Math.round((plan.emergencyFund.currentSavings / plan.emergencyFund.targetAmount) * 100)) : 0 })}
             </strong>
             <span className="dashboard-card-sub">
-              {country.symbol} {Math.round(plan.emergencyFund.currentSavings).toLocaleString()} of {country.symbol} {Math.round(plan.emergencyFund.targetAmount).toLocaleString()} target
+              {t('dashboard.efSub', {
+                current: `${country.symbol} ${Math.round(plan.emergencyFund.currentSavings).toLocaleString()}`,
+                target: `${country.symbol} ${Math.round(plan.emergencyFund.targetAmount).toLocaleString()}`
+              })}
             </span>
-            <button className="dashboard-card-link" onClick={() => onNavigate('Emergency Fund')}>Open Emergency Fund →</button>
+            <button className="dashboard-card-link" onClick={() => onNavigate('Emergency Fund')}>{t('dashboard.openTab', { tab: 'Emergency Fund' })}</button>
           </div>
         ) : (
           <div className="dashboard-card empty">
-            <h3>🛟 Emergency Fund</h3>
-            <p>No plan saved yet.</p>
-            <button className="dashboard-card-link" onClick={() => onNavigate('Emergency Fund')}>Set it up →</button>
+            <h3>{t('dashboard.efCard')}</h3>
+            <p>{t('dashboard.noPlanYet')}</p>
+            <button className="dashboard-card-link" onClick={() => onNavigate('Emergency Fund')}>{t('dashboard.setItUp')}</button>
           </div>
         )}
 
         {plan?.debt ? (
           <div className="dashboard-card">
             <div className="dashboard-card-header">
-              <h3>💳 Debt Payoff</h3>
-              <span className="dashboard-card-meta">saved {fmtDaysAgo(daysBetween(plan.debt.savedAt))}</span>
+              <h3>{t('dashboard.debtCard')}</h3>
+              <span className="dashboard-card-meta">{t('dashboard.savedOn', { date: fmtDaysAgo(daysBetween(plan.debt.savedAt)) })}</span>
             </div>
             <strong className="dashboard-card-value warn">{country.symbol} {Math.round(plan.debt.totalBalance).toLocaleString()}</strong>
-            <span className="dashboard-card-sub">{plan.debt.avalancheReachable === false ? 'not debt-free within 50 years at this pace' : `debt-free in ${plan.debt.avalancheMonths} months at this pace`}</span>
-            <button className="dashboard-card-link" onClick={() => onNavigate('Debt Payoff')}>Open Debt Payoff →</button>
+            <span className="dashboard-card-sub">{plan.debt.avalancheReachable === false ? t('dashboard.debtNotReachable') : t('dashboard.debtOnPace', { months: plan.debt.avalancheMonths })}</span>
+            <button className="dashboard-card-link" onClick={() => onNavigate('Debt Payoff')}>{t('dashboard.openTab', { tab: 'Debt Payoff' })}</button>
           </div>
         ) : (
           <div className="dashboard-card empty">
-            <h3>💳 Debt Payoff</h3>
-            <p>No plan saved yet.</p>
-            <button className="dashboard-card-link" onClick={() => onNavigate('Debt Payoff')}>Set it up →</button>
+            <h3>{t('dashboard.debtCard')}</h3>
+            <p>{t('dashboard.noPlanYet')}</p>
+            <button className="dashboard-card-link" onClick={() => onNavigate('Debt Payoff')}>{t('dashboard.setItUp')}</button>
           </div>
         )}
 
         {plan?.loan ? (
           <div className="dashboard-card">
             <div className="dashboard-card-header">
-              <h3>{plan.loan.loanTypeLabel || '🏦 Loan'}</h3>
-              <span className="dashboard-card-meta">saved {fmtDaysAgo(daysBetween(plan.loan.savedAt))}</span>
+              <h3>{plan.loan.loanTypeLabel || t('dashboard.loanCard')}</h3>
+              <span className="dashboard-card-meta">{t('dashboard.savedOn', { date: fmtDaysAgo(daysBetween(plan.loan.savedAt)) })}</span>
             </div>
             <strong className="dashboard-card-value warn">{country.symbol} {Math.round(plan.loan.principal).toLocaleString()}</strong>
             {/* monthlyPayment is the required base installment; extraMonthly (if any) is what's
                 actually being paid each month to hit the accelerated payoffMonths/totalInterest
                 saved above -- show the real total (and the real, shortened payoff horizon) so
                 this doesn't understate the payment or contradict itself with the nominal term. */}
-            <span className="dashboard-card-sub">{country.symbol} {loanEffectiveMonthlyPayment(plan.loan).toLocaleString()}/mo over {loanEffectiveTermLabel(plan.loan)}</span>
-            <button className="dashboard-card-link" onClick={() => onNavigate('Loan & Bond')}>Open Loan & Bond →</button>
+            <span className="dashboard-card-sub">{t('dashboard.loanSub', { payment: `${country.symbol} ${loanEffectiveMonthlyPayment(plan.loan).toLocaleString()}`, term: loanEffectiveTermLabel(plan.loan) })}</span>
+            <button className="dashboard-card-link" onClick={() => onNavigate('Loan & Bond')}>{t('dashboard.openTab', { tab: 'Loan & Bond' })}</button>
           </div>
         ) : (
           <div className="dashboard-card empty">
-            <h3>🏦 Loan / Bond</h3>
-            <p>No plan saved yet.</p>
-            <button className="dashboard-card-link" onClick={() => onNavigate('Loan & Bond')}>Set it up →</button>
+            <h3>{t('dashboard.loanBondCard')}</h3>
+            <p>{t('dashboard.noPlanYet')}</p>
+            <button className="dashboard-card-link" onClick={() => onNavigate('Loan & Bond')}>{t('dashboard.setItUp')}</button>
           </div>
         )}
 
         {plan?.fire ? (
           <div className="dashboard-card">
             <div className="dashboard-card-header">
-              <h3>🔥 FIRE Target</h3>
-              <span className="dashboard-card-meta">saved {fmtDaysAgo(daysBetween(plan.fire.savedAt))}</span>
+              <h3>{t('dashboard.fireCard')}</h3>
+              <span className="dashboard-card-meta">{t('dashboard.savedOn', { date: fmtDaysAgo(daysBetween(plan.fire.savedAt)) })}</span>
             </div>
             <strong className="dashboard-card-value positive">{country.symbol} {Math.round(plan.fire.fireNumber).toLocaleString()}</strong>
             <span className="dashboard-card-sub">
-              {plan.fire.yearsToFire === null ? 'not reachable within 60 years at that pace' : `~${plan.fire.yearsToFire} years out`}
+              {plan.fire.yearsToFire === null ? t('dashboard.fireNotReachable') : t('dashboard.fireYearsOut', { years: plan.fire.yearsToFire })}
             </span>
-            <button className="dashboard-card-link" onClick={() => onNavigate('Power Tools')}>Open Power Tools →</button>
+            <button className="dashboard-card-link" onClick={() => onNavigate('Power Tools')}>{t('dashboard.openTab', { tab: 'Power Tools' })}</button>
           </div>
         ) : (
           <div className="dashboard-card empty">
-            <h3>🔥 FIRE Target</h3>
-            <p>No target saved yet.</p>
-            <button className="dashboard-card-link" onClick={() => onNavigate('Power Tools')}>Set it up →</button>
+            <h3>{t('dashboard.fireCard')}</h3>
+            <p>{t('dashboard.noTargetYet')}</p>
+            <button className="dashboard-card-link" onClick={() => onNavigate('Power Tools')}>{t('dashboard.setItUp')}</button>
           </div>
         )}
       </div>
 
       {hasTrends && (
         <div className="dashboard-trends">
-          <h3>Trends</h3>
+          <h3>{t('dashboard.trendsHeading')}</h3>
           {netWorthPoints.length > 1 && (
             <div className="dashboard-trend-card">
-              <span className="dashboard-trend-label">💰 Net Worth</span>
+              <span className="dashboard-trend-label">{t('dashboard.trendNetWorth')}</span>
               <SnapshotChart points={netWorthPoints} series={NETWORTH_SERIES} symbol={netWorthCountry.symbol} />
             </div>
           )}
           {debtPoints.length > 1 && (
             <div className="dashboard-trend-card">
-              <span className="dashboard-trend-label">💳 Debt Payoff</span>
+              <span className="dashboard-trend-label">{t('dashboard.trendDebt')}</span>
               <SnapshotChart points={debtPoints} series={DEBT_SERIES} symbol={country.symbol} />
             </div>
           )}
           {efPoints.length > 1 && (
             <div className="dashboard-trend-card">
-              <span className="dashboard-trend-label">🛟 Emergency Fund</span>
+              <span className="dashboard-trend-label">{t('dashboard.trendEf')}</span>
               <SnapshotChart points={efPoints} series={EF_SERIES} symbol={country.symbol} />
             </div>
           )}
           {budgetPoints.length > 1 && (
             <div className="dashboard-trend-card">
-              <span className="dashboard-trend-label">🧮 Budget Surplus</span>
+              <span className="dashboard-trend-label">{t('dashboard.trendBudget')}</span>
               <SnapshotChart points={budgetPoints} series={BUDGET_SERIES} symbol={country.symbol} />
             </div>
           )}
@@ -439,14 +446,12 @@ const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = fals
 
       {hasAnything && (
         <button className="dashboard-myplan-link" onClick={() => onNavigate('My Plan')}>
-          📓 Go to My Plan to check in on progress since you saved →
+          {t('dashboard.myPlanLink')}
         </button>
       )}
 
       <p className="dashboard-note">
-        Everything here lives only in your browser's local storage -- nothing is sent anywhere, and none of these
-        numbers recompute automatically. Revisit each tab and save again to refresh what's shown here. Every figure
-        is one possible outcome if the plan you saved keeps running as entered, not a guaranteed result.
+        {t('dashboard.footerNote')}
       </p>
 
       {canWhiteLabel && compliance.trim() && (
@@ -454,7 +459,7 @@ const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = fals
       )}
       {canWhiteLabel && ((reportBranding.contactInfo || '').trim() || (reportBranding.fspNumber || '').trim()) && (
         <p className="dashboard-note dashboard-print-compliance">
-          {(reportBranding.firmName || '').trim() || 'Contact'}
+          {(reportBranding.firmName || '').trim() || t('dashboard.contactFallback')}
           {(reportBranding.fspNumber || '').trim() && ` (${reportBranding.fspNumber.trim()})`}
           {(reportBranding.contactInfo || '').trim() && `: ${reportBranding.contactInfo.trim()}`}
         </p>

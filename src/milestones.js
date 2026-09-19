@@ -35,16 +35,21 @@ const NET_WORTH_THRESHOLDS_ZAR = [100000, 500000, 1000000, 5000000, 10000000];
 // points: [{ date, net }] already converted to the display currency, oldest first.
 // currencyCode: the country code `points` is denominated in (e.g. netWorthCountry.code
 // in Dashboard.jsx) -- used only to scale NET_WORTH_THRESHOLDS_ZAR into that currency.
+// `label` is the literal English text (the source of truth this module's own tests
+// read, and every caller's default); `labelKey` is what Dashboard.jsx passes to t()
+// for translation -- t() falls back to `label`'s own English wording via
+// translations.js if a language hasn't got that key yet, so this file never needs to
+// know what language is active.
 export const detectNetWorthMilestones = (points, currencyCode) => {
   const thresholds = NET_WORTH_THRESHOLDS_ZAR.map(t => convertAmount(t, 'za', currencyCode));
   return scanConsecutivePairs(points, 'net', (prevNet, net, { date }) => {
     const found = [];
     if (prevNet <= 0 && net > 0) {
-      found.push({ key: `nw-positive-${date}`, date, label: 'First positive net worth', icon: '🎉' });
+      found.push({ key: `nw-positive-${date}`, date, label: 'First positive net worth', labelKey: 'dashboard.milestoneNetWorthPositive', icon: '🎉' });
     }
     for (const threshold of thresholds) {
       if (prevNet < threshold && net >= threshold) {
-        found.push({ key: `nw-${threshold}-${date}`, date, label: 'Net worth crossed', amount: threshold, icon: '💰' });
+        found.push({ key: `nw-${threshold}-${date}`, date, label: 'Net worth crossed', labelKey: 'dashboard.milestoneNetWorthCrossed', amount: threshold, icon: '💰' });
       }
     }
     return found;
@@ -60,7 +65,7 @@ export const detectNetWorthMilestones = (points, currencyCode) => {
 // not a per-debt breakdown).
 export const detectDebtClearedMilestone = (points) =>
   scanConsecutivePairs(points, 'total', (prevTotal, total, { date }) =>
-    prevTotal > 0 && total <= 0 ? [{ key: `debt-cleared-${date}`, date, label: 'Debt fully paid off', icon: '🏁' }] : []
+    prevTotal > 0 && total <= 0 ? [{ key: `debt-cleared-${date}`, date, label: 'Debt fully paid off', labelKey: 'dashboard.milestoneDebtCleared', icon: '🏁' }] : []
   );
 
 // Emergency Fund reaching (or first reaching) 100% funded, from the currently-saved
@@ -69,7 +74,7 @@ export const detectDebtClearedMilestone = (points) =>
 export const detectEfFundedMilestone = (efPlan) => {
   if (!efPlan || !(efPlan.targetAmount > 0)) return [];
   if (efPlan.currentSavings >= efPlan.targetAmount) {
-    return [{ key: 'ef-funded', date: efPlan.savedAt, label: 'Emergency Fund fully funded', icon: '🛟' }];
+    return [{ key: 'ef-funded', date: efPlan.savedAt, label: 'Emergency Fund fully funded', labelKey: 'dashboard.milestoneEfFunded', icon: '🛟' }];
   }
   return [];
 };
