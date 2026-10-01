@@ -7,6 +7,7 @@
 import { rejectMethod, readJsonBody, sendJson } from '../_lib/http.js';
 import { paymentProvider } from '../_lib/provider.js';
 import { activeSubscriptionsFor } from '../_lib/payfast.js';
+import { retrySuperseded } from '../_lib/payfastCancel.js';
 import { paystackApi, subscriptionIsActive } from '../_lib/paystack.js';
 import { verifyEntitlement, signEntitlement } from '../_lib/entitlement.js';
 
@@ -34,6 +35,7 @@ export default async function handler(req, res) {
     if (provider === 'payfast') {
       // PayFast has no list-by-email API, so the ITN webhook keeps our own table current.
       // Take the best active plan so an upgrade is reflected on the next load.
+      await retrySuperseded(email, process.env); // finish any PayFast cancel that failed earlier
       const [best] = await activeSubscriptionsFor(email, process.env);
       if (best) { active = true; tier = best.tier; period = best.period; }
     } else {

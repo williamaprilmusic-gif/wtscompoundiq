@@ -5,6 +5,7 @@
 import dns from 'node:dns/promises';
 import { sendJson } from '../_lib/http.js';
 import { getConfig, PRICES, sign, db, UUID_RE } from '../_lib/payfast.js';
+import { supersedeOtherSubscriptions } from '../_lib/payfastCancel.js';
 
 const PAYFAST_HOSTS = ['www.payfast.co.za', 'sandbox.payfast.co.za', 'w1w.payfast.co.za', 'w2w.payfast.co.za'];
 
@@ -68,6 +69,9 @@ export default async function handler(req, res) {
 
     const status = { COMPLETE: 'active', CANCELLED: 'cancelled', FAILED: 'failed' }[data.payment_status];
     if (status) {
+      // A SUPERSEDED row is one we retired on purpose when the buyer started a newer plan;
+      // late/renewal notifications for it must not bring it back to life.
+      if (row.status === 'superseded') return sendJson(res, 200, { received: true });
       await db(`subscriptions?payment_id=eq.${pid}`, {
         method: 'PATCH',
         body: {
@@ -77,6 +81,11 @@ export default async function handler(req, res) {
           updated_at: new Date().toISOString()
         }
       });
+      // First payment of a NEW subscription (pending -> active), not a renewal: retire the
+      // buyer's other active plans so an upgrade/downgrade never bills twice.
+      if (status === 'active' && row.status === 'pending') {
+        await supersedeOtherSubscriptions(row.email, pid);
+      }
     }
     return sendJson(res, 200, { received: true });
   } catch (err) {
