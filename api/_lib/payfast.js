@@ -63,13 +63,22 @@ export function sign(entries, passphrase, keepBlank = false) {
 // Minimal Supabase REST client using the service-role key (bypasses RLS; the
 // subscriptions table has no public policies). Throws on any non-2xx so callers fail
 // loudly instead of half-saving.
+// Supabase has two server-key formats: the legacy service_role JWT ("eyJ...") and the newer
+// secret key ("sb_secret_..."). Legacy keys go in both headers; the new ones are NOT JWTs and
+// must only be sent as `apikey` (putting one in Authorization makes the gateway reject it).
+export const supabaseHeaders = (key) => ({
+  apikey: key,
+  ...(key.startsWith('sb_') ? {} : { Authorization: `Bearer ${key}` }),
+  'Content-Type': 'application/json'
+});
+
 export async function db(path, { method = 'GET', body } = {}, env = process.env) {
   const url = env.SUPABASE_URL;
   const key = env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) throw new Error('Supabase env vars are not configured');
   const res = await fetch(`${url}/rest/v1/${path}`, {
     method,
-    headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+    headers: supabaseHeaders(key),
     body: body ? JSON.stringify(body) : undefined
   });
   if (!res.ok) throw new Error(`Supabase ${method} ${path} -> ${res.status}`);

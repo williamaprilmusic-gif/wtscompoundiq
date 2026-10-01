@@ -65,7 +65,14 @@ export default async function handler(req, res) {
       body: new URLSearchParams(entries).toString()
     });
     const verdict = (await validate.text()).trim();
-    if (verdict !== 'VALID') return reject(res, 'not_validated', `payfast said: ${verdict.slice(0, 80)}`);
+    if (verdict !== 'VALID') {
+      // Diagnostics for an INVALID verdict: which notification it was and which fields it
+      // carried, with anything personal or secret left out (no email/name/token/signature).
+      const shown = entries
+        .filter(([k]) => !['signature', 'token', 'email_address', 'name_first', 'name_last'].includes(k))
+        .map(([k, v]) => `${k}=${v}`).join('&');
+      return reject(res, 'not_validated', `payfast said: ${verdict.slice(0, 80)} | status=${data.payment_status} ${shown}`.slice(0, 900));
+    }
 
     const status = { COMPLETE: 'active', CANCELLED: 'cancelled', FAILED: 'failed' }[data.payment_status];
     if (status) {

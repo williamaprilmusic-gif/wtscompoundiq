@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import crypto from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { sign, getConfig, isLive, isPayfastConfigured, PRICES, FREQUENCY } from './payfast.js';
+import { sign, getConfig, isLive, isPayfastConfigured, supabaseHeaders, PRICES, FREQUENCY } from './payfast.js';
 import { paymentProvider } from './provider.js';
 
 const md5 = (s) => crypto.createHash('md5').update(s).digest('hex');
@@ -67,6 +67,19 @@ describe('getConfig / isPayfastConfigured', () => {
       delete env[missing];
       expect(isPayfastConfigured(env), missing).toBe(false);
     }
+  });
+});
+
+describe('supabaseHeaders', () => {
+  it('legacy JWT keys go in apikey AND Authorization: Bearer', () => {
+    expect(supabaseHeaders('eyJhbGciOi.payload.sig')).toMatchObject({
+      apikey: 'eyJhbGciOi.payload.sig', Authorization: 'Bearer eyJhbGciOi.payload.sig'
+    });
+  });
+  it('new sb_secret_ keys are sent as apikey only (they are not JWTs)', () => {
+    const h = supabaseHeaders('sb_secret_abc123');
+    expect(h.apikey).toBe('sb_secret_abc123');
+    expect(h).not.toHaveProperty('Authorization');
   });
 });
 
