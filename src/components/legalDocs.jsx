@@ -128,8 +128,8 @@ export const LEGAL_DOCS = [
               services provider.
             </p>
             <p>
-              Nothing produced by the Service — including output from the AI Coach and AI
-              Advisor features — is financial, investment, tax, or legal advice, and none of
+              Nothing produced by the Service — including output from the AI Coach feature —
+              is financial, investment, tax, or legal advice, and none of
               it constitutes a personalized recommendation. Projections assume constant rates
               and no volatility unless a tool explicitly models a range of outcomes (e.g. the
               Monte Carlo simulator). Before acting on anything the Service shows you, verify
