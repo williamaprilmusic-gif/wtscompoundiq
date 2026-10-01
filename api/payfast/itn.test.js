@@ -79,6 +79,12 @@ describe('COMPLETE (grants access: full checks)', () => {
     expect(payfastApiCalls[0]).toContain('/subscriptions/tok-old/cancel');
   });
 
+  it('records paid_through from billing_date, and a renewal pushes it forward', async () => {
+    const next = new Date(Date.now() + 20 * 24 * 3600 * 1000).toISOString().slice(0, 10); // a realistic next billing date
+    await run(notice({ ...COMPLETE, billing_date: next }));
+    expect(row().paid_through).toBe(new Date(Date.parse(next) + 24 * 3600 * 1000).toISOString());
+  });
+
   it('does not activate when PayFast says INVALID', async () => {
     validateVerdict = 'INVALID';
     const r = await run(notice(COMPLETE));
@@ -124,6 +130,13 @@ describe('CANCELLED / FAILED (removes access: signature + source IP)', () => {
     expect(r.code).toBe(200);
     expect(row().status).toBe('cancelled');
     expect(validateCalls).toHaveLength(0); // not consulted for access removal
+  });
+
+  it('keeps paid_through on cancel, so the buyer keeps what they paid for', async () => {
+    rows[0].paid_through = '2099-06-01T00:00:00.000Z';
+    await run(notice(CANCELLED));
+    expect(row().status).toBe('cancelled');
+    expect(row().paid_through).toBe('2099-06-01T00:00:00.000Z');
   });
 
   it('marks a failed payment failed', async () => {

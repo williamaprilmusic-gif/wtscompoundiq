@@ -1,8 +1,8 @@
 // api/_lib/payfast.test.js
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import crypto from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { sign, getConfig, isLive, isPayfastConfigured, supabaseHeaders, PRICES, FREQUENCY } from './payfast.js';
+import { sign, getConfig, isLive, isPayfastConfigured, supabaseHeaders, paidThrough, activeSubscriptionsFor, PRICES, FREQUENCY } from './payfast.js';
 import { paymentProvider } from './provider.js';
 
 const md5 = (s) => crypto.createHash('md5').update(s).digest('hex');
@@ -80,6 +80,41 @@ describe('supabaseHeaders', () => {
     const h = supabaseHeaders('sb_secret_abc123');
     expect(h.apikey).toBe('sb_secret_abc123');
     expect(h).not.toHaveProperty('Authorization');
+  });
+});
+
+describe('paidThrough', () => {
+  const NOW = new Date('2026-10-01T12:00:00Z');
+  const DAY = 24 * 3600 * 1000;
+
+  it("uses PayFast's billing_date (+1 day of slack) when it is sensible", () => {
+    expect(paidThrough('2026-11-01', 'monthly', NOW)).toBe(new Date(Date.parse('2026-11-01') + DAY).toISOString());
+  });
+  it('falls back to one billing period (+slack) when billing_date is missing, junk, past, or absurdly far', () => {
+    const month = new Date('2026-11-01T12:00:00Z').getTime() + DAY;
+    const year = new Date('2027-10-01T12:00:00Z').getTime() + DAY;
+    for (const bad of [undefined, '', 'not a date', '2020-01-01', '2099-01-01']) {
+      expect(paidThrough(bad, 'monthly', NOW), String(bad)).toBe(new Date(month).toISOString());
+      expect(paidThrough(bad, 'annual', NOW), String(bad)).toBe(new Date(year).toISOString());
+    }
+  });
+});
+
+describe('activeSubscriptionsFor', () => {
+  const ENV = { SUPABASE_URL: 'https://fake.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'svc' };
+  it('asks for active plans AND cancelled-but-still-paid ones, and sorts Ultra above Pro', async () => {
+    let seen;
+    vi.stubGlobal('fetch', async (url) => {
+      seen = decodeURIComponent(String(url));
+      return new Response(JSON.stringify([{ tier: 'Pro' }, { tier: 'Ultra' }]), { status: 200 });
+    });
+    const rows = await activeSubscriptionsFor('A@B.co', ENV, new Date('2026-10-01T00:00:00Z'));
+    vi.unstubAllGlobals();
+    expect(rows.map((r) => r.tier)).toEqual(['Ultra', 'Pro']);
+    expect(seen).toContain('email=eq.a@b.co');
+    expect(seen).toContain('status.eq.active');
+    expect(seen).toContain('and(status.eq.cancelled,paid_through.gt.2026-10-01T00:00:00.000Z)');
+    expect(seen).not.toContain('superseded');
   });
 });
 

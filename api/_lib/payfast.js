@@ -86,10 +86,28 @@ export async function db(path, { method = 'GET', body } = {}, env = process.env)
   return text ? JSON.parse(text) : null;
 }
 
-// Active PayFast subscriptions for an email, best tier first (Ultra over Pro).
-export async function activeSubscriptionsFor(email, env = process.env) {
+// End of the period the buyer has paid for. PayFast's ITN carries `billing_date` (the next
+// charge date), which is exactly that; if it is missing or implausible, fall back to one
+// billing period from now. A day of slack covers the charge landing late on the billing date.
+export const paidThrough = (billingDate, period, now = new Date()) => {
+  const slack = 24 * 3600 * 1000;
+  const d = billingDate ? new Date(billingDate) : null;
+  const ok = d && !Number.isNaN(d.getTime()) && d > now && d.getTime() < now.getTime() + 400 * 24 * 3600 * 1000;
+  if (ok) return new Date(d.getTime() + slack).toISOString();
+  const f = new Date(now.getTime());
+  if (period === 'annual') f.setUTCFullYear(f.getUTCFullYear() + 1);
+  else f.setUTCMonth(f.getUTCMonth() + 1);
+  return new Date(f.getTime() + slack).toISOString();
+};
+
+// Plans that currently entitle this email to access, best tier first (Ultra over Pro): the
+// active ones, PLUS ones the buyer has cancelled but already paid for (status 'cancelled'
+// with paid_through still in the future) -- so cancelling never cuts off a paid period.
+// 'superseded' rows (replaced by a newer plan) deliberately never count.
+export async function activeSubscriptionsFor(email, env = process.env, now = new Date()) {
+  const filter = `(status.eq.active,and(status.eq.cancelled,paid_through.gt.${now.toISOString()}))`;
   const rows = await db(
-    `subscriptions?email=eq.${encodeURIComponent(String(email).toLowerCase())}&status=eq.active&select=tier,period`,
+    `subscriptions?email=eq.${encodeURIComponent(String(email).toLowerCase())}&or=${encodeURIComponent(filter)}&select=tier,period,status,paid_through`,
     {},
     env
   );

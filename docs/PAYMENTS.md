@@ -38,9 +38,32 @@ PayFast's **ITN webhook**.
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | The billing project. The service-role key bypasses RLS — server only, never `VITE_`-prefixed. |
 | `PUBLIC_BASE_URL` | Optional origin override for the return/notify URLs. |
 
+### Cancelling and what a buyer keeps
+
+- **In-app**: the pricing modal's "Downgrade to Basic" calls `POST /api/entitlement/cancel`
+  (authenticated by the signed entitlement token). It cancels the subscription at PayFast
+  (`PUT /subscriptions/:token/cancel`) and the app keeps the tier until the paid period ends.
+  It also works from the buyer's PayFast account / receipt email; PayFast's CANCELLED
+  notice then reaches `/api/payfast/itn`.
+- **End of period**: each successful payment sets `subscriptions.paid_through` (PayFast's
+  `billing_date`, +1 day). A `cancelled` row still entitles the buyer until `paid_through`.
+  A plan replaced by a newer purchase is `superseded` with `paid_through` cleared, so it never
+  counts. Failed payments (`failed`) cut access immediately.
+- **Webhook rules**: access-granting notices (COMPLETE) get all four checks. Access-removing
+  ones (CANCELLED/FAILED) rely on signature + PayFast source IP (+ matching token), because
+  PayFast's validate endpoint answers INVALID for them.
+
+### Known gaps before launch
+
+- Annual-plan renewal reminders (CPA §14, 40–80 business days ahead, in-app + email) are
+  promised in the Terms but **not built**; no email sender is configured in production. Needed
+  before the first annual renewal (~12 months after the first annual sale).
+- Upgrading mid-period cancels the old plan without crediting its unused time (policy decision
+  flagged in the Refund Policy).
+
 Going live: set `PAYFAST_ENV=live`, redeploy, then make one small real purchase yourself
-before announcing. Cancelling happens in the buyer's PayFast account / receipt email
-(there is no in-app cancel for PayFast yet).
+before announcing, and delete the two "[Remove this paragraph once live billing is switched
+on.]" demo-mode paragraphs in the Terms (§7) and Refund Policy (Overview).
 
 ---
 

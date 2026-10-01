@@ -35,7 +35,7 @@ import WealthPath from './components/WealthPath';
 import { buildShareUrl, parseShareParams, clearShareParamsFromUrl } from './utils/shareLink';
 import { downloadCSV } from './utils/csv';
 import { uniqueId } from './utils/uniqueId';
-import { readEntitlement, refreshEntitlement, clearEntitlement, consumePaystackRedirect, consumePayfastReturn } from './utils/entitlement';
+import { readEntitlement, refreshEntitlement, clearEntitlement, consumePaystackRedirect, consumePayfastReturn, cancelSubscription } from './utils/entitlement';
 import { projectionMilestones } from './projectionMilestones';
 import { solveMonthlyForGoal } from './goalSolver';
 import { ruleOf72 } from './ruleOf72';
@@ -348,8 +348,30 @@ export default function App() {
   // Basic is free -- downgrading to it skips the (fake) payment flow entirely. The
   // "are you sure" step now lives in the pricing modal's Basic card (a two-tap confirm),
   // so this just applies it -- no window.confirm(), which a browser can silently refuse.
-  const downgradeToBasic = () => {
+  // A paying (entitlement-backed) subscriber must be cancelled at the processor too, or the card
+  // keeps being charged while the screen says Basic -- and they keep the plan they've paid for until
+  // the period ends. Only when there's nothing to cancel server-side (demo mode, no entitlement)
+  // does this fall back to the plain local downgrade.
+  const downgradeToBasic = async () => {
     if (userTier === 'Basic') return;
+    if (readEntitlement()) {
+      const r = await cancelSubscription();
+      if (r.status === 'cancelled' || r.status === 'already_cancelled') {
+        const until = r.accessUntil
+          ? new Date(r.accessUntil).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })
+          : null;
+        setShowPricing(false);
+        setTierChangeMsg(until
+          ? `Subscription cancelled — you won't be charged again, and you keep ${userTier} until ${until}.`
+          : "Subscription cancelled — you won't be charged again.");
+        return;
+      }
+      if (r.status === 'error') {
+        setTierChangeMsg("We couldn't cancel just now. Please try again in a moment, or cancel from your PayFast account.");
+        return;
+      }
+      // 'none' | 'unconfigured' | 'invalid': nothing to cancel server-side -> local downgrade below.
+    }
     setTier('Basic');
     setShowPricing(false);
   };

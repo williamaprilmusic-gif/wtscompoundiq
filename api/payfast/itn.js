@@ -4,7 +4,7 @@
 //   1. signature  2. source IP is PayFast  3. amount matches our price  4. PayFast confirms.
 import dns from 'node:dns/promises';
 import { sendJson } from '../_lib/http.js';
-import { getConfig, PRICES, sign, db, UUID_RE } from '../_lib/payfast.js';
+import { getConfig, PRICES, sign, db, paidThrough, UUID_RE } from '../_lib/payfast.js';
 import { supersedeOtherSubscriptions } from '../_lib/payfastCancel.js';
 
 const PAYFAST_HOSTS = ['www.payfast.co.za', 'sandbox.payfast.co.za', 'w1w.payfast.co.za', 'w2w.payfast.co.za'];
@@ -97,6 +97,9 @@ export default async function handler(req, res) {
         status,
         payfast_token: data.token || row.payfast_token,
         last_pf_payment_id: data.pf_payment_id || row.last_pf_payment_id,
+        // Each successful payment (first or renewal) pays through to the next billing date.
+        // Cancelling or failing leaves it untouched, so a cancelled plan keeps what was paid for.
+        ...(status === 'active' ? { paid_through: paidThrough(data.billing_date, row.period) } : {}),
         updated_at: new Date().toISOString()
       }
     });

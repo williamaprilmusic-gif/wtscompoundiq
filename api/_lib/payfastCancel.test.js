@@ -1,7 +1,7 @@
 // api/_lib/payfastCancel.test.js
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import crypto from 'node:crypto';
-import { apiSignature, cancelSubscriptionAtPayFast, supersedeOtherSubscriptions, retrySuperseded } from './payfastCancel.js';
+import { apiSignature, cancelSubscriptionAtPayFast, supersedeOtherSubscriptions, retrySuperseded, cancelActiveForEmail } from './payfastCancel.js';
 
 const md5 = (s) => crypto.createHash('md5').update(s).digest('hex');
 
@@ -30,10 +30,13 @@ const fakeFetch = async (url, opts = {}) => {
     rows.filter((r) => r.payment_id === id).forEach((r) => Object.assign(r, body));
     return new Response(null, { status: 204 }); // a 204 may not carry a body
   }
-  const hit = rows.filter((r) =>
+  let hit = rows.filter((r) =>
     (!q.email || r.email === decodeURIComponent(val('email'))) &&
     (!q.status || r.status === val('status')) &&
+    (!q.paid_through || (r.paid_through && new Date(r.paid_through) > new Date(q.paid_through.replace(/^gt\./, '')))) &&
     (!q.payment_id || (q.payment_id.startsWith('neq.') ? r.payment_id !== val('payment_id') : r.payment_id === val('payment_id'))));
+  if (q.order === 'paid_through.desc') hit = [...hit].sort((a, b) => new Date(b.paid_through) - new Date(a.paid_through));
+  if (q.limit) hit = hit.slice(0, Number(q.limit));
   return new Response(JSON.stringify(hit), { status: 200 });
 };
 
@@ -136,6 +139,60 @@ describe('supersedeOtherSubscriptions', () => {
   it('never throws even if the database is unreachable', async () => {
     vi.stubGlobal('fetch', async () => { throw new Error('network down'); });
     await expect(supersedeOtherSubscriptions('a@b.co', 'new-ultra', ENV)).resolves.toBe(0);
+  });
+});
+
+describe('supersede clears paid_through so a replaced plan can never outrank the chosen one', () => {
+  it('nulls paid_through on the retired row', async () => {
+    rows[0].paid_through = '2099-01-01T00:00:00.000Z';
+    await supersedeOtherSubscriptions('a@b.co', 'new-ultra', ENV);
+    expect(rows[0].status).toBe('cancelled');
+    expect(rows[0].paid_through).toBeNull();
+  });
+});
+
+describe('cancelActiveForEmail (the in-app cancel)', () => {
+  const FUTURE = '2099-06-01T00:00:00.000Z';
+
+  it('cancels the active plan at PayFast, keeps paid_through, and reports when access ends', async () => {
+    rows = [{ payment_id: 'p1', email: 'a@b.co', status: 'active', payfast_token: 'tok-1', paid_through: FUTURE }];
+    const r = await cancelActiveForEmail('a@b.co', ENV);
+    expect(r).toEqual({ status: 'cancelled', accessUntil: FUTURE });
+    expect(payfastCalls).toHaveLength(1);
+    expect(rows[0].status).toBe('cancelled');
+    expect(rows[0].paid_through).toBe(FUTURE); // the paid period survives the cancel
+  });
+
+  it('is idempotent: cancelling again reports already_cancelled with the same end date and calls PayFast no more', async () => {
+    rows = [{ payment_id: 'p1', email: 'a@b.co', status: 'cancelled', payfast_token: 'tok-1', paid_through: FUTURE }];
+    expect(await cancelActiveForEmail('a@b.co', ENV)).toEqual({ status: 'already_cancelled', accessUntil: FUTURE });
+    expect(payfastCalls).toHaveLength(0);
+  });
+
+  it('a paid period that has already ended is "none", not access', async () => {
+    rows = [{ payment_id: 'p1', email: 'a@b.co', status: 'cancelled', payfast_token: 'tok-1', paid_through: '2000-01-01T00:00:00.000Z' }];
+    expect(await cancelActiveForEmail('a@b.co', ENV)).toEqual({ status: 'none' });
+  });
+
+  it('no subscription at all is "none"', async () => {
+    rows = [];
+    expect(await cancelActiveForEmail('nobody@x.co', ENV)).toEqual({ status: 'none' });
+  });
+
+  it('reports error (and leaves the plan active) when PayFast refuses, so the buyer is never told they are cancelled when they are not', async () => {
+    rows = [{ payment_id: 'p1', email: 'a@b.co', status: 'active', payfast_token: 'tok-1', paid_through: FUTURE }];
+    payfastBehaviour = fail;
+    expect(await cancelActiveForEmail('a@b.co', ENV)).toEqual({ status: 'error' });
+    expect(rows[0].status).toBe('active');
+  });
+
+  it('only touches the requesting email', async () => {
+    rows = [
+      { payment_id: 'p1', email: 'a@b.co', status: 'active', payfast_token: 'tok-1', paid_through: FUTURE },
+      { payment_id: 'p2', email: 'z@z.co', status: 'active', payfast_token: 'tok-2', paid_through: FUTURE }
+    ];
+    await cancelActiveForEmail('a@b.co', ENV);
+    expect(rows.find((r) => r.payment_id === 'p2').status).toBe('active');
   });
 });
 

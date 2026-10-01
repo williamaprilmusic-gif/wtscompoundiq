@@ -72,6 +72,28 @@ export const refreshEntitlement = async () => {
   }
 };
 
+// Cancel the paying subscription behind the stored entitlement (PayFast). The plan stays
+// active until the period already paid for ends, so the caller must NOT drop the tier itself.
+// Returns { status, accessUntil? }: 'cancelled' | 'already_cancelled' (both carry accessUntil),
+// 'none' / 'unconfigured' / 'invalid' (nothing to cancel server-side -> local downgrade is
+// all that's left), or 'error' (PayFast refused or the network failed -> tell the user).
+export const cancelSubscription = async () => {
+  const current = (() => { try { return localStorage.getItem(KEY); } catch { return null; } })();
+  if (!current) return { status: 'invalid' };
+  try {
+    const res = await fetch('/api/entitlement/cancel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ entitlement: current })
+    });
+    if (!res.ok) return { status: 'error' };
+    const data = await res.json().catch(() => ({}));
+    return { status: data.status || 'error', accessUntil: data.accessUntil || null };
+  } catch {
+    return { status: 'error' };
+  }
+};
+
 // Recover a paid tier on a browser that has no token -- after clearing site data, or
 // on a new device. The subscription still exists on Paystack keyed by the payer's
 // email; the server checks it and re-issues a token. Returns

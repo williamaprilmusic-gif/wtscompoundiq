@@ -262,8 +262,8 @@ export const LEGAL_DOCS = [
               with the processor to complete your purchase.
             </p>
             <p>
-              Monthly plans bill every 30 days from the date of purchase; annual plans bill
-              every 12 months. Subscriptions <strong>renew automatically</strong> at the
+              Monthly plans bill once a month, on the same day of the month as your first
+              payment; annual plans bill every 12 months. Subscriptions <strong>renew automatically</strong> at the
               then-current price unless cancelled before the renewal date, per Section 9. A
               failed renewal payment may result in an automatic downgrade to the Basic tier
               after <Fill>[a grace period, e.g. 3 days]</Fill> of retry attempts.
@@ -358,6 +358,14 @@ export const LEGAL_DOCS = [
               "fixed-term" definition and this renewal-notice mechanic isn't a strict legal
               requirement for them — we still surface the upcoming charge in-app either way
               as a matter of practice, not obligation.]</Fill>
+            </p>
+            <p>
+              <Fill>[Operational to-do, NOT yet built: the in-app and email renewal reminders
+              promised above must be live before the first annual plan renews (about 12
+              months after the first annual purchase; the 40–80 business-day window opens
+              roughly 4 months before that). The app has no email sender configured in
+              production yet. Until the reminders exist, either do not sell annual plans or
+              soften this paragraph with counsel.]</Fill>
             </p>
           </>
         )
@@ -892,8 +900,10 @@ export const LEGAL_DOCS = [
               You have the right to: be notified that your information is being processed;
               access the personal information we hold about you; request its correction or
               deletion; object to our processing of it; and lodge a complaint with the
-              Information Regulator. Because we hold so little — essentially just a
-              transaction record from Section 4 — most requests are quick to fulfil. Your
+              Information Regulator. Because we hold so little — essentially just the
+              small subscription and transaction record from Section 4 — most requests are
+              quick to fulfil (deleting that record is subject to the retention period below,
+              which exists so we can meet tax and accounting duties). Your
               planning data itself is already entirely in your control: delete it any time
               via your browser's site-data settings, or the in-app "Clear history" controls
               on each tool.
@@ -924,7 +934,7 @@ export const LEGAL_DOCS = [
         heading: 'Data Retention',
         body: (
           <p>
-            Transaction records (Section 4) are retained for <Fill>[5 years]</Fill> to meet
+            The subscription record and transaction records (Section 4) are retained for <Fill>[5 years]</Fill> to meet
             South African tax and accounting record-keeping requirements, then deleted. Your
             local planning data is retained on your own device for as long as you keep it
             there — we have no ability to delete it remotely, because we never had it.
@@ -1006,13 +1016,19 @@ export const LEGAL_DOCS = [
         heading: 'Cancelling Anytime',
         body: (
           <p>
-            You can cancel a Pro or Ultra subscription at any time via the in-app "Downgrade
-            to Basic" control — it's instant, self-service, and needs no confirmation email
-            or support ticket. <strong>Cancelling stops future renewal charges; it doesn't
-            refund the period you're currently in.</strong> Your plan stays at its current
-            tier until the end of that period, then drops to Basic. Your saved planning data
-            isn't deleted by downgrading — it's simply local to your device either way, and
-            picks back up in full if you resubscribe.
+            You can cancel a Pro or Ultra subscription at any time, either through the in-app
+            "Downgrade to Basic" control — instant and self-service, with no confirmation
+            email or support ticket — or from your PayFast account or the link in your PayFast
+            receipt email. <strong>Cancelling stops future renewal charges; it doesn't refund
+            the period you're currently in.</strong> Your plan stays at its current tier until
+            the end of that period, then drops to Basic. Your saved planning data isn't
+            deleted by downgrading — it's simply local to your device either way, and picks
+            back up in full if you resubscribe. If you switch to a different paid plan, the
+            new plan starts immediately and your previous one is cancelled so you are never
+            billed for both.{' '}
+            <Fill>[Decision for the operator: the unused part of the plan you are replacing is
+            currently not credited towards the new one — confirm that is the intended policy,
+            and say so here if it is.]</Fill>
           </p>
         )
       },

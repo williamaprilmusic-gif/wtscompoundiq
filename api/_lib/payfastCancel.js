@@ -49,10 +49,10 @@ export async function cancelSubscriptionAtPayFast(token, env = process.env, now 
   return { ok: ok || alreadyCancelled, alreadyCancelled, status: res.status, detail };
 }
 
-const patch = (paymentId, status, env) =>
+const patch = (paymentId, status, env, extra = {}) =>
   db(`subscriptions?payment_id=eq.${paymentId}`, {
     method: 'PATCH',
-    body: { status, updated_at: new Date().toISOString() }
+    body: { status, ...extra, updated_at: new Date().toISOString() }
   }, env);
 
 // Try to cancel one row at PayFast; on success mark it 'cancelled'. Never throws.
@@ -84,7 +84,9 @@ export async function supersedeOtherSubscriptions(email, keepPaymentId, env = pr
       {}, env
     );
     for (const row of rows || []) {
-      await patch(row.payment_id, 'superseded', env); // access follows the newest payment immediately
+      // Access follows the newest payment immediately: clearing paid_through stops this retired
+      // plan counting as "cancelled but paid for", which would let it outrank the plan chosen.
+      await patch(row.payment_id, 'superseded', env, { paid_through: null });
       await cancelRow(row, env);
     }
     return (rows || []).length;
@@ -106,4 +108,27 @@ export async function retrySuperseded(email, env = process.env) {
   } catch (err) {
     console.error(`payfast retry-cancel error for ${email}: ${err.message}`);
   }
+}
+
+// The buyer chose to cancel (in-app "Downgrade to Basic"). Cancel their active plan(s) at
+// PayFast. The status becomes 'cancelled' but paid_through is KEPT, so they retain what they
+// already paid for until it ends (the Refund Policy's promise). Returns:
+//   { status: 'cancelled', accessUntil }   cancelled now
+//   { status: 'already_cancelled', accessUntil }  nothing active, but a paid period remains
+//   { status: 'none' }                     no subscription at all for this email
+//   { status: 'error' }                    PayFast refused; the buyer can retry or cancel in PayFast
+export async function cancelActiveForEmail(email, env = process.env, now = new Date()) {
+  const enc = encodeURIComponent(String(email).toLowerCase());
+  const active = (await db(`subscriptions?email=eq.${enc}&status=eq.active&select=payment_id,payfast_token`, {}, env)) || [];
+  let failed = 0;
+  for (const row of active) if (!(await cancelRow(row, env))) failed += 1;
+  if (failed) return { status: 'error' };
+
+  const paid = (await db(
+    `subscriptions?email=eq.${enc}&status=eq.cancelled&paid_through=gt.${encodeURIComponent(now.toISOString())}&select=paid_through&order=paid_through.desc&limit=1`,
+    {}, env
+  )) || [];
+  const accessUntil = paid[0]?.paid_through || null;
+  if (active.length) return { status: 'cancelled', accessUntil };
+  return accessUntil ? { status: 'already_cancelled', accessUntil } : { status: 'none' };
 }
