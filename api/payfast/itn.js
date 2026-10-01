@@ -54,45 +54,56 @@ export default async function handler(req, res) {
     const [row] = (await db(`subscriptions?payment_id=eq.${pid}&select=*`)) || [];
     if (!row) return reject(res, 'unknown_payment');
 
-    const expected = PRICES[row.tier]?.[row.period];
-    if (!expected || Math.abs(parseFloat(data.amount_gross) - expected) > 0.01) {
-      return reject(res, 'amount_mismatch', `got=${data.amount_gross} expected=${expected}`);
-    }
-
-    const validate = await fetch(`https://${cfg.host}/eng/query/validate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams(entries).toString()
-    });
-    const verdict = (await validate.text()).trim();
-    if (verdict !== 'VALID') {
-      // Diagnostics for an INVALID verdict: which notification it was and which fields it
-      // carried, with anything personal or secret left out (no email/name/token/signature).
-      const shown = entries
-        .filter(([k]) => !['signature', 'token', 'email_address', 'name_first', 'name_last'].includes(k))
-        .map(([k, v]) => `${k}=${v}`).join('&');
-      return reject(res, 'not_validated', `payfast said: ${verdict.slice(0, 80)} | status=${data.payment_status} ${shown}`.slice(0, 900));
-    }
-
     const status = { COMPLETE: 'active', CANCELLED: 'cancelled', FAILED: 'failed' }[data.payment_status];
-    if (status) {
-      // A SUPERSEDED row is one we retired on purpose when the buyer started a newer plan;
-      // late/renewal notifications for it must not bring it back to life.
-      if (row.status === 'superseded') return sendJson(res, 200, { received: true });
-      await db(`subscriptions?payment_id=eq.${pid}`, {
-        method: 'PATCH',
-        body: {
-          status,
-          payfast_token: data.token || row.payfast_token,
-          last_pf_payment_id: data.pf_payment_id || row.last_pf_payment_id,
-          updated_at: new Date().toISOString()
-        }
-      });
-      // First payment of a NEW subscription (pending -> active), not a renewal: retire the
-      // buyer's other active plans so an upgrade/downgrade never bills twice.
-      if (status === 'active' && row.status === 'pending') {
-        await supersedeOtherSubscriptions(row.email, pid);
+    if (!status) return sendJson(res, 200, { received: true }); // e.g. a status we don't act on
+
+    if (status === 'active') {
+      // GRANTING access: the full set of PayFast-mandated checks. The amount must be present
+      // and exactly our price (a missing amount parses to NaN, and NaN > 0.01 is false, which
+      // would otherwise sail through), and PayFast itself must confirm the data.
+      const expected = PRICES[row.tier]?.[row.period];
+      const gross = parseFloat(data.amount_gross);
+      if (!expected || !Number.isFinite(gross) || Math.abs(gross - expected) > 0.01) {
+        return reject(res, 'amount_mismatch', `got=${data.amount_gross} expected=${expected}`);
       }
+      const validate = await fetch(`https://${cfg.host}/eng/query/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(entries).toString()
+      });
+      const verdict = (await validate.text()).trim();
+      if (verdict !== 'VALID') {
+        // Diagnostics, with anything personal or secret left out (no email/name/token/signature).
+        const shown = entries
+          .filter(([k]) => !['signature', 'token', 'email_address', 'name_first', 'name_last'].includes(k))
+          .map(([k, v]) => `${k}=${v}`).join('&');
+        return reject(res, 'not_validated', `payfast said: ${verdict.slice(0, 80)} | status=${data.payment_status} ${shown}`.slice(0, 900));
+      }
+    } else if (data.token && row.payfast_token && data.token !== row.payfast_token) {
+      // REMOVING access (CANCELLED / FAILED). These carry no amount, and PayFast's validate
+      // endpoint answers INVALID for them (seen in the sandbox: it only understands payment
+      // notices), so insisting on it meant a buyer who cancelled in PayFast kept access. The
+      // signature (needs our secret passphrase) and the PayFast source IP already prove origin;
+      // a token, when sent, must also be the one we stored for this subscription.
+      return reject(res, 'token_mismatch');
+    }
+
+    // A SUPERSEDED row is one we retired on purpose when the buyer started a newer plan;
+    // late/renewal notifications for it must not bring it back to life.
+    if (row.status === 'superseded') return sendJson(res, 200, { received: true });
+    await db(`subscriptions?payment_id=eq.${pid}`, {
+      method: 'PATCH',
+      body: {
+        status,
+        payfast_token: data.token || row.payfast_token,
+        last_pf_payment_id: data.pf_payment_id || row.last_pf_payment_id,
+        updated_at: new Date().toISOString()
+      }
+    });
+    // First payment of a NEW subscription (pending -> active), not a renewal: retire the
+    // buyer's other active plans so an upgrade/downgrade never bills twice.
+    if (status === 'active' && row.status === 'pending') {
+      await supersedeOtherSubscriptions(row.email, pid);
     }
     return sendJson(res, 200, { received: true });
   } catch (err) {
