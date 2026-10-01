@@ -60,6 +60,17 @@ const normalizeTier = (tier) => (tier === 'Enterprise' ? 'Ultra' : tier);
 // and a huge typed-in value would otherwise freeze the tab with zero feedback.
 const MAX_YEARS = 100;
 
+// A free user who clicks a locked tab and pays leaves the app for the payment page and the
+// page reloads on return, which wipes React state -- so the tab they wanted is kept here
+// and applied once the purchase is confirmed (otherwise they land back on the home tab).
+const RETURN_TAB_KEY = 'wts_compoundiq_return_tab';
+const rememberReturnTab = (tab) => {
+  try { if (tab) localStorage.setItem(RETURN_TAB_KEY, tab); else localStorage.removeItem(RETURN_TAB_KEY); } catch { /* ignore */ }
+};
+const takeReturnTab = () => {
+  try { const t = localStorage.getItem(RETURN_TAB_KEY); localStorage.removeItem(RETURN_TAB_KEY); return t; } catch { return null; }
+};
+
 export default function App() {
   const { t } = useLanguage();
   // Computed fresh each render, but only ever matters on the very first one (the
@@ -270,6 +281,8 @@ export default function App() {
       if (cancelled) return;
       if (granted && granted.tier) {
         setTier(granted.tier);
+        const wanted = takeReturnTab();
+        if (wanted && tabGroups.some((g) => g.tabs.some((t) => t.name === wanted))) setActiveTab(wanted);
         return;
       }
       if (granted && granted.pending) {
@@ -311,6 +324,7 @@ export default function App() {
     setSelectedUpgradeTier(targetTier);
     setSelectedBillingPeriod('monthly'); // this entry point (a locked-tab click) has no billing toggle
     setPendingTab(targetTab);
+    rememberReturnTab(targetTab);
     setShowPayment(true);
   };
 
@@ -323,6 +337,7 @@ export default function App() {
 
   const processSuccessfulPayment = (tier) => {
     setTier(tier);
+    takeReturnTab();
     setShowPayment(false);
     if (pendingTab) {
       setActiveTab(pendingTab);
@@ -1212,6 +1227,7 @@ export default function App() {
             // pendingTab from an earlier abandoned locked-tab click hijack navigation
             // once this payment succeeds.
             setPendingTab(null);
+            rememberReturnTab(null);
             setShowPayment(true);
             setShowPricing(false);
           }}
@@ -1230,7 +1246,7 @@ export default function App() {
           country={country}
           action={TIER_ORDER.indexOf(selectedUpgradeTier) < TIER_ORDER.indexOf(userTier) ? 'Downgrade' : 'Upgrade'}
           onSuccess={processSuccessfulPayment}
-          onClose={() => { setShowPayment(false); setPendingTab(null); }}
+          onClose={() => { setShowPayment(false); setPendingTab(null); rememberReturnTab(null); }}
         />
       )}
 
