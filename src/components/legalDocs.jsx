@@ -34,8 +34,8 @@ export const LEGAL_DOCS = [
     tab: 'Terms & Conditions',
     title: 'Terms & Conditions',
     docLabel: 'Document 1 of 3',
-    effective: <Fill>[Effective Date]</Fill>,
-    updated: <Fill>[Last Updated Date]</Fill>,
+    effective: '2 October 2026',
+    updated: '2 October 2026',
     callout: {
       tag: 'Reviewed against SA law — read this first',
       body: (
@@ -238,7 +238,7 @@ export const LEGAL_DOCS = [
               We may change tier pricing or feature composition prospectively. A price change
               never applies retroactively to a billing period you've already paid for; it
               takes effect at your next renewal, and we'll give you at least{' '}
-              <Fill>[30]</Fill> days' notice in-app before it does.
+              30 days' notice in-app before it does.
             </p>
           </>
         )
@@ -266,7 +266,7 @@ export const LEGAL_DOCS = [
               payment; annual plans bill every 12 months. Subscriptions <strong>renew automatically</strong> at the
               then-current price unless cancelled before the renewal date, per Section 9. A
               failed renewal payment may result in an automatic downgrade to the Basic tier
-              after <Fill>[a grace period, e.g. 3 days]</Fill> of retry attempts.
+              after 3 days of retry attempts.
             </p>
           </>
         )
@@ -480,7 +480,7 @@ export const LEGAL_DOCS = [
             possibility of such loss. Our total aggregate liability to you for any and all
             claims arising from or relating to these Terms or the Service is limited to, and
             is your <strong>sole and exclusive remedy</strong> for, the amount you paid us in
-            the 12 months before the claim arose, or <Fill>[R500]</Fill>, whichever is
+            the 12 months before the claim arose, or R500, whichever is
             greater. Multiple claims arising from the same event, or from a related series of
             events, count as a single claim for the purpose of this cap. Nothing in this
             section limits liability that cannot be limited under South African law,
@@ -643,7 +643,7 @@ export const LEGAL_DOCS = [
             <h4>Time Limit on Claims</h4>
             <p>
               Any claim you bring arising out of or relating to these Terms or the Service
-              must be commenced within <Fill>[one year]</Fill> of the date the cause of action
+              must be commenced within one year of the date the cause of action
               arose, failing which it is permanently barred, except where a longer period
               cannot lawfully be shortened by agreement.{' '}
               <Fill>[Flag for counsel: a contractually shortened limitation period may not be
@@ -683,12 +683,12 @@ export const LEGAL_DOCS = [
             regard to conflict-of-law principles. Subject to any non-waivable consumer
             protection you have where you live, disputes arising from these Terms will first
             be attempted to be resolved informally by contacting us at{' '}
-            <Fill>[legal@wtscompoundiq.co.za]</Fill> and allowing <Fill>[30]</Fill> days to
+            <Fill>[legal@wtscompoundiq.co.za]</Fill> and allowing 30 days to
             resolve it. Failing that, at our election, a dispute may instead be referred to
-            arbitration under the rules of <Fill>[the Arbitration Foundation of Southern
-            Africa (AFSA), or your preferred body]</Fill> rather than litigated in court, or
+            arbitration under the rules of the Arbitration Foundation of Southern
+            Africa (AFSA) rather than litigated in court, or
             is otherwise subject to the exclusive jurisdiction of the courts of{' '}
-            <Fill>[South Africa — e.g. Western Cape Division, Cape Town]</Fill>.
+            the Republic of South Africa.
           </p>
         )
       },
@@ -709,8 +709,8 @@ export const LEGAL_DOCS = [
     tab: 'Privacy Policy',
     title: 'Privacy Policy',
     docLabel: 'Document 2 of 3',
-    effective: <Fill>[Effective Date]</Fill>,
-    updated: <Fill>[Last Updated Date]</Fill>,
+    effective: '2 October 2026',
+    updated: '2 October 2026',
     callout: {
       tag: 'Reviewed against POPIA & PAIA — read this first',
       body: (
@@ -815,8 +815,7 @@ export const LEGAL_DOCS = [
               We do not receive or store your card number, CVV, or full billing address.
               The subscription record — your email address, tier, billing period, status, and
               PayFast's reference numbers — is held in a database operated for us by{' '}
-              <Fill>[Supabase, hosted in Frankfurt, Germany — confirm the provider, the
-              region, and that its data-processing terms have been accepted]</Fill>; see
+              Supabase, hosted in Frankfurt, Germany; see
               Security Safeguards below. It is not used for anything else.
             </p>
           </>
@@ -866,16 +865,16 @@ export const LEGAL_DOCS = [
             Section 4. That record sits in a database that is not publicly readable: it can
             be accessed only with a private server key held by the operator, which is kept as
             a protected environment secret and is never included in the app itself. The
-            limited transaction metadata we hold in addition (Section 4) is stored in{' '}
-            <Fill>[describe where: e.g. your accounting software / a spreadsheet, and who can
-            access it]</Fill>, access to which is restricted to{' '}
-            <Fill>[e.g. the founder / named staff]</Fill>. Because your planning data never
+            limited transaction metadata we hold in addition (Section 4) is kept in our
+            PayFast merchant account and the subscription database above, access to which is
+            restricted to the operator and the service providers that run them. Because your
+            planning data never
             leaves your device, there is no central database of it that could be breached;
             the only server-side personal information is the small subscription record above.
             If PayFast or our database provider processes any of the narrow subscription data
             in Section 4 on infrastructure outside South Africa, POPIA section 72's
             cross-border safeguards are met through{' '}
-            <Fill>[confirm: each provider's contractual / data-processing terms]</Fill> and
+            each provider's own contractual and data-processing terms and
             your consent given by proceeding with payment; your planning data never leaves
             your device, so no transfer of it arises.
           </p>
@@ -934,7 +933,7 @@ export const LEGAL_DOCS = [
         heading: 'Data Retention',
         body: (
           <p>
-            The subscription record and transaction records (Section 4) are retained for <Fill>[5 years]</Fill> to meet
+            The subscription record and transaction records (Section 4) are retained for 5 years to meet
             South African tax and accounting record-keeping requirements, then deleted. Your
             local planning data is retained on your own device for as long as you keep it
             there — we have no ability to delete it remotely, because we never had it.
@@ -978,15 +977,15 @@ export const LEGAL_DOCS = [
     tab: 'Refund & Cancellation',
     title: 'Refund & Cancellation Policy',
     docLabel: 'Document 3 of 3',
-    effective: <Fill>[Effective Date]</Fill>,
-    updated: <Fill>[Last Updated Date]</Fill>,
+    effective: '2 October 2026',
+    updated: '2 October 2026',
     callout: {
       tag: 'Reviewed against ECTA & the CPA — read this first',
       body: (
         <p>
           Section 3 adds the statutory ECTA cooling-off right this policy sits on top of;
           Section 5 cross-references the Terms' CPA renewal-notice mechanic for annual plans.
-          The exact numbers below (<Fill>[14 days]</Fill>, grace periods, etc.) are still
+          The exact numbers below (14 days, grace periods, etc.) are still
           your business call, not a legal minimum — this is a substantive review, not a
           formal legal opinion, and the flagged judgment calls are worth an attorney's
           confirmation before publishing.
@@ -1056,7 +1055,7 @@ export const LEGAL_DOCS = [
           <>
             <p>
               If you're not happy with a paid tier, you can request a full refund within{' '}
-              <Fill>[14]</Fill> calendar days of your <strong>first</strong> payment on that
+              14 calendar days of your <strong>first</strong> payment on that
               tier — no reason required. This applies once per person per tier; it isn't
               renewed by re-subscribing after a previous refund, and we may decline a request
               that we reasonably believe is being used to cycle free access — for example,
@@ -1064,7 +1063,7 @@ export const LEGAL_DOCS = [
               methods traceable to the same person.
             </p>
             <p>
-              After the <Fill>[14]</Fill>-day window, subscription payments are non-refundable
+              After the 14-day window, subscription payments are non-refundable
               for the remainder of that billing period — you keep access through the period
               you paid for, and cancellation under Section 2 prevents the next charge.
             </p>
@@ -1101,7 +1100,7 @@ export const LEGAL_DOCS = [
           <p>
             If a renewal payment fails, we'll retry per our processor's standard schedule;
             your tier downgrades to Basic automatically if it's still unresolved after{' '}
-            <Fill>[3 days]</Fill>. If you file a chargeback with your bank instead of
+            3 days. If you file a chargeback with your bank instead of
             contacting us first, we reserve the right to immediately suspend the associated
             access while it's investigated.
           </p>
@@ -1113,9 +1112,9 @@ export const LEGAL_DOCS = [
           <p>
             Email <Fill>[support@wtscompoundiq.co.za]</Fill> with the email address you paid
             with and, if you have it, your transaction reference from PayFast's
-            confirmation. We aim to respond within <Fill>[3]</Fill> business days and, once
+            confirmation. We aim to respond within 3 business days and, once
             approved, refunds are returned to your original payment method within{' '}
-            <Fill>[5–10]</Fill> business days, depending on your bank or card issuer.
+            5–10 business days, depending on your bank or card issuer.
           </p>
         )
       },
