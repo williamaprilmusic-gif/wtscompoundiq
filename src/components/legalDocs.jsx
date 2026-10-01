@@ -164,13 +164,18 @@ export const LEGAL_DOCS = [
           <>
             <p>
               The Service does not require you to register an account or provide a name,
-              email, or password to use its free or paid Tools. Your plan inputs, saved
+              or password to use its Tools (a paid subscription additionally needs the
+              email address you pay with). Your plan inputs, saved
               snapshots, and selected tier are stored only in your own browser's local
               storage — never on our servers, because we don't operate one for this data.
               Clearing your browser's site data, switching browsers, or switching devices
               will lose this information unless you've exported a backup using the in-app
               backup feature — either saving the file to your own device, or emailing a copy
-              to yourself (see the next paragraph).
+              to yourself (see the next paragraph). The only thing we keep on a server is the
+              small subscription record created if you subscribe to a paid tier — your email
+              address, the tier and billing period, and whether the subscription is active —
+              so that your plan can be confirmed and restored; the Privacy Policy describes
+              it in full.
             </p>
             <p>
               The optional <strong>"email a copy"</strong> backup transmits your saved data,
@@ -187,7 +192,7 @@ export const LEGAL_DOCS = [
               browser/device you paid from</strong>, restored via a backup file you saved or
               emailed yourself, recovered with the in-app "Restore your plan" tool using the
               email you paid with, or reissued by us on request — using the contact details
-              in Section 23 — if you can show proof of payment, such as Paystack's emailed
+              in Section 23 — if you can show proof of payment, such as PayFast's emailed
               receipt or transaction reference. See the Privacy Policy for exactly what
               limited data does pass through a third party when you subscribe.
             </p>
@@ -251,7 +256,7 @@ export const LEGAL_DOCS = [
               how paid subscriptions work once live payment processing is enabled.
             </p>
             <p>
-              Paid subscriptions are processed by Paystack, an independent third-party
+              Paid subscriptions are processed by PayFast, an independent third-party
               payment processor. We never receive or store your full card number, CVV, or
               banking credentials — see the Privacy Policy for what limited data is shared
               with the processor to complete your purchase.
@@ -293,9 +298,9 @@ export const LEGAL_DOCS = [
               <li><strong>Return, exchange, and refund policy:</strong> Section 9, and in
                 full in the separate Refund &amp; Cancellation Policy.</li>
               <li><strong>Payment security:</strong> card and bank details are entered
-                directly into Paystack's own checkout, not ours, and handled under its
+                directly into PayFast's own checkout, not ours, and handled under its
                 PCI-DSS-compliant infrastructure — we never see or store them.</li>
-              <li><strong>Transaction record:</strong> Paystack emails you a receipt at the
+              <li><strong>Transaction record:</strong> PayFast emails you a receipt at the
                 time of payment; contact us at{' '}
                 <Fill>[support@wtscompoundiq.co.za]</Fill> for a copy of your transaction
                 history with us at any time.</li>
@@ -440,7 +445,7 @@ export const LEGAL_DOCS = [
             <p>
               <strong>Third-party services.</strong> We're not liable for the acts, omissions,
               downtime, or errors of any third-party service the Service relies on or links
-              to, including our payment processor (Paystack), your browser, your device, or
+              to, including our payment processor (PayFast), your browser, your device, or
               your internet service provider — each is a separate party under its own terms,
               outside our control.
             </p>
@@ -757,7 +762,7 @@ export const LEGAL_DOCS = [
               script, tracking pixel, or third-party script running in the Service beyond
               what's listed in Sections 4 and 5. This is a verifiable architectural claim, not
               boilerplate — the app's only outbound network calls are its own service worker
-              caching its own files for offline use, (only if you subscribe) the payment
+              caching its own files for offline use, (only if you subscribe) our own server confirming your subscription is still active, the payment
               processor's own checkout, and (only if you choose to use it) the optional
               "email a copy" backup described in the next paragraph and in Section 5.
             </p>
@@ -766,7 +771,7 @@ export const LEGAL_DOCS = [
               copy"</strong> backup feature, the JSON file of your saved data is sent from your
               browser to our serverless function and handed straight to a third-party email
               provider (currently Resend) for delivery to the address you typed. It is held in
-              memory only for that moment, is never written to a database (we don't have one),
+              memory only for that moment, is never written to a database or otherwise stored by us,
               and is not retained by us afterwards. A short-lived, best-effort per-address rate
               limit and a payload-size cap apply to discourage misuse. If you never use this
               feature, none of your saved data ever leaves your device.
@@ -781,26 +786,30 @@ export const LEGAL_DOCS = [
             <p>
               If you subscribe to Pro or Ultra, you type your email address
               directly into our own checkout screen — it's the one piece of personal
-              information our own code ever touches, and it exists only to pass straight
-              through to our payment processor, Paystack, which needs it to process the
-              transaction and email you a receipt. Everything else — card or bank details,
-              billing address — goes directly into Paystack's own secure checkout fields,
-              never through our code at all. Paystack processes what it collects as an
-              independent controller under its own privacy policy — we receive back only:
+              information our own systems keep. We pass it to our payment processor,
+              PayFast, which needs it to process the transaction and email you a receipt,
+              and we record it with your subscription. Everything else — card or bank
+              details, billing address — goes directly into PayFast's own secure checkout
+              fields, never through our code at all. PayFast processes what it collects as
+              an independent controller under its own privacy policy. We keep a small
+              subscription record and receive back only:
             </p>
             <ul>
-              <li>A confirmation that payment succeeded, and the tier/plan purchased;</li>
+              <li>A confirmation that payment succeeded, and the tier/plan and billing
+                period purchased;</li>
               <li>The email address you paid with, so we can find your transaction if you
-                contact support or request a refund;</li>
-              <li>A transaction reference and amount, for our own accounting and tax
-                records.</li>
+                contact support, restore your plan, or request a refund;</li>
+              <li>The status of the subscription (active or cancelled) and PayFast's
+                reference numbers for it, so we can unlock — and stop unlocking — your
+                tier, and for our own accounting and tax records.</li>
             </ul>
             <p>
               We do not receive or store your card number, CVV, or full billing address.
-              Your email passes through our checkout screen in memory only — it isn't written
-              to our own database (we don't have one) and isn't the same thing as the email
-              address Paystack reports back to us in the confirmation above, though in
-              practice they're usually the same address.
+              The subscription record — your email address, tier, billing period, status, and
+              PayFast's reference numbers — is held in a database operated for us by{' '}
+              <Fill>[Supabase, hosted in Frankfurt, Germany — confirm the provider, the
+              region, and that its data-processing terms have been accepted]</Fill>; see
+              Security Safeguards below. It is not used for anything else.
             </p>
           </>
         )
@@ -827,9 +836,10 @@ export const LEGAL_DOCS = [
         body: (
           <p>
             The only point at which any personal information is collected — your email,
-            directly by our own checkout screen, and the rest, directly by Paystack's own
+            directly by our own checkout screen, and the rest, directly by PayFast's own
             fields — is checkout. At that point: the purpose is solely to process your
-            payment and activate your subscription; providing it is entirely{' '}
+            payment, activate and maintain your subscription, and restore your plan if you
+            ask; providing it is entirely{' '}
             <strong>voluntary</strong> in the sense that the free Basic tier requires none of
             it — it's only required if you choose to subscribe to a paid tier; the
             consequence of not providing it is simply that the paid tier isn't activated; and
@@ -841,22 +851,25 @@ export const LEGAL_DOCS = [
         heading: 'Security Safeguards',
         body: (
           <p>
-            Card and bank details are entered directly into Paystack's own PCI-DSS-compliant
+            Card and bank details are entered directly into PayFast's own PCI-DSS-compliant
             checkout over an encrypted (TLS/HTTPS) connection — they never transit our own
-            systems at all. Your email address briefly does, in your browser's own memory
-            only, on its way from our checkout screen to Paystack over the same encrypted
-            connection — it's never written to a database of ours (we don't have one) or
-            logged anywhere on our side. The limited transaction metadata we do hold
-            afterward (Section 4) is stored in <Fill>[describe where: e.g. your accounting
-            software / a spreadsheet / a database, and who can access it]</Fill>, access to
-            which is restricted to <Fill>[e.g. the founder / named staff]</Fill>. Because the
-            Service itself has no backend, there is no central database of user planning data
-            that could be breached — the largest practical privacy risk this architecture
-            avoids entirely. If Paystack processes any of the narrow transaction data in
-            Section 4 on infrastructure outside South Africa, POPIA section 72's cross-border
-            safeguards are met through Paystack's own contractual terms and your consent
-            given by proceeding with payment; your planning data never leaves your device,
-            so no transfer of it arises.
+            systems at all. Your email address does pass through our servers over the same
+            encrypted connection and is stored in the subscription record described in
+            Section 4. That record sits in a database that is not publicly readable: it can
+            be accessed only with a private server key held by the operator, which is kept as
+            a protected environment secret and is never included in the app itself. The
+            limited transaction metadata we hold in addition (Section 4) is stored in{' '}
+            <Fill>[describe where: e.g. your accounting software / a spreadsheet, and who can
+            access it]</Fill>, access to which is restricted to{' '}
+            <Fill>[e.g. the founder / named staff]</Fill>. Because your planning data never
+            leaves your device, there is no central database of it that could be breached;
+            the only server-side personal information is the small subscription record above.
+            If PayFast or our database provider processes any of the narrow subscription data
+            in Section 4 on infrastructure outside South Africa, POPIA section 72's
+            cross-border safeguards are met through{' '}
+            <Fill>[confirm: each provider's contractual / data-processing terms]</Fill> and
+            your consent given by proceeding with payment; your planning data never leaves
+            your device, so no transfer of it arises.
           </p>
         )
       },
@@ -1083,7 +1096,7 @@ export const LEGAL_DOCS = [
         body: (
           <p>
             Email <Fill>[support@wtscompoundiq.co.za]</Fill> with the email address you paid
-            with and, if you have it, your transaction reference from Paystack's
+            with and, if you have it, your transaction reference from PayFast's
             confirmation. We aim to respond within <Fill>[3]</Fill> business days and, once
             approved, refunds are returned to your original payment method within{' '}
             <Fill>[5–10]</Fill> business days, depending on your bank or card issuer.

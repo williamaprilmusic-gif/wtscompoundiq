@@ -12,7 +12,9 @@
 // simply gets { status: 'none' }, and a correct one only ever restores the tier that
 // email is genuinely paying for. The token is still HMAC-signed and still expires.
 import { rejectMethod, readJsonBody, sendJson } from '../_lib/http.js';
-import { isCheckoutConfigured, tierForPlanCode } from '../_lib/tiers.js';
+import { tierForPlanCode } from '../_lib/tiers.js';
+import { paymentProvider } from '../_lib/provider.js';
+import { activeSubscriptionsFor } from '../_lib/payfast.js';
 import { paystackApi, pickBestSubscriptionTier } from '../_lib/paystack.js';
 import { signEntitlement } from '../_lib/entitlement.js';
 
@@ -20,7 +22,8 @@ const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 export default async function handler(req, res) {
   if (rejectMethod(req, res, 'POST')) return;
-  if (!isCheckoutConfigured(process.env)) {
+  const provider = paymentProvider(process.env);
+  if (!provider) {
     // Demo mode: no real purchases exist, so there is nothing to restore.
     return sendJson(res, 200, { status: 'unconfigured' });
   }
@@ -31,16 +34,19 @@ export default async function handler(req, res) {
     return sendJson(res, 400, { status: 'bad_email' });
   }
 
-  let list = [];
+  let best = null;
   try {
-    const api = paystackApi(process.env.PAYSTACK_SECRET_KEY);
-    const subs = await api.listSubscriptions({ perPage: 100 });
-    list = Array.isArray(subs) ? subs : (subs && subs.data) || [];
+    if (provider === 'payfast') {
+      [best] = await activeSubscriptionsFor(clean, process.env);
+    } else {
+      const api = paystackApi(process.env.PAYSTACK_SECRET_KEY);
+      const subs = await api.listSubscriptions({ perPage: 100 });
+      const list = Array.isArray(subs) ? subs : (subs && subs.data) || [];
+      best = pickBestSubscriptionTier(list, clean, (code) => tierForPlanCode(code, process.env));
+    }
   } catch (err) {
     return sendJson(res, 502, { status: 'error', message: err.message });
   }
-
-  const best = pickBestSubscriptionTier(list, clean, (code) => tierForPlanCode(code, process.env));
   if (!best) {
     return sendJson(res, 200, { status: 'none' });
   }

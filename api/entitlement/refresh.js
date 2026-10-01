@@ -1,17 +1,19 @@
 // api/entitlement/refresh.js
 // POST /api/entitlement/refresh  { entitlement }
 // The app calls this on load when it holds an entitlement token. The server checks the
-// token's signature, then asks Paystack whether that customer's subscription is still
+// token's signature, then asks the payment provider (Paystack, or our PayFast table) whether that customer's subscription is still
 // active, and either re-issues a fresh token (sliding expiry) or tells the client to
 // downgrade. This is what makes a cancelled/lapsed subscription actually lose access.
 import { rejectMethod, readJsonBody, sendJson } from '../_lib/http.js';
-import { isCheckoutConfigured } from '../_lib/tiers.js';
+import { paymentProvider } from '../_lib/provider.js';
+import { activeSubscriptionsFor } from '../_lib/payfast.js';
 import { paystackApi, subscriptionIsActive } from '../_lib/paystack.js';
 import { verifyEntitlement, signEntitlement } from '../_lib/entitlement.js';
 
 export default async function handler(req, res) {
   if (rejectMethod(req, res, 'POST')) return;
-  if (!isCheckoutConfigured(process.env)) {
+  const provider = paymentProvider(process.env);
+  if (!provider) {
     // Payments turned off again -- tell the client to fall back to demo/basic rather
     // than trusting a stale token forever.
     return sendJson(res, 200, { status: 'unconfigured' });
@@ -25,20 +27,27 @@ export default async function handler(req, res) {
   if (!check.payload) {
     return sendJson(res, 200, { status: 'invalid' });
   }
-  const { email, tier, period } = check.payload;
+  let { email, tier, period } = check.payload;
 
   let active = false;
   try {
-    const api = paystackApi(process.env.PAYSTACK_SECRET_KEY);
-    const subs = await api.listSubscriptions({ perPage: 50 });
-    const list = Array.isArray(subs) ? subs : (subs && subs.data) || [];
-    active = list.some(
-      (s) =>
-        s &&
-        s.customer &&
-        String(s.customer.email || '').toLowerCase() === String(email).toLowerCase() &&
-        subscriptionIsActive(s)
-    );
+    if (provider === 'payfast') {
+      // PayFast has no list-by-email API, so the ITN webhook keeps our own table current.
+      // Take the best active plan so an upgrade is reflected on the next load.
+      const [best] = await activeSubscriptionsFor(email, process.env);
+      if (best) { active = true; tier = best.tier; period = best.period; }
+    } else {
+      const api = paystackApi(process.env.PAYSTACK_SECRET_KEY);
+      const subs = await api.listSubscriptions({ perPage: 50 });
+      const list = Array.isArray(subs) ? subs : (subs && subs.data) || [];
+      active = list.some(
+        (s) =>
+          s &&
+          s.customer &&
+          String(s.customer.email || '').toLowerCase() === String(email).toLowerCase() &&
+          subscriptionIsActive(s)
+      );
+    }
   } catch (err) {
     // Can't reach Paystack: don't punish a paying user for our outage. If their token
     // is still valid, keep it; if it had expired, grant a short renewal so they get

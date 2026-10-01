@@ -1,7 +1,7 @@
 // src/components/PaymentSection.jsx
 import React, { useEffect, useState } from 'react';
 import './PaymentSection.css';
-import { getPaymentsConfig } from '../utils/entitlement';
+import { getPaymentsConfig, PAYFAST_PENDING_KEY } from '../utils/entitlement';
 
 const SA_BANKS = [
   'Absa Bank',
@@ -30,14 +30,17 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
   const [paymentMethod, setPaymentMethod] = useState('card');
   // The app has no account system (see Terms § "No Account, Local-First Data") -- this
   // is the ONLY place anywhere in the app that ever asks for an email address, and only
-  // because Paystack requires one per transaction (for the receipt and to de-duplicate
-  // a returning customer). In live mode it's posted to our /api/paystack/init and then
-  // straight on to Paystack; this app never stores it.
+  // because the payment processor requires one per transaction (for the receipt and to
+  // de-duplicate a returning customer). In live mode it's posted to our /api/<provider>/init
+  // and on to the processor; with PayFast it is also kept in the subscription record (see
+  // the Privacy Policy, "Information We Do Collect") so a plan can be confirmed and restored.
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState(false);
   const [checkoutError, setCheckoutError] = useState('');
   // 'loading' until /api/config answers, then 'live' (real Paystack) or 'demo' (no charge).
   const [mode, setMode] = useState('loading');
+  // Which processor is live: 'payfast' | 'paystack' (from /api/config).
+  const [provider, setProvider] = useState('paystack');
   const periodLabel = period === 'annual' ? '/yr' : '/mo';
   const priceLabel = typeof price === 'number' ? `R${price.toLocaleString()}${periodLabel}` : price;
 
@@ -51,16 +54,46 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
         cfg.availablePlans[tier].includes(period) &&
         typeof price === 'number';
       setMode(livePlan ? 'live' : 'demo');
+      setProvider(cfg?.provider === 'payfast' ? 'payfast' : 'paystack');
     });
     return () => { alive = false; };
   }, [tier, period, price]);
 
-  // --- LIVE: hand off to Paystack's hosted checkout -------------------------------
+  // --- LIVE: hand off to the processor's hosted checkout --------------------------
   const startLiveCheckout = async () => {
     if (!EMAIL_RE.test(email.trim())) { setEmailError(true); return; }
     setProcessing(true);
     setCheckoutError('');
     try {
+      if (provider === 'payfast') {
+        const pfRes = await fetch('/api/payfast/init', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim(), tier, period })
+        });
+        const pf = await pfRes.json().catch(() => ({}));
+        if (pfRes.ok && pf.action && pf.fields) {
+          // Remember the receipt id so a slow webhook can be picked up on the next load.
+          try { localStorage.setItem(PAYFAST_PENDING_KEY, pf.paymentId); } catch { /* ignore */ }
+          // PayFast's checkout is a form POST, not a redirect URL (CSP form-action allows it).
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = pf.action;
+          for (const [name, value] of Object.entries(pf.fields)) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = name;
+            input.value = value;
+            form.appendChild(input);
+          }
+          document.body.appendChild(form);
+          form.submit();
+          return;
+        }
+        setCheckoutError('Could not start checkout. Please try again.');
+        setProcessing(false);
+        return;
+      }
       const res = await fetch('/api/paystack/init', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -106,8 +139,10 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
           <button className="close-btn" onClick={onClose} aria-label="Close">&times;</button>
           <h3>{action} to {tier}</h3>
           <p className="payment-sub">
-            <strong>{priceLabel}</strong>, billed {period === 'annual' ? 'yearly' : 'every 30 days'} via Paystack.
-            You can cancel anytime from the app.
+            <strong>{priceLabel}</strong>, billed {period === 'annual' ? 'yearly' : provider === 'payfast' ? 'monthly' : 'every 30 days'} via {provider === 'payfast' ? 'PayFast' : 'Paystack'}.
+            {provider === 'payfast'
+              ? ' You can cancel anytime from your PayFast account or the link in your PayFast receipt email.'
+              : ' You can cancel anytime from the app.'}
           </p>
 
           <input
@@ -125,7 +160,7 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
             {processing ? 'Starting checkout…' : 'Continue to secure checkout →'}
           </button>
           <small className="secure-note">
-            🔒 Card details are entered on Paystack's own PCI-DSS-compliant page — never on this site.
+            🔒 Card details are entered on {provider === 'payfast' ? "PayFast's" : "Paystack's"} own PCI-DSS-compliant page — never on this site.
           </small>
         </div>
       </div>

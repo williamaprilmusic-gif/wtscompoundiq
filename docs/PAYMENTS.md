@@ -1,4 +1,50 @@
-# Live payments (Paystack subscriptions)
+# Live payments (PayFast or Paystack subscriptions)
+
+> **PayFast** is the preferred provider and is described first below; the Paystack
+> sections that follow still work unchanged. If both are configured, PayFast wins
+> (`api/_lib/provider.js`). `GET /api/config` reports which one is live.
+
+## PayFast
+
+Same entitlement-token design as Paystack (signed token in the browser, re-checked on
+every load), with one difference: PayFast can't be asked "does this email have an active
+subscription?", so a small Supabase table (`public.subscriptions`, RLS on, no public
+policies, service-role access only) records each checkout and is kept current by
+PayFast's **ITN webhook**.
+
+1. **Checkout** — `POST /api/payfast/init { email, tier, period }` stores a `pending`
+   row and returns a signed form. The browser POSTs it to PayFast's hosted page.
+   Amounts come from `PRICES` in `api/_lib/payfast.js`, **never** from the browser;
+   `payfast.test.js` fails if they drift from `TierPricing.jsx`.
+2. **Webhook** — PayFast calls `POST /api/payfast/itn`. It only activates the row after
+   four checks: signature (ITN signatures *include* blank fields), source IP is PayFast,
+   amount matches our price, and PayFast's own `/eng/query/validate` says VALID. Every
+   rejection is logged with its reason (Vercel → Logs).
+3. **Return** — PayFast sends the buyer to `/?payment=return&pid=…`; the app polls
+   `POST /api/payfast/verify` until the webhook has landed, then stores the same signed
+   entitlement token Paystack issues.
+4. **Revalidate / restore** — `/api/entitlement/refresh` and `/restore` read the table
+   instead of calling Paystack. A cancelled subscription (webhook `CANCELLED`) lapses
+   on the next load.
+
+### PayFast environment variables
+
+| Variable | What it is |
+| --- | --- |
+| `PAYFAST_ENV` | `sandbox` (default, no real money) or `live`. `PAYFAST_MODE` also works. |
+| `PAYFAST_MERCHANT_ID`, `PAYFAST_MERCHANT_KEY`, `PAYFAST_PASSPHRASE` | **Live** merchant credentials (PayFast dashboard → Settings → Integration). Used only when `PAYFAST_ENV=live`. |
+| `PAYFAST_SANDBOX_MERCHANT_ID`, `PAYFAST_SANDBOX_MERCHANT_KEY`, `PAYFAST_SANDBOX_PASSPHRASE` | Your own free account from sandbox.payfast.co.za. Used only in sandbox. PayFast's shared test merchant (10000100) rejects signed requests, so don't use it. |
+| `ENTITLEMENT_SECRET` | Long random string; signs entitlement tokens (same as Paystack). |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | The billing project. The service-role key bypasses RLS — server only, never `VITE_`-prefixed. |
+| `PUBLIC_BASE_URL` | Optional origin override for the return/notify URLs. |
+
+Going live: set `PAYFAST_ENV=live`, redeploy, then make one small real purchase yourself
+before announcing. Cancelling happens in the buyer's PayFast account / receipt email
+(there is no in-app cancel for PayFast yet).
+
+---
+
+# Paystack
 
 The app ships in **demo mode** — the upgrade modal simulates a charge and unlocks the
 tier locally, nothing is billed. It switches itself to **live mode** the moment the

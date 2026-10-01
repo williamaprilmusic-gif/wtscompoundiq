@@ -35,7 +35,7 @@ import WealthPath from './components/WealthPath';
 import { buildShareUrl, parseShareParams, clearShareParamsFromUrl } from './utils/shareLink';
 import { downloadCSV } from './utils/csv';
 import { uniqueId } from './utils/uniqueId';
-import { readEntitlement, refreshEntitlement, clearEntitlement, consumePaystackRedirect } from './utils/entitlement';
+import { readEntitlement, refreshEntitlement, clearEntitlement, consumePaystackRedirect, consumePayfastReturn } from './utils/entitlement';
 import { projectionMilestones } from './projectionMilestones';
 import { solveMonthlyForGoal } from './goalSolver';
 import { ruleOf72 } from './ruleOf72';
@@ -266,10 +266,14 @@ export default function App() {
     else if (savedTier) setUserTier(savedTier);
 
     (async () => {
-      const granted = await consumePaystackRedirect();
+      const granted = (await consumePaystackRedirect()) || (await consumePayfastReturn());
       if (cancelled) return;
       if (granted && granted.tier) {
         setTier(granted.tier);
+        return;
+      }
+      if (granted && granted.pending) {
+        setTierChangeMsg('Your payment is still being confirmed by PayFast. Your plan unlocks automatically the next time you open the app — no need to pay again.');
         return;
       }
       if (ent) {

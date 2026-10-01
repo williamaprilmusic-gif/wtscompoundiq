@@ -133,6 +133,59 @@ export const consumePaystackRedirect = async () => {
   }
 };
 
+// --- PayFast return -------------------------------------------------------------
+// PayFast sends the buyer back to /?payment=return&pid=<id>. Their ITN webhook (server to
+// server) activates the subscription and can land a few seconds after the redirect, so
+// this polls /api/payfast/verify briefly. If it still hasn't landed, the id is kept so the
+// next load tries once more. Returns { tier, period, email } when granted, { pending: true }
+// when still waiting, or null when there is nothing to do / it was cancelled.
+export const PAYFAST_PENDING_KEY = 'wts_compoundiq_payfast_pending';
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export const consumePayfastReturn = async () => {
+  let params;
+  try { params = new URLSearchParams(window.location.search); } catch { return null; }
+  const status = params.get('payment');
+  const stored = (() => { try { return localStorage.getItem(PAYFAST_PENDING_KEY); } catch { return null; } })();
+  const returning = status === 'return';
+  const pid = returning ? params.get('pid') : stored;
+
+  if (status) {
+    try {
+      ['payment', 'pid'].forEach((k) => params.delete(k));
+      const qs = params.toString();
+      window.history.replaceState({}, '', window.location.pathname + (qs ? `?${qs}` : '') + window.location.hash);
+    } catch { /* ignore */ }
+  }
+  const forget = () => { try { localStorage.removeItem(PAYFAST_PENDING_KEY); } catch { /* ignore */ } };
+  if (status === 'cancelled') { forget(); return null; }
+  if (!pid || !UUID_RE.test(pid)) return null;
+
+  const attempts = returning ? 10 : 1;
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      const res = await fetch('/api/payfast/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentId: pid })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.status === 'active' && data.entitlement) {
+        storeEntitlement(data.entitlement);
+        forget();
+        return { tier: data.tier, period: data.period, email: data.email };
+      }
+      if (res.status === 402 || res.status === 404) { forget(); return null; } // failed / unknown
+    } catch { /* network blip: keep trying */ }
+    if (attempt < attempts - 1) await new Promise((r) => setTimeout(r, 3000));
+  }
+  if (returning) {
+    try { localStorage.setItem(PAYFAST_PENDING_KEY, pid); } catch { /* ignore */ }
+    return { pending: true };
+  }
+  return null;
+};
+
 // Fetch runtime payment config (live vs demo). Cached for the page's lifetime.
 let _configPromise = null;
 export const getPaymentsConfig = () => {
@@ -140,7 +193,7 @@ export const getPaymentsConfig = () => {
     _configPromise = fetch('/api/config')
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null)
-      .then((c) => c || { paymentsMode: 'demo', paystackPublicKey: null, availablePlans: {} });
+      .then((c) => c || { paymentsMode: 'demo', provider: null, paystackPublicKey: null, availablePlans: {} });
   }
   return _configPromise;
 };
