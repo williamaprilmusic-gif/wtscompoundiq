@@ -37,8 +37,10 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState(false);
   const [checkoutError, setCheckoutError] = useState('');
-  // 'loading' until /api/config answers, then 'live' (real Paystack) or 'demo' (no charge).
+  // 'loading' until /api/config answers, then 'live' (real checkout), 'demo' (no charge,
+  // only when the server says so) or 'unavailable' (config failed or this plan isn't offered).
   const [mode, setMode] = useState('loading');
+  const [attempt, setAttempt] = useState(0); // bumped by "Try again" to re-fetch /api/config
   // Which processor is live: 'payfast' | 'paystack' (from /api/config).
   const [provider, setProvider] = useState('paystack');
   const periodLabel = period === 'annual' ? '/yr' : '/mo';
@@ -53,11 +55,20 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
         Array.isArray(cfg.availablePlans?.[tier]) &&
         cfg.availablePlans[tier].includes(period) &&
         typeof price === 'number';
-      setMode(livePlan ? 'live' : 'demo');
+      // A failed config fetch or an unoffered plan is NEVER demo mode: demo grants the tier
+      // for free, so only an explicit server answer of 'demo' may reach it.
+      setMode(livePlan ? 'live' : cfg?.paymentsMode === 'demo' ? 'demo' : 'unavailable');
       setProvider(cfg?.provider === 'payfast' ? 'payfast' : 'paystack');
     });
     return () => { alive = false; };
-  }, [tier, period, price]);
+  }, [tier, period, price, attempt]);
+
+  // Escape closes the dialog.
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   // --- LIVE: hand off to the processor's hosted checkout --------------------------
   const startLiveCheckout = async () => {
@@ -122,11 +133,20 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
     }, 600);
   };
 
-  if (mode === 'loading') {
+  if (mode === 'loading' || mode === 'unavailable') {
+    const failed = mode === 'unavailable';
     return (
       <div className="payment-overlay">
-        <div className="payment-card">
-          <p className="payment-sub">Loading checkout…</p>
+        <div className="payment-card" role="dialog" aria-modal="true" aria-label="Checkout">
+          <button className="close-btn" onClick={onClose} aria-label="Close">&times;</button>
+          <p className="payment-sub">
+            {failed ? "Checkout isn't available right now. Please check your connection and try again." : 'Loading checkout…'}
+          </p>
+          {failed && (
+            <button className="btn-pay now" onClick={() => { setMode('loading'); setAttempt((n) => n + 1); }}>
+              Try again
+            </button>
+          )}
         </div>
       </div>
     );
@@ -135,7 +155,7 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
   if (mode === 'live') {
     return (
       <div className="payment-overlay">
-        <div className="payment-card">
+        <div className="payment-card" role="dialog" aria-modal="true" aria-label={`${action} to ${tier}`}>
           <button className="close-btn" onClick={onClose} aria-label="Close">&times;</button>
           <h3>{action} to {tier}</h3>
           <p className="payment-sub">
@@ -170,7 +190,7 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
   // --- DEMO MODE (default when live payments aren't configured) ------------------
   return (
     <div className="payment-overlay">
-      <div className="payment-card">
+      <div className="payment-card" role="dialog" aria-modal="true" aria-label={`Demo ${action}`}>
         <button className="close-btn" onClick={onClose} aria-label="Close">&times;</button>
         <h3>Demo {action} <span className="demo-badge">No Charge</span></h3>
         <p className="payment-sub">You are previewing <strong>{tier}</strong> (normally <strong>{priceLabel}</strong>). This is a demo checkout -- no card is charged and no payment is processed.</p>

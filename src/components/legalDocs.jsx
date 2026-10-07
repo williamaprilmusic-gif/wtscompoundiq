@@ -8,10 +8,10 @@
 // position (1..N), so reordering or inserting a section renumbers everything automatically
 // and the "Section N" cross-references in the prose stay the single thing to keep in sync.
 //
-// The operating company is Warrr Tech Solutions (trading as WTS CompoundIQ). Its
-// registration number and physical/business address are deliberately NOT stated, at the
-// operator's instruction -- see the [Flag for counsel] notes in Terms Section 1 and
-// Section 8 about the ECTA s43(1) e-commerce disclosure implication.
+// The operating company is Warrr Tech Solutions (trading as WTS CompoundIQ). It
+// is an unregistered trading name (no registration number, not VAT-registered), and no
+// physical/business address is stated -- see the [Flag for counsel] notes in Terms
+// Section 1 and Section 8 about the ECTA s43(1) e-commerce disclosure implication.
 //
 // <Fill> marks a detail still to be supplied (support emails, effective dates, the
 // Information Officer's name, and the few numbers left as a business call). It renders
@@ -73,12 +73,11 @@ export const LEGAL_DOCS = [
               WTS CompoundIQ, governing your access to and use of WTS CompoundIQ,
               including its website, calculators, and any related tools (together, the
               "<strong>Service</strong>").{' '}
-              <Fill>[Flag for counsel: ECTA s43(1) requires an e-commerce supplier to
-              disclose its legal status, registration number (if registered), and
-              physical/business address. Those are deliberately omitted here at the
-              operator's instruction -- confirm whether a registered address must still be
-              added before the checkout goes live, or whether a trading name + email
-              contact is sufficient for how this Service actually operates.]</Fill>
+              Warrr Tech Solutions is an unregistered trading name of its owner: it is
+              not a registered company, has no company registration number, and is not
+              registered for VAT. <Fill>[Flag for counsel: ECTA s43(1) also asks an
+              e-commerce supplier for a physical/business address, which is not stated
+              here -- confirm whether one must be added before the checkout goes live.]</Fill>
             </p>
             <p>
               By creating a plan, upgrading to a paid tier, or otherwise using the Service,
@@ -275,10 +274,10 @@ export const LEGAL_DOCS = [
             <ul>
               <li><strong>Supplier:</strong> Warrr Tech Solutions, the operator of WTS
                 CompoundIQ (Section 1); contactable at the email address in Section 23.
-                <Fill>[Flag for counsel: a registration number and physical address are
-                omitted at the operator's instruction -- see the note in Section 1 on
-                whether ECTA s43(1)(a)-(c) still needs them added before checkout goes
-                live.]</Fill></li>
+                Warrr Tech Solutions is an unregistered trading name with no company
+                registration number. <Fill>[Flag for counsel: no physical address is
+                stated -- see the note in Section 1 on whether ECTA s43(1)(a)-(c) needs one
+                before checkout goes live.]</Fill></li>
               <li><strong>Main characteristics of the Service:</strong> Section 2.</li>
               <li><strong>Full price</strong>, including VAT where applicable, and no
                 undisclosed charges: Section 6. Warrr Tech Solutions is not

@@ -208,14 +208,25 @@ export const consumePayfastReturn = async () => {
   return null;
 };
 
-// Fetch runtime payment config (live vs demo). Cached for the page's lifetime.
+// Fetch runtime payment config (live vs demo). A good answer is cached for the page's
+// lifetime. A FAILED fetch (network, 5xx, timeout) resolves to { failed: true } and is NOT
+// cached: it must never read as "demo mode", which would hand out free upgrades whenever
+// the config call hiccups. Callers treat `failed` as "checkout unavailable, try again".
 let _configPromise = null;
 export const getPaymentsConfig = () => {
   if (!_configPromise) {
-    _configPromise = fetch('/api/config')
+    const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+    const timer = ctl ? setTimeout(() => ctl.abort(), 8000) : null;
+    const p = fetch('/api/config', ctl ? { signal: ctl.signal } : undefined)
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null)
-      .then((c) => c || { paymentsMode: 'demo', provider: null, paystackPublicKey: null, availablePlans: {} });
+      .then((c) => {
+        if (timer) clearTimeout(timer);
+        if (c && (c.paymentsMode === 'live' || c.paymentsMode === 'demo')) return c;
+        if (_configPromise === p) _configPromise = null; // don't cache a failure
+        return { failed: true, paymentsMode: null, provider: null, paystackPublicKey: null, availablePlans: {} };
+      });
+    _configPromise = p;
   }
   return _configPromise;
 };

@@ -1,5 +1,5 @@
 // src/App.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import './App.css';
 import TierPricing, { UPGRADE_PRICES, TIER_ORDER } from './components/TierPricing';
 import PaymentSection from './components/PaymentSection';
@@ -35,7 +35,7 @@ import WealthPath from './components/WealthPath';
 import { buildShareUrl, parseShareParams, clearShareParamsFromUrl } from './utils/shareLink';
 import { downloadCSV } from './utils/csv';
 import { uniqueId } from './utils/uniqueId';
-import { readEntitlement, refreshEntitlement, clearEntitlement, consumePaystackRedirect, consumePayfastReturn, cancelSubscription } from './utils/entitlement';
+import { readEntitlement, refreshEntitlement, clearEntitlement, consumePaystackRedirect, consumePayfastReturn, cancelSubscription, getPaymentsConfig } from './utils/entitlement';
 import { projectionMilestones } from './projectionMilestones';
 import { solveMonthlyForGoal } from './goalSolver';
 import { ruleOf72 } from './ruleOf72';
@@ -80,6 +80,11 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState(() => shareParams ? 'Calculator' : 'Start Here');
   const [userTier, setUserTier] = useState('Basic');
+  // True only when the server explicitly says payments are in demo mode. In every other
+  // case (live, or the config couldn't be fetched) the plain localStorage tier string is
+  // neither trusted nor written: otherwise any visitor could unlock paid tabs from the
+  // console, and a lapsed subscriber would keep their tier after the token expired.
+  const legacyTierAllowed = useRef(false);
   // Dark is this app's original, always-on look -- only switch to light if the user
   // explicitly chose it last time (no OS prefers-color-scheme auto-detection, since
   // the app never followed system theme before and silently flipping on a light-OS
@@ -266,17 +271,25 @@ export default function App() {
   //      signed entitlement, unlock its tier.
   //   2. An existing signed entitlement in localStorage -> unlock its tier now, then
   //      revalidate it against Paystack in the background and downgrade if it lapsed.
-  //   3. The legacy plain `wts_compoundiq_tier` string -> demo-mode / manually-set tier,
-  //      unchanged behaviour for when live payments aren't configured.
+  //   3. The legacy plain `wts_compoundiq_tier` string -> demo mode only (the server
+  //      explicitly reports paymentsMode 'demo'). With live payments it is ignored and removed.
   useEffect(() => {
     let cancelled = false;
 
     const savedTier = (() => { try { return normalizeTier(localStorage.getItem('wts_compoundiq_tier')); } catch { return null; } })();
     const ent = readEntitlement();
     if (ent) setUserTier(normalizeTier(ent.tier));
-    else if (savedTier) setUserTier(savedTier);
 
     (async () => {
+      const cfg = await getPaymentsConfig();
+      if (cancelled) return;
+      legacyTierAllowed.current = !cfg.failed && cfg.paymentsMode === 'demo';
+      if (legacyTierAllowed.current) {
+        if (!ent && savedTier) setUserTier(savedTier);
+      } else if (!cfg.failed) {
+        // Live payments: the signed entitlement is the only source of truth.
+        try { localStorage.removeItem('wts_compoundiq_tier'); } catch { /* ignore */ }
+      }
       const granted = (await consumePaystackRedirect()) || (await consumePayfastReturn());
       if (cancelled) return;
       if (granted && granted.tier) {
@@ -295,8 +308,8 @@ export default function App() {
         if (['lapsed', 'invalid', 'unconfigured'].includes(outcome)) {
           clearEntitlement();
           // Only force a downgrade if the entitlement was what was unlocking the tier;
-          // don't stomp a legacy/demo tier the user set another way.
-          if (!savedTier || savedTier === ent.tier) {
+          // don't stomp a demo tier the user set another way.
+          if (!legacyTierAllowed.current || !savedTier || savedTier === ent.tier) {
             setUserTier('Basic');
             try { localStorage.removeItem('wts_compoundiq_tier'); } catch { /* ignore */ }
           }
@@ -331,7 +344,9 @@ export default function App() {
   const setTier = (rawTier) => {
     const tier = normalizeTier(rawTier);
     setUserTier(tier);
-    try { localStorage.setItem('wts_compoundiq_tier', tier); } catch { /* private mode / quota */ }
+    if (legacyTierAllowed.current) {
+      try { localStorage.setItem('wts_compoundiq_tier', tier); } catch { /* private mode / quota */ }
+    }
     setTierChangeMsg(tier === 'Basic' ? "You're now on the free Basic plan." : `You're now on ${tier} — premium features unlocked.`);
   };
 
