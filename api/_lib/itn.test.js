@@ -1,4 +1,4 @@
-// api/payfast/itn.test.js
+// api/_lib/itn.test.js
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // PayFast's source IPs are looked up in DNS; pin them so the IP check is deterministic.
@@ -7,8 +7,8 @@ vi.mock('node:dns/promises', () => ({
   resolve4: async () => ['41.74.179.194']
 }));
 
-import handler from './itn.js';
-import { sign } from '../_lib/payfast.js';
+import handler from '../payfast/itn.js';
+import { sign } from './payfast.js';
 
 const PASS = 'itn test passphrase';
 const PID = 'a50e31dd-be5b-44cd-a126-df04a27a88da';

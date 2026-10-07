@@ -1,6 +1,6 @@
-// api/entitlement/restore.test.js
+// api/_lib/restore.test.js
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import handler from './restore.js';
+import handler from '../entitlement/restore.js';
 
 const run = async (req) => {
   const res = { code: 0, out: null, status(c) { this.code = c; return this; }, setHeader() {}, end(t) { try { this.out = JSON.parse(t); } catch { this.out = t; } } };
