@@ -112,7 +112,7 @@ export const restoreEntitlement = async (email) => {
       storeEntitlement(data.entitlement);
       return { status: 'restored', tier: data.tier, period: data.period };
     }
-    if (['none', 'unconfigured', 'bad_email'].includes(data.status)) return { status: data.status };
+    if (['none', 'unconfigured', 'bad_email', 'unavailable'].includes(data.status)) return { status: data.status };
     return { status: 'error' };
   } catch {
     return { status: 'error' };

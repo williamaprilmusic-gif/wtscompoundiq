@@ -23,25 +23,23 @@ export default async function handler(req, res) {
   try {
     txn = await paystackApi(process.env.PAYSTACK_SECRET_KEY).verifyTransaction(reference.trim());
   } catch (err) {
-    return sendJson(res, 502, { error: 'paystack_verify_failed', message: err.message });
+    return sendJson(res, 502, { error: 'paystack_verify_failed' });
   }
 
   if (!txn || txn.status !== 'success') {
     return sendJson(res, 402, { error: 'payment_not_successful', status: txn && txn.status });
   }
 
-  // A subscription transaction reports the plan it was for. Fall back to the metadata
-  // we set at init time if the shape ever differs.
+  // A subscription transaction reports the plan it was for. Never fall back to
+  // txn.metadata: the client controls it on a self-made Paystack transaction, so it can
+  // not be trusted to say which tier was paid for.
   const planCode =
     (txn.plan && (txn.plan.plan_code || txn.plan)) ||
     (txn.plan_object && txn.plan_object.plan_code) ||
     null;
   let mapped = tierForPlanCode(planCode, process.env);
-  if (!mapped && txn.metadata && txn.metadata.tier && txn.metadata.period) {
-    mapped = { tier: txn.metadata.tier, period: txn.metadata.period };
-  }
   if (!mapped) {
-    return sendJson(res, 422, { error: 'unrecognised_plan', planCode });
+    return sendJson(res, 422, { error: 'unrecognised_plan' });
   }
 
   const email = (txn.customer && txn.customer.email) || '';

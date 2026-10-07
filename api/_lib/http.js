@@ -22,7 +22,12 @@ export const rejectMethod = (req, res, allowed) => {
 
 // Parse a JSON body whether the platform pre-parsed it (req.body is an object) or not
 // (req.body is a string, or we have to read the stream). Returns {} on empty/invalid.
+const asObject = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
 export const readJsonBody = async (req) => {
+  const out = await parseJsonBody(req);
+  return asObject(out);
+};
+const parseJsonBody = async (req) => {
   if (req.body && typeof req.body === 'object') return req.body;
   if (typeof req.body === 'string' && req.body.length) {
     try { return JSON.parse(req.body); } catch { return {}; }

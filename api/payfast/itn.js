@@ -2,6 +2,7 @@
 // POST /api/payfast/itn -- PayFast's Instant Transaction Notification webhook. Activates
 // / cancels a subscription only after all four PayFast-mandated checks pass:
 //   1. signature  2. source IP is PayFast  3. amount matches our price  4. PayFast confirms.
+import crypto from 'node:crypto';
 import dns from 'node:dns/promises';
 import { sendJson } from '../_lib/http.js';
 import { getConfig, PRICES, sign, db, paidThrough, UUID_RE } from '../_lib/payfast.js';
@@ -31,6 +32,13 @@ const readEntries = (req) => {
   return Object.entries(raw || {});
 };
 
+// Constant-time string compare, so the signature check leaks nothing through timing.
+const safeEqual = (a, b) => {
+  const x = Buffer.from(String(a ?? ''));
+  const y = Buffer.from(String(b ?? ''));
+  return x.length === y.length && crypto.timingSafeEqual(x, y);
+};
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -42,8 +50,12 @@ export default async function handler(req, res) {
 
   try {
     // ITN signatures keep blank fields (custom_str1=...), unlike checkout signatures.
-    if (sign(entries, cfg.passphrase, true) !== data.signature) {
+    if (!safeEqual(sign(entries, cfg.passphrase, true), data.signature)) {
       return reject(res, 'bad_signature', `fields=${entries.map(([k]) => k).join(',')}`);
+    }
+    // Defence in depth: a notification for a different merchant is never ours.
+    if (data.merchant_id && cfg.merchantId && String(data.merchant_id) !== String(cfg.merchantId)) {
+      return reject(res, 'wrong_merchant');
     }
     if (!(await fromPayFast(req))) {
       return reject(res, 'bad_source', `ip=${String(req.headers['x-forwarded-for'] || '')}`);
@@ -91,6 +103,12 @@ export default async function handler(req, res) {
     // A SUPERSEDED row is one we retired on purpose when the buyer started a newer plan;
     // late/renewal notifications for it must not bring it back to life.
     if (row.status === 'superseded') return sendJson(res, 200, { received: true });
+    // Late or retried deliveries must not undo a newer state: a COMPLETE for a plan the buyer
+    // already cancelled is ignored, and a COMPLETE carrying the payment id we already
+    // recorded (a PayFast retry after a 5xx) must not extend access a second time.
+    if (status === 'active' && (row.status === 'cancelled' || data.pf_payment_id === row.last_pf_payment_id && row.status === 'active')) {
+      return sendJson(res, 200, { received: true });
+    }
     await db(`subscriptions?payment_id=eq.${pid}`, {
       method: 'PATCH',
       body: {

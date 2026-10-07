@@ -11,6 +11,7 @@ import { restoreEntitlement } from '../utils/entitlement';
 const MESSAGES = {
   none: "No active subscription found for that email. Check the address you paid with, or contact support.",
   unconfigured: "Live billing isn't switched on for this app yet, so there's no purchase to restore.",
+  unavailable: "Automatic restore is switched off while we add email verification. Email warrrtechsolutions@gmail.com from the address you paid with and we'll restore your plan by hand.",
   bad_email: 'That doesn\'t look like a valid email address.',
   error: "Couldn't reach the server just now. Try again in a moment."
 };

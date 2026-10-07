@@ -105,6 +105,29 @@ describe('COMPLETE (grants access: full checks)', () => {
     expect(row().status).toBe('pending');
   });
 
+  it('ignores a late/retried COMPLETE for a plan the buyer already cancelled', async () => {
+    rows[0].status = 'cancelled';
+    const r = await run(notice(COMPLETE));
+    expect(r.code).toBe(200);
+    expect(row().status).toBe('cancelled');
+  });
+
+  it('does not extend paid_through again when PayFast retries the same payment', async () => {
+    rows[0].status = 'active';
+    rows[0].last_pf_payment_id = '3423142';
+    rows[0].paid_through = '2026-01-01T00:00:00.000Z';
+    const next = new Date(Date.now() + 20 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+    const r = await run(notice({ ...COMPLETE, billing_date: next }));
+    expect(r.code).toBe(200);
+    expect(row().paid_through).toBe('2026-01-01T00:00:00.000Z');
+  });
+
+  it('rejects a notification for a different merchant', async () => {
+    const r = await run(notice({ ...COMPLETE, merchant_id: '99999999' }));
+    expect(r.code).toBe(400);
+    expect(row().status).toBe('pending');
+  });
+
   it('ignores a late COMPLETE for a row we deliberately superseded', async () => {
     rows[0].status = 'superseded';
     const r = await run(notice(COMPLETE));
