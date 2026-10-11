@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import './MyPlan.css';
 import { daysBetween, fmtDaysAgo } from '../utils/dateAgo';
 import { PLAN_STORAGE_KEY, readPlan, loanEffectiveMonthlyPayment, loanEffectiveTermLabel } from '../utils/planStorage';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const REMINDER_KEY = 'wts_compoundiq_reminder_at';
 const REMINDER_NOTIFIED_KEY = 'wts_compoundiq_reminder_notified_at';
@@ -39,6 +40,7 @@ const readBranding = () => {
 };
 
 const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
+  const { t } = useLanguage();
   const [snapshot, setSnapshot] = useState(null);
   const [currentDebtBalance, setCurrentDebtBalance] = useState('');
   const [currentEfBalance, setCurrentEfBalance] = useState('');
@@ -114,7 +116,7 @@ const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
       // notification on every single visit.
       const alreadyNotified = localStorage.getItem(REMINDER_NOTIFIED_KEY) === storedReminder;
       if (due && !alreadyNotified && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-        new Notification('WTS CompoundIQ', { body: "It's been 30 days -- time for your plan check-in." });
+        new Notification('WTS CompoundIQ', { body: t('plan.notifBody') });
         localStorage.setItem(REMINDER_NOTIFIED_KEY, storedReminder);
       }
     }
@@ -137,7 +139,7 @@ const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
   };
 
   const clearPlan = () => {
-    if (!window.confirm("Clear your saved plan? This removes your saved Debt Payoff, Emergency Fund, Loan/Bond, and FIRE snapshots from My Plan -- it doesn't affect those tabs themselves.")) return;
+    if (!window.confirm(t('plan.clearConfirm'))) return;
     localStorage.removeItem(PLAN_STORAGE_KEY);
     setSnapshot(null);
     setCurrentDebtBalance('');
@@ -211,16 +213,16 @@ const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
     <div className="plan-reminder">
       {reminderDue ? (
         <>
-          <span className="plan-reminder-due">⏰ It's been {REMINDER_DAYS} days -- time for a check-in.</span>
-          <button className="plan-reminder-btn" onClick={setReminder}>Snooze another {REMINDER_DAYS} days</button>
+          <span className="plan-reminder-due">{t('plan.reminderDue', { days: REMINDER_DAYS })}</span>
+          <button className="plan-reminder-btn" onClick={setReminder}>{t('plan.snooze', { days: REMINDER_DAYS })}</button>
         </>
       ) : reminderAt ? (
         <>
-          <span>🔔 Reminder set for {new Date(reminderAt).toLocaleDateString()}</span>
-          <button className="plan-reminder-btn secondary" onClick={cancelReminder}>Cancel</button>
+          <span>{t('plan.reminderSet', { date: new Date(reminderAt).toLocaleDateString() })}</span>
+          <button className="plan-reminder-btn secondary" onClick={cancelReminder}>{t('plan.cancel')}</button>
         </>
       ) : (
-        <button className="plan-reminder-btn" onClick={setReminder}>🔔 Remind me in {REMINDER_DAYS} days</button>
+        <button className="plan-reminder-btn" onClick={setReminder}>{t('plan.remind', { days: REMINDER_DAYS })}</button>
       )}
     </div>
   );
@@ -230,17 +232,14 @@ const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
       <div className="card my-plan">
         {brandingBanner}
         <div className="plan-header">
-          <h2>📓 My Plan</h2>
-          <p>Nothing saved yet. This is a check-in tool, not a calculator -- save a snapshot from the Debt Payoff, Emergency Fund, Loan & Bond, or Power Tools (FIRE) tabs (look for "Save This Plan"), then come back later to see if you're on track.</p>
+          <h2>{t('plan.title')}</h2>
+          <p>{t('plan.emptyIntro')}</p>
         </div>
         {brandingEditor}
         {complianceEditor}
         {compliance.trim() && <div className="plan-compliance-note">{compliance.trim()}</div>}
         {reminderBlock}
-        <p className="plan-note">
-          Reminders only fire while this app is open (there's no background server to push a notification while your
-          browser is closed) -- but next time you visit after {REMINDER_DAYS} days, you'll see it here.
-        </p>
+        <p className="plan-note">{t('plan.emptyNote', { days: REMINDER_DAYS })}</p>
       </div>
     );
   }
@@ -296,13 +295,13 @@ const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
     <div className="card my-plan">
       {brandingBanner}
       <div className="plan-header">
-        <h2>📓 My Plan</h2>
-        <p>Enter where things actually stand to see if you're ahead or behind your own plan.</p>
+        <h2>{t('plan.title')}</h2>
+        <p>{t('plan.intro')}</p>
       </div>
 
       {hasDebt && (
         <div className="plan-section">
-          <h3>💳 Debt Payoff <span className="plan-saved-label">saved {fmtDaysAgo(debtDaysAgo)}</span></h3>
+          <h3>{t('plan.debtTitle')} <span className="plan-saved-label">{t('common.savedAgo', { when: fmtDaysAgo(debtDaysAgo, t) })}</span></h3>
           <div className="plan-baseline">
             When saved: {country.symbol} {Math.round(snapshot.debt.totalBalance).toLocaleString()} total debt,
             paying {country.symbol} {snapshot.debt.extraMonthly.toLocaleString()}/mo extra,{' '}
@@ -332,21 +331,19 @@ const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
 
       {hasEf && (
         <div className="plan-section">
-          <h3>🛟 Emergency Fund <span className="plan-saved-label">saved {fmtDaysAgo(efDaysAgo)}</span></h3>
+          <h3>{t('plan.efTitle')} <span className="plan-saved-label">{t('common.savedAgo', { when: fmtDaysAgo(efDaysAgo, t) })}</span></h3>
           <div className="plan-baseline">
-            When saved: {country.symbol} {Math.round(snapshot.emergencyFund.currentSavings).toLocaleString()} saved toward a
-            {' '}{country.symbol} {Math.round(snapshot.emergencyFund.targetAmount).toLocaleString()} target,
-            contributing {country.symbol} {snapshot.emergencyFund.monthlyContribution.toLocaleString()}/mo.
+            {t('plan.efBaseline', { saved: `${country.symbol} ${Math.round(snapshot.emergencyFund.currentSavings).toLocaleString()}`, target: `${country.symbol} ${Math.round(snapshot.emergencyFund.targetAmount).toLocaleString()}`, contribution: `${country.symbol} ${snapshot.emergencyFund.monthlyContribution.toLocaleString()}` })}
           </div>
           <div className="plan-checkin">
-            <label>What's your emergency fund balance right now? ({country.symbol})</label>
-            <input type="number" min="0" value={currentEfBalance} onChange={(e) => setCurrentEfBalance(e.target.value)} placeholder={`Expected: ~${Math.round(efExpectedSaved).toLocaleString()}`} />
+            <label>{t('plan.efQ', { symbol: country.symbol })}</label>
+            <input type="number" min="0" value={currentEfBalance} onChange={(e) => setCurrentEfBalance(e.target.value)} placeholder={t('plan.expected', { amount: Math.round(efExpectedSaved).toLocaleString() })} />
           </div>
           {efDrift !== null && (
             <p className={`plan-drift ${efDrift >= 0 ? 'ahead' : 'behind'}`}>
               {efDrift >= 0
-                ? `You're ${country.symbol} ${Math.round(efDrift).toLocaleString()} ahead of schedule -- nice.`
-                : `You're ${country.symbol} ${Math.round(-efDrift).toLocaleString()} behind where the plan expected. Worth revisiting the Emergency Fund tab.`}
+                ? t('plan.ahead', { amount: `${country.symbol} ${Math.round(efDrift).toLocaleString()}` })
+                : t('plan.behindEf', { amount: `${country.symbol} ${Math.round(-efDrift).toLocaleString()}` })}
             </p>
           )}
         </div>
@@ -354,20 +351,19 @@ const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
 
       {hasLoan && (
         <div className="plan-section">
-          <h3>{snapshot.loan.loanTypeLabel || '🏦 Loan'} <span className="plan-saved-label">saved {fmtDaysAgo(loanDaysAgo)}</span></h3>
+          <h3>{snapshot.loan.loanTypeLabel || t('plan.loanDefault')} <span className="plan-saved-label">{t('common.savedAgo', { when: fmtDaysAgo(loanDaysAgo, t) })}</span></h3>
           <div className="plan-baseline">
-            When saved: {country.symbol} {Math.round(snapshot.loan.principal).toLocaleString()} borrowed at {snapshot.loan.annualRate}%
-            over {loanEffectiveTermLabel(snapshot.loan)}, paying {country.symbol} {loanEffectiveMonthlyPayment(snapshot.loan).toLocaleString()}/mo.
+            {t('plan.loanBaseline', { principal: `${country.symbol} ${Math.round(snapshot.loan.principal).toLocaleString()}`, rate: snapshot.loan.annualRate, term: loanEffectiveTermLabel(snapshot.loan, t), payment: `${country.symbol} ${loanEffectiveMonthlyPayment(snapshot.loan).toLocaleString()}` })}
           </div>
           <div className="plan-checkin">
-            <label>What's your loan/bond balance right now? ({country.symbol})</label>
-            <input type="number" min="0" value={currentLoanBalance} onChange={(e) => setCurrentLoanBalance(e.target.value)} placeholder={`Expected: ~${Math.round(loanExpectedRemaining).toLocaleString()}`} />
+            <label>{t('plan.loanQ', { symbol: country.symbol })}</label>
+            <input type="number" min="0" value={currentLoanBalance} onChange={(e) => setCurrentLoanBalance(e.target.value)} placeholder={t('plan.expected', { amount: Math.round(loanExpectedRemaining).toLocaleString() })} />
           </div>
           {loanDrift !== null && (
             <p className={`plan-drift ${loanDrift >= 0 ? 'ahead' : 'behind'}`}>
               {loanDrift >= 0
-                ? `You're ${country.symbol} ${Math.round(loanDrift).toLocaleString()} ahead of schedule -- nice.`
-                : `You're ${country.symbol} ${Math.round(-loanDrift).toLocaleString()} behind where the plan expected. Worth revisiting the Loan & Bond tab -- an extra payment there could close the gap.`}
+                ? t('plan.ahead', { amount: `${country.symbol} ${Math.round(loanDrift).toLocaleString()}` })
+                : t('plan.behindLoan', { amount: `${country.symbol} ${Math.round(-loanDrift).toLocaleString()}` })}
             </p>
           )}
         </div>
@@ -375,15 +371,12 @@ const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
 
       {hasFire && (
         <div className="plan-section">
-          <h3>🔥 FIRE Target <span className="plan-saved-label">saved {fmtDaysAgo(daysBetween(snapshot.fire.savedAt))}</span></h3>
+          <h3>{t('plan.fireTitle')} <span className="plan-saved-label">{t('common.savedAgo', { when: fmtDaysAgo(daysBetween(snapshot.fire.savedAt), t) })}</span></h3>
           <div className="plan-baseline">
-            When saved: {country.symbol} {Math.round(snapshot.fire.annualExpenses).toLocaleString()}/yr expenses at a {snapshot.fire.withdrawalRate}%
-            withdrawal rate puts your FIRE number at {country.symbol} {Math.round(snapshot.fire.fireNumber).toLocaleString()},{' '}
-            {snapshot.fire.yearsToFire === null ? 'not reachable within 60 years at that pace' : `about ${snapshot.fire.yearsToFire} years out at your saved pace`}.
+            {t('plan.fireBaseline', { expenses: `${country.symbol} ${Math.round(snapshot.fire.annualExpenses).toLocaleString()}`, rate: snapshot.fire.withdrawalRate, number: `${country.symbol} ${Math.round(snapshot.fire.fireNumber).toLocaleString()}` })}{' '}
+            {snapshot.fire.yearsToFire === null ? t('plan.fireNever') : t('plan.fireYears', { n: snapshot.fire.yearsToFire })}.
           </div>
-          <p className="plan-note-inline">
-            Revisit the Power Tools tab to see if you're still on pace -- FIRE progress depends on your investment balance, which isn't tracked here.
-          </p>
+          <p className="plan-note-inline">{t('plan.fireNote')}</p>
         </div>
       )}
 
@@ -422,12 +415,7 @@ const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
 
       <button className="plan-clear-btn no-print" onClick={clearPlan}>Clear saved plan</button>
 
-      <p className="plan-note">
-        This lives only in your browser's local storage -- nothing is sent anywhere, and it won't follow you to another
-        device or browser. "Expected" figures assume steady linear progress at the rate you set when you saved.
-        Reminders only fire while this app is open in a tab -- there's no background server to push one while your
-        browser is closed.
-      </p>
+      <p className="plan-note">{t('plan.note')}</p>
     </div>
   );
 };

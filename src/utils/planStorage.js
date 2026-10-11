@@ -42,7 +42,10 @@ export const loanEffectiveMonthlyPayment = (loan) =>
 // Converts a month count to a "N years" label rounded to 1 decimal place, without a
 // trailing ".0" on whole numbers (so 60 months reads "5 years", not "5.0 years").
 // Shared so every payoff-horizon display formats months the same way.
-export const monthsToYearsLabel = (months) => `${Math.round(months / 12 * 10) / 10} years`;
+export const monthsToYearsLabel = (months, t) => {
+  const n = Math.round(months / 12 * 10) / 10;
+  return t ? t('common.yearsN', { n }) : `${n} years`;
+};
 
 // Given a saved 'loan' plan section, returns a "N years" label for how long it'll
 // actually take to pay off at the saved pace. termYears is the loan's nominal
@@ -50,7 +53,7 @@ export const monthsToYearsLabel = (months) => `${Math.round(months / 12 * 10) / 
 // (already accelerated by LoanCalculator's savePlan) is the real payoff horizon, so
 // pairing the effective monthly payment above with the unadjusted termYears would
 // describe two different, contradictory payment scenarios in the same sentence.
-export const loanEffectiveTermLabel = (loan) =>
+export const loanEffectiveTermLabel = (loan, t) =>
   loan.extraMonthly > 0 && loan.payoffMonths
-    ? monthsToYearsLabel(loan.payoffMonths)
-    : `${loan.termYears} years`;
+    ? monthsToYearsLabel(loan.payoffMonths, t)
+    : (t ? t('common.yearsN', { n: loan.termYears }) : `${loan.termYears} years`);

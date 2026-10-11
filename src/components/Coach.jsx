@@ -7,8 +7,10 @@ import { readJSONArray } from '../utils/storage';
 import { readPlan } from '../utils/planStorage';
 import { HISTORY_KEY as NETWORTH_HISTORY_KEY, isValidNetWorthEntry } from './NetWorth';
 import { balanceSheetRatios } from '../balanceSheetRatios';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [], maxYears = Infinity, onSetWrapper, onSetMonthly, onSetYears, onSetContributionIncrease }) => {
+  const { t } = useLanguage();
   const base = { initial, monthly, rate, years, inflation, taxRate: country.taxRate, wrapper, compoundFrequency, annualWrapperLimit: country.annualWrapperLimit, lifetimeWrapperLimit: country.lifetimeWrapperLimit, contributionIncreaseRate: contributionIncrease, lumpSums };
   const baseline = calculateCompoundInterest(base);
 
@@ -128,15 +130,15 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
       title: 'Build Your Foundation',
       done: !hasWrapper || wrapper,
       body: !hasWrapper
-        ? `${country.name} has no standard tax-free wrapper in this dataset -- your foundation is a taxable account at an indicative ${country.taxRate}% tax rate.`
+        ? t('coach.s1NoWrapper', { country: country.name, rate: country.taxRate })
         : wrapper
           ? (baseline.wrapperCapExceeded
-            ? `You're using ${country.wrapperLabel}, but your contributions exceed its real-world limit in at least one year -- the portion over the cap is taxed like a normal account, not fully sheltered.`
-            : `You're already using ${country.wrapperLabel} -- nice, your gains are sheltered from tax entirely.`)
-          : `Switch on your ${country.wrapperLabel} to shelter this plan from tax. That alone is worth an extra ${country.symbol} ${Math.round(wrapperGain).toLocaleString()} over ${years} years.`,
+            ? t('coach.s1OverCap', { wrapper: country.wrapperLabel })
+            : t('coach.s1Using', { wrapper: country.wrapperLabel }))
+          : t('coach.s1Switch', { wrapper: country.wrapperLabel, amount: `${country.symbol} ${Math.round(wrapperGain).toLocaleString()}`, years }),
       interactive: hasWrapper && !wrapper,
       onApply: applyWrapper,
-      applyLabel: `Turn on ${country.wrapperLabel}`
+      applyLabel: t('coach.s1Apply', { wrapper: country.wrapperLabel })
     },
     ...(savedEfPlan ? [{
       key: 'efPriority',
@@ -158,16 +160,16 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
       key: 'boost',
       title: 'Accelerate Your Growth',
       done: false,
-      body: `Bumping your monthly contribution from ${country.symbol} ${monthly.toLocaleString()} to ${country.symbol} ${Math.round(boostedMonthly).toLocaleString()} (+${boostPercent}%) would grow your final balance by ${country.symbol} ${Math.round(boostGain).toLocaleString()} over ${years} years.`,
+      body: t('coach.s2Body', { from: `${country.symbol} ${monthly.toLocaleString()}`, to: `${country.symbol} ${Math.round(boostedMonthly).toLocaleString()}`, pct: boostPercent, gain: `${country.symbol} ${Math.round(boostGain).toLocaleString()}`, years }),
       interactive: true,
       control: (
         <div className="coach-slider-row">
-          <label>+{boostPercent}% monthly contribution</label>
-          <input type="range" min="5" max="100" step="5" value={boostPercent} aria-label="Monthly contribution boost percentage" onChange={(e) => setBoostPercent(Number(e.target.value))} />
+          <label>{t('coach.s2Slider', { pct: boostPercent })}</label>
+          <input type="range" min="5" max="100" step="5" value={boostPercent} aria-label={t('coach.s2Aria')} onChange={(e) => setBoostPercent(Number(e.target.value))} />
         </div>
       ),
       onApply: applyBoost,
-      applyLabel: `Set monthly to ${country.symbol}${Math.round(boostedMonthly).toLocaleString()}`
+      applyLabel: t('coach.s2Apply', { amount: `${country.symbol}${Math.round(boostedMonthly).toLocaleString()}` })
     },
     {
       key: 'years',
@@ -260,7 +262,7 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
               {step.control}
               {step.interactive && (
                 <button className="coach-apply-btn" onClick={step.onApply}>
-                  {applied === step.key ? '✓ Applied to your plan' : step.applyLabel}
+                  {applied === step.key ? t('coach.applied') : step.applyLabel}
                 </button>
               )}
             </div>

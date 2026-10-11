@@ -6,6 +6,7 @@
 // (colorVar on each segment), never cycled -- see the dataviz skill.
 import React, { useState } from 'react';
 import './AllocationChart.css';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const SIZE = 160;
 const STROKE = 28;
@@ -25,6 +26,7 @@ const formatCenterTotal = (value) => value >= 1000000 ? `${(value / 1000000).toF
 // value of 0 are dropped before rendering (an empty slice has nothing to show or hover).
 // symbol: currency symbol for the legend's amount column.
 const AllocationChart = ({ segments, symbol = '' }) => {
+  const { t } = useLanguage();
   const [hoverKey, setHoverKey] = useState(null);
   const real = segments.filter(s => s.value > 0);
   const total = real.reduce((sum, s) => sum + s.value, 0);
@@ -40,7 +42,7 @@ const AllocationChart = ({ segments, symbol = '' }) => {
   });
 
   const dominant = real.reduce((max, s) => (s.value > max.value ? s : max), real[0]);
-  const ariaLabel = `Allocation breakdown: ${real.map(s => `${s.label} ${Math.round(s.value / total * 100)}%`).join(', ')}`;
+  const ariaLabel = t('charts.allocAria', { list: real.map(s => `${s.label} ${Math.round(s.value / total * 100)}%`).join(', ') });
 
   return (
     <div className="alloc-chart">
@@ -76,7 +78,7 @@ const AllocationChart = ({ segments, symbol = '' }) => {
           ) : (
             <>
               <strong>{symbol}{formatCenterTotal(total)}</strong>
-              <span>Total</span>
+              <span>{t('charts.total')}</span>
             </>
           )}
         </div>

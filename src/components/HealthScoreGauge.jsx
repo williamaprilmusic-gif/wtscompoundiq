@@ -5,6 +5,7 @@
 // not an arbitrary series hue, since there's only ever one thing being shown.
 import React from 'react';
 import './HealthScoreGauge.css';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const SIZE = 140;
 const STROKE = 14;
@@ -17,6 +18,7 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 const GRADE_COLOR_VAR = { A: '--accent-green', B: '--accent-green', C: '--accent-yellow', D: '--accent-red', F: '--accent-red' };
 
 const HealthScoreGauge = ({ score, grade, label, components }) => {
+  const { t } = useLanguage();
   const pct = Math.max(0, Math.min(100, score));
   const dashOffset = CIRCUMFERENCE * (1 - pct / 100);
   const colorVar = GRADE_COLOR_VAR[grade] || '--accent';
@@ -24,7 +26,7 @@ const HealthScoreGauge = ({ score, grade, label, components }) => {
   return (
     <div className="health-gauge">
       <div className="health-gauge-ring-wrap">
-        <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} role="img" aria-label={`Financial health score: ${score} out of 100, grade ${grade} (${label})`}>
+        <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} role="img" aria-label={t('charts.gaugeAria', { score, grade, label })}>
           <circle cx={SIZE / 2} cy={SIZE / 2} r={RADIUS} className="health-gauge-track" strokeWidth={STROKE} fill="none" />
           <circle
             cx={SIZE / 2}
@@ -45,7 +47,7 @@ const HealthScoreGauge = ({ score, grade, label, components }) => {
       </div>
       <div className="health-gauge-details">
         <div className="health-gauge-grade" style={{ color: `var(${colorVar})` }}>
-          Grade {grade} -- {label}
+          {t('charts.gaugeGrade', { grade, label })}
         </div>
         <ul className="health-gauge-components">
           {components.map(c => (

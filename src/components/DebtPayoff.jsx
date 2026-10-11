@@ -13,6 +13,7 @@ import { uniqueId } from '../utils/uniqueId';
 import { safeTrim } from '../utils/safeTrim';
 import { readJSONArray, writeJSON } from '../utils/storage';
 import SnapshotChart from './SnapshotChart';
+import { useLanguage } from '../i18n/LanguageContext';
 
 // Exported so PowerTools.jsx's Home Affordability / Insurance Needs calculators can
 // offer a "pull from Debt Payoff" shortcut without redeclaring this string (same
@@ -33,7 +34,6 @@ export const HISTORY_KEY = 'wts_compoundiq_debtpayoff_history';
 // identical guard instead of duplicating it.
 export const isValidDebtHistoryEntry = (h) => Number.isFinite(h.total);
 
-const HISTORY_SERIES = [{ key: 'total', label: 'Total Debt Balance' }];
 
 // "Debt-free by March 2029" reads more concretely than "in 41 months" -- same touch as
 // the Calculator tab's own years-to-grow date hint.
@@ -49,6 +49,8 @@ const downloadTemplate = () => {
 };
 
 const DebtPayoff = ({ country }) => {
+  const { t } = useLanguage();
+  const HISTORY_SERIES = [{ key: 'total', label: t('debt.historySeries') }];
   const [debts, setDebts] = usePersistedState(DEBTS_KEY, []);
   const [extraMonthly, setExtraMonthly] = usePersistedState(EXTRA_KEY, 0);
   const [lumpSums, setLumpSums] = usePersistedState(LUMPSUMS_KEY, []);
@@ -76,7 +78,7 @@ const DebtPayoff = ({ country }) => {
   const removeDebt = (id) => {
     const debt = debts.find(d => d.id === id);
     const hasData = !!(debt && (safeTrim(debt.name) || debt.balance > 0 || debt.rate > 0 || debt.minPayment > 0));
-    if (!confirmRemoval(hasData, `Remove "${safeTrim(debt?.name) || 'this debt'}"? This can't be undone.`)) return;
+    if (!confirmRemoval(hasData, t('debt.removeConfirm', { name: safeTrim(debt?.name) || t('debt.thisDebt') }))) return;
     setDebts(prev => prev.filter(d => d.id !== id));
   };
 
@@ -88,14 +90,14 @@ const DebtPayoff = ({ country }) => {
     reader.onload = (e) => {
       try {
         const rows = parseCSV(String(e.target.result));
-        if (rows.length < 2) { setImportError('That CSV has no data rows -- see the template for the expected format.'); return; }
+        if (rows.length < 2) { setImportError(t('debt.errNoRows')); return; }
         const header = rows[0].map(h => h.trim().toLowerCase());
         const nameIdx = header.indexOf('name');
         const balanceIdx = header.indexOf('balance');
         const rateIdx = header.indexOf('rate');
         const minPaymentIdx = header.indexOf('minpayment');
         if (nameIdx === -1 || balanceIdx === -1) {
-          setImportError('CSV needs at least "name" and "balance" columns -- download the template below for the expected format.');
+          setImportError(t('debt.errColumns'));
           return;
         }
         const imported = rows.slice(1).map((r) => ({
@@ -107,13 +109,13 @@ const DebtPayoff = ({ country }) => {
         })).filter(d => d.name && d.balance > 0);
 
         if (imported.length === 0) {
-          setImportError('No usable rows found -- each row needs a name and a balance greater than 0.');
+          setImportError(t('debt.errNoUsable'));
           return;
         }
         setDebts(prev => [...prev, ...imported]);
         setImportError(null);
       } catch {
-        setImportError("Could not read that file -- make sure it's a plain .csv export.");
+        setImportError(t('debt.errRead'));
       }
     };
     reader.readAsText(file);
@@ -207,14 +209,14 @@ const DebtPayoff = ({ country }) => {
     // No count in the message -- see NetWorth.jsx's clearHistory for why (the header
     // above and this raw history.length can diverge when a corrupt entry is filtered
     // out of what's displayed but still present in storage).
-    if (!window.confirm("Clear all saved debt balance snapshots? This can't be undone.")) return;
+    if (!window.confirm(t('debt.clearConfirm'))) return;
     localStorage.removeItem(HISTORY_KEY);
     setHistory([]);
   };
 
   const exportHistoryCSV = () => {
     downloadCSV('wts-compoundiq-debtpayoff-history.csv', [
-      ['Date', `Total Debt Balance (${country.currency})`],
+      [t('debt.csvDate'), t('debt.csvBalance', { currency: country.currency })],
       ...convertedHistory.map(h => [new Date(h.date).toLocaleDateString(), Math.round(h.total)])
     ]);
   };
@@ -222,68 +224,68 @@ const DebtPayoff = ({ country }) => {
   return (
     <div className="card debt-payoff">
       <div className="debt-header">
-        <h2>💳 Debt Payoff Planner</h2>
-        <p>Compare the Avalanche (highest interest first -- mathematically fastest) and Snowball (smallest balance first -- most motivating) strategies.</p>
+        <h2>{t('debt.title')}</h2>
+        <p>{t('debt.intro')}</p>
         <div className="debt-import-row">
           <label className="debt-import-btn">
-            📥 Import CSV
+            {t('debt.importCsv')}
             <input type="file" accept=".csv,text/csv" onChange={handleImportFile} hidden />
           </label>
-          <button className="debt-template-btn" onClick={downloadTemplate}>Download template</button>
+          <button className="debt-template-btn" onClick={downloadTemplate}>{t('debt.template')}</button>
         </div>
         {importError && <p className="debt-import-error">⚠️ {importError}</p>}
       </div>
 
       <div className="debt-list">
         {debts.length === 0 && (
-          <p className="debt-empty-state">No debts added yet -- click "Add Another Debt" below to enter your first one.</p>
+          <p className="debt-empty-state">{t('debt.empty')}</p>
         )}
         {debts.map((d) => (
           <div key={d.id} className="debt-row">
-            <input type="text" className="debt-name" placeholder="Debt name" aria-label="Debt name" value={d.name} onChange={(e) => setDebts(prev => prev.map(x => x.id === d.id ? { ...x, name: e.target.value } : x))} />
+            <input type="text" className="debt-name" placeholder={t('debt.debtName')} aria-label={t('debt.debtName')} value={d.name} onChange={(e) => setDebts(prev => prev.map(x => x.id === d.id ? { ...x, name: e.target.value } : x))} />
             <div className="debt-field">
-              <label>Balance ({country.symbol})</label>
+              <label>{t('debt.balance', { symbol: country.symbol })}</label>
               <input type="number" min="0" value={d.balance} onChange={(e) => updateDebt(d.id, 'balance', e.target.value)} />
             </div>
             <div className="debt-field">
-              <label>Rate (%)</label>
+              <label>{t('debt.rate')}</label>
               <input type="number" min="0" step="0.1" value={d.rate} onChange={(e) => updateDebt(d.id, 'rate', e.target.value)} />
             </div>
             <div className="debt-field">
-              <label>Min Payment ({country.symbol})</label>
+              <label>{t('debt.minPayment', { symbol: country.symbol })}</label>
               <input type="number" min="0" value={d.minPayment} onChange={(e) => updateDebt(d.id, 'minPayment', e.target.value)} />
             </div>
-            <button className="debt-remove" onClick={() => removeDebt(d.id)} aria-label="Remove debt">&times;</button>
+            <button className="debt-remove" onClick={() => removeDebt(d.id)} aria-label={t('debt.removeDebt')}>&times;</button>
           </div>
         ))}
-        <button className="debt-add" onClick={addDebt}>+ Add Another Debt</button>
+        <button className="debt-add" onClick={addDebt}>{t('debt.addDebt')}</button>
       </div>
 
       <div className="debt-extra">
-        <label>Extra Monthly Payment ({country.symbol}, on top of all minimums)</label>
+        <label>{t('debt.extra', { symbol: country.symbol })}</label>
         <input type="number" min="0" value={extraMonthly} onChange={(e) => setExtraMonthly(Number(e.target.value))} />
       </div>
 
       <div className="debt-lumpsum-section">
         <div className="debt-lumpsum-header">
-          <h3>One-Off Extra Payments</h3>
-          <button className="debt-lumpsum-add-btn" onClick={addLumpSum}>+ Add One-Off</button>
+          <h3>{t('debt.oneOffTitle')}</h3>
+          <button className="debt-lumpsum-add-btn" onClick={addLumpSum}>{t('debt.addOneOff')}</button>
         </div>
         {lumpSums.length === 0 ? (
-          <p className="debt-lumpsum-empty">None added -- use this for a bonus, tax refund, or any extra payment landing in a specific month, on top of your regular extra above.</p>
+          <p className="debt-lumpsum-empty">{t('debt.oneOffEmpty')}</p>
         ) : (
           <div className="debt-lumpsum-list">
             {lumpSums.map((l) => (
               <div key={l.id} className="debt-lumpsum-row">
                 <div className="debt-lumpsum-field">
-                  <label>In month</label>
+                  <label>{t('debt.inMonth')}</label>
                   <input type="number" min="1" value={l.month} onChange={(e) => updateLumpSum(l.id, 'month', e.target.value)} />
                 </div>
                 <div className="debt-lumpsum-field">
-                  <label>Amount ({country.symbol})</label>
+                  <label>{t('debt.amount', { symbol: country.symbol })}</label>
                   <input type="number" min="0" step="500" value={l.amount} onChange={(e) => updateLumpSum(l.id, 'amount', e.target.value)} />
                 </div>
-                <button className="debt-lumpsum-remove" onClick={() => removeLumpSum(l.id)} aria-label="Remove one-off payment">&times;</button>
+                <button className="debt-lumpsum-remove" onClick={() => removeLumpSum(l.id)} aria-label={t('debt.removeOneOff')}>&times;</button>
               </div>
             ))}
           </div>
@@ -300,7 +302,7 @@ const DebtPayoff = ({ country }) => {
             <span className="debt-result-label">Total interest paid</span>
             <strong className="interest-figure">{country.symbol} {Math.round(avalanche.totalInterest).toLocaleString()}</strong>
             <div className="debt-order">
-              Payoff order: {avalancheOrder(validDebts).map(d => d.name).join(' → ')}
+              {t('debt.payoffOrder', { order: avalancheOrder(validDebts).map(d => d.name).join(' → ') })}
             </div>
           </div>
 
@@ -312,18 +314,14 @@ const DebtPayoff = ({ country }) => {
             <span className="debt-result-label">Total interest paid</span>
             <strong className="interest-figure">{country.symbol} {Math.round(snowball.totalInterest).toLocaleString()}</strong>
             <div className="debt-order">
-              Payoff order: {snowballOrder(validDebts).map(d => d.name).join(' → ')}
+              {t('debt.payoffOrder', { order: snowballOrder(validDebts).map(d => d.name).join(' → ') })}
             </div>
           </div>
         </div>
       )}
 
       {validDebts.length > 0 && interestSaved > 0 && (
-        <p className="debt-verdict">
-          Avalanche saves you roughly {country.symbol} {Math.round(interestSaved).toLocaleString()} in interest over Snowball here --
-          but Snowball clears your first debt faster, which many people find easier to stick with. Pick whichever you'll
-          actually follow through on.
-        </p>
+        <p className="debt-verdict">{t('debt.verdict', { amount: `${country.symbol} ${Math.round(interestSaved).toLocaleString()}` })}</p>
       )}
 
       {validDebts.length > 0 && avalanche.reachable && avalanche.totalInterest > 0 && totalBalance > 0 && (
@@ -338,18 +336,15 @@ const DebtPayoff = ({ country }) => {
 
       {validDebts.length > 0 && (
         <div className="debt-consolidate-section">
-          <h3>🔗 Debt Consolidation Analyzer</h3>
-          <p className="debt-consolidate-desc">
-            Curious whether rolling everything above into one new loan would actually help? Enter the rate and term a
-            consolidation loan would offer, and compare it against your Avalanche plan.
-          </p>
+          <h3>{t('debt.consolidateTitle')}</h3>
+          <p className="debt-consolidate-desc">{t('debt.consolidateDesc')}</p>
           <div className="debt-consolidate-inputs">
             <div className="debt-field">
-              <label>Consolidation Loan Rate (%)</label>
+              <label>{t('debt.consolidateRate')}</label>
               <input type="number" min="0" step="0.1" value={consolidateRate} onChange={(e) => setConsolidateRate(Number(e.target.value))} />
             </div>
             <div className="debt-field">
-              <label>Consolidation Loan Term (years)</label>
+              <label>{t('debt.consolidateTerm')}</label>
               <input type="number" min="1" max="30" value={consolidateTermYears} onChange={(e) => setConsolidateTermYears(Number(e.target.value))} />
             </div>
           </div>
@@ -357,30 +352,30 @@ const DebtPayoff = ({ country }) => {
             <>
               <div className="debt-results">
                 <div className="debt-result-card avalanche">
-                  <h3>Keep Paying Separately (Avalanche)</h3>
-                  <span className="debt-result-label">Debt-free in</span>
-                  <strong>{avalanche.reachable ? `${avalanche.months} months` : '50+ years'}</strong>
-                  <span className="debt-result-label">Total interest paid</span>
+                  <h3>{t('debt.keepSeparate')}</h3>
+                  <span className="debt-result-label">{t('debt.debtFreeIn')}</span>
+                  <strong>{avalanche.reachable ? t('debt.months', { n: avalanche.months }) : t('debt.fiftyPlus')}</strong>
+                  <span className="debt-result-label">{t('debt.totalInterest')}</span>
                   <strong className="interest-figure">{country.symbol} {Math.round(avalanche.totalInterest).toLocaleString()}</strong>
-                  <span className="debt-result-label">Monthly payment</span>
+                  <span className="debt-result-label">{t('debt.monthlyPayment')}</span>
                   <strong>{country.symbol} {Math.round(currentCombinedMonthly).toLocaleString()}</strong>
                 </div>
                 <div className="debt-result-card consolidate">
-                  <h3>Consolidated Loan</h3>
-                  <span className="debt-result-label">Debt-free in</span>
-                  <strong>{consolidateAmort.reachable ? `${consolidateAmort.payoffMonths} months` : '60+ years'}</strong>
-                  <span className="debt-result-label">Total interest paid</span>
+                  <h3>{t('debt.consolidated')}</h3>
+                  <span className="debt-result-label">{t('debt.debtFreeIn')}</span>
+                  <strong>{consolidateAmort.reachable ? t('debt.months', { n: consolidateAmort.payoffMonths }) : t('debt.sixtyPlus')}</strong>
+                  <span className="debt-result-label">{t('debt.totalInterest')}</span>
                   <strong className="interest-figure">{country.symbol} {consolidateAmort.totalInterest.toLocaleString()}</strong>
-                  <span className="debt-result-label">Monthly payment</span>
+                  <span className="debt-result-label">{t('debt.monthlyPayment')}</span>
                   <strong>{country.symbol} {consolidateAmort.monthlyPayment.toLocaleString()}</strong>
                 </div>
               </div>
               <p className="debt-verdict">
                 {consolidateAmort.totalInterest < avalanche.totalInterest && consolidateAmort.payoffMonths <= avalanche.months
-                  ? 'Consolidating looks better here -- less total interest, and no slower than your current Avalanche pace.'
+                  ? t('debt.verdictBetter')
                   : consolidateAmort.monthlyPayment < currentCombinedMonthly
-                    ? `Consolidating lowers the monthly payment to ${country.symbol} ${consolidateAmort.monthlyPayment.toLocaleString()} (from ${country.symbol} ${Math.round(currentCombinedMonthly).toLocaleString()}), but stretches the term and costs more in total interest -- a classic tradeoff: better for cash flow, worse for total cost.`
-                    : "Keeping these separate and following Avalanche looks better here -- consolidating at this rate/term wouldn't actually save interest or time."}
+                    ? t('debt.verdictTradeoff', { to: `${country.symbol} ${consolidateAmort.monthlyPayment.toLocaleString()}`, from: `${country.symbol} ${Math.round(currentCombinedMonthly).toLocaleString()}` })
+                    : t('debt.verdictKeep')}
               </p>
             </>
           )}
@@ -390,9 +385,9 @@ const DebtPayoff = ({ country }) => {
       {validDebts.length > 0 && (
         <div className="debt-actions">
           <button className="debt-save-plan-btn" onClick={savePlan}>
-            {saved ? '✓ Saved to My Plan' : '💾 Save This Plan'}
+            {saved ? t('debt.savedToPlan') : t('debt.savePlan')}
           </button>
-          <button className="debt-save-snapshot-btn" onClick={saveSnapshot}>📸 Log Balance</button>
+          <button className="debt-save-snapshot-btn" onClick={saveSnapshot}>{t('debt.logBalance')}</button>
         </div>
       )}
 
@@ -403,15 +398,15 @@ const DebtPayoff = ({ country }) => {
                 filtered out of convertedHistory above but stays in raw history (so "Clear
                 history" below can still remove it), and this count should match what the
                 list/chart below actually display rather than what's stored. */}
-            <h3>Balance History ({convertedHistory.length} snapshot{convertedHistory.length === 1 ? '' : 's'})</h3>
+            <h3>{t(convertedHistory.length === 1 ? 'debt.historyOne' : 'debt.historyMany', { n: convertedHistory.length })}</h3>
             <div className="debt-history-header-actions">
-              <button className="history-export-btn" onClick={exportHistoryCSV}>⬇️ Export CSV</button>
-              <button className="debt-clear-history-btn" onClick={clearHistory}>Clear history</button>
+              <button className="history-export-btn" onClick={exportHistoryCSV}>{t('debt.exportCsv')}</button>
+              <button className="debt-clear-history-btn" onClick={clearHistory}>{t('debt.clearHistory')}</button>
             </div>
           </div>
           {delta !== null && (
             <div className={`debt-history-delta ${delta <= 0 ? 'down' : 'up'}`}>
-              {delta <= 0 ? '▼' : '▲'} {country.symbol} {Math.abs(Math.round(delta)).toLocaleString()} since last snapshot
+              {delta <= 0 ? '▼' : '▲'} {t('debt.sinceLast', { amount: `${country.symbol} ${Math.abs(Math.round(delta)).toLocaleString()}` })}
             </div>
           )}
           {convertedHistory.length > 1 && (
@@ -425,10 +420,7 @@ const DebtPayoff = ({ country }) => {
               </div>
             ))}
           </div>
-          <p className="debt-history-note">
-            Logging your balance here just tracks it over time for your own reference -- it doesn't affect the
-            Avalanche/Snowball projections above, which are always calculated from the debts listed at the top.
-          </p>
+          <p className="debt-history-note">{t('debt.historyNote')}</p>
         </div>
       )}
     </div>

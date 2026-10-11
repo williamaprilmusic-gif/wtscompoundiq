@@ -11,6 +11,7 @@ import { usePersistedState } from '../utils/usePersistedState';
 import { uniqueId } from '../utils/uniqueId';
 import Term from './Term';
 import SnapshotChart from './SnapshotChart';
+import { useLanguage } from '../i18n/LanguageContext';
 
 // "Clears this loan around March 2029" reads more concretely than "in 41 months" --
 // same touch as Debt Payoff's own payoff-date hint and the Calculator tab's
@@ -18,10 +19,6 @@ import SnapshotChart from './SnapshotChart';
 const monthsFromNowLabel = (months) =>
   new Date(new Date().setMonth(new Date().getMonth() + months)).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 
-const SINGLE_BALANCE_SERIES = [{ key: 'debts', label: 'Loan Balance' }];
-const COMPARISON_BALANCE_SERIES = [{ key: 'standard', label: 'Standard Payment' }, { key: 'plan', label: 'With Extra Payments' }];
-const formatYearAxis = (year) => `Yr ${year}`;
-const formatYearTooltip = (year) => `Year ${year}`;
 
 const INPUTS_KEY = 'wts_compoundiq_loancalc_inputs';
 const LUMPSUMS_KEY = 'wts_compoundiq_loancalc_lumpsums';
@@ -38,55 +35,26 @@ const DEFAULT_INPUTS = {
 
 // Term is a sensible starting default per type -- not a rate estimate (rates vary too
 // much by lender, credit profile, and country to guess responsibly), just how long
-// this kind of loan typically runs. Fully editable either way.
+// this kind of loan typically runs. Fully editable either way. Labels/tips come from the
+// translations (src/i18n/strings/loan.js: type{key}, short{key}, g{n}*, {key}{n}*).
 const LOAN_TYPES = [
-  { key: 'bond', label: '🏠 Home Loan / Bond', shortLabel: 'home loan', defaultTermYears: 20 },
-  { key: 'vehicle', label: '🚗 Vehicle Loan', shortLabel: 'vehicle loan', defaultTermYears: 6 },
-  { key: 'personal', label: '💳 Personal Loan', shortLabel: 'loan', defaultTermYears: 3 },
-  { key: 'student', label: '🎓 Student Loan', shortLabel: 'student loan', defaultTermYears: 10 },
-  { key: 'other', label: '📄 Other Loan', shortLabel: 'loan', defaultTermYears: 5 }
+  { key: 'bond', defaultTermYears: 20 },
+  { key: 'vehicle', defaultTermYears: 6 },
+  { key: 'personal', defaultTermYears: 3 },
+  { key: 'student', defaultTermYears: 10 },
+  { key: 'other', defaultTermYears: 5 }
 ];
 
-// General strategies that apply regardless of loan type.
-const GENERAL_TIPS = [
-  {
-    title: 'Make sure extra payments hit the principal',
-    body: "Many lenders default an extra payment to \"pay ahead\" -- it covers a future instalment instead of reducing what you owe today. Check (or call and ask) that overpayments are applied straight to the principal, or you won't get the interest savings this calculator shows."
-  },
-  {
-    title: 'Throw lump sums at it',
-    body: 'A bonus, tax refund, 13th cheque, or inheritance applied directly to the balance skips straight to the "principal paid" column -- no monthly commitment required, and it still compounds into real interest savings for the rest of the term.'
-  },
-  {
-    title: "Don't let a lower rate lower your payment",
-    body: 'If your rate drops (or you refinance to a better one), keep paying your old, higher instalment amount instead of "enjoying" the smaller required payment. The difference goes straight to principal -- you keep the discipline you already had.'
-  }
-];
-
-const TYPE_TIPS = {
-  bond: [
-    { title: 'Use an access/flexi facility if your bond has one', body: "Extra payments still reduce the interest you owe even if you can withdraw them again later for an emergency -- so there's little downside to overpaying into one versus a regular savings account." },
-    { title: 'Round up to a clean number', body: "Rounding R15,739/month up to R16,000 barely registers month to month, but compounded over a 20-year term it's a meaningfully earlier payoff date." }
-  ],
-  vehicle: [
-    { title: 'Put down the biggest deposit you can', body: 'Every rand you put down upfront saves you that same rand plus every month of interest it would have accrued for the entire loan term -- one of the highest-value moves available.' },
-    { title: 'Avoid a balloon/residual payment structure', body: "A balloon payment lowers your monthly instalment by leaving a lump sum owed at the very end -- it usually means more total interest, not less, and can leave you owing more than the car is worth." }
-  ],
-  personal: [
-    { title: 'Personal loans are usually your highest-rate debt', body: "If you're also carrying a bond or vehicle loan, extra cash almost always does more good here first -- see the Debt Payoff tab's Avalanche method for the math." },
-    { title: "Be careful consolidating it into something else", body: 'Rolling it into a longer-term consolidation loan can lower the monthly payment while quietly increasing total interest paid -- run the new numbers through this calculator before agreeing.' }
-  ],
-  student: [
-    { title: 'Check your loan\'s rules before overpaying', body: "Some income-driven or forgiveness-track student loans (common with US federal loans) can make extra payments pointless, or even reduce a forgiveness benefit you'd otherwise get after a set number of years. Confirm how yours works first." },
-    { title: 'On a standard fixed-rate loan, pay extra early', body: "If there's no forgiveness angle, treat it like any other loan -- interest is front-loaded, so extra payments made early in the term save the most." }
-  ],
-  other: [
-    { title: 'Confirm there\'s no early-settlement penalty', body: 'Some loan agreements charge a fee for paying off early -- check the terms before making extra payments so the fee doesn\'t eat the interest you\'re trying to save.' },
-    { title: 'Prioritize against your other debts', body: "If you're juggling more than one loan, the Debt Payoff tab's Avalanche/Snowball comparison will tell you exactly which one extra cash should go to first." }
-  ]
-};
+// General strategies that apply regardless of loan type (3), plus 2 per type.
+const GENERAL_TIP_KEYS = ['g0', 'g1', 'g2'];
+const TYPE_TIP_KEYS = ['0', '1'];
 
 const LoanCalculator = ({ country }) => {
+  const { t } = useLanguage();
+  const SINGLE_BALANCE_SERIES = [{ key: 'debts', label: t('loan.seriesLoanBalance') }];
+  const COMPARISON_BALANCE_SERIES = [{ key: 'standard', label: t('loan.seriesStandard') }, { key: 'plan', label: t('loan.seriesExtra') }];
+  const formatYearAxis = (year) => t('loan.yr', { n: year });
+  const formatYearTooltip = (year) => t('loan.year', { n: year });
   const [inputs, setInputs] = usePersistedState(INPUTS_KEY, DEFAULT_INPUTS);
   const { loanType, principal, annualRate, termYears, extraMonthly, quotedAsPrimePlus, primeRate, margin } = inputs;
   // The rate actually fed to every calculation below -- prime + margin when quoted that
@@ -113,7 +81,9 @@ const LoanCalculator = ({ country }) => {
 
   const result = calculateLoanAmortization({ principal, annualRate: effectiveAnnualRate, termYears, extraMonthly, lumpSums: safeLumpSums });
   const repaymentMultiple = principal > 0 ? result.totalRepayment / principal : 0;
-  const activeType = LOAN_TYPES.find(t => t.key === loanType) || LOAN_TYPES[0];
+  const activeType = LOAN_TYPES.find(lt => lt.key === loanType) || LOAN_TYPES[0];
+  const activeTypeLabel = t(`loan.type${activeType.key}`);
+  const activeShortLabel = t(`loan.short${activeType.key}`);
 
   // Rate-shock table: South African home loans (and most vehicle finance) are
   // variable-rate, prime-linked -- the payment moves whenever the Reserve Bank moves.
@@ -161,7 +131,7 @@ const LoanCalculator = ({ country }) => {
   ];
 
   const exportCSV = () => {
-    const header = ['Year', 'Interest Paid', 'Principal Paid', 'Total Paid To Date', 'Remaining Balance'];
+    const header = [t('loan.csvYear'), t('loan.csvInterest'), t('loan.csvPrincipal'), t('loan.csvTotal'), t('loan.csvBalance')];
     const rows = result.yearlyData.map(r => [r.year, r.interestPaid, r.principalPaid, r.totalPaidToDate, r.balance]);
     downloadCSV(`wts-compoundiq-${loanType}-amortization.csv`, [header, ...rows]);
   };
@@ -176,7 +146,7 @@ const LoanCalculator = ({ country }) => {
     savePlanSection('loan', {
       savedAt: new Date().toISOString(),
       loanType,
-      loanTypeLabel: activeType.label,
+      loanTypeLabel: activeTypeLabel,
       principal,
       annualRate: effectiveAnnualRate,
       termYears,
@@ -192,8 +162,8 @@ const LoanCalculator = ({ country }) => {
   return (
     <div className="card loan-calculator">
       <div className="loan-header">
-        <h2>🏦 <Term k="amortization">Loan & Bond</Term> Calculator</h2>
-        <p>See exactly what a home loan (<Term k="bond">bond</Term>), vehicle loan, or any other fixed-rate loan actually costs you -- monthly installment, total interest, and the full payoff schedule.</p>
+        <h2>🏦 <Term k="amortization">{t('loan.termLabel')}</Term> {t('loan.titleSuffix')}</h2>
+        <p>{t('loan.introPre')}<Term k="bond">{t('loan.bondTerm')}</Term>{t('loan.introPost')}</p>
       </div>
 
       <div className="loan-type-presets">
@@ -203,7 +173,7 @@ const LoanCalculator = ({ country }) => {
             className={`loan-type-btn ${loanType === type.key ? 'active' : ''}`}
             onClick={() => selectLoanType(type)}
           >
-            {type.label}
+            {t(`loan.type${type.key}`)}
           </button>
         ))}
       </div>
@@ -215,7 +185,7 @@ const LoanCalculator = ({ country }) => {
 
       <div className="loan-form">
         <div className="form-group">
-          <label>Loan Amount ({country.symbol})</label>
+          <label>{t('loan.loanAmount', { symbol: country.symbol })}</label>
           <input type="number" min="0" step="10000" value={principal} onChange={(e) => updateInput('principal', e.target.value)} />
         </div>
         {quotedAsPrimePlus ? (
@@ -239,35 +209,35 @@ const LoanCalculator = ({ country }) => {
           </div>
         )}
         <div className="form-group">
-          <label>Loan Term (years)</label>
+          <label>{t('loan.loanTerm')}</label>
           <input type="number" min="1" max="50" value={termYears} onChange={(e) => updateInput('termYears', e.target.value)} />
         </div>
         <div className="form-group">
-          <label>Extra Monthly Payment ({country.symbol}, optional)</label>
+          <label>{t('loan.extraMonthly', { symbol: country.symbol })}</label>
           <input type="number" min="0" step="100" value={extraMonthly} onChange={(e) => updateInput('extraMonthly', e.target.value)} />
         </div>
       </div>
 
       <div className="loan-lumpsum-section">
         <div className="loan-lumpsum-header">
-          <h3>One-Off Extra Payments</h3>
-          <button className="loan-lumpsum-add-btn" onClick={addLumpSum}>+ Add One-Off</button>
+          <h3>{t('loan.oneOffTitle')}</h3>
+          <button className="loan-lumpsum-add-btn" onClick={addLumpSum}>{t('loan.addOneOff')}</button>
         </div>
         {lumpSums.length === 0 ? (
-          <p className="loan-lumpsum-empty">None added -- use this for a bonus, tax refund, or any extra payment landing in a specific month, on top of your regular payment above.</p>
+          <p className="loan-lumpsum-empty">{t('loan.oneOffEmpty')}</p>
         ) : (
           <div className="loan-lumpsum-list">
             {lumpSums.map((l) => (
               <div key={l.id} className="loan-lumpsum-row">
                 <div className="loan-lumpsum-field">
-                  <label>In month</label>
+                  <label>{t('loan.inMonth')}</label>
                   <input type="number" min="1" value={l.month} onChange={(e) => updateLumpSum(l.id, 'month', e.target.value)} />
                 </div>
                 <div className="loan-lumpsum-field">
-                  <label>Amount ({country.symbol})</label>
+                  <label>{t('loan.amount', { symbol: country.symbol })}</label>
                   <input type="number" min="0" step="1000" value={l.amount} onChange={(e) => updateLumpSum(l.id, 'amount', e.target.value)} />
                 </div>
-                <button className="loan-lumpsum-remove" onClick={() => removeLumpSum(l.id)} aria-label="Remove one-off payment">&times;</button>
+                <button className="loan-lumpsum-remove" onClick={() => removeLumpSum(l.id)} aria-label={t('loan.removeOneOff')}>&times;</button>
               </div>
             ))}
           </div>
@@ -278,28 +248,25 @@ const LoanCalculator = ({ country }) => {
         <>
           <div className="loan-results">
             <div className="loan-stat">
-              <span>Monthly Payment</span>
+              <span>{t('loan.monthlyPayment')}</span>
               <strong>{country.symbol} {result.monthlyPayment.toLocaleString()}</strong>
             </div>
             <div className="loan-stat">
-              <span>Total Repayment</span>
+              <span>{t('loan.totalRepayment')}</span>
               <strong>{country.symbol} {result.totalRepayment.toLocaleString()}</strong>
             </div>
             <div className="loan-stat">
-              <span>Total Interest Paid</span>
+              <span>{t('loan.totalInterest')}</span>
               <strong className="warn">{country.symbol} {result.totalInterest.toLocaleString()}</strong>
             </div>
             <div className="loan-stat">
-              <span>You Repay</span>
-              <strong>{repaymentMultiple.toFixed(2)}&times; what you borrowed</strong>
+              <span>{t('loan.youRepay')}</span>
+              <strong>{repaymentMultiple.toFixed(2)}{t('loan.whatYouBorrowed')}</strong>
             </div>
           </div>
 
           {!result.reachable && (
-            <p className="loan-warning">
-              ⚠️ At this rate, the required monthly payment barely covers (or doesn't cover) the interest --
-              this loan wouldn't actually pay itself off within a normal term. Double-check the rate and term.
-            </p>
+            <p className="loan-warning">{t('loan.warning')}</p>
           )}
 
           {rateShockRows && (
@@ -349,7 +316,7 @@ const LoanCalculator = ({ country }) => {
 
           {balanceChartPoints.length > 2 && (
             <div className="loan-chart-section">
-              <h3>Balance Over Time</h3>
+              <h3>{t('loan.balanceOverTime')}</h3>
               <SnapshotChart
                 points={balanceChartPoints}
                 series={showComparisonChart ? COMPARISON_BALANCE_SERIES : SINGLE_BALANCE_SERIES}
@@ -362,19 +329,19 @@ const LoanCalculator = ({ country }) => {
           )}
 
           <div className="loan-table-actions">
-            <h3>Year-by-Year Payoff Schedule</h3>
-            <button className="loan-export-btn" onClick={exportCSV}>⬇️ Export CSV</button>
+            <h3>{t('loan.schedule')}</h3>
+            <button className="loan-export-btn" onClick={exportCSV}>{t('loan.exportCsv')}</button>
           </div>
 
           <div className="table-container">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Year</th>
-                  <th>Interest Paid</th>
-                  <th>Principal Paid</th>
-                  <th>Total Paid To Date</th>
-                  <th>Remaining Balance</th>
+                  <th>{t('loan.thYear')}</th>
+                  <th>{t('loan.thInterest')}</th>
+                  <th>{t('loan.thPrincipal')}</th>
+                  <th>{t('loan.thTotalPaid')}</th>
+                  <th>{t('loan.thBalance')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -392,34 +359,30 @@ const LoanCalculator = ({ country }) => {
           </div>
 
           <button className="loan-save-plan-btn" onClick={savePlan}>
-            {saved ? '✓ Saved to My Plan' : '💾 Save This Plan'}
+            {saved ? t('loan.savedToPlan') : t('loan.savePlan')}
           </button>
         </>
       )}
 
       <div className="loan-tips-section">
-        <h3>💡 Ways to Pay {activeType.shortLabel === 'loan' ? 'It' : `Your ${activeType.shortLabel}`} Off Faster</h3>
+        <h3>{activeType.key === 'personal' || activeType.key === 'other' ? t('loan.tipsItTitle') : t('loan.tipsTypeTitle', { type: activeShortLabel })}</h3>
         <div className="loan-tips-grid">
-          {GENERAL_TIPS.map((tip) => (
-            <div key={tip.title} className="loan-tip-card">
-              <h4>{tip.title}</h4>
-              <p>{tip.body}</p>
+          {GENERAL_TIP_KEYS.map((k) => (
+            <div key={k} className="loan-tip-card">
+              <h4>{t(`loan.${k}Title`)}</h4>
+              <p>{t(`loan.${k}Body`)}</p>
             </div>
           ))}
-          {(TYPE_TIPS[loanType] || []).map((tip) => (
-            <div key={tip.title} className="loan-tip-card specific">
-              <h4>{tip.title}</h4>
-              <p>{tip.body}</p>
+          {TYPE_TIP_KEYS.map((n) => (
+            <div key={`${activeType.key}${n}`} className="loan-tip-card specific">
+              <h4>{t(`loan.${activeType.key}${n}Title`)}</h4>
+              <p>{t(`loan.${activeType.key}${n}Body`)}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <p className="loan-note">
-        Standard fixed-rate amortization -- assumes one constant interest rate for the whole term (no rate changes,
-        common with variable-rate loans), and doesn't include fees, insurance, rates & taxes, or bond registration
-        costs. Educational estimate only, not a loan offer -- confirm actual figures with your lender.
-      </p>
+      <p className="loan-note">{t('loan.note')}</p>
     </div>
   );
 };

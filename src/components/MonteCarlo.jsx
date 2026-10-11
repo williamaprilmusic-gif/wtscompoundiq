@@ -6,6 +6,7 @@ import { RETURN_MODELS } from '../data/historicalReturns';
 import Term from './Term';
 import FanChart from './FanChart';
 import { worstHistoricalWindow, projectThroughSequence } from '../worstHistoricalWindow';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const NUM_SIMULATIONS = 1000;
 
@@ -175,6 +176,7 @@ export const runSimulation = ({
 };
 
 const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [] }) => {
+  const { t } = useLanguage();
   const deterministic = calculateCompoundInterest({ initial, monthly, rate, years, inflation: 0, taxRate: country.taxRate, wrapper: false, compoundFrequency, contributionIncreaseRate: contributionIncrease, lumpSums });
   const hasWrapper = country.wrapperLabel && country.wrapperLabel !== 'N/A';
 
@@ -384,52 +386,47 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
   return (
     <div className="card monte-carlo">
       <div className="mc-header">
-        <h2>🎲 <Term k="monteCarloSimulation">Monte Carlo Simulation</Term></h2>
-        <p>{NUM_SIMULATIONS.toLocaleString()} randomized market paths over {years} years{compareWrapper && hasWrapper ? ` -- comparing taxable vs. ${country.wrapperLabel}` : ' -- pre-tax, ignores wrapper effects for simplicity'}.</p>
+        <h2>🎲 <Term k="monteCarloSimulation">{t('charts.mcTitle')}</Term></h2>
+        <p>{t('charts.mcIntro', { sims: NUM_SIMULATIONS.toLocaleString(), years, suffix: compareWrapper && hasWrapper ? t('charts.mcSuffixWrapper', { wrapper: country.wrapperLabel }) : t('charts.mcSuffixPlain') })}</p>
       </div>
 
       <div className="mc-model-toggle">
         <button className={`mc-model-btn ${returnModel === 'normal' ? 'active' : ''}`} onClick={() => setReturnModel('normal')}>
-          📊 Statistical (Normal Distribution)
+          {t('charts.mcStatistical')}
         </button>
         <button className={`mc-model-btn ${returnModel === 'historical' ? 'active' : ''}`} onClick={() => setReturnModel('historical')}>
-          📜 Historical (Bootstrap)
+          {t('charts.mcHistorical')}
         </button>
       </div>
 
       <div className="mc-form">
         <div className="form-group">
-          <label>Expected Annual Return (%)</label>
+          <label>{t('charts.mcExpected')}</label>
           <input type="number" value={rate} disabled />
-          <small>From your Calculator tab inputs{returnModel === 'historical' ? ' -- ignored in Historical mode' : ''}</small>
+          <small>{t('charts.mcFromCalc')}{returnModel === 'historical' ? t('charts.mcIgnored') : ''}</small>
         </div>
         {returnModel === 'normal' ? (
           <div className="form-group">
-            <label><Term k="volatility">Volatility</Term> / Std. Deviation (%)</label>
+            <label><Term k="volatility">{t('charts.mcVolatility')}</Term>{t('charts.mcStdDev')}</label>
             <input type="number" min="0" max="60" step="1" value={volatility} onChange={(e) => setVolatility(Number(e.target.value))} />
           </div>
         ) : (
           <div className="form-group">
-            <label>Historical Benchmark</label>
+            <label>{t('charts.mcBenchmark')}</label>
             <select value={historicalModelKey} onChange={(e) => setHistoricalModelKey(e.target.value)}>
-              {RETURN_MODELS.map(m => <option key={m.key} value={m.key}>{m.label}</option>)}
+              {RETURN_MODELS.map(m => <option key={m.key} value={m.key}>{t(`charts.model${m.key}`)}</option>)}
             </select>
-            <small>{activeHistoricalModel.data.length} yrs, illustrative/approximate -- see note below</small>
+            <small>{t('charts.mcYrsNote', { n: activeHistoricalModel.data.length })}</small>
           </div>
         )}
         <div className="form-group">
-          <label>Goal Amount ({country.symbol})</label>
+          <label>{t('charts.mcGoal', { symbol: country.symbol })}</label>
           <input type="number" min="0" step="10000" value={goal} onChange={(e) => setGoal(Number(e.target.value))} />
         </div>
       </div>
 
       {returnModel === 'historical' && (
-        <p className="mc-model-note">
-          Each simulated year independently draws one year's real historical return from the chosen benchmark
-          (bootstrap resampling, reordered -- not a replay of any single real period), so crashes, booms, and fat
-          tails come from actual market history instead of a smooth bell curve. Figures are illustrative/approximate,
-          not a live data feed, and no single benchmark is necessarily representative of {country.name} or of the future.
-        </p>
+        <p className="mc-model-note">{t('charts.mcModelNote', { country: country.name })}</p>
       )}
 
       {worstWindow && worstWindowOutcome && (
@@ -448,7 +445,7 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
       {hasWrapper && (
         <label className="mc-compare-toggle">
           <input type="checkbox" checked={compareWrapper} onChange={(e) => setCompareWrapper(e.target.checked)} />
-          Compare taxable vs. {country.wrapperLabel} outcomes (applies {country.taxRate}% tax to the taxable path each simulated year)
+          {t('charts.mcCompareToggle', { wrapper: country.wrapperLabel, rate: country.taxRate })}
         </label>
       )}
 
@@ -498,7 +495,7 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
       )}
 
       <button className="mc-run-btn" onClick={handleRun} disabled={isRunning}>
-        {isRunning ? '⏳ Running…' : 'Run Simulation'}
+        {isRunning ? t('charts.mcRunning') : t('charts.mcRun')}
       </button>
 
       <div className="mc-solver">
@@ -550,7 +547,7 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
       {result && (
         <div className="mc-results">
           <div className="mc-probability">
-            <span>Probability of Reaching Your Goal</span>
+            <span>{t('charts.mcProbability')}</span>
             <strong className={result.probabilityOfGoal >= 50 ? 'positive' : 'warn'}>{result.probabilityOfGoal.toFixed(1)}%</strong>
           </div>
 
@@ -571,11 +568,11 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
           <FanChart yearlyPercentiles={result.yearlyPercentiles} symbol={country.symbol} />
 
           <div className="mc-percentiles">
-            <div className="mc-stat"><span><Term k="percentile">10th percentile</Term></span><strong>{country.symbol} {Math.round(result.p10).toLocaleString()}</strong></div>
-            <div className="mc-stat"><span>25th percentile</span><strong>{country.symbol} {Math.round(result.p25).toLocaleString()}</strong></div>
-            <div className="mc-stat median"><span>Median (50th)</span><strong>{country.symbol} {Math.round(result.p50).toLocaleString()}</strong></div>
-            <div className="mc-stat"><span>75th percentile</span><strong>{country.symbol} {Math.round(result.p75).toLocaleString()}</strong></div>
-            <div className="mc-stat"><span>90th percentile</span><strong>{country.symbol} {Math.round(result.p90).toLocaleString()}</strong></div>
+            <div className="mc-stat"><span><Term k="percentile">{t('charts.mcPct10')}</Term></span><strong>{country.symbol} {Math.round(result.p10).toLocaleString()}</strong></div>
+            <div className="mc-stat"><span>{t('charts.mcPct25')}</span><strong>{country.symbol} {Math.round(result.p25).toLocaleString()}</strong></div>
+            <div className="mc-stat median"><span>{t('charts.median')}</span><strong>{country.symbol} {Math.round(result.p50).toLocaleString()}</strong></div>
+            <div className="mc-stat"><span>{t('charts.mcPct75')}</span><strong>{country.symbol} {Math.round(result.p75).toLocaleString()}</strong></div>
+            <div className="mc-stat"><span>{t('charts.mcPct90')}</span><strong>{country.symbol} {Math.round(result.p90).toLocaleString()}</strong></div>
           </div>
 
           {(() => {
@@ -635,17 +632,16 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
       {wrapperCompare && (
         <div className="mc-results mc-wrapper-compare">
           <p className="mc-compare-summary">
-            Median outcome with {country.wrapperLabel}: <strong className="positive">{country.symbol} {Math.round(wrapperCompare.sheltered.p50).toLocaleString()}</strong>
-            {' '}vs. taxable: <strong>{country.symbol} {Math.round(wrapperCompare.taxable.p50).toLocaleString()}</strong>
-            {' '}-- a median gap of <strong className="positive">{country.symbol} {Math.round(wrapperCompare.sheltered.p50 - wrapperCompare.taxable.p50).toLocaleString()}</strong> from tax alone,
-            purely from randomness-driven variation on top of your {rate}% expected return.
+            {t('charts.mcCompareSummary1', { wrapper: country.wrapperLabel })} <strong className="positive">{country.symbol} {Math.round(wrapperCompare.sheltered.p50).toLocaleString()}</strong>
+            {' '}{t('charts.mcCompareSummary2')} <strong>{country.symbol} {Math.round(wrapperCompare.taxable.p50).toLocaleString()}</strong>
+            {' '}{t('charts.mcCompareSummary3')} <strong className="positive">{country.symbol} {Math.round(wrapperCompare.sheltered.p50 - wrapperCompare.taxable.p50).toLocaleString()}</strong> {t('charts.mcCompareSummary4', { rate })}
           </p>
 
           <div className="mc-compare-grid">
             <div className="mc-compare-col">
-              <h3>Taxable Account</h3>
+              <h3>{t('charts.mcTaxable')}</h3>
               <div className="mc-probability small">
-                <span>Probability of Reaching Goal</span>
+                <span>{t('charts.mcProbShort')}</span>
                 <strong className={wrapperCompare.taxable.probabilityOfGoal >= 50 ? 'positive' : 'warn'}>{wrapperCompare.taxable.probabilityOfGoal.toFixed(1)}%</strong>
               </div>
               <FanChart yearlyPercentiles={wrapperCompare.taxable.yearlyPercentiles} symbol={country.symbol} />
@@ -653,7 +649,7 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
             <div className="mc-compare-col">
               <h3>{country.wrapperLabel}</h3>
               <div className="mc-probability small">
-                <span>Probability of Reaching Goal</span>
+                <span>{t('charts.mcProbShort')}</span>
                 <strong className={wrapperCompare.sheltered.probabilityOfGoal >= 50 ? 'positive' : 'warn'}>{wrapperCompare.sheltered.probabilityOfGoal.toFixed(1)}%</strong>
               </div>
               <FanChart yearlyPercentiles={wrapperCompare.sheltered.yearlyPercentiles} symbol={country.symbol} />

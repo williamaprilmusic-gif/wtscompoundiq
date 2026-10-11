@@ -3,10 +3,14 @@
 import React, { useState } from 'react';
 import './Term.css';
 import { GLOSSARY } from '../data/glossary';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const Term = ({ k, children }) => {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
-  const definition = GLOSSARY[k];
+  // Translated tooltip when one exists (glossary.<k>), else the English GLOSSARY entry.
+  const translated = t(`glossary.${k}`);
+  const definition = translated !== `glossary.${k}` ? translated : GLOSSARY[k];
 
   if (!definition) return <>{children}</>;
 

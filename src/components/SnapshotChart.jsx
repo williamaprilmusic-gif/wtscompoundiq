@@ -8,6 +8,7 @@
 import React, { useState, useRef, useMemo } from 'react';
 import './SnapshotChart.css';
 import { niceCeil, niceFloor, formatCompact } from '../utils/chartFormat';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const WIDTH = 640;
 const HEIGHT = 220;
@@ -62,6 +63,7 @@ const defaultFormatXTooltip = (x) => new Date(x).toLocaleDateString();
 // behavior -- `hasProjection` is false, `allPoints` is just `safePoints`, and no new
 // path/marker renders.
 const SnapshotChart = ({ points, series, symbol = '', xKey = 'date', formatXAxis = defaultFormatXAxis, formatXTooltip = defaultFormatXTooltip, projectedPoints = [] }) => {
+  const { t } = useLanguage();
   const svgRef = useRef(null);
   const [hoverIdx, setHoverIdx] = useState(null);
 
@@ -123,7 +125,7 @@ const SnapshotChart = ({ points, series, symbol = '', xKey = 'date', formatXAxis
   const hover = hoverIdx !== null ? allPoints[hoverIdx] : null;
   const hoverIsProjected = hasProjection && hoverIdx !== null && hoverIdx > safePoints.length - 1;
   const tooltipFlip = hover ? xScale(hoverIdx) > PAD_LEFT + plotW / 2 : false;
-  const ariaLabel = `${series.map(s => s.label).join(', ')} over time${hasProjection ? ', including a projected continuation' : ''}`;
+  const ariaLabel = t('loan.chartAria', { series: series.map(s => s.label).join(', ') }) + (hasProjection ? t('loan.chartAriaProjected') : '');
 
   return (
     <div className="snap-chart">
@@ -152,11 +154,11 @@ const SnapshotChart = ({ points, series, symbol = '', xKey = 'date', formatXAxis
             onKeyDown={handleKeyDown}
             onBlur={handlePointerLeave}
           >
-            {ticks.map((t, i) => (
+            {ticks.map((tv, i) => (
               <g key={i}>
-                <line x1={PAD_LEFT} x2={WIDTH - PAD_RIGHT} y1={yScale(t)} y2={yScale(t)} className="snap-chart-gridline" />
-                <text x={PAD_LEFT - 8} y={yScale(t)} className="snap-chart-axis-label" textAnchor="end" dominantBaseline="middle">
-                  {symbol}{formatCompact(t)}
+                <line x1={PAD_LEFT} x2={WIDTH - PAD_RIGHT} y1={yScale(tv)} y2={yScale(tv)} className="snap-chart-gridline" />
+                <text x={PAD_LEFT - 8} y={yScale(tv)} className="snap-chart-axis-label" textAnchor="end" dominantBaseline="middle">
+                  {symbol}{formatCompact(tv)}
                 </text>
               </g>
             ))}
@@ -166,7 +168,7 @@ const SnapshotChart = ({ points, series, symbol = '', xKey = 'date', formatXAxis
             {hasProjection && (
               <g>
                 <line x1={xScale(safePoints.length - 1)} x2={xScale(safePoints.length - 1)} y1={PAD_TOP} y2={HEIGHT - PAD_BOTTOM} className="snap-chart-today-line" />
-                <text x={xScale(safePoints.length - 1)} y={PAD_TOP - 4} className="snap-chart-axis-label" textAnchor="middle">Today</text>
+                <text x={xScale(safePoints.length - 1)} y={PAD_TOP - 4} className="snap-chart-axis-label" textAnchor="middle">{t('loan.chartToday')}</text>
               </g>
             )}
 
@@ -233,7 +235,7 @@ const SnapshotChart = ({ points, series, symbol = '', xKey = 'date', formatXAxis
             >
               <div className="snap-chart-tooltip-date">
                 {formatXTooltip(hover[xKey])}
-                {hoverIsProjected && <span className="snap-chart-tooltip-projected-tag"> (projected)</span>}
+                {hoverIsProjected && <span className="snap-chart-tooltip-projected-tag">{t('loan.chartProjected')}</span>}
               </div>
               {series.map(s => (
                 <div key={s.key} className="snap-chart-tooltip-row">

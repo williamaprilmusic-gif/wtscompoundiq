@@ -1,4 +1,5 @@
 // src/data/countries.js
+import { COUNTRY_NAMES } from './countryNames';
 // South Africa is the only entry this app actually runs its tax/wrapper calculations
 // against (WTS_COUNTRIES[0] in App.jsx -- there's no country picker any more). The other
 // 35 entries below are kept, unused for tax purposes, purely as a currency reference
@@ -722,6 +723,22 @@ export const countriesData = [
   // 36 countries total -- see the header note: South Africa (first entry) is the only
   // one this app's tax/wrapper logic actually runs against; the rest are currency-only.
 ];
+
+// Display names: each country's `name` is turned into a getter that returns the
+// Afrikaans/isiZulu name (src/data/countryNames.js) while one of those languages is
+// active, and the English name otherwise -- so every place that reads `country.name`
+// (including the country picker and the sentences built from it) follows the language
+// without each caller needing to know about it. The English name is kept as `nameEn`.
+let countryNameLanguage = 'en';
+export const setCountryNameLanguage = (lang) => { countryNameLanguage = lang; };
+countriesData.forEach((c) => {
+  const english = c.name;
+  Object.defineProperty(c, 'nameEn', { value: english, enumerable: false });
+  Object.defineProperty(c, 'name', {
+    enumerable: true,
+    get: () => COUNTRY_NAMES[countryNameLanguage]?.[c.code] ?? english
+  });
+});
 
 export const getCountryByCode = (code) => countriesData.find(c => c.code === code) || countriesData[0];
 

@@ -6,8 +6,10 @@ import { compareRetirementVehicle } from '../retirementComparison';
 import { estimateLossHarvestingSaving } from '../capitalGainsTax';
 import { getVerificationInfo } from '../data/countries';
 import Term from './Term';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [], taxBrackets = null, otherTaxableIncome = 0 }) => {
+  const { t } = useLanguage();
   const hasWrapper = country.wrapperLabel && country.wrapperLabel !== 'N/A';
   const verification = getVerificationInfo(country.code);
 
@@ -52,51 +54,47 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
   return (
     <div className="card tax-optimizer">
       <div className="tax-header">
-        <h2>🧾 Tax Optimizer</h2>
-        <p>See how much a tax-free wrapper is worth for your current {country.name} calculator inputs.</p>
+        <h2>{t('tax.title')}</h2>
+        <p>{t('tax.intro', { country: country.name })}</p>
         <span className={`tax-verification ${verification.stale ? 'stale' : ''}`}>
           {verification.date
-            ? `${verification.stale ? '⚠️ ' : '✓ '}${country.name}'s tax figures last verified ${verification.date} (${verification.daysAgo} day${verification.daysAgo === 1 ? '' : 's'} ago)${verification.stale ? ' -- overdue for a recheck' : ''}`
-            : '⚠️ Verification date unknown for this country'}
+            ? `${verification.stale ? '⚠️ ' : '✓ '}${t(verification.daysAgo === 1 ? 'tax.verifiedOne' : 'tax.verifiedMany', { country: country.name, date: verification.date, n: verification.daysAgo })}${verification.stale ? t('tax.overdue') : ''}`
+            : t('tax.unknownVerification')}
         </span>
       </div>
 
       {hasWrapper ? (
         <div className="tax-comparison">
           <div className="tax-compare-card taxable">
-            <span className="tax-compare-label">Taxable Account</span>
+            <span className="tax-compare-label">{t('tax.taxableAccount')}</span>
             <strong className="tax-compare-value">{country.symbol} {taxableResults.finalBalance.toLocaleString()}</strong>
-            <span className="tax-compare-sub">after {years} years, {taxBrackets ? 'progressive brackets' : `${country.taxRate}% tax`} on gains</span>
+            <span className="tax-compare-sub">{taxBrackets ? t('tax.afterYearsBrackets', { years }) : t('tax.afterYearsFlat', { years, rate: country.taxRate })}</span>
           </div>
           <div className="tax-compare-arrow">→</div>
           <div className="tax-compare-card wrapper">
             <span className="tax-compare-label">{country.wrapperLabel}</span>
             <strong className="tax-compare-value">{country.symbol} {wrapperResults.finalBalance.toLocaleString()}</strong>
-            <span className="tax-compare-sub">after {years} years, 0% tax on gains</span>
+            <span className="tax-compare-sub">{t('tax.afterYearsZero', { years })}</span>
           </div>
         </div>
       ) : (
         <div className="no-wrapper-note">
-          {country.name} has no standard retail tax-free wrapper in this dataset, so a taxable-vs-wrapper comparison isn't shown --
-          but interest here is taxed at an indicative {country.taxRate}%.
+          {t('tax.noWrapper', { country: country.name, rate: country.taxRate })}
         </div>
       )}
 
       <div className="tax-plans-grid">
         {hasWrapper && (
           <div className="tax-plan-card">
-            <h3><Term k="wrapper">Tax-Free Wrapper</Term> Strategy</h3>
-            <p>Use your {country.taxFreeWrapper} to shelter these contributions from tax entirely.</p>
+            <h3><Term k="wrapper">{t('tax.wrapperTerm')}</Term> {t('tax.wrapperSuffix')}</h3>
+            <p>{t('tax.wrapperUse', { wrapper: country.taxFreeWrapper })}</p>
             <ul>
-              <li>Contribution limit: {country.taxFreeLimit}</li>
-              <li>Tax avoided over {years} years: <strong>{country.symbol} {totalTaxPaid.toLocaleString()}</strong></li>
-              <li>Extra balance from using the wrapper: <strong className="positive">{country.symbol} {wrapperBenefit.toLocaleString()}</strong></li>
+              <li>{t('tax.contributionLimit', { limit: country.taxFreeLimit })}</li>
+              <li>{t('tax.taxAvoided', { years })} <strong>{country.symbol} {totalTaxPaid.toLocaleString()}</strong></li>
+              <li>{t('tax.extraBalance')} <strong className="positive">{country.symbol} {wrapperBenefit.toLocaleString()}</strong></li>
             </ul>
             {wrapperResults.wrapperCapExceeded && (
-              <p className="wrapper-cap-note">
-                ⚠️ Your contribution plan exceeds this wrapper's real-world annual or lifetime limit in at least one year --
-                the figures above assume full shelter, but the portion over the cap would actually be taxed like a normal account.
-              </p>
+              <p className="wrapper-cap-note">{t('tax.capNote')}</p>
             )}
             {lifetimeLimit > 0 && (
               <div className="tfsa-lifetime-tracker">
@@ -123,12 +121,12 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
         )}
 
         <div className="tax-plan-card">
-          <h3><Term k="taxLossHarvesting">Tax-Loss Harvesting</Term></h3>
-          <p>Offset capital gains with investment losses to reduce your tax burden.</p>
+          <h3><Term k="taxLossHarvesting">{t('tax.harvestTerm')}</Term></h3>
+          <p>{t('tax.harvestIntro')}</p>
           <ul>
-            <li>Sell investments at a loss to offset gains elsewhere in your portfolio</li>
-            <li>Reinvest in similar (not identical) assets to stay invested</li>
-            <li>Watch local wash-sale / bed-and-breakfasting rules before repurchasing</li>
+            <li>{t('tax.harvest1')}</li>
+            <li>{t('tax.harvest2')}</li>
+            <li>{t('tax.harvest3')}</li>
           </ul>
           <div className="tax-loss-harvest-calc">
             <div className="form-group">
@@ -152,58 +150,50 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
         </div>
 
         <div className="tax-plan-card">
-          <h3><Term k="assetLocation">Asset Location Strategy</Term></h3>
-          <p>Place tax-inefficient investments in tax-advantaged accounts, and tax-efficient ones in taxable accounts.</p>
+          <h3><Term k="assetLocation">{t('tax.locationTerm')}</Term></h3>
+          <p>{t('tax.locationIntro')}</p>
           <ul>
-            <li>Put bonds and interest-heavy assets in tax-advantaged wrappers first</li>
-            <li>Keep long-term growth stocks in taxable accounts where rates are often lower</li>
-            <li>Favor low-turnover, tax-efficient index funds in taxable accounts</li>
+            <li>{t('tax.location1')}</li>
+            <li>{t('tax.location2')}</li>
+            <li>{t('tax.location3')}</li>
           </ul>
         </div>
       </div>
 
       <div className="retirement-comparison">
-        <h3>🏦 <Term k="retirementFund">Retirement Fund</Term> Comparison</h3>
+        <h3>🏦 <Term k="retirementFund">{t('tax.retirementTerm')}</Term> {t('tax.retirementSuffix')}</h3>
         <p className="retirement-comparison-desc">
-          A retirement fund (e.g. South Africa's RA/pension/provident funds, or a traditional-style pension elsewhere)
-          works differently from the {hasWrapper ? country.wrapperLabel : 'tax-free wrapper'} above: contributions get an
-          upfront tax deduction (a refund at your rate today), growth compounds tax-free, and it's the withdrawal that
-          gets taxed -- once, years from now.
+          {t('tax.retirementDesc', { wrapper: hasWrapper ? country.wrapperLabel : t('tax.taxFreeWrapperFallback') })}
         </p>
         <div className="retirement-comparison-form">
           <div className="form-group">
-            <label>Contribution Tax Refund Rate (%)</label>
+            <label>{t('tax.contributionRefundRate')}</label>
             <input type="number" min="0" max="60" step="1" value={contributionTaxRate} onChange={(e) => setContributionTaxRate(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Withdrawal Tax Rate (%)</label>
+            <label>{t('tax.withdrawalRate')}</label>
             <input type="number" min="0" max="60" step="1" value={withdrawalTaxRate} onChange={(e) => setWithdrawalTaxRate(Number(e.target.value))} />
           </div>
         </div>
         <div className="retirement-comparison-grid">
           <div className="retirement-stat">
-            <span>Net Cost of Contributions (after refund)</span>
+            <span>{t('tax.netCost')}</span>
             <strong>{country.symbol} {Math.round(retirementResults.netContributionCost).toLocaleString()}</strong>
           </div>
           <div className="retirement-stat">
-            <span>Tax Refunds Received Along the Way</span>
+            <span>{t('tax.refunds')}</span>
             <strong className="positive">{country.symbol} {Math.round(retirementResults.contributionTaxRefund).toLocaleString()}</strong>
           </div>
           <div className="retirement-stat">
-            <span>Balance Before Withdrawal Tax</span>
+            <span>{t('tax.beforeWithdrawal')}</span>
             <strong>{country.symbol} {retirementResults.finalBalance.toLocaleString()}</strong>
           </div>
           <div className="retirement-stat">
-            <span>Net After Withdrawal Tax</span>
+            <span>{t('tax.netAfter')}</span>
             <strong className="positive">{country.symbol} {Math.round(retirementResults.netAfterWithdrawalTax).toLocaleString()}</strong>
           </div>
         </div>
-        <p className="retirement-comparison-note">
-          Illustrative, not tax advice -- real retirement contribution-deduction limits and withdrawal tax tables vary
-          by country (and often by age/withdrawal size) and aren't modeled here; both rates above are a flat starting
-          guess, editable to match your own situation. The refund isn't compounded back into the balance above -- it's
-          shown as a separate amount you'd actually receive along the way, not part of the retirement pot itself.
-        </p>
+        <p className="retirement-comparison-note">{t('tax.retirementNote')}</p>
       </div>
     </div>
   );

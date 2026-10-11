@@ -1,6 +1,7 @@
 // src/i18n/LanguageContext.jsx
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { translations, LANGUAGES } from './translations';
+import { setCountryNameLanguage } from '../data/countries';
 
 const LANGUAGE_KEY = 'wts_compoundiq_language';
 const DEFAULT_LANGUAGE = 'en';
@@ -36,6 +37,10 @@ export const LanguageProvider = ({ children }) => {
   // in (it was hardcoded to "en" in index.html and never updated), and `dir` at least
   // gets RTL script reading direction right (see RTL_LANGUAGES above) even though the
   // rest of the layout isn't mirrored.
+  // Country names are looked up lazily (see data/countries.js); set synchronously during
+  // render so the very first paint after a switch already uses the new names.
+  setCountryNameLanguage(language);
+
   useEffect(() => {
     document.documentElement.lang = language;
     document.documentElement.dir = RTL_LANGUAGES.has(language) ? 'rtl' : 'ltr';

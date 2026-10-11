@@ -198,7 +198,7 @@ export default function App() {
     try {
       await navigator.clipboard.writeText(url);
     } catch {
-      window.prompt('Copy this link:', url); // clipboard API unavailable (e.g. insecure context) -- fall back to a manual copy
+      window.prompt(t('app.copyLink'), url); // clipboard API unavailable (e.g. insecure context) -- fall back to a manual copy
       return;
     }
     setShareLinkCopied(true);
@@ -247,7 +247,7 @@ export default function App() {
     if (scenarios.length >= MAX_SCENARIOS) return;
     setScenarios(prev => [...prev, {
       id: uniqueId(),
-      label: `Scenario ${prev.length + 1}`,
+      label: t('app.scenarioN', { n: prev.length + 1 }),
       countryName: country.name,
       symbol: country.symbol,
       initial, monthly, rate, years, wrapper,
@@ -261,8 +261,8 @@ export default function App() {
 
   const exportScenariosCSV = () => {
     downloadCSV('wts-compoundiq-scenarios.csv', [
-      ['Label', 'Country', 'Initial', 'Monthly', 'Rate %', 'Years', 'Wrapper', 'Final Balance', 'Total Interest'],
-      ...scenarios.map(s => [s.label, s.countryName, s.initial, s.monthly, s.rate, s.years, s.wrapper ? 'Yes' : 'No', s.finalBalance, s.totalInterest])
+      [t('app.csvLabel'), t('app.csvCountry'), t('app.csvInitial'), t('app.csvMonthly'), t('app.csvRate'), t('app.csvYears'), t('app.csvWrapper'), t('app.csvFinal'), t('app.csvInterest')],
+      ...scenarios.map(s => [s.label, s.countryName, s.initial, s.monthly, s.rate, s.years, s.wrapper ? t('app.yes') : t('app.no'), s.finalBalance, s.totalInterest])
     ]);
   };
 
@@ -596,7 +596,7 @@ export default function App() {
       <header className="app-header">
         <div className="brand">
           <div className="logo-badge">
-            <img src={wtsLogo} alt="WTS logo" className="logo-img" />
+            <img src={wtsLogo} alt={t('app.logoAlt')} className="logo-img" />
           </div>
           <div className="brand-text">
             <h1>WTS CompoundIQ</h1>
@@ -611,8 +611,8 @@ export default function App() {
           <button
             className="theme-toggle-btn"
             onClick={toggleTheme}
-            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            aria-label={theme === 'dark' ? t('app.switchToLight') : t('app.switchToDark')}
+            title={theme === 'dark' ? t('app.switchToLight') : t('app.switchToDark')}
           >
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
@@ -642,7 +642,7 @@ export default function App() {
                     key={tab.name}
                     className={`tab-btn ${activeTab === tab.name ? 'active' : ''} ${locked ? 'locked' : ''}`}
                     aria-current={activeTab === tab.name ? 'page' : undefined}
-                    title={locked ? `Requires ${tab.tier} or higher` : undefined}
+                    title={locked ? t('app.requires', { tier: tab.tier }) : undefined}
                     onClick={() => {
                       if (!locked) {
                         setActiveTab(tab.name);
@@ -696,7 +696,7 @@ export default function App() {
                   )}
                 </div>
                 <div className="form-group">
-                  <label><Term k="inflation">{t('calculator.inflation')}</Term> (%/yr)</label>
+                  <label><Term k="inflation">{t('calculator.inflation')}</Term> {t('app.perYr')}</label>
                   <input type="number" step="0.1" value={inflation} onChange={(e) => setInflation(Number(e.target.value))} />
                 </div>
                 <div className="form-group">
@@ -710,7 +710,7 @@ export default function App() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label><Term k="contributionIncrease">{t('calculator.annualContributionIncrease')}</Term> (%/yr)</label>
+                  <label><Term k="contributionIncrease">{t('calculator.annualContributionIncrease')}</Term> {t('app.perYr')}</label>
                   <input type="number" min="0" step="0.5" value={contributionIncrease} onChange={(e) => setContributionIncrease(Number(e.target.value))} />
                 </div>
                 <div className="form-group checkbox-group">

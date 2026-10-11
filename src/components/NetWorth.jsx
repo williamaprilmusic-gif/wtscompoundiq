@@ -15,12 +15,7 @@ import SnapshotChart from './SnapshotChart';
 import CountrySelect from './CountrySelect';
 import AllocationChart from './AllocationChart';
 import SubTabs from './SubTabs';
-
-const HISTORY_SERIES = [
-  { key: 'assets', label: 'Assets' },
-  { key: 'debts', label: 'Debts' },
-  { key: 'net', label: 'Net Worth' }
-];
+import { useLanguage } from '../i18n/LanguageContext';
 
 // Fixed category sets per item type -- 'Other' is the default for a new item and the
 // fallback for anything a CSV import can't match, so every item always has a usable
@@ -64,8 +59,8 @@ export const isValidNetWorthEntry = (h) => Number.isFinite(h.netWorth)
 // '' is the sentinel code for "follow whatever the Calculator tab's country is" --
 // no real country uses an empty code, so it can't collide. Recomputed per-render
 // (cheap -- 37 entries) since the "follow" option's label depends on scenarioCountry.
-const REPORTING_CURRENCY_OPTIONS = (scenarioCountry) => [
-  { code: '', name: `Follow Calculator tab (${scenarioCountry?.name ?? '...'})`, currency: scenarioCountry?.currency ?? '' },
+const REPORTING_CURRENCY_OPTIONS = (scenarioCountry, t) => [
+  { code: '', name: t('nw.followCalc', { country: scenarioCountry?.name ?? '...' }), currency: scenarioCountry?.currency ?? '' },
   ...countriesData
 ];
 
@@ -84,10 +79,10 @@ const downloadTemplate = () => {
 // Fixed base set -- the FX Stress Test tab is appended conditionally below (only once
 // there's a foreign-currency item to stress-test), so it doesn't sit in the bar as a
 // permanently-empty option for a single-currency user.
-const BASE_SUB_TABS = [
-  { key: 'tracker', label: '💰 Tracker' },
-  { key: 'allocation', label: '📊 Allocation' },
-  { key: 'history', label: '📈 History & Forecast' }
+const BASE_SUB_TAB_KEYS = [
+  { key: 'tracker', labelKey: 'nw.tabTracker' },
+  { key: 'allocation', labelKey: 'nw.tabAllocation' },
+  { key: 'history', labelKey: 'nw.tabHistory' }
 ];
 
 // Shared empty-state for a sub-tab with nothing to show yet -- Allocation, History, and
@@ -108,6 +103,13 @@ const NwTabEmpty = ({ message, onGoToTracker }) => (
 );
 
 const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onReportingCurrencyChange, canFxStressTest = false, onOpenPricing }) => {
+  const { t } = useLanguage();
+  const HISTORY_SERIES = [
+    { key: 'assets', label: t('nw.assets') },
+    { key: 'debts', label: t('nw.debts') },
+    { key: 'net', label: t('nw.netWorth') }
+  ];
+  const BASE_SUB_TABS = BASE_SUB_TAB_KEYS.map(s => ({ key: s.key, label: t(s.labelKey) }));
   const [activeSubTab, setActiveSubTab] = useState('tracker');
   const [items, setItems] = usePersistedState(ITEMS_KEY, []);
   const [history, setHistory] = useState([]);
@@ -139,7 +141,7 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
   const removeItem = (id) => {
     const item = items.find(i => i.id === id);
     const hasData = !!(item && (safeTrim(item.name) || item.value > 0));
-    if (!confirmRemoval(hasData, `Remove "${safeTrim(item?.name) || 'this item'}"? This can't be undone.`)) return;
+    if (!confirmRemoval(hasData, t('nw.removeConfirm', { name: safeTrim(item?.name) || t('nw.thisItem') }))) return;
     setItems(prev => prev.filter(i => i.id !== id));
   };
 
@@ -152,7 +154,7 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
     reader.onload = (e) => {
       try {
         const rows = parseCSV(String(e.target.result));
-        if (rows.length < 2) { setImportError('That CSV has no data rows -- see the template for the expected format.'); return; }
+        if (rows.length < 2) { setImportError(t('nw.errNoRows')); return; }
         const header = rows[0].map(h => h.trim().toLowerCase());
         const nameIdx = header.indexOf('name');
         const typeIdx = header.indexOf('type');
@@ -160,7 +162,7 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
         const currencyIdx = header.indexOf('currency');
         const valueIdx = header.indexOf('value');
         if (nameIdx === -1 || valueIdx === -1) {
-          setImportError('CSV needs at least "name" and "value" columns -- download the template below for the expected format.');
+          setImportError(t('nw.errColumns'));
           return;
         }
         const imported = rows.slice(1).map((r) => {
@@ -182,13 +184,13 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
         }).filter(item => item.name && item.value > 0);
 
         if (imported.length === 0) {
-          setImportError('No usable rows found -- each row needs a name and a value greater than 0.');
+          setImportError(t('nw.errNoUsable'));
           return;
         }
         setItems(prev => [...prev, ...imported]);
         setImportError(null);
       } catch {
-        setImportError("Could not read that file -- make sure it's a plain .csv export.");
+        setImportError(t('nw.errRead'));
       }
     };
     reader.readAsText(file);
@@ -216,7 +218,7 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
   // rendering a slice for them.
   const buildSegments = (categories, type) => categories.map(cat => ({
     key: cat,
-    label: cat,
+    label: t(`nw.cat.${cat}`),
     colorVar: CATEGORY_COLOR_VAR[cat],
     value: items.filter(i => i.type === type && (i.category || 'Other') === cat).reduce((s, i) => s + valueIn(i), 0)
   }));
@@ -331,14 +333,14 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
     // actually visible) while this clears the raw, unfiltered history.length (which can
     // include a corrupt entry hidden from that count); stating a specific number here
     // risked contradicting the header instead of just confirming the action.
-    if (!window.confirm("Clear all saved net worth snapshots? This can't be undone.")) return;
+    if (!window.confirm(t('nw.clearConfirm'))) return;
     localStorage.removeItem(HISTORY_KEY);
     setHistory([]);
   };
 
   const exportHistoryCSV = () => {
     downloadCSV('wts-compoundiq-networth-history.csv', [
-      ['Date', `Assets (${country.currency})`, `Debts (${country.currency})`, `Net Worth (${country.currency})`],
+      [t('nw.csvDate'), t('nw.csvAssets', { currency: country.currency }), t('nw.csvDebts', { currency: country.currency }), t('nw.csvNet', { currency: country.currency })],
       ...convertedHistory.map(h => [new Date(h.date).toLocaleDateString(), Math.round(h.assets), Math.round(h.debts), Math.round(h.net)])
     ]);
   };
@@ -346,34 +348,34 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
   return (
     <div className="card net-worth">
       <div className="nw-header">
-        <h2>💰 <Term k="netWorth">Net Worth</Term> Tracker</h2>
-        <p>List everything you own (assets) and owe (debts) to see the full picture -- then save snapshots to track it over time. Each item can be in its own currency; totals convert to {country.name}'s {country.currency}.</p>
+        <h2>💰 <Term k="netWorth">{t('nw.netWorth')}</Term> {t('nw.titleSuffix')}</h2>
+        <p>{t('nw.intro', { country: country.name, currency: country.currency })}</p>
         {onReportingCurrencyChange && (
           <div className="nw-currency-row">
-            <span className="nw-currency-label">Display currency</span>
+            <span className="nw-currency-label">{t('nw.displayCurrency')}</span>
             <CountrySelect
-              countries={REPORTING_CURRENCY_OPTIONS(scenarioCountry)}
+              countries={REPORTING_CURRENCY_OPTIONS(scenarioCountry, t)}
               value={reportingCurrencyCode}
               onChange={onReportingCurrencyChange}
-              ariaLabel="Net Worth display currency"
+              ariaLabel={t('nw.displayCurrencyAria')}
             />
           </div>
         )}
         <div className="nw-import-row">
           <label className="nw-import-btn">
-            📥 Import CSV
+            {t('nw.importCsv')}
             <input type="file" accept=".csv,text/csv" onChange={handleImportFile} hidden />
           </label>
-          <button className="nw-template-btn" onClick={downloadTemplate}>Download template</button>
+          <button className="nw-template-btn" onClick={downloadTemplate}>{t('nw.template')}</button>
         </div>
         {importError && <p className="nw-import-error">⚠️ {importError}</p>}
       </div>
 
       <SubTabs
-        tabs={hasForeignCurrencyItems ? [...BASE_SUB_TABS, { key: 'fx', label: '💱 FX Stress Test' }] : BASE_SUB_TABS}
+        tabs={hasForeignCurrencyItems ? [...BASE_SUB_TABS, { key: 'fx', label: t('nw.tabFx') }] : BASE_SUB_TABS}
         active={activeSubTab}
         onChange={setActiveSubTab}
-        ariaLabel="Net Worth section"
+        ariaLabel={t('nw.sectionAria')}
       />
 
       {activeSubTab === 'tracker' && (
@@ -381,42 +383,42 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
       <div className="nw-columns">
         <div className="nw-column">
           <div className="nw-column-header">
-            <h3>Assets</h3>
-            <button className="nw-add-btn asset" onClick={() => addItem('asset')}>+ Add Asset</button>
+            <h3>{t('nw.assets')}</h3>
+            <button className="nw-add-btn asset" onClick={() => addItem('asset')}>{t('nw.addAsset')}</button>
           </div>
-          {items.filter(i => i.type === 'asset').length === 0 && <p className="nw-empty">No assets added yet.</p>}
+          {items.filter(i => i.type === 'asset').length === 0 && <p className="nw-empty">{t('nw.noAssets')}</p>}
           {items.filter(i => i.type === 'asset').map(i => (
             <div key={i.id} className="nw-item">
-              <input type="text" placeholder="e.g. Savings account" aria-label="Asset name" value={i.name} onChange={(e) => updateItem(i.id, 'name', e.target.value)} />
-              <select aria-label="Asset category" value={i.category || 'Other'} onChange={(e) => updateItem(i.id, 'category', e.target.value)}>
-                {ASSET_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              <input type="text" placeholder={t('nw.assetPlaceholder')} aria-label={t('nw.assetName')} value={i.name} onChange={(e) => updateItem(i.id, 'name', e.target.value)} />
+              <select aria-label={t('nw.assetCategory')} value={i.category || 'Other'} onChange={(e) => updateItem(i.id, 'category', e.target.value)}>
+                {ASSET_CATEGORIES.map(c => <option key={c} value={c}>{t(`nw.cat.${c}`)}</option>)}
               </select>
-              <select aria-label="Asset currency" value={i.currency || country.code} onChange={(e) => updateItem(i.id, 'currency', e.target.value)}>
+              <select aria-label={t('nw.assetCurrency')} value={i.currency || country.code} onChange={(e) => updateItem(i.id, 'currency', e.target.value)}>
                 {countriesData.map(c => <option key={c.code} value={c.code}>{c.currency}</option>)}
               </select>
-              <input type="number" min="0" aria-label="Asset value" value={i.value} onChange={(e) => updateItem(i.id, 'value', e.target.value)} />
-              <button className="nw-remove" onClick={() => removeItem(i.id)} aria-label="Remove">&times;</button>
+              <input type="number" min="0" aria-label={t('nw.assetValue')} value={i.value} onChange={(e) => updateItem(i.id, 'value', e.target.value)} />
+              <button className="nw-remove" onClick={() => removeItem(i.id)} aria-label={t('nw.remove')}>&times;</button>
             </div>
           ))}
         </div>
 
         <div className="nw-column">
           <div className="nw-column-header">
-            <h3>Debts</h3>
-            <button className="nw-add-btn debt" onClick={() => addItem('debt')}>+ Add Debt</button>
+            <h3>{t('nw.debts')}</h3>
+            <button className="nw-add-btn debt" onClick={() => addItem('debt')}>{t('nw.addDebt')}</button>
           </div>
-          {items.filter(i => i.type === 'debt').length === 0 && <p className="nw-empty">No debts added yet.</p>}
+          {items.filter(i => i.type === 'debt').length === 0 && <p className="nw-empty">{t('nw.noDebts')}</p>}
           {items.filter(i => i.type === 'debt').map(i => (
             <div key={i.id} className="nw-item">
-              <input type="text" placeholder="e.g. Credit card" aria-label="Debt name" value={i.name} onChange={(e) => updateItem(i.id, 'name', e.target.value)} />
-              <select aria-label="Debt category" value={i.category || 'Other'} onChange={(e) => updateItem(i.id, 'category', e.target.value)}>
-                {DEBT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              <input type="text" placeholder={t('nw.debtPlaceholder')} aria-label={t('nw.debtName')} value={i.name} onChange={(e) => updateItem(i.id, 'name', e.target.value)} />
+              <select aria-label={t('nw.debtCategory')} value={i.category || 'Other'} onChange={(e) => updateItem(i.id, 'category', e.target.value)}>
+                {DEBT_CATEGORIES.map(c => <option key={c} value={c}>{t(`nw.cat.${c}`)}</option>)}
               </select>
-              <select aria-label="Debt currency" value={i.currency || country.code} onChange={(e) => updateItem(i.id, 'currency', e.target.value)}>
+              <select aria-label={t('nw.debtCurrency')} value={i.currency || country.code} onChange={(e) => updateItem(i.id, 'currency', e.target.value)}>
                 {countriesData.map(c => <option key={c.code} value={c.code}>{c.currency}</option>)}
               </select>
-              <input type="number" min="0" aria-label="Debt value" value={i.value} onChange={(e) => updateItem(i.id, 'value', e.target.value)} />
-              <button className="nw-remove" onClick={() => removeItem(i.id)} aria-label="Remove">&times;</button>
+              <input type="number" min="0" aria-label={t('nw.debtValue')} value={i.value} onChange={(e) => updateItem(i.id, 'value', e.target.value)} />
+              <button className="nw-remove" onClick={() => removeItem(i.id)} aria-label={t('nw.remove')}>&times;</button>
             </div>
           ))}
         </div>
@@ -424,20 +426,20 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
 
       <div className={`nw-result ${netWorth >= 0 ? 'positive' : 'negative'}`}>
         <div className="nw-result-row">
-          <span>Total Assets</span>
+          <span>{t('nw.totalAssets')}</span>
           <strong>{country.symbol} {Math.round(totalAssets).toLocaleString()}</strong>
         </div>
         <div className="nw-result-row">
-          <span>Total Debts</span>
+          <span>{t('nw.totalDebts')}</span>
           <strong>{country.symbol} {Math.round(totalDebts).toLocaleString()}</strong>
         </div>
         <div className="nw-result-row main">
-          <span>Net Worth</span>
+          <span>{t('nw.netWorth')}</span>
           <strong>{country.symbol} {Math.round(netWorth).toLocaleString()}</strong>
         </div>
         {delta !== null && (
           <div className={`nw-delta ${delta >= 0 ? 'up' : 'down'}`}>
-            {delta >= 0 ? '▲' : '▼'} {country.symbol} {Math.abs(Math.round(delta)).toLocaleString()} since last snapshot
+            {delta >= 0 ? '▲' : '▼'} {t('nw.sinceLast', { amount: `${country.symbol} ${Math.abs(Math.round(delta)).toLocaleString()}` })}
           </div>
         )}
       </div>
@@ -486,19 +488,19 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
           <div className="nw-allocation">
             {totalAssets > 0 && (
               <div className="nw-allocation-card">
-                <h3>Asset Allocation</h3>
+                <h3>{t('nw.assetAllocation')}</h3>
                 <AllocationChart segments={assetSegments} symbol={country.symbol} />
               </div>
             )}
             {totalDebts > 0 && (
               <div className="nw-allocation-card">
-                <h3>Debt Breakdown</h3>
+                <h3>{t('nw.debtBreakdown')}</h3>
                 <AllocationChart segments={debtSegments} symbol={country.symbol} />
               </div>
             )}
           </div>
         ) : (
-          <NwTabEmpty message="Add some assets or debts to see your allocation breakdown." onGoToTracker={() => setActiveSubTab('tracker')} />
+          <NwTabEmpty message={t('nw.emptyAllocation')} onGoToTracker={() => setActiveSubTab('tracker')} />
         )
       )}
 
@@ -510,14 +512,11 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
           // already sitting on this tab, activeSubTab stays 'fx' with no button left to
           // click away from it. Same empty-state pattern as Allocation/History above,
           // rather than a blank pane below the tab bar.
-          <NwTabEmpty message="Add an item in a different currency to see an FX stress test." onGoToTracker={() => setActiveSubTab('tracker')} />
+          <NwTabEmpty message={t('nw.emptyFx')} onGoToTracker={() => setActiveSubTab('tracker')} />
         ) : canFxStressTest ? (
           <div className="nw-fx-stress">
-            <h3>💱 FX Stress Test</h3>
-            <p className="nw-fx-stress-desc">
-              See how much your net worth actually moves if {country.currency} shifts against everything you hold in a
-              different currency -- realistic for anyone with offshore holdings.
-            </p>
+            <h3>{t('nw.fxTitle')}</h3>
+            <p className="nw-fx-stress-desc">{t('nw.fxDesc', { currency: country.currency })}</p>
             <div className="nw-fx-stress-slider-row">
               <input
                 type="range"
@@ -526,7 +525,7 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
                 step="1"
                 value={fxShockPct}
                 onChange={(e) => setFxShockPct(Number(e.target.value))}
-                aria-label={`${country.currency} shock percentage`}
+                aria-label={t('nw.fxShockAria', { currency: country.currency })}
               />
               <span className="nw-fx-stress-pct">{fxShockPct > 0 ? '+' : ''}{fxShockPct}%</span>
             </div>
@@ -550,11 +549,11 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
 
             <div className="nw-fx-stress-grid">
               <div className="nw-fx-stress-stat">
-                <span>Net Worth at {fxShockPct > 0 ? '+' : ''}{fxShockPct}%</span>
+                <span>{t('nw.fxNetAt', { pct: `${fxShockPct > 0 ? '+' : ''}${fxShockPct}` })}</span>
                 <strong className={shockedNetWorth >= 0 ? 'positive' : 'negative'}>{country.symbol} {Math.round(shockedNetWorth).toLocaleString()}</strong>
               </div>
               <div className="nw-fx-stress-stat">
-                <span>Change from Today</span>
+                <span>{t('nw.fxChange')}</span>
                 <strong className={shockedNetWorth - netWorth >= 0 ? 'positive' : 'negative'}>
                   {shockedNetWorth - netWorth >= 0 ? '+' : '-'}{country.symbol} {Math.abs(Math.round(shockedNetWorth - netWorth)).toLocaleString()}
                 </strong>
@@ -566,18 +565,13 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
                 </strong>
               </div>
             </div>
-            <p className="nw-fx-stress-note">
-              Assumes every foreign-currency item moves by the same {fxShockPct}% at once (a simplification -- real
-              currencies don't move in lockstep) and uses this app's illustrative, approximate exchange rate table, not
-              live rates.
-            </p>
+            <p className="nw-fx-stress-note">{t('nw.fxNote', { pct: fxShockPct })}</p>
           </div>
         ) : (
           <div className="nw-fx-stress-upsell">
             <p>
-              💱 <strong>FX Stress Test</strong> -- see how much your net worth actually moves if {country.currency} shifts
-              against your offshore holdings. Included on Ultra.{' '}
-              {onOpenPricing && <button type="button" className="nw-fx-stress-upsell-btn" onClick={onOpenPricing}>View Pricing</button>}
+              💱 <strong>{t('nw.fxUpsell1')}</strong>{t('nw.fxUpsell2', { currency: country.currency })}{' '}
+              {onOpenPricing && <button type="button" className="nw-fx-stress-upsell-btn" onClick={onOpenPricing}>{t('nw.viewPricing')}</button>}
             </p>
           </div>
         )
@@ -591,10 +585,10 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
                 filtered out of convertedHistory above but stays in raw history (so "Clear
                 history" below can still remove it), and this count should match what the
                 list/chart below actually display rather than what's stored. */}
-            <h3>History ({convertedHistory.length} snapshot{convertedHistory.length === 1 ? '' : 's'})</h3>
+            <h3>{t(convertedHistory.length === 1 ? 'nw.historyOne' : 'nw.historyMany', { n: convertedHistory.length })}</h3>
             <div className="nw-history-header-actions">
-              <button className="history-export-btn" onClick={exportHistoryCSV}>⬇️ Export CSV</button>
-              <button className="nw-clear-btn" onClick={clearHistory}>Clear history</button>
+              <button className="history-export-btn" onClick={exportHistoryCSV}>{t('nw.exportCsv')}</button>
+              <button className="nw-clear-btn" onClick={clearHistory}>{t('nw.clearHistory')}</button>
             </div>
           </div>
           {nwGrowth && (
@@ -613,16 +607,16 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
             <div className="nw-forecast-controls">
               <label className="nw-forecast-toggle">
                 <input type="checkbox" checked={forecastEnabled} onChange={(e) => setForecastEnabled(e.target.checked)} />
-                Show forecast
+                {t('nw.showForecast')}
               </label>
               {forecastEnabled && (
                 <>
                   <label>
-                    <span>Years</span>
+                    <span>{t('nw.years')}</span>
                     <input type="number" min="1" max="30" value={forecastYears} onChange={(e) => setForecastYears(Number(e.target.value))} />
                   </label>
                   <label>
-                    <span>Assumed annual growth (%)</span>
+                    <span>{t('nw.growth')}</span>
                     <input type="number" step="0.5" value={forecastRate} onChange={(e) => setForecastRate(Number(e.target.value))} />
                   </label>
                 </>
@@ -633,11 +627,7 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
             <SnapshotChart points={convertedHistory} series={HISTORY_SERIES} symbol={country.symbol} projectedPoints={projectedPoints} />
           )}
           {projectedPoints.length > 0 && (
-            <p className="nw-forecast-note">
-              Dashed line: assumes your assets keep compounding at {forecastRate}%/yr and your debts stay flat at their
-              current total (this doesn't know your Debt Payoff plan's payoff timeline) -- a simple illustration, not a
-              prediction.
-            </p>
+            <p className="nw-forecast-note">{t('nw.forecastNote', { rate: forecastRate })}</p>
           )}
           <div className="nw-history-list">
             {[...convertedHistory].reverse().map((h, idx) => (
@@ -649,14 +639,11 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
           </div>
         </div>
         ) : (
-          <NwTabEmpty message="No snapshots saved yet -- save one from the Tracker tab to start tracking your net worth over time." onGoToTracker={() => setActiveSubTab('tracker')} />
+          <NwTabEmpty message={t('nw.emptyHistory')} onGoToTracker={() => setActiveSubTab('tracker')} />
         )
       )}
 
-      <p className="nw-note">
-        Saved only in your browser's local storage -- nothing is sent anywhere. Up to the most recent 24 snapshots are kept.
-        Currency conversions use the same illustrative, approximate exchange rate table as the Compare tab -- not live rates.
-      </p>
+      <p className="nw-note">{t('nw.note')}</p>
     </div>
   );
 };

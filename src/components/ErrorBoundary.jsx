@@ -4,6 +4,15 @@
 // componentDidCatch/getDerivedStateFromError have no hook equivalent.
 import React from 'react';
 import './ErrorBoundary.css';
+import { translations } from '../i18n/translations';
+
+// This boundary wraps LanguageProvider (see main.jsx), so it can't use the context --
+// read the stored language directly and fall back to English.
+const tr = (key) => {
+  let lang = 'en';
+  try { lang = localStorage.getItem('wts_compoundiq_language') || 'en'; } catch { /* ignore */ }
+  return translations[lang]?.shell?.[key] ?? translations.en.shell[key];
+};
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -31,13 +40,9 @@ class ErrorBoundary extends React.Component {
         <div className="error-boundary">
           <div className="error-boundary-card">
             <div className="error-boundary-icon">⚠️</div>
-            <h1>Something went wrong</h1>
-            <p>
-              This page hit an unexpected error and couldn't continue. Your data is safe --
-              everything this app stores lives only in your browser's local storage, and
-              nothing was lost or sent anywhere.
-            </p>
-            <button className="error-boundary-btn" onClick={this.handleReload}>Reload the App</button>
+            <h1>{tr('errTitle')}</h1>
+            <p>{tr('errBody')}</p>
+            <button className="error-boundary-btn" onClick={this.handleReload}>{tr('errReload')}</button>
           </div>
         </div>
       );

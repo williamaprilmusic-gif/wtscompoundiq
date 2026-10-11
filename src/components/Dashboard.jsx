@@ -23,14 +23,9 @@ import { buildNextSteps } from '../nextSteps';
 import { readJSONArray } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 
-const NETWORTH_SERIES = [{ key: 'assets', label: 'Assets' }, { key: 'debts', label: 'Debts' }, { key: 'net', label: 'Net Worth' }];
-const DEBT_SERIES = [{ key: 'total', label: 'Total Debt Balance' }];
 // colorKey: see SnapshotChart.jsx's SERIES_COLOR_VAR note -- 'total' is also Debt
 // Payoff's field name (colored debt-red), but a growing EF balance is the opposite
 // semantic, so this needs its own colorKey rather than inheriting that color.
-const EF_SERIES = [{ key: 'total', label: 'Emergency Fund Balance', colorKey: 'efBalance' }];
-const BUDGET_SERIES = [{ key: 'surplus', label: 'Monthly Surplus' }];
-
 // reportingCountry: the currency Net Worth's own tab currently displays in (see
 // App.jsx) -- independent of `country` (the Calculator scenario's country), since Net
 // Worth's saved figures already carry proper per-snapshot currency conversion and can
@@ -40,6 +35,12 @@ const BUDGET_SERIES = [{ key: 'surplus', label: 'Monthly Surplus' }];
 // symbol without converting the number would misrepresent the amount.
 const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = false }) => {
   const { t } = useLanguage();
+  const NETWORTH_SERIES = [{ key: 'assets', label: t('dash.series.assets') }, { key: 'debts', label: t('dash.series.debts') }, { key: 'net', label: t('dash.series.net') }];
+  const DEBT_SERIES = [{ key: 'total', label: t('dash.series.debtTotal') }];
+  // colorKey: see SnapshotChart.jsx's SERIES_COLOR_VAR note -- 'total' is also Debt Payoff's field name
+  // (colored debt-red), but a growing EF balance is the opposite semantic, so it needs its own colorKey.
+  const EF_SERIES = [{ key: 'total', label: t('dash.series.ef'), colorKey: 'efBalance' }];
+  const BUDGET_SERIES = [{ key: 'surplus', label: t('dash.series.budget') }];
   const netWorthCountry = reportingCountry || country;
   const [plan, setPlan] = useState(null);
   const [netWorthHistory, setNetWorthHistory] = useState([]);
@@ -224,7 +225,7 @@ const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = fals
                 <span className="dashboard-milestone-label">
                   {m.labelKey ? t(m.labelKey) : m.label}{m.amount != null && ` ${netWorthCountry.symbol}${Math.round(m.amount).toLocaleString()}`}
                 </span>
-                <span className="dashboard-milestone-date">{fmtDaysAgo(daysBetween(m.date))}</span>
+                <span className="dashboard-milestone-date">{fmtDaysAgo(daysBetween(m.date), t)}</span>
               </li>
             ))}
           </ul>

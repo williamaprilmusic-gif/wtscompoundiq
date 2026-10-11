@@ -7,6 +7,7 @@ import { readPlan, loanEffectiveMonthlyPayment, loanEffectiveTermLabel } from '.
 import { usePersistedState } from '../utils/usePersistedState';
 import { downloadCSV } from '../utils/csv';
 import { COMPLIANCE_KEY } from './MyPlan';
+import { useLanguage } from '../i18n/LanguageContext';
 
 // Exported so Dashboard.jsx's own print masthead can read the same firm/advisor/client
 // details and logo an Ultra user already set here, rather than a third place to
@@ -29,6 +30,7 @@ const exportProjectionCSV = (results, country) => downloadCSV(
 );
 
 const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, compoundFrequency, contributionIncrease = 0, lumpSums = [], canWhiteLabel = false, onOpenPricing }) => {
+  const { t } = useLanguage();
   const [plan, setPlan] = useState(null);
   const [branding, setBranding] = usePersistedState(BRANDING_KEY, DEFAULT_BRANDING);
   const [brandingError, setBrandingError] = useState(null);
@@ -54,11 +56,11 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
     const file = e.target.files?.[0];
     e.target.value = ''; // allow re-selecting the same file later
     if (!file) return;
-    if (!file.type.startsWith('image/')) { setBrandingError('Please choose an image file (PNG, JPG, SVG, etc.).'); return; }
-    if (file.size > MAX_LOGO_BYTES) { setBrandingError(`That logo is ${Math.round(file.size / 1024)}KB -- please use an image under ${MAX_LOGO_BYTES / 1024}KB.`); return; }
+    if (!file.type.startsWith('image/')) { setBrandingError(t('snap.errImage')); return; }
+    if (file.size > MAX_LOGO_BYTES) { setBrandingError(t('snap.errSize', { kb: Math.round(file.size / 1024), max: MAX_LOGO_BYTES / 1024 })); return; }
     const reader = new FileReader();
     reader.onload = (ev) => { updateBranding('logoDataUrl', String(ev.target.result)); setBrandingError(null); };
-    reader.onerror = () => setBrandingError('Could not read that image file.');
+    reader.onerror = () => setBrandingError(t('snap.errRead'));
     reader.readAsDataURL(file);
   };
 
@@ -89,8 +91,8 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
     <div className="card snapshot-page">
       <div className="snapshot-actions no-print">
         <div className="snapshot-actions-text">
-          <h2>📄 Financial Snapshot</h2>
-          <p>A one-page summary of your current plan -- print it, save it as a PDF, or download the raw numbers.</p>
+          <h2>{t('snap.title')}</h2>
+          <p>{t('snap.intro')}</p>
         </div>
         <div className="snapshot-buttons">
           <button className="snapshot-btn" onClick={() => window.print()}>🖨️ Print / Save as PDF</button>
@@ -104,16 +106,16 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
           <p className="snapshot-branding-desc">Ultra feature -- add your firm's details below and they'll appear on the report header instead of WTS CompoundIQ's own, ready to hand to a client.</p>
           <div className="snapshot-branding-form">
             <div className="form-group">
-              <label>Firm Name</label>
-              <input type="text" value={branding.firmName} onChange={(e) => updateBranding('firmName', e.target.value)} placeholder="e.g. Acme Financial Advisory" />
+              <label>{t('snap.firmName')}</label>
+              <input type="text" value={branding.firmName} onChange={(e) => updateBranding('firmName', e.target.value)} placeholder={t('snap.firmPlaceholder')} />
             </div>
             <div className="form-group">
-              <label>Advisor Name</label>
-              <input type="text" value={branding.advisorName} onChange={(e) => updateBranding('advisorName', e.target.value)} placeholder="e.g. Jane Smith, CFP" />
+              <label>{t('snap.advisorName')}</label>
+              <input type="text" value={branding.advisorName} onChange={(e) => updateBranding('advisorName', e.target.value)} placeholder={t('snap.advisorPlaceholder')} />
             </div>
             <div className="form-group">
-              <label>Client Name</label>
-              <input type="text" value={branding.clientName} onChange={(e) => updateBranding('clientName', e.target.value)} placeholder="e.g. John Doe" />
+              <label>{t('snap.clientName')}</label>
+              <input type="text" value={branding.clientName} onChange={(e) => updateBranding('clientName', e.target.value)} placeholder={t('snap.clientPlaceholder')} />
             </div>
             <div className="form-group">
               <label>Contact Info (for the report footer)</label>
@@ -125,13 +127,13 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
             </div>
           </div>
           <div className="snapshot-branding-logo-row">
-            {branding.logoDataUrl && <img src={branding.logoDataUrl} alt="Firm logo preview" className="snapshot-branding-logo-preview" />}
+            {branding.logoDataUrl && <img src={branding.logoDataUrl} alt={t('snap.logoPreview')} className="snapshot-branding-logo-preview" />}
             <label className="snapshot-branding-logo-btn">
-              🖼️ {branding.logoDataUrl ? 'Replace Logo' : 'Upload Logo'}
+              {branding.logoDataUrl ? t('snap.replaceLogo') : t('snap.uploadLogo')}
               <input type="file" accept="image/*" onChange={handleLogoUpload} hidden />
             </label>
             {branding.logoDataUrl && (
-              <button type="button" className="snapshot-branding-logo-remove" onClick={() => updateBranding('logoDataUrl', '')}>Remove logo</button>
+              <button type="button" className="snapshot-branding-logo-remove" onClick={() => updateBranding('logoDataUrl', '')}>{t('snap.removeLogo')}</button>
             )}
           </div>
           {brandingError && <p className="snapshot-branding-error">⚠️ {brandingError}</p>}
@@ -149,9 +151,9 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
       <div className="snapshot-print-area">
         <div className="snapshot-report-header">
           {canWhiteLabel && branding.logoDataUrl && (
-            <img src={branding.logoDataUrl} alt={`${branding.firmName || 'Firm'} logo`} className="snapshot-report-logo" />
+            <img src={branding.logoDataUrl} alt={t('snap.logoAlt', { firm: branding.firmName || t('snap.firmFallback') })} className="snapshot-report-logo" />
           )}
-          <h1>{canWhiteLabel && branding.firmName ? branding.firmName : 'WTS CompoundIQ'} -- Financial Snapshot</h1>
+          <h1>{canWhiteLabel && branding.firmName ? branding.firmName : 'WTS CompoundIQ'} -- {t('snap.reportTitle')}</h1>
           <p>
             {country.name} · Generated {today}
             {canWhiteLabel && branding.advisorName && ` · Prepared by ${branding.advisorName}`}
@@ -161,46 +163,43 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
         </div>
 
         <section className="snapshot-section">
-          <h3>Compound Interest Projection</h3>
+          <h3>{t('snap.projection')}</h3>
           <div className="snapshot-grid">
-            <div><span>Initial</span><strong>{country.symbol} {initial.toLocaleString()}</strong></div>
-            <div><span>Monthly Contribution</span><strong>{country.symbol} {monthly.toLocaleString()}</strong></div>
-            <div><span>Annual Rate</span><strong>{rate}%</strong></div>
-            <div><span>Timeframe</span><strong>{years} years</strong></div>
-            <div><span>Projected Balance</span><strong>{country.symbol} {results.finalBalance.toLocaleString()}</strong></div>
-            <div><span>Total Interest Earned</span><strong>{country.symbol} {results.totalInterest.toLocaleString()}</strong></div>
+            <div><span>{t('snap.initial')}</span><strong>{country.symbol} {initial.toLocaleString()}</strong></div>
+            <div><span>{t('snap.monthlyContribution')}</span><strong>{country.symbol} {monthly.toLocaleString()}</strong></div>
+            <div><span>{t('snap.annualRate')}</span><strong>{rate}%</strong></div>
+            <div><span>{t('snap.timeframe')}</span><strong>{t('snap.years', { n: years })}</strong></div>
+            <div><span>{t('snap.projectedBalance')}</span><strong>{country.symbol} {results.finalBalance.toLocaleString()}</strong></div>
+            <div><span>{t('snap.totalInterest')}</span><strong>{country.symbol} {results.totalInterest.toLocaleString()}</strong></div>
           </div>
           <GrowthChart yearlyData={results.yearlyData} initial={initial} symbol={country.symbol} />
         </section>
 
         <section className="snapshot-section">
-          <h3>Tax Optimization</h3>
+          <h3>{t('snap.taxOpt')}</h3>
           {hasWrapper ? (
             <p>
-              Using your {country.wrapperLabel} instead of a taxable account is worth an extra{' '}
-              <strong>{country.symbol} {Math.round(wrapperBenefit).toLocaleString()}</strong> over {years} years,
-              by avoiding the indicative {country.taxRate}% tax on gains.
-              {wrapperResults.wrapperCapExceeded && ' Note: this contribution level exceeds the wrapper\'s real-world limit in at least one year, so the portion over the cap would actually be taxed.'}
+              {t('snap.wrapperWorth', { wrapper: country.wrapperLabel })}{' '}
+              <strong>{country.symbol} {Math.round(wrapperBenefit).toLocaleString()}</strong> {t('snap.wrapperWorth2', { years, rate: country.taxRate })}
+              {wrapperResults.wrapperCapExceeded && t('snap.capNote')}
             </p>
           ) : (
-            <p>{country.name} has no standard tax-free wrapper in this dataset; gains are taxed at an indicative {country.taxRate}%.</p>
+            <p>{t('snap.noWrapper', { country: country.name, rate: country.taxRate })}</p>
           )}
         </section>
 
         {plan?.emergencyFund && (
           <section className="snapshot-section">
-            <h3>Emergency Fund (last saved)</h3>
+            <h3>{t('snap.efHeading')}</h3>
             <p>
-              {country.symbol} {Math.round(plan.emergencyFund.currentSavings).toLocaleString()} saved toward a{' '}
-              {country.symbol} {Math.round(plan.emergencyFund.targetAmount).toLocaleString()} target,
-              contributing {country.symbol} {plan.emergencyFund.monthlyContribution.toLocaleString()}/month.
+              {t('snap.efBody', { saved: `${country.symbol} ${Math.round(plan.emergencyFund.currentSavings).toLocaleString()}`, target: `${country.symbol} ${Math.round(plan.emergencyFund.targetAmount).toLocaleString()}`, contribution: `${country.symbol} ${plan.emergencyFund.monthlyContribution.toLocaleString()}` })}
             </p>
           </section>
         )}
 
         {plan?.debt && (
           <section className="snapshot-section">
-            <h3>Debt Payoff (last saved)</h3>
+            <h3>{t('snap.debtHeading')}</h3>
             <p>
               {country.symbol} {Math.round(plan.debt.totalBalance).toLocaleString()} total debt,
               paying {country.symbol} {plan.debt.extraMonthly.toLocaleString()}/month extra,{' '}
@@ -213,22 +212,19 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
 
         {plan?.loan && (
           <section className="snapshot-section">
-            <h3>{plan.loan.loanTypeLabel || 'Loan'} (last saved)</h3>
+            <h3>{t('snap.lastSaved', { label: plan.loan.loanTypeLabel || t('snap.loanDefault') })}</h3>
             <p>
-              {country.symbol} {Math.round(plan.loan.principal).toLocaleString()} borrowed at {plan.loan.annualRate}% over {loanEffectiveTermLabel(plan.loan)},
-              paying {country.symbol} {loanEffectiveMonthlyPayment(plan.loan).toLocaleString()}/month --
-              {' '}{country.symbol} {plan.loan.totalInterest.toLocaleString()} total interest over the full term.
+              {t('snap.loanBody', { principal: `${country.symbol} ${Math.round(plan.loan.principal).toLocaleString()}`, rate: plan.loan.annualRate, term: loanEffectiveTermLabel(plan.loan, t), payment: `${country.symbol} ${loanEffectiveMonthlyPayment(plan.loan).toLocaleString()}`, interest: `${country.symbol} ${plan.loan.totalInterest.toLocaleString()}` })}
             </p>
           </section>
         )}
 
         {plan?.fire && (
           <section className="snapshot-section">
-            <h3>FIRE Target (last saved)</h3>
+            <h3>{t('snap.fireHeading')}</h3>
             <p>
-              {country.symbol} {Math.round(plan.fire.annualExpenses).toLocaleString()}/year expenses at a {plan.fire.withdrawalRate}% withdrawal
-              rate puts the FIRE number at {country.symbol} {Math.round(plan.fire.fireNumber).toLocaleString()},{' '}
-              {plan.fire.yearsToFire === null ? 'not reachable within 60 years at that saved pace' : `about ${plan.fire.yearsToFire} years out at that saved pace`}.
+              {t('snap.fireBody', { expenses: `${country.symbol} ${Math.round(plan.fire.annualExpenses).toLocaleString()}`, rate: plan.fire.withdrawalRate, number: `${country.symbol} ${Math.round(plan.fire.fireNumber).toLocaleString()}` })}{' '}
+              {plan.fire.yearsToFire === null ? t('snap.fireNever') : t('snap.fireYears', { n: plan.fire.yearsToFire })}.
             </p>
           </section>
         )}
@@ -236,7 +232,7 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
         <div className="snapshot-table-container">
         <table className="snapshot-table">
           <thead>
-            <tr><th>Year</th><th>Balance</th><th>Real Value</th><th>Deposited</th><th>Interest</th><th>Tax Paid</th></tr>
+            <tr><th>{t('snap.csvYear')}</th><th>{t('snap.csvBalance')}</th><th>{t('snap.csvReal')}</th><th>{t('snap.csvDeposited')}</th><th>{t('snap.csvInterest')}</th><th>{t('snap.csvTax')}</th></tr>
           </thead>
           <tbody>
             {results.yearlyData.map(row => (

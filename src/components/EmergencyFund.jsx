@@ -8,6 +8,7 @@ import { convertAmount } from '../data/countries';
 import { downloadCSV } from '../utils/csv';
 import { readJSONArray, writeJSON } from '../utils/storage';
 import SnapshotChart from './SnapshotChart';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const INPUTS_KEY = 'wts_compoundiq_emergencyfund_inputs';
 export const HISTORY_KEY = 'wts_compoundiq_emergencyfund_history';
@@ -16,7 +17,6 @@ const DEFAULT_INPUTS = { monthlyExpenses: 0, monthsCoverage: 3, currentSavings: 
 // --accent-red), but a growing EF balance is the opposite semantic -- see
 // SnapshotChart.jsx's SERIES_COLOR_VAR note for why this needs its own colorKey
 // rather than sharing Debt Payoff's `total` color entry.
-const HISTORY_SERIES = [{ key: 'total', label: 'Emergency Fund Balance', colorKey: 'efBalance' }];
 
 // A history entry is only safe to feed to convertAmount/SnapshotChart when `total` is a
 // real number -- a hand-edited or partially-written localStorage value (or an
@@ -27,6 +27,8 @@ const HISTORY_SERIES = [{ key: 'total', label: 'Emergency Fund Balance', colorKe
 export const isValidEfHistoryEntry = (h) => Number.isFinite(h.total);
 
 const EmergencyFund = ({ country }) => {
+  const { t } = useLanguage();
+  const HISTORY_SERIES = [{ key: 'total', label: t('ef.historySeries'), colorKey: 'efBalance' }];
   const [inputs, setInputs] = usePersistedState(INPUTS_KEY, DEFAULT_INPUTS);
   const { monthlyExpenses, monthsCoverage, currentSavings, monthlyContribution } = inputs;
   const [saved, setSaved] = useState(false);
@@ -88,14 +90,14 @@ const EmergencyFund = ({ country }) => {
     // No count in the message -- see NetWorth.jsx's clearHistory for why (the header
     // above and this raw history.length can diverge when a corrupt entry is filtered
     // out of what's displayed but still present in storage).
-    if (!window.confirm("Clear all saved emergency fund snapshots? This can't be undone.")) return;
+    if (!window.confirm(t('ef.clearConfirm'))) return;
     localStorage.removeItem(HISTORY_KEY);
     setHistory([]);
   };
 
   const exportHistoryCSV = () => {
     downloadCSV('wts-compoundiq-emergencyfund-history.csv', [
-      ['Date', `Balance (${country.currency})`],
+      [t('ef.csvDate'), t('ef.csvBalance', { currency: country.currency })],
       ...convertedHistory.map(h => [new Date(h.date).toLocaleDateString(), Math.round(h.total)])
     ]);
   };
@@ -103,37 +105,37 @@ const EmergencyFund = ({ country }) => {
   return (
     <div className="card emergency-fund">
       <div className="ef-header">
-        <h2>🛟 <Term k="emergencyFund">Emergency Fund</Term> Tracker</h2>
-        <p>Before investing, most guidance recommends this as your financial foundation -- money that's there when life happens, without needing to sell investments or go into debt.</p>
+        <h2>🛟 <Term k="emergencyFund">{t('ef.termLabel')}</Term> {t('ef.titleSuffix')}</h2>
+        <p>{t('ef.intro')}</p>
       </div>
 
       <div className="ef-form">
         <div className="form-group">
-          <label>Monthly Essential Expenses ({country.symbol})</label>
+          <label>{t('ef.monthlyExpenses', { symbol: country.symbol })}</label>
           <input type="number" min="0" value={monthlyExpenses} onChange={(e) => updateInput('monthlyExpenses', e.target.value)} />
         </div>
         <div className="form-group">
-          <label>Months of Coverage</label>
+          <label>{t('ef.monthsCoverage')}</label>
           <select value={monthsCoverage} onChange={(e) => updateInput('monthsCoverage', e.target.value)}>
-            <option value="3">3 months (minimum)</option>
-            <option value="6">6 months (standard)</option>
-            <option value="9">9 months (cautious)</option>
-            <option value="12">12 months (very cautious)</option>
+            <option value="3">{t('ef.months3')}</option>
+            <option value="6">{t('ef.months6')}</option>
+            <option value="9">{t('ef.months9')}</option>
+            <option value="12">{t('ef.months12')}</option>
           </select>
         </div>
         <div className="form-group">
-          <label>Current Emergency Savings ({country.symbol})</label>
+          <label>{t('ef.currentSavings', { symbol: country.symbol })}</label>
           <input type="number" min="0" value={currentSavings} onChange={(e) => updateInput('currentSavings', e.target.value)} />
         </div>
         <div className="form-group">
-          <label>Monthly Contribution ({country.symbol})</label>
+          <label>{t('ef.monthlyContribution', { symbol: country.symbol })}</label>
           <input type="number" min="0" value={monthlyContribution} onChange={(e) => updateInput('monthlyContribution', e.target.value)} />
         </div>
       </div>
 
       <div className={`ef-result ${isFunded ? 'funded' : ''}`}>
         <div className="ef-progress-header">
-          <span>{country.symbol} {currentSavings.toLocaleString()} of {country.symbol} {targetAmount.toLocaleString()} target</span>
+          <span>{t('ef.progress', { saved: `${country.symbol} ${currentSavings.toLocaleString()}`, target: `${country.symbol} ${targetAmount.toLocaleString()}` })}</span>
           <span>{progressPct.toFixed(0)}%</span>
         </div>
         <div className="ef-progress-bar">
@@ -141,27 +143,24 @@ const EmergencyFund = ({ country }) => {
         </div>
 
         {isFunded ? (
-          <p className="ef-status">✅ Fully funded -- you're covered for {monthsCoverage} months of essential expenses.</p>
+          <p className="ef-status">{t('ef.funded', { months: monthsCoverage })}</p>
         ) : (
           <p className="ef-status">
-            {country.symbol} {Math.round(remaining).toLocaleString()} to go.
+            {t('ef.toGo', { amount: `${country.symbol} ${Math.round(remaining).toLocaleString()}` })}
             {monthsToTarget !== null
-              ? ` At ${country.symbol} ${monthlyContribution.toLocaleString()}/month, you'll be fully covered in ${monthsToTarget} month${monthsToTarget === 1 ? '' : 's'}.`
-              : ' Set a monthly contribution above to see how long it will take.'}
+              ? t(monthsToTarget === 1 ? 'ef.timeToTargetOne' : 'ef.timeToTargetMany', { contribution: `${country.symbol} ${monthlyContribution.toLocaleString()}`, n: monthsToTarget })
+              : t('ef.setContribution')}
           </p>
         )}
       </div>
 
-      <p className="ef-note">
-        This is simple non-compounding math on purpose -- emergency funds belong in an easily accessible account
-        (not invested), so this doesn't assume any investment growth.
-      </p>
+      <p className="ef-note">{t('ef.note')}</p>
 
       <div className="ef-actions">
         <button className="ef-save-plan-btn" onClick={savePlan}>
-          {saved ? '✓ Saved to My Plan' : '💾 Save This Plan'}
+          {saved ? t('ef.savedToPlan') : t('ef.savePlan')}
         </button>
-        <button className="ef-save-snapshot-btn" onClick={saveSnapshot}>📸 Log Balance</button>
+        <button className="ef-save-snapshot-btn" onClick={saveSnapshot}>{t('ef.logBalance')}</button>
       </div>
 
       {history.length > 0 && (
@@ -171,15 +170,15 @@ const EmergencyFund = ({ country }) => {
                 filtered out of convertedHistory above but stays in raw history (so "Clear
                 history" below can still remove it), and this count should match what the
                 list/chart below actually display rather than what's stored. */}
-            <h3>Balance History ({convertedHistory.length} snapshot{convertedHistory.length === 1 ? '' : 's'})</h3>
+            <h3>{t(convertedHistory.length === 1 ? 'ef.historyOne' : 'ef.historyMany', { n: convertedHistory.length })}</h3>
             <div className="ef-history-header-actions">
-              <button className="history-export-btn" onClick={exportHistoryCSV}>⬇️ Export CSV</button>
-              <button className="ef-clear-history-btn" onClick={clearHistory}>Clear history</button>
+              <button className="history-export-btn" onClick={exportHistoryCSV}>{t('ef.exportCsv')}</button>
+              <button className="ef-clear-history-btn" onClick={clearHistory}>{t('ef.clearHistory')}</button>
             </div>
           </div>
           {delta !== null && (
             <div className={`ef-history-delta ${delta >= 0 ? 'up' : 'down'}`}>
-              {delta >= 0 ? '▲' : '▼'} {country.symbol} {Math.abs(Math.round(delta)).toLocaleString()} since last snapshot
+              {delta >= 0 ? '▲' : '▼'} {t('ef.sinceLast', { amount: `${country.symbol} ${Math.abs(Math.round(delta)).toLocaleString()}` })}
             </div>
           )}
           {convertedHistory.length > 1 && (

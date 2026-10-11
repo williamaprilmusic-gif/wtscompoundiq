@@ -10,6 +10,7 @@ import { HISTORY_KEY as NETWORTH_HISTORY_KEY } from './NetWorth';
 import { HISTORY_KEY as DEBTPAYOFF_HISTORY_KEY, EXTRA_KEY as DEBTPAYOFF_EXTRA_KEY } from './DebtPayoff';
 import { HISTORY_KEY as EMERGENCYFUND_HISTORY_KEY } from './EmergencyFund';
 import { BUDGET_ITEMS_KEY, BUDGET_HISTORY_KEY } from '../budgetEngine';
+import { useLanguage } from '../i18n/LanguageContext';
 import {
   ADVISER_NOTES_KEY as MYPLAN_ADVISER_NOTES_KEY,
   BRANDING_KEY as MYPLAN_BRANDING_KEY,
@@ -116,7 +117,7 @@ const emailData = async (email) => {
   }
 };
 
-const importData = (file, onDone) => {
+const importData = (file, onDone, t) => {
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
@@ -129,9 +130,9 @@ const importData = (file, onDone) => {
           imported++;
         }
       });
-      onDone(imported > 0 ? null : 'No recognized WTS CompoundIQ data found in that file.');
+      onDone(imported > 0 ? null : t('common.backupNoData'));
     } catch {
-      onDone('Could not read that file -- make sure it\'s a WTS CompoundIQ backup (.json) exported from this app.');
+      onDone(t('common.backupBadFile'));
     }
   };
   reader.readAsText(file);
@@ -206,6 +207,7 @@ const EmailBackup = ({ onSent }) => {
 };
 
 const DataBackup = () => {
+  const { t } = useLanguage();
   const [lastBackupAt, setLastBackupAt] = useState(null);
 
   useEffect(() => {
@@ -222,7 +224,7 @@ const DataBackup = () => {
   const handleImportFile = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!window.confirm('Import this backup? It will overwrite your current tier, saved plans, and any entered net worth items, debts, and investment goals in this browser.')) {
+    if (!window.confirm(t('common.backupConfirm'))) {
       e.target.value = '';
       return;
     }
@@ -230,23 +232,21 @@ const DataBackup = () => {
       if (error) {
         alert(error);
       } else {
-        alert('Data imported successfully. Reloading to apply it...');
+        alert(t('common.backupDone'));
         window.location.reload();
       }
-    });
+    }, t);
     e.target.value = ''; // allow re-selecting the same file later
   };
 
   return (
     <div className="data-backup">
-      <span className="data-backup-text">
-        Your data (tier, saved plans, net worth/debts/goals) lives only in this browser.
-      </span>
+      <span className="data-backup-text">{t('common.backupText')}</span>
       <div className="data-backup-buttons">
         <button className="data-backup-btn" onClick={handleExport}>⬇️ Save to Device</button>
         <EmailBackup onSent={handleEmailed} />
         <label className="data-backup-btn secondary">
-          ⬆️ Import Backup
+          {t('common.backupImport')}
           <input type="file" accept="application/json" onChange={handleImportFile} hidden />
         </label>
       </div>

@@ -7,6 +7,7 @@
 import React, { useState, useRef, useMemo } from 'react';
 import './GrowthChart.css';
 import { niceCeil, formatCompact } from '../utils/chartFormat';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const WIDTH = 640;
 const HEIGHT = 280;
@@ -21,6 +22,7 @@ const PAD_BOTTOM = 30;
 // text list and the chart) visibly agree rather than living as two disconnected views
 // of the same numbers.
 const GrowthChart = ({ yearlyData, initial = 0, symbol = '', milestones = [] }) => {
+  const { t } = useLanguage();
   const svgRef = useRef(null);
   const [hoverIdx, setHoverIdx] = useState(null);
 
@@ -98,8 +100,8 @@ const GrowthChart = ({ yearlyData, initial = 0, symbol = '', milestones = [] }) 
   return (
     <div className="growth-chart">
       <div className="growth-chart-legend">
-        <span className="growth-chart-legend-item"><span className="growth-chart-swatch balance" />Balance</span>
-        <span className="growth-chart-legend-item"><span className="growth-chart-swatch real" />Real Value (today's money)</span>
+        <span className="growth-chart-legend-item"><span className="growth-chart-swatch balance" />{t('charts.balance')}</span>
+        <span className="growth-chart-legend-item"><span className="growth-chart-swatch real" />{t('charts.realValue')}</span>
       </div>
 
       {/* A narrow phone shrinking this SVG down would shrink its text past legibility --
@@ -114,7 +116,7 @@ const GrowthChart = ({ yearlyData, initial = 0, symbol = '', milestones = [] }) 
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         className="growth-chart-svg"
         role="img"
-        aria-label="Balance and real value projected over time"
+        aria-label={t('charts.growthAria')}
         tabIndex={0}
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
@@ -122,11 +124,11 @@ const GrowthChart = ({ yearlyData, initial = 0, symbol = '', milestones = [] }) 
         onBlur={handlePointerLeave}
       >
         {/* Gridlines + y-axis labels */}
-        {ticks.map((t, i) => (
+        {ticks.map((tv, i) => (
           <g key={i}>
-            <line x1={PAD_LEFT} x2={WIDTH - PAD_RIGHT} y1={yScale(t)} y2={yScale(t)} className="growth-chart-gridline" />
-            <text x={PAD_LEFT - 8} y={yScale(t)} className="growth-chart-axis-label" textAnchor="end" dominantBaseline="middle">
-              {symbol}{formatCompact(t)}
+            <line x1={PAD_LEFT} x2={WIDTH - PAD_RIGHT} y1={yScale(tv)} y2={yScale(tv)} className="growth-chart-gridline" />
+            <text x={PAD_LEFT - 8} y={yScale(tv)} className="growth-chart-axis-label" textAnchor="end" dominantBaseline="middle">
+              {symbol}{formatCompact(tv)}
             </text>
           </g>
         ))}
@@ -134,7 +136,7 @@ const GrowthChart = ({ yearlyData, initial = 0, symbol = '', milestones = [] }) 
         {/* X-axis year labels */}
         {xLabels.map((p) => (
           <text key={p.year} x={xScale(p.year)} y={HEIGHT - PAD_BOTTOM + 18} className="growth-chart-axis-label" textAnchor="middle">
-            Yr {p.year}
+            {t('charts.yr', { n: p.year })}
           </text>
         ))}
 
@@ -177,9 +179,9 @@ const GrowthChart = ({ yearlyData, initial = 0, symbol = '', milestones = [] }) 
             transform: tooltipFlip ? 'translateX(-100%)' : 'none'
           }}
         >
-          <div className="growth-chart-tooltip-year">Year {hover.year}</div>
-          <div className="growth-chart-tooltip-row"><span className="growth-chart-key balance" />Balance <strong>{symbol}{Math.round(hover.balance).toLocaleString()}</strong></div>
-          <div className="growth-chart-tooltip-row"><span className="growth-chart-key real" />Real Value <strong>{symbol}{Math.round(hover.realValue).toLocaleString()}</strong></div>
+          <div className="growth-chart-tooltip-year">{t('charts.year', { n: hover.year })}</div>
+          <div className="growth-chart-tooltip-row"><span className="growth-chart-key balance" />{t('charts.balance')} <strong>{symbol}{Math.round(hover.balance).toLocaleString()}</strong></div>
+          <div className="growth-chart-tooltip-row"><span className="growth-chart-key real" />{t('charts.realValueShort')} <strong>{symbol}{Math.round(hover.realValue).toLocaleString()}</strong></div>
         </div>
       )}
       </div>

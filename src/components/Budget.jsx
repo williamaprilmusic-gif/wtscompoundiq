@@ -12,6 +12,7 @@ import { safeTrim } from '../utils/safeTrim';
 import { convertAmount } from '../data/countries';
 import { downloadCSV } from '../utils/csv';
 import { readJSONArray, writeJSON } from '../utils/storage';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const HISTORY_SERIES = [{ key: 'surplus', label: 'Monthly Surplus' }];
 
@@ -29,6 +30,7 @@ const EXPENSE_CATEGORY_COLOR_VAR = {
 };
 
 const Budget = ({ country }) => {
+  const { t } = useLanguage();
   const [items, setItems] = usePersistedState(BUDGET_ITEMS_KEY, []);
   const [pushed, setPushed] = useState(false);
   const [history, setHistory] = useState([]);
@@ -51,13 +53,13 @@ const Budget = ({ country }) => {
   const removeItem = (id) => {
     const item = items.find(i => i.id === id);
     const hasData = !!(item && (safeTrim(item.name) || item.amount > 0));
-    if (!confirmRemoval(hasData, `Remove "${safeTrim(item?.name) || 'this line item'}"? This can't be undone.`)) return;
+    if (!confirmRemoval(hasData, t('budget.removeConfirm', { name: safeTrim(item?.name) || t('budget.thisLineItem') }))) return;
     setItems(prev => prev.filter(i => i.id !== id));
   };
 
   const summary = computeBudgetSummary(items);
   const expenseSegments = summary.byCategory.map(c => ({
-    key: c.category, label: c.category, value: c.total, colorVar: EXPENSE_CATEGORY_COLOR_VAR[c.category]
+    key: c.category, label: t(`budget.cat.${c.category}`), value: c.total, colorVar: EXPENSE_CATEGORY_COLOR_VAR[c.category]
   }));
 
   // Writes straight to Debt Payoff's own storage key -- picked up next time that tab
@@ -113,40 +115,40 @@ const Budget = ({ country }) => {
   return (
     <div className="card budget-tracker">
       <div className="budget-header">
-        <h2>🧮 Budget / Cash Flow Tracker</h2>
-        <p>List what comes in and what goes out each month to see your real surplus -- the number every other planning tool here (Debt Payoff's extra payment, Power Tools' "extra cash available") ultimately depends on.</p>
+        <h2>{t('budget.title')}</h2>
+        <p>{t('budget.intro')}</p>
       </div>
 
       <div className="budget-columns">
         <div className="budget-column">
           <div className="budget-column-header">
-            <h3>Income</h3>
-            <button className="budget-add-btn income" onClick={() => addItem('income')}>+ Add Income</button>
+            <h3>{t('budget.income')}</h3>
+            <button className="budget-add-btn income" onClick={() => addItem('income')}>{t('budget.addIncome')}</button>
           </div>
-          {incomeItems.length === 0 && <p className="budget-empty">No income added yet.</p>}
+          {incomeItems.length === 0 && <p className="budget-empty">{t('budget.noIncome')}</p>}
           {incomeItems.map(i => (
             <div key={i.id} className="budget-item">
-              <input type="text" placeholder="e.g. Salary" aria-label="Income name" value={i.name} onChange={(e) => updateItem(i.id, 'name', e.target.value)} />
-              <input type="number" min="0" aria-label="Income amount" value={i.amount} onChange={(e) => updateItem(i.id, 'amount', e.target.value)} />
-              <button className="budget-remove" onClick={() => removeItem(i.id)} aria-label="Remove">&times;</button>
+              <input type="text" placeholder={t('budget.incomePlaceholder')} aria-label={t('budget.incomeName')} value={i.name} onChange={(e) => updateItem(i.id, 'name', e.target.value)} />
+              <input type="number" min="0" aria-label={t('budget.incomeAmount')} value={i.amount} onChange={(e) => updateItem(i.id, 'amount', e.target.value)} />
+              <button className="budget-remove" onClick={() => removeItem(i.id)} aria-label={t('budget.remove')}>&times;</button>
             </div>
           ))}
         </div>
 
         <div className="budget-column">
           <div className="budget-column-header">
-            <h3>Expenses</h3>
-            <button className="budget-add-btn expense" onClick={() => addItem('expense')}>+ Add Expense</button>
+            <h3>{t('budget.expenses')}</h3>
+            <button className="budget-add-btn expense" onClick={() => addItem('expense')}>{t('budget.addExpense')}</button>
           </div>
-          {expenseItems.length === 0 && <p className="budget-empty">No expenses added yet.</p>}
+          {expenseItems.length === 0 && <p className="budget-empty">{t('budget.noExpenses')}</p>}
           {expenseItems.map(i => (
             <div key={i.id} className="budget-item budget-item-expense">
-              <input type="text" placeholder="e.g. Rent" aria-label="Expense name" value={i.name} onChange={(e) => updateItem(i.id, 'name', e.target.value)} />
-              <select aria-label="Expense category" value={i.category || 'Other'} onChange={(e) => updateItem(i.id, 'category', e.target.value)}>
-                {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              <input type="text" placeholder={t('budget.expensePlaceholder')} aria-label={t('budget.expenseName')} value={i.name} onChange={(e) => updateItem(i.id, 'name', e.target.value)} />
+              <select aria-label={t('budget.expenseCategory')} value={i.category || 'Other'} onChange={(e) => updateItem(i.id, 'category', e.target.value)}>
+                {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{t(`budget.cat.${c}`)}</option>)}
               </select>
-              <input type="number" min="0" aria-label="Expense amount" value={i.amount} onChange={(e) => updateItem(i.id, 'amount', e.target.value)} />
-              <button className="budget-remove" onClick={() => removeItem(i.id)} aria-label="Remove">&times;</button>
+              <input type="number" min="0" aria-label={t('budget.expenseAmount')} value={i.amount} onChange={(e) => updateItem(i.id, 'amount', e.target.value)} />
+              <button className="budget-remove" onClick={() => removeItem(i.id)} aria-label={t('budget.remove')}>&times;</button>
             </div>
           ))}
         </div>
@@ -154,22 +156,22 @@ const Budget = ({ country }) => {
 
       <div className={`budget-result ${summary.surplus >= 0 ? 'positive' : 'negative'}`}>
         <div className="budget-result-row">
-          <span>Total Income</span>
+          <span>{t('budget.totalIncome')}</span>
           <strong>{country.symbol} {Math.round(summary.totalIncome).toLocaleString()}</strong>
         </div>
         <div className="budget-result-row">
-          <span>Total Expenses</span>
+          <span>{t('budget.totalExpenses')}</span>
           <strong>{country.symbol} {Math.round(summary.totalExpenses).toLocaleString()}</strong>
         </div>
         <div className="budget-result-row main">
-          <span>{summary.surplus >= 0 ? 'Monthly Surplus' : 'Monthly Deficit'}</span>
+          <span>{summary.surplus >= 0 ? t('budget.surplus') : t('budget.deficit')}</span>
           <strong>{country.symbol} {Math.abs(Math.round(summary.surplus)).toLocaleString()}</strong>
         </div>
       </div>
 
       {summary.surplus > 0 && (
         <button className="budget-push-btn" onClick={pushSurplusToDebtPayoff}>
-          {pushed ? '✓ Sent -- open Debt Payoff to see it applied' : `→ Send ${country.symbol}${Math.round(summary.surplus).toLocaleString()}/mo surplus to Debt Payoff's extra payment`}
+          {pushed ? t('budget.sent') : t('budget.send', { amount: `${country.symbol}${Math.round(summary.surplus).toLocaleString()}` })}
         </button>
       )}
 
@@ -209,7 +211,7 @@ const Budget = ({ country }) => {
 
       {summary.totalExpenses > 0 && (
         <div className="budget-allocation">
-          <h3>Expense Breakdown</h3>
+          <h3>{t('budget.breakdown')}</h3>
           <AllocationChart segments={expenseSegments} symbol={country.symbol} />
         </div>
       )}

@@ -15,4 +15,8 @@ export const daysBetween = (isoDate) => {
   return Number.isFinite(ms) ? Math.max(0, Math.floor(ms / (1000 * 60 * 60 * 24))) : 0;
 };
 
-export const fmtDaysAgo = (d) => d === 0 ? 'today' : `${d} day${d === 1 ? '' : 's'} ago`;
+// Optional `t` (from useLanguage) localizes the label; without it the English wording is used.
+export const fmtDaysAgo = (d, t) => {
+  if (t) return d === 0 ? t('common.today') : t(d === 1 ? 'common.dayAgo' : 'common.daysAgo', { n: d });
+  return d === 0 ? 'today' : `${d} day${d === 1 ? '' : 's'} ago`;
+};

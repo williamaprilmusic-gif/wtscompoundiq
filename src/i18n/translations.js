@@ -36,6 +36,8 @@ export const LANGUAGES = [
   { code: 'nr', label: 'isiNdebele' }
 ];
 
+import stringModules from './strings';
+
 export const translations = {
   en: {
     common: {
@@ -2541,3 +2543,9 @@ export const translations = {
     }
   }
 };
+
+// Per-component namespaces (budget, loan, pricing, shell, ...) live in strings/*.js and are
+// merged in here for English, Afrikaans and isiZulu; the other languages fall back to English.
+for (const m of stringModules) {
+  for (const lang of ['en', 'af', 'zu']) translations[lang][m.ns] = { ...translations[lang][m.ns], ...m[lang] };
+}

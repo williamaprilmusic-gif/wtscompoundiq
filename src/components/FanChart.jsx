@@ -7,6 +7,7 @@
 import React, { useState, useRef } from 'react';
 import './FanChart.css';
 import { niceCeil, formatCompact } from '../utils/chartFormat';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const WIDTH = 640;
 const HEIGHT = 280;
@@ -16,6 +17,7 @@ const PAD_TOP = 16;
 const PAD_BOTTOM = 30;
 
 const FanChart = ({ yearlyPercentiles, symbol = '' }) => {
+  const { t } = useLanguage();
   const svgRef = useRef(null);
   const [hoverIdx, setHoverIdx] = useState(null);
 
@@ -74,9 +76,9 @@ const FanChart = ({ yearlyPercentiles, symbol = '' }) => {
   return (
     <div className="fan-chart">
       <div className="fan-chart-legend">
-        <span className="fan-chart-legend-item"><span className="fan-chart-swatch median" />Median (50th)</span>
-        <span className="fan-chart-legend-item"><span className="fan-chart-swatch band-inner" />25th-75th percentile</span>
-        <span className="fan-chart-legend-item"><span className="fan-chart-swatch band-outer" />10th-90th percentile</span>
+        <span className="fan-chart-legend-item"><span className="fan-chart-swatch median" />{t('charts.median')}</span>
+        <span className="fan-chart-legend-item"><span className="fan-chart-swatch band-inner" />{t('charts.band25')}</span>
+        <span className="fan-chart-legend-item"><span className="fan-chart-swatch band-outer" />{t('charts.band10')}</span>
       </div>
 
       {/* Same fix as GrowthChart -- scroll instead of shrinking the SVG's text past legibility. */}
@@ -87,25 +89,25 @@ const FanChart = ({ yearlyPercentiles, symbol = '' }) => {
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         className="fan-chart-svg"
         role="img"
-        aria-label="Projected balance range over time across simulated market paths"
+        aria-label={t('charts.fanAria')}
         tabIndex={0}
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
         onKeyDown={handleKeyDown}
         onBlur={handlePointerLeave}
       >
-        {ticks.map((t, i) => (
+        {ticks.map((tv, i) => (
           <g key={i}>
-            <line x1={PAD_LEFT} x2={WIDTH - PAD_RIGHT} y1={yScale(t)} y2={yScale(t)} className="fan-chart-gridline" />
-            <text x={PAD_LEFT - 8} y={yScale(t)} className="fan-chart-axis-label" textAnchor="end" dominantBaseline="middle">
-              {symbol}{formatCompact(t)}
+            <line x1={PAD_LEFT} x2={WIDTH - PAD_RIGHT} y1={yScale(tv)} y2={yScale(tv)} className="fan-chart-gridline" />
+            <text x={PAD_LEFT - 8} y={yScale(tv)} className="fan-chart-axis-label" textAnchor="end" dominantBaseline="middle">
+              {symbol}{formatCompact(tv)}
             </text>
           </g>
         ))}
 
         {xLabels.map((p) => (
           <text key={p.year} x={xScale(p.year)} y={HEIGHT - PAD_BOTTOM + 18} className="fan-chart-axis-label" textAnchor="middle">
-            Yr {p.year}
+            {t('charts.yr', { n: p.year })}
           </text>
         ))}
 
@@ -123,12 +125,12 @@ const FanChart = ({ yearlyPercentiles, symbol = '' }) => {
 
       {hover && (
         <div className="fan-chart-tooltip" style={{ left: `${(xScale(hover.year) / WIDTH) * 100}%`, transform: tooltipFlip ? 'translateX(-100%)' : 'none' }}>
-          <div className="fan-chart-tooltip-year">Year {hover.year}</div>
-          <div className="fan-chart-tooltip-row">90th <strong>{symbol}{Math.round(hover.p90).toLocaleString()}</strong></div>
-          <div className="fan-chart-tooltip-row">75th <strong>{symbol}{Math.round(hover.p75).toLocaleString()}</strong></div>
-          <div className="fan-chart-tooltip-row median">Median <strong>{symbol}{Math.round(hover.p50).toLocaleString()}</strong></div>
-          <div className="fan-chart-tooltip-row">25th <strong>{symbol}{Math.round(hover.p25).toLocaleString()}</strong></div>
-          <div className="fan-chart-tooltip-row">10th <strong>{symbol}{Math.round(hover.p10).toLocaleString()}</strong></div>
+          <div className="fan-chart-tooltip-year">{t('charts.year', { n: hover.year })}</div>
+          <div className="fan-chart-tooltip-row">{t('charts.p90')} <strong>{symbol}{Math.round(hover.p90).toLocaleString()}</strong></div>
+          <div className="fan-chart-tooltip-row">{t('charts.p75')} <strong>{symbol}{Math.round(hover.p75).toLocaleString()}</strong></div>
+          <div className="fan-chart-tooltip-row median">{t('charts.medianShort')} <strong>{symbol}{Math.round(hover.p50).toLocaleString()}</strong></div>
+          <div className="fan-chart-tooltip-row">{t('charts.p25')} <strong>{symbol}{Math.round(hover.p25).toLocaleString()}</strong></div>
+          <div className="fan-chart-tooltip-row">{t('charts.p10')} <strong>{symbol}{Math.round(hover.p10).toLocaleString()}</strong></div>
         </div>
       )}
       </div>
