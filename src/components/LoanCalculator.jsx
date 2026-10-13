@@ -180,7 +180,7 @@ const LoanCalculator = ({ country }) => {
 
       <label className="loan-prime-toggle">
         <input type="checkbox" checked={quotedAsPrimePlus} onChange={toggleQuotedAsPrimePlus} />
-        My rate is quoted as "prime + %" (common for SA bonds and vehicle finance)
+        {t('loan.primePlus')}
       </label>
 
       <div className="loan-form">
@@ -204,7 +204,7 @@ const LoanCalculator = ({ country }) => {
           </>
         ) : (
           <div className="form-group">
-            <label>Interest Rate (% per year)</label>
+            <label>{t('loan.interestRate')}</label>
             <input type="number" min="0" step="0.1" value={annualRate} onChange={(e) => updateInput('annualRate', e.target.value)} />
           </div>
         )}
@@ -286,32 +286,27 @@ const LoanCalculator = ({ country }) => {
                 ))}
               </div>
               <p className="loan-note" style={{ marginTop: '8px' }}>
-                {activeType.shortLabel === 'home loan' ? 'SA home loans' : 'Most SA vehicle finance'} track the prime rate, so the instalment changes each time the Reserve Bank does. This shows the new payment at {effectiveAnnualRate.toFixed(2)}% ± a few points, same principal and term.
+                {activeType.shortLabel === 'home loan' ? t('loan.homeLoans') : t('loan.vehicleFinance')} {t('loan.shockNote', { rate: effectiveAnnualRate.toFixed(2) })}
               </p>
             </div>
           )}
 
           {extraMonthly > 0 && result.extra && (
             <div className="loan-extra-callout">
-              Paying an extra {country.symbol}{extraMonthly.toLocaleString()}/month clears this {activeType.shortLabel} in{' '}
-              <strong>{monthsToYearsLabel(result.extra.payoffMonths)}</strong> instead of {monthsToYearsLabel(result.payoffMonths)}{' '}
-              (<span className="loan-result-date">around {monthsFromNowLabel(result.extra.payoffMonths)}</span>) --
-              saving <strong className="positive">{country.symbol} {result.extra.interestSaved.toLocaleString()}</strong> in interest
-              and {Math.floor(result.extra.monthsSaved / 12)} years {result.extra.monthsSaved % 12} months off the term.
+              {t('loan.extraCallout1', { amount: `${country.symbol}${extraMonthly.toLocaleString()}`, type: activeType.shortLabel })}{' '}
+              <strong>{monthsToYearsLabel(result.extra.payoffMonths)}</strong> {t('loan.extraCallout2', { was: monthsToYearsLabel(result.payoffMonths) })}{' '}
+              (<span className="loan-result-date">{t('loan.around', { date: monthsFromNowLabel(result.extra.payoffMonths) })}</span>) --{' '}
+              {t('loan.extraCallout3')} <strong className="positive">{country.symbol} {result.extra.interestSaved.toLocaleString()}</strong>{' '}
+              {t('loan.extraCallout4', { years: Math.floor(result.extra.monthsSaved / 12), months: result.extra.monthsSaved % 12 })}
             </div>
           )}
 
           {biweeklyResult?.extra && (
             <div className="loan-extra-callout biweekly">
-              💡 Switching to bi-weekly payments (half your {country.symbol}{result.monthlyPayment.toLocaleString()} instalment, paid every 2
-              weeks instead of once a month) works out to one extra payment a year. That alone would clear this {activeType.shortLabel} in{' '}
-              <strong>{monthsToYearsLabel(biweeklyResult.extra.payoffMonths)}</strong> instead of {monthsToYearsLabel(result.payoffMonths)}{' '}
-              (<span className="loan-result-date">around {monthsFromNowLabel(biweeklyResult.extra.payoffMonths)}</span>),
-              saving <strong className="positive">{country.symbol} {biweeklyResult.extra.interestSaved.toLocaleString()}</strong> in interest.
-              You do pay one extra instalment's worth per year in total -- but if you're paid weekly or bi-weekly yourself, it often lines up
-              with your paycheck rhythm instead of feeling like a separate decision (confirm your lender actually applies bi-weekly payments
-              this way before switching -- some just bank them and apply monthly anyway, which erases the benefit).
-            </div>
+              {t('loan.biweeklyA', { payment: `${country.symbol}${result.monthlyPayment.toLocaleString()}`, type: activeType.shortLabel })}{' '}
+              <strong>{monthsToYearsLabel(biweeklyResult.extra.payoffMonths)}</strong> {t('loan.biweeklyB', { was: monthsToYearsLabel(result.payoffMonths) })}{' '}
+              (<span className="loan-result-date">{t('loan.around', { date: monthsFromNowLabel(biweeklyResult.extra.payoffMonths) })}</span>),{' '}
+              {t('loan.extraCallout3')} <strong className="positive">{country.symbol} {biweeklyResult.extra.interestSaved.toLocaleString()}</strong>{t('loan.biweekly3')}</div>
           )}
 
           {balanceChartPoints.length > 2 && (

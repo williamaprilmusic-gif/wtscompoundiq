@@ -4,6 +4,7 @@ import './Compare.css';
 import { calculateCompoundInterest } from '../engine';
 import { downloadCSV } from '../utils/csv';
 import { usePersistedState } from '../utils/usePersistedState';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const SCENARIO_A_KEY = 'wts_compoundiq_scenario_a';
 const SCENARIO_B_KEY = 'wts_compoundiq_scenario_b';
@@ -16,6 +17,7 @@ const SCENARIO_C_KEY = 'wts_compoundiq_scenario_c';
 // independently-editable plans -- e.g. "what if I contributed more" or "what if I
 // waited 5 years to start".
 const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0 }) => {
+  const { t } = useLanguage();
   // Seeded from the live Calculator inputs on first use only (usePersistedState's
   // default is a one-time initializer) -- same "seed from current context at mount"
   // pattern as PowerTools' affordRate. Plan B starts as a copy of Plan A so both cards
@@ -108,17 +110,12 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
     <div className="card country-compare">
       <div className="compare-header">
         <h2>📊 Compare My Plans</h2>
-        <p>
-          Same South African tax rules -- three independently-editable plans, so you can see what changing the
-          contribution, rate, timeframe, or wrapper actually does.
-        </p>
+        <p>{t('plan.cmpIntro')}</p>
       </div>
 
       {allScenariosEmpty && (
         <p className="compare-scenario-empty-hint">
-          All three plans start at {country.symbol}0 -- this tab seeds itself from the Calculator tab's inputs the
-          first time you open it, so if you haven't entered anything there yet, edit the fields below directly, or
-          fill in the Calculator tab first and click "Sync with Calculator" on any plan.
+          {t('plan.cmpEmpty', { symbol: country.symbol })}
         </p>
       )}
       <div className="compare-grid">
@@ -137,19 +134,19 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
                 <input type="number" min="0" value={scenario.initial} onChange={(e) => updateScenario(setScenario, 'initial', e.target.value)} />
               </div>
               <div className="form-group">
-                <label>Monthly ({country.symbol})</label>
+                <label>{t('plan.cmpMonthly', { symbol: country.symbol })}</label>
                 <input type="number" min="0" value={scenario.monthly} onChange={(e) => updateScenario(setScenario, 'monthly', e.target.value)} />
               </div>
               <div className="form-group">
-                <label>Rate (%)</label>
+                <label>{t('plan.cmpRate')}</label>
                 <input type="number" step="0.1" value={scenario.rate} onChange={(e) => updateScenario(setScenario, 'rate', e.target.value)} />
               </div>
               <div className="form-group">
-                <label>Years</label>
+                <label>{t('plan.cmpYears')}</label>
                 <input type="number" min="1" max="80" value={scenario.years} onChange={(e) => updateScenario(setScenario, 'years', e.target.value)} />
               </div>
               <div className="form-group">
-                <label>Inflation (%)</label>
+                <label>{t('plan.cmpInflation')}</label>
                 <input type="number" step="0.1" value={scenario.inflation} onChange={(e) => updateScenario(setScenario, 'inflation', e.target.value)} />
               </div>
             </div>
@@ -171,35 +168,32 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
 
       {scenarioWinner && (
         <p className="compare-scenario-verdict">
-          If each plan runs exactly as entered, {scenarioRanked[0].scenario.name || `Plan ${scenarioRanked[0].label}`} would come out ahead at{' '}
-          {country.symbol} {Math.round(scenarioRanked[0].value).toLocaleString()} —{' '}
-          {country.symbol} {Math.round(scenarioRunnerUpGap).toLocaleString()} more than{' '}
-          {scenarioRanked[1].scenario.name || `Plan ${scenarioRanked[1].label}`}, driven by whatever's different
-          between the plans (contribution, rate, timeframe, or wrapper use).
+          {t('plan.cmpVerdict', {
+            winner: scenarioRanked[0].scenario.name || t('plan.cmpPlanN', { n: scenarioRanked[0].label }),
+            amount: `${country.symbol} ${Math.round(scenarioRanked[0].value).toLocaleString()}`,
+            gap: `${country.symbol} ${Math.round(scenarioRunnerUpGap).toLocaleString()}`,
+            runnerUp: scenarioRanked[1].scenario.name || t('plan.cmpPlanN', { n: scenarioRanked[1].label })
+          })}
         </p>
       )}
 
       {overtake && overtake.type === 'year' && overtake.year > 1 && (
         <p className="compare-scenario-verdict compare-overtake">
-          ⏱️ It starts behind: {winnerName} doesn't overtake {runnerUpName} until{' '}
-          <strong>year {overtake.year}</strong>. Up to then the other plan is worth more — the lead above is the
-          finish line, not the whole race.
+          {t('plan.cmpOvertake', { winner: winnerName, runnerUp: runnerUpName })}{' '}
+          <strong>{t('plan.cmpYearN', { n: overtake.year })}</strong>. {t('plan.cmpOvertake2')}
         </p>
       )}
 
       {overtake && overtake.type === 'never' && (
         <p className="compare-scenario-verdict compare-overtake">
-          ⏱️ Across the years these two plans share, {runnerUpName} stays ahead the whole way — {winnerName} only
-          wins on its longer timeframe. Set both plans to the same number of years to compare like with like.
+          {t('plan.cmpNever1', { runnerUp: runnerUpName, winner: winnerName })}
         </p>
       )}
 
-      <button className="compare-export-btn" onClick={exportScenarioCSV}>⬇️ Export Year-by-Year CSV</button>
+      <button className="compare-export-btn" onClick={exportScenarioCSV}>{t('plan.cmpExport')}</button>
 
       <div className="compare-note">
-        All three plans use South Africa's current tax rules and Calculator-tab compounding frequency/contribution
-        growth settings -- only the fields shown above differ between them. Saved in your browser so they're still
-        here next time.
+        {t('plan.cmpFootNote')}
       </div>
     </div>
   );

@@ -81,7 +81,7 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
     if (plan.debt && plan.debt.avalancheReachable && plan.debt.combinedMonthly > 0) setDebtPlan(plan.debt);
   }, []);
   const debtFreeYears = debtPlan ? Math.round(debtPlan.avalancheMonths / 12) : 0;
-  const debtFreeLabel = debtFreeYears < 1 ? 'under a year' : `about ${debtFreeYears} year${debtFreeYears === 1 ? '' : 's'}`;
+  const debtFreeLabel = debtFreeYears < 1 ? t('coach.underAYear') : t(debtFreeYears === 1 ? 'coach.aboutYear' : 'coach.aboutYears', { n: debtFreeYears });
   const postDebtYears = debtPlan ? Math.max(0, years - debtFreeYears) : 0;
   const postDebtBaseline = debtPlan ? calculateCompoundInterest({ ...base, years: postDebtYears }) : null;
   const redirectApplied = debtPlan ? calculateCompoundInterest({ ...base, years: postDebtYears, monthly: monthly + debtPlan.combinedMonthly }) : null;
@@ -127,7 +127,7 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
   const steps = [
     {
       key: 'wrapper',
-      title: 'Build Your Foundation',
+      title: t('coach.s1Title'),
       done: !hasWrapper || wrapper,
       body: !hasWrapper
         ? t('coach.s1NoWrapper', { country: country.name, rate: country.taxRate })
@@ -142,23 +142,23 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
     },
     ...(savedEfPlan ? [{
       key: 'efPriority',
-      title: 'Fund Your Emergency Buffer First',
+      title: t('coach.efPriorityTitle'),
       done: efFunded,
       body: efFunded
-        ? `Your saved Emergency Fund plan is fully funded (${country.symbol}${Math.round(savedEfPlan.currentSavings).toLocaleString()} of ${country.symbol}${Math.round(savedEfPlan.targetAmount).toLocaleString()}) -- you're clear to prioritise the growth levers below.`
-        : `Your saved Emergency Fund plan is ${efFundedPct.toFixed(0)}% funded (${country.symbol}${Math.round(savedEfPlan.currentSavings).toLocaleString()} of ${country.symbol}${Math.round(savedEfPlan.targetAmount).toLocaleString()}). Most guidance treats a full emergency fund as the foundation to build before increasing investment risk -- consider directing new money there before applying the boosts below.`,
+        ? t('coach.efFunded', { saved: `${country.symbol}${Math.round(savedEfPlan.currentSavings).toLocaleString()}`, target: `${country.symbol}${Math.round(savedEfPlan.targetAmount).toLocaleString()}` })
+        : t('coach.efPartial', { pct: efFundedPct.toFixed(0), saved: `${country.symbol}${Math.round(savedEfPlan.currentSavings).toLocaleString()}`, target: `${country.symbol}${Math.round(savedEfPlan.targetAmount).toLocaleString()}` }),
       interactive: false
     }] : []),
     ...(leverageIsHigh ? [{
       key: 'leverageCheck',
-      title: 'Check Your Leverage Before Adding Risk',
+      title: t('coach.leverageTitle'),
       done: false,
-      body: `Your latest saved Net Worth snapshot puts debt at ${netWorthRatios.debtToAsset.toFixed(0)}% of assets -- "${netWorthRatios.bandLabel}". Before taking on more investment risk, consider whether reducing debt (or growing assets) would put you on steadier footing -- see the Net Worth tab's balance-sheet ratios, and Debt Payoff for a plan to bring it down.`,
+      body: t('coach.leverageBody', { pct: netWorthRatios.debtToAsset.toFixed(0), band: t(`coach.band_${netWorthRatios.band || 'none'}`) }),
       interactive: false
     }] : []),
     {
       key: 'boost',
-      title: 'Accelerate Your Growth',
+      title: t('coach.s2Title'),
       done: false,
       body: t('coach.s2Body', { from: `${country.symbol} ${monthly.toLocaleString()}`, to: `${country.symbol} ${Math.round(boostedMonthly).toLocaleString()}`, pct: boostPercent, gain: `${country.symbol} ${Math.round(boostGain).toLocaleString()}`, years }),
       interactive: true,
@@ -173,70 +173,70 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
     },
     {
       key: 'years',
-      title: 'Stay The Course',
+      title: t('coach.s3Title'),
       done: maxExtraYears === 0,
       body: maxExtraYears === 0
-        ? `Your timeframe is already at the ${maxYears}-year maximum -- there's no more runway to add here.`
-        : `Staying invested for ${extendedYears} years instead of ${years} adds ${country.symbol} ${Math.round(extendGain).toLocaleString()} to your final balance -- compounding rewards patience more than almost anything else.`,
+        ? t('coach.s3Maxed', { max: maxYears })
+        : t('coach.s3Body', { extended: extendedYears, years, gain: `${country.symbol} ${Math.round(extendGain).toLocaleString()}` }),
       interactive: maxExtraYears > 0,
       control: maxExtraYears > 0 ? (
         <div className="coach-slider-row">
-          <label>+{effectiveExtraYears} extra year{effectiveExtraYears === 1 ? '' : 's'}</label>
-          <input type="range" min="1" max={Math.min(20, maxExtraYears)} step="1" value={effectiveExtraYears} aria-label="Extra years to stay invested" onChange={(e) => setExtraYears(Number(e.target.value))} />
+          <label>{t(effectiveExtraYears === 1 ? 'coach.s3SliderOne' : 'coach.s3SliderMany', { n: effectiveExtraYears })}</label>
+          <input type="range" min="1" max={Math.min(20, maxExtraYears)} step="1" value={effectiveExtraYears} aria-label={t('coach.s3Aria')} onChange={(e) => setExtraYears(Number(e.target.value))} />
         </div>
       ) : null,
       onApply: applyYears,
-      applyLabel: `Set timeframe to ${extendedYears} years`
+      applyLabel: t('coach.s3Apply', { years: extendedYears })
     },
     ...(canEscalate ? [{
       key: 'escalate',
-      title: 'Make Contributions Keep Pace',
+      title: t('coach.escalateTitle'),
       done: escalateDone,
       body: escalateDone
-        ? `You're already growing contributions by ${contributionIncrease}%/yr -- ahead of this step's ${escalatePercent}% suggestion.`
-        : `A flat ${country.symbol}${monthly.toLocaleString()}/month quietly buys less every year. Growing it by ${escalatePercent}%/yr instead of ${contributionIncrease}% -- roughly matching a raise -- adds ${country.symbol} ${Math.round(escalateGain).toLocaleString()} over ${years} years, on top of anything from steps 1-3.`,
+        ? t('coach.escalateDone', { current: contributionIncrease, suggest: escalatePercent })
+        : t('coach.escalateBody', { monthly: `${country.symbol}${monthly.toLocaleString()}`, suggest: escalatePercent, current: contributionIncrease, gain: `${country.symbol} ${Math.round(escalateGain).toLocaleString()}`, years }),
       interactive: !escalateDone,
       control: !escalateDone ? (
         <div className="coach-slider-row">
-          <label>+{escalatePercent}%/yr contribution growth</label>
-          <input type="range" min="1" max="15" step="1" value={escalatePercent} aria-label="Annual contribution growth percentage" onChange={(e) => setEscalatePercent(Number(e.target.value))} />
+          <label>{t('coach.escalateSlider', { pct: escalatePercent })}</label>
+          <input type="range" min="1" max="15" step="1" value={escalatePercent} aria-label={t('coach.escalateAria')} onChange={(e) => setEscalatePercent(Number(e.target.value))} />
         </div>
       ) : null,
       onApply: applyEscalate,
-      applyLabel: `Set contribution growth to ${escalatePercent}%/yr`
+      applyLabel: t('coach.escalateApply', { pct: escalatePercent })
     }] : []),
     ...(hasWrapper && tfsaMonthlyMax > 0 ? [{
       key: 'tfsaMax',
-      title: `Use Your Full ${country.wrapperLabel} Allowance`,
+      title: t('coach.tfsaTitle', { wrapper: country.wrapperLabel }),
       done: tfsaStepDone,
       body: tfsaStepDone
-        ? `You're already contributing at or above the ${country.symbol}${Math.round(tfsaMonthlyMax).toLocaleString()}/month (${country.symbol}${country.annualWrapperLimit.toLocaleString()}/yr) ${country.wrapperLabel} cap -- every rand of this year's tax-free allowance is being used.`
-        : `Contributing the full ${country.symbol}${Math.round(tfsaMonthlyMax).toLocaleString()}/month (${country.symbol}${country.annualWrapperLimit.toLocaleString()}/yr) into your ${country.wrapperLabel}, instead of ${country.symbol}${monthly.toLocaleString()}/month, adds ${country.symbol} ${Math.round(tfsaMaxGain).toLocaleString()} over ${years} years -- all of it sheltered from tax. Unused allowance each year is gone for good; it doesn't carry forward.`,
+        ? t('coach.tfsaDone', { monthly: `${country.symbol}${Math.round(tfsaMonthlyMax).toLocaleString()}`, annual: `${country.symbol}${country.annualWrapperLimit.toLocaleString()}`, wrapper: country.wrapperLabel })
+        : t('coach.tfsaBody', { monthly: `${country.symbol}${Math.round(tfsaMonthlyMax).toLocaleString()}`, annual: `${country.symbol}${country.annualWrapperLimit.toLocaleString()}`, wrapper: country.wrapperLabel, current: `${country.symbol}${monthly.toLocaleString()}`, gain: `${country.symbol} ${Math.round(tfsaMaxGain).toLocaleString()}`, years }),
       interactive: !tfsaStepDone,
       onApply: applyTfsaMax,
-      applyLabel: `Set monthly to ${country.symbol}${Math.round(tfsaMonthlyMax).toLocaleString()} + turn on ${country.wrapperLabel}`
+      applyLabel: t('coach.tfsaApply', { monthly: `${country.symbol}${Math.round(tfsaMonthlyMax).toLocaleString()}`, wrapper: country.wrapperLabel })
     }] : []),
     ...(budgetSurplus != null ? [{
       key: 'surplus',
-      title: 'Put Your Budget Surplus to Work',
+      title: t('coach.surplusTitle'),
       done: !hasUnusedSurplus,
       body: hasUnusedSurplus
-        ? `Your saved Budget plan shows a ${country.symbol}${Math.round(budgetSurplus).toLocaleString()}/month surplus -- ${country.symbol}${Math.round(budgetSurplus - monthly).toLocaleString()} more than the ${country.symbol}${monthly.toLocaleString()} you're currently investing. Putting all of it to work adds ${country.symbol} ${Math.round(surplusGain).toLocaleString()} over ${years} years.`
+        ? t('coach.surplusBody', { surplus: `${country.symbol}${Math.round(budgetSurplus).toLocaleString()}`, extra: `${country.symbol}${Math.round(budgetSurplus - monthly).toLocaleString()}`, current: `${country.symbol}${monthly.toLocaleString()}`, gain: `${country.symbol} ${Math.round(surplusGain).toLocaleString()}`, years })
         : budgetSurplus <= 0
-          ? `Your saved Budget plan shows no surplus to redirect right now -- revisit the Budget tab once your income or expenses change.`
-          : `You're already investing at least your full saved Budget surplus (${country.symbol}${Math.round(budgetSurplus).toLocaleString()}/month) -- nothing unused to redirect here.`,
+          ? t('coach.surplusNone')
+          : t('coach.surplusAlready', { surplus: `${country.symbol}${Math.round(budgetSurplus).toLocaleString()}` }),
       interactive: hasUnusedSurplus,
       onApply: applySurplus,
-      applyLabel: `Set monthly to ${country.symbol}${Math.round(budgetSurplus).toLocaleString()}`
+      applyLabel: t('coach.surplusApply', { amount: `${country.symbol}${Math.round(budgetSurplus).toLocaleString()}` })
     }] : []),
     ...(hasDebtRedirect ? [{
       key: 'debtRedirect',
-      title: 'Redirect Debt Payments Once You Are Clear',
+      title: t('coach.debtTitle'),
       done: false,
-      body: `Your saved Debt Payoff plan clears the debt in ${debtFreeLabel} on the Avalanche method, freeing up the ${country.symbol}${Math.round(debtPlan.combinedMonthly).toLocaleString()}/month you're putting toward it. Rolling that straight into this plan from then on -- on top of your current ${country.symbol}${monthly.toLocaleString()}/month -- adds ${country.symbol} ${Math.round(redirectGain).toLocaleString()} over the remaining ${postDebtYears} year${postDebtYears === 1 ? '' : 's'}, versus letting that cash flow drift into everyday spending.`,
+      body: t('coach.debtBody', { when: debtFreeLabel, freed: `${country.symbol}${Math.round(debtPlan.combinedMonthly).toLocaleString()}`, current: `${country.symbol}${monthly.toLocaleString()}`, gain: `${country.symbol} ${Math.round(redirectGain).toLocaleString()}`, years: t(postDebtYears === 1 ? 'coach.yearsOne' : 'coach.yearsMany', { n: postDebtYears }) }),
       interactive: true,
       onApply: applyDebtRedirect,
-      applyLabel: `Set monthly to ${country.symbol}${Math.round(monthly + debtPlan.combinedMonthly).toLocaleString()}`
+      applyLabel: t('coach.debtApply', { amount: `${country.symbol}${Math.round(monthly + debtPlan.combinedMonthly).toLocaleString()}` })
     }] : [])
   ];
 
@@ -248,8 +248,8 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
   return (
     <div className="card wealth-coach">
       <div className="coach-header">
-        <h2>🧭 AI Wealth Coach</h2>
-        <p>A step-by-step plan built from your current calculator inputs. Adjust each lever below, then apply it straight to your plan.</p>
+        <h2>{t('coach.title')}</h2>
+        <p>{t('coach.intro2')}</p>
       </div>
 
       <div className="coach-steps">
@@ -271,11 +271,7 @@ const Coach = ({ country, initial, monthly, rate, years, inflation, wrapper, com
       </div>
 
       <p className="coach-assumption-note">
-        These are rule-based, not AI-generated: most steps recompute your current plan through the same calculator
-        engine with one input changed, assuming a constant {rate}% return, and applying one updates your actual
-        Calculator inputs. The foundation checks (emergency fund, leverage) instead read your saved Emergency Fund
-        and Net Worth plans directly -- either way, it's a "what-if" comparison you can act on, not personalized
-        financial advice.
+        {t('coach.note2', { rate })}
       </p>
     </div>
   );

@@ -95,12 +95,15 @@ const BASE_SUB_TAB_KEYS = [
 // Calculator tab's own rate-sensitivity band).
 const FX_SHOCK_LEVELS = [-20, -10, 0, 10, 20];
 
-const NwTabEmpty = ({ message, onGoToTracker }) => (
-  <div className="nw-tab-empty">
-    <p>{message}</p>
-    <button type="button" onClick={onGoToTracker}>Go to Tracker →</button>
-  </div>
-);
+const NwTabEmpty = ({ message, onGoToTracker }) => {
+  const { t } = useLanguage();
+  return (
+    <div className="nw-tab-empty">
+      <p>{message}</p>
+      <button type="button" onClick={onGoToTracker}>{t('nw.goToTracker')}</button>
+    </div>
+  );
+};
 
 const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onReportingCurrencyChange, canFxStressTest = false, onOpenPricing }) => {
   const { t } = useLanguage();
@@ -460,7 +463,7 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
           </div>
           <div className="nw-ratio">
             <span>Read</span>
-            <strong>{bsRatios.bandLabel}</strong>
+            <strong>{t(`coach.band_${bsRatios.band || 'none'}`)}</strong>
           </div>
         </div>
       )}
@@ -473,13 +476,13 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
         return (
           <p className={`nw-concentration ${concentrated ? 'warn' : ''}`}>
             {concentrated ? '⚠️ ' : '📊 '}
-            Your biggest asset class, <strong>{top.label}</strong>, is <strong>{pct.toFixed(0)}%</strong> of your total assets.
-            {concentrated ? ' That\'s a concentrated position — a hit to that one category moves most of your net worth.' : ' Reasonably spread across categories.'}
+            {t('nw.concentration', { label: top.label, pct: pct.toFixed(0) })}
+            {t(concentrated ? 'nw.concentratedYes' : 'nw.concentratedNo')}
           </p>
         );
       })()}
 
-      <button className="nw-save-btn" onClick={saveSnapshot}>📸 Save Snapshot</button>
+      <button className="nw-save-btn" onClick={saveSnapshot}>{t('nw.saveSnapshot')}</button>
       </>
       )}
 
@@ -594,13 +597,11 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
           {nwGrowth && (
             <p className="nw-history-growth">
               {nwGrowth.cagr != null
-                ? `Net worth has ${nwGrowth.cagr >= 0 ? 'grown' : 'shrunk'} at about ${Math.abs(nwGrowth.cagr).toFixed(1)}%/yr over ${nwGrowth.years.toFixed(1)} years (${nwGrowth.totalChange >= 0 ? '+' : '−'}${country.symbol}${Math.abs(Math.round(nwGrowth.totalChange)).toLocaleString()} in total).`
-                : `${nwGrowth.totalChange >= 0 ? '+' : '−'}${country.symbol}${Math.abs(Math.round(nwGrowth.totalChange)).toLocaleString()} in total across your snapshots — ${
-                    nwGrowth.reason === 'short-span'
-                      ? 'too little time between them to annualise a rate yet.'
-                      : nwGrowth.reason === 'nonpositive-end'
-                        ? 'net worth is now zero or negative, so an annualised rate has no meaning.'
-                        : 'an annualised rate needs a positive starting net worth.'}`}
+                ? t(nwGrowth.cagr >= 0 ? 'nw.growthGrown' : 'nw.growthShrunk', { rate: Math.abs(nwGrowth.cagr).toFixed(1), years: nwGrowth.years.toFixed(1), change: `${nwGrowth.totalChange >= 0 ? '+' : '−'}${country.symbol}${Math.abs(Math.round(nwGrowth.totalChange)).toLocaleString()}` })
+                : t('nw.growthTotal', {
+                    change: `${nwGrowth.totalChange >= 0 ? '+' : '−'}${country.symbol}${Math.abs(Math.round(nwGrowth.totalChange)).toLocaleString()}`,
+                    reason: t(nwGrowth.reason === 'short-span' ? 'nw.reasonShort' : nwGrowth.reason === 'nonpositive-end' ? 'nw.reasonNonpositive' : 'nw.reasonStart')
+                  })}
             </p>
           )}
           {canForecast && (

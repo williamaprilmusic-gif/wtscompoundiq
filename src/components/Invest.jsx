@@ -242,10 +242,10 @@ const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12, con
       {goals.length > 0 && budgetSurplus != null && (
         <div className={`invest-budget-check ${combinedMonthly <= budgetSurplus ? 'covered' : 'short'}`}>
           {combinedMonthly <= budgetSurplus
-            ? `✅ Covered by your Budget: your saved Budget plan shows a ${country.symbol}${Math.round(budgetSurplus).toLocaleString()}/month surplus -- enough for the ${country.symbol}${Math.round(combinedMonthly).toLocaleString()}/month these goal${goals.length === 1 ? '' : 's'} need, with ${country.symbol}${Math.round(budgetSurplus - combinedMonthly).toLocaleString()}/month left over.`
+            ? t('invest.covered', { surplus: `${country.symbol}${Math.round(budgetSurplus).toLocaleString()}`, need: `${country.symbol}${Math.round(combinedMonthly).toLocaleString()}`, these: t(goals.length === 1 ? 'invest.theseGoal' : 'invest.theseGoals'), left: `${country.symbol}${Math.round(budgetSurplus - combinedMonthly).toLocaleString()}` })
             : budgetSurplus <= 0
-              ? `⚠️ Your saved Budget plan shows no surplus right now, but these goals need ${country.symbol}${Math.round(combinedMonthly).toLocaleString()}/month -- revisit the Budget tab, or these contributions aren't coming from spare cash flow.`
-              : `⚠️ Short by ${country.symbol}${Math.round(combinedMonthly - budgetSurplus).toLocaleString()}/month: these goal${goals.length === 1 ? '' : 's'} need ${country.symbol}${Math.round(combinedMonthly).toLocaleString()}/month, but your saved Budget plan only shows a ${country.symbol}${Math.round(budgetSurplus).toLocaleString()}/month surplus.`}
+              ? t('invest.noSurplus', { need: `${country.symbol}${Math.round(combinedMonthly).toLocaleString()}` })
+              : t('invest.short', { gap: `${country.symbol}${Math.round(combinedMonthly - budgetSurplus).toLocaleString()}`, these: t(goals.length === 1 ? 'invest.theseGoal' : 'invest.theseGoals'), need: `${country.symbol}${Math.round(combinedMonthly).toLocaleString()}`, surplus: `${country.symbol}${Math.round(budgetSurplus).toLocaleString()}` })}
         </div>
       )}
 

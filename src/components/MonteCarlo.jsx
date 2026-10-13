@@ -431,13 +431,13 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
 
       {worstWindow && worstWindowOutcome && (
         <div className="mc-worst-window">
-          <span className="mc-worst-window-label">Your plan through history's worst {worstWindow.windowYears}-year stretch</span>
+          <span className="mc-worst-window-label">{t('charts.worstLabel', { n: worstWindow.windowYears })}</span>
           <p>
-            The weakest run of {worstWindow.windowYears} straight years in the {activeHistoricalModel.label} data compounded to
-            just <strong>{worstWindow.growthMultiple.toFixed(2)}×</strong> ({worstWindow.annualisedReturnPct.toFixed(1)}%/yr).
-            Living straight through it, your plan would have gone in {country.symbol}{Math.round(worstWindowOutcome.totalContributed).toLocaleString()} of contributions
-            and come out with about <strong>{country.symbol}{Math.round(worstWindowOutcome.finalBalance).toLocaleString()}</strong>.
-            The resampled cloud above smooths sequences like this apart — this is one real, ordered bad case for contrast.
+            {t('charts.worstBody1', { n: worstWindow.windowYears, model: activeHistoricalModel.label })}{' '}
+            <strong>{worstWindow.growthMultiple.toFixed(2)}×</strong> ({worstWindow.annualisedReturnPct.toFixed(1)}%/yr).{' '}
+            {t('charts.worstBody2', { contrib: `${country.symbol}${Math.round(worstWindowOutcome.totalContributed).toLocaleString()}` })}{' '}
+            <strong>{country.symbol}{Math.round(worstWindowOutcome.finalBalance).toLocaleString()}</strong>.{' '}
+            {t('charts.worstBody3')}
           </p>
         </div>
       )}
@@ -451,20 +451,20 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
 
       <label className="mc-compare-toggle">
         <input type="checkbox" checked={modelDrawdown} onChange={(e) => setModelDrawdown(e.target.checked)} />
-        Then model a retirement drawdown — how often does the pot survive being lived off?
+        {t('charts.drawdownToggle')}
       </label>
       {modelDrawdown && (
         <div className="mc-form mc-drawdown-form">
           <div className="form-group">
-            <label>Retirement length (years)</label>
+            <label>{t('charts.retLength')}</label>
             <input type="number" min="1" max="60" step="1" value={retirementYears} onChange={(e) => setRetirementYears(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Withdrawal ({country.symbol}/yr, year 1)</label>
+            <label>{t('charts.withdrawalYr1', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={annualWithdrawal} onChange={(e) => setAnnualWithdrawal(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Grow withdrawal by (%/yr)</label>
+            <label>{t('charts.growWithdrawal')}</label>
             <input type="number" min="0" step="0.5" value={withdrawalInflation} onChange={(e) => setWithdrawalInflation(Number(e.target.value))} />
           </div>
         </div>
@@ -473,7 +473,7 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
         <div className="mc-solver mc-solver-inline">
           <div className="mc-solver-row">
             <label>
-              Or — find the year-one withdrawal the pot survives{' '}
+              {t('charts.solveWithdrawalPre')}{' '}
               <input
                 type="number" min="1" max="99"
                 value={Math.max(1, Math.min(99, targetProb || 90))}
@@ -487,8 +487,8 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
           {withdrawalSolveResult && (
             <p className={`mc-solver-result ${withdrawalSolveResult.reachable ? '' : 'warn'}`}>
               {withdrawalSolveResult.reachable
-                ? `About ${country.symbol} ${withdrawalSolveResult.withdrawal.toLocaleString()}/yr in year one (rising ${withdrawalInflation}%/yr) keeps the pot alive through ${retirementYears} years in roughly ${withdrawalSolveResult.achievedSurvival.toFixed(0)}% of runs (target ${withdrawalSolveResult.wanted}%). Approximate — from ${NUM_SIMULATIONS.toLocaleString()} random paths.`
-                : `Even drawing nothing, the pot only survives ${retirementYears} years in about ${withdrawalSolveResult.achievedSurvival.toFixed(0)}% of runs — it needs a bigger pot, a shorter retirement, or a lower target than ${withdrawalSolveResult.wanted}%.`}
+                ? t('charts.wdReachable', { amount: `${country.symbol} ${withdrawalSolveResult.withdrawal.toLocaleString()}`, infl: withdrawalInflation, years: retirementYears, surv: withdrawalSolveResult.achievedSurvival.toFixed(0), wanted: withdrawalSolveResult.wanted, sims: NUM_SIMULATIONS.toLocaleString() })
+                : t('charts.wdUnreachable', { years: retirementYears, surv: withdrawalSolveResult.achievedSurvival.toFixed(0), wanted: withdrawalSolveResult.wanted })}
             </p>
           )}
         </div>
@@ -501,45 +501,45 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
       <div className="mc-solver">
         <div className="mc-solver-row">
           <label>
-            Or — find the monthly contribution for a{' '}
+            {t('charts.solveMonthlyPre')}{' '}
             <input
               type="number" min="1" max="99"
               value={Math.max(1, Math.min(99, targetProb || 90))}
               onChange={(e) => setTargetProb(Number(e.target.value))}
-            />% chance of reaching {country.symbol}{Math.round(goal).toLocaleString()}
+            />{t('charts.solveMonthlyPost', { goal: `${country.symbol}${Math.round(goal).toLocaleString()}` })}
           </label>
           <button className="mc-solver-btn" onClick={handleSolve} disabled={isSolving}>
-            {isSolving ? '⏳ Solving…' : 'Find it'}
+            {isSolving ? t('charts.solving') : t('charts.findIt')}
           </button>
         </div>
         {solveResult && (
           <p className={`mc-solver-result ${solveResult.reachable ? '' : 'warn'}`}>
             {solveResult.reachable
-              ? `About ${country.symbol} ${solveResult.monthly.toLocaleString()}/month gives roughly a ${solveResult.achievedProb.toFixed(0)}% chance of hitting the goal (target was ${solveResult.wanted}%). Approximate — the probability is estimated from ${NUM_SIMULATIONS.toLocaleString()} random paths and moves a point or two each run.`
-              : `Even ${country.symbol} ${solveResult.monthly.toLocaleString()}/month only reaches about ${solveResult.achievedProb.toFixed(0)}% — the ${solveResult.wanted}% target isn't achievable at this volatility and timeframe. Lower the goal, extend the years, or accept a lower success rate.`}
+              ? t('charts.moReachable', { amount: `${country.symbol} ${solveResult.monthly.toLocaleString()}`, prob: solveResult.achievedProb.toFixed(0), wanted: solveResult.wanted, sims: NUM_SIMULATIONS.toLocaleString() })
+              : t('charts.moUnreachable', { amount: `${country.symbol} ${solveResult.monthly.toLocaleString()}`, prob: solveResult.achievedProb.toFixed(0), wanted: solveResult.wanted })}
           </p>
         )}
 
         <div className="mc-solver-row">
           <label>
-            Or — hold the contribution and find how many <strong>years</strong> get you to a{' '}
+            {t('charts.solveYearsPre1')} <strong>{t('charts.solveYearsWord')}</strong> {t('charts.solveYearsPre2')}{' '}
             <input
               type="number" min="1" max="99"
               value={Math.max(1, Math.min(99, targetProb || 90))}
               onChange={(e) => setTargetProb(Number(e.target.value))}
-            />% chance of {country.symbol}{Math.round(goal).toLocaleString()}
+            />{t('charts.solveYearsPost', { goal: `${country.symbol}${Math.round(goal).toLocaleString()}` })}
           </label>
           <button className="mc-solver-btn" onClick={handleSolveYears} disabled={isSolvingYears}>
-            {isSolvingYears ? '⏳ Solving…' : 'Find it'}
+            {isSolvingYears ? t('charts.solving') : t('charts.findIt')}
           </button>
         </div>
         {yearsSolveResult && (
           <p className={`mc-solver-result ${yearsSolveResult.reachable ? '' : 'warn'}`}>
             {yearsSolveResult.reachable
               ? (yearsSolveResult.extraYears === 0
-                  ? `You're already there — at ${yearsSolveResult.years} years the current plan hits about a ${yearsSolveResult.achievedProb.toFixed(0)}% chance (target ${yearsSolveResult.wanted}%).`
-                  : `About ${yearsSolveResult.years} years total — ${yearsSolveResult.extraYears} more than your current plan — gets you to roughly ${yearsSolveResult.achievedProb.toFixed(0)}% (target ${yearsSolveResult.wanted}%). Approximate, from ${NUM_SIMULATIONS.toLocaleString()} random paths.`)
-              : `Even ${yearsSolveResult.years} years only reaches about ${yearsSolveResult.achievedProb.toFixed(0)}% — the ${yearsSolveResult.wanted}% target needs a higher contribution or a lower goal, not just more time.`}
+                  ? t('charts.yrAlready', { years: yearsSolveResult.years, prob: yearsSolveResult.achievedProb.toFixed(0), wanted: yearsSolveResult.wanted })
+                  : t('charts.yrMore', { years: yearsSolveResult.years, extra: yearsSolveResult.extraYears, prob: yearsSolveResult.achievedProb.toFixed(0), wanted: yearsSolveResult.wanted, sims: NUM_SIMULATIONS.toLocaleString() }))
+              : t('charts.yrUnreachable', { years: yearsSolveResult.years, prob: yearsSolveResult.achievedProb.toFixed(0), wanted: yearsSolveResult.wanted })}
           </p>
         )}
       </div>
@@ -578,20 +578,20 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
           {(() => {
             const rank = result.percentileRankOf(deterministic.finalBalance);
             if (rank == null) return null;
-            const optimism = rank >= 65 ? 'optimistic' : rank <= 35 ? 'conservative' : 'middle-of-the-road';
+            const optimism = t(rank >= 65 ? 'charts.optimistic' : rank <= 35 ? 'charts.conservative' : 'charts.middle');
             return (
               <p className="mc-model-note">
-                📍 Your Calculator tab's straight-line projection ({country.symbol}{Math.round(deterministic.finalBalance).toLocaleString()} at a flat {rate}%/yr) lands around the{' '}
-                <strong>{Math.round(rank)}th percentile</strong> of these {NUM_SIMULATIONS.toLocaleString()} runs — a {optimism} assumption. {rank >= 65 ? 'Real markets underperform it more often than not.' : rank <= 35 ? 'Most runs beat it.' : 'It sits close to the median.'}
+                {t('charts.modelNote1', { amount: `${country.symbol}${Math.round(deterministic.finalBalance).toLocaleString()}`, rate })}{' '}
+                <strong>{t('charts.modelNote2', { n: Math.round(rank) })}</strong> {t('charts.modelNote3', { sims: NUM_SIMULATIONS.toLocaleString(), optimism })} {t(rank >= 65 ? 'charts.modelUnder' : rank <= 35 ? 'charts.modelBeat' : 'charts.modelMedian')}
               </p>
             );
           })()}
 
           {result.p50 > 0 && (
             <p className="mc-model-note">
-              ⚠️ Downside exposure: a bad run (10th percentile, {country.symbol}{Math.round(result.p10).toLocaleString()}) ends up{' '}
-              <strong>{country.symbol}{Math.round(result.p50 - result.p10).toLocaleString()} short of the median</strong>{' '}
-              ({Math.round(((result.p50 - result.p10) / result.p50) * 100)}% less) — that's the size of the shortfall a plan needs a buffer for, not just the average outcome.
+              {t('charts.downside1', { p10: `${country.symbol}${Math.round(result.p10).toLocaleString()}` })}{' '}
+              <strong>{t('charts.downside2', { gap: `${country.symbol}${Math.round(result.p50 - result.p10).toLocaleString()}` })}</strong>{' '}
+              {t('charts.downside3', { pct: Math.round(((result.p50 - result.p10) / result.p50) * 100) })}
             </p>
           )}
 
@@ -601,28 +601,28 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
             const breakEvenProb = 100 - rank;
             return (
               <p className="mc-model-note">
-                💧 Break-even: in <strong>{Math.round(breakEvenProb)}%</strong> of the {NUM_SIMULATIONS.toLocaleString()} runs you at least get back the {country.symbol}{Math.round(deterministic.totalDeposited).toLocaleString()} you put in (before inflation). In the other {Math.round(rank)}% the final pot is below total contributions.
+                {t('charts.breakEven1')} <strong>{Math.round(breakEvenProb)}%</strong> {t('charts.breakEven2', { sims: NUM_SIMULATIONS.toLocaleString(), deposited: `${country.symbol}${Math.round(deterministic.totalDeposited).toLocaleString()}`, rest: Math.round(rank) })}
               </p>
             );
           })()}
 
           {result.p10 > 0 && result.p90 > result.p10 && (
             <p className="mc-model-note">
-              🎲 The luck spread: same contributions and the same {rate}% average return, but a top-decile run ({country.symbol}{Math.round(result.p90).toLocaleString()}) finishes with{' '}
-              <strong>{(result.p90 / result.p10).toFixed(1)}× more</strong> than a bottom-decile one ({country.symbol}{Math.round(result.p10).toLocaleString()}) — the difference is purely the order the good and bad years happen to fall in. It's why the plan you can actually stick to beats the optimistic one you can't.
+              {t('charts.luck1', { rate, p90: `${country.symbol}${Math.round(result.p90).toLocaleString()}` })}{' '}
+              <strong>{t('charts.luck2', { x: (result.p90 / result.p10).toFixed(1) })}</strong> {t('charts.luck3', { p10: `${country.symbol}${Math.round(result.p10).toLocaleString()}` })}
             </p>
           )}
 
           {result.drawdown && (
             <div className="mc-drawdown-result">
               <div className="mc-probability">
-                <span>Pot survives {result.drawdown.retirementYears} years of drawdown</span>
+                <span>{t('charts.potSurvives', { years: result.drawdown.retirementYears })}</span>
                 <strong className={result.drawdown.survivalRate >= 85 ? 'positive' : result.drawdown.survivalRate >= 60 ? 'warn' : 'warn'}>
-                  {result.drawdown.survivalRate.toFixed(0)}% of the time
+                  {t('charts.ofTheTime', { pct: result.drawdown.survivalRate.toFixed(0) })}
                 </strong>
               </div>
               <p className="mc-model-note">
-                Drawing {country.symbol}{Math.round(annualWithdrawal).toLocaleString()} in year one, rising {withdrawalInflation}%/yr. In the unlucky runs the money lasts a median of {result.drawdown.medianYearsLasted} years (worst case {result.drawdown.worstCaseYearsLasted}); the surviving runs end with a median of {country.symbol}{Math.round(result.drawdown.p50EndBalance).toLocaleString()} left. Withdrawals come off the pot at the start of each year, then a fresh random return is applied — same return model as the accumulation phase.
+                {t('charts.drawNote', { amount: `${country.symbol}${Math.round(annualWithdrawal).toLocaleString()}`, infl: withdrawalInflation, median: result.drawdown.medianYearsLasted, worst: result.drawdown.worstCaseYearsLasted, left: `${country.symbol}${Math.round(result.drawdown.p50EndBalance).toLocaleString()}` })}
               </p>
             </div>
           )}

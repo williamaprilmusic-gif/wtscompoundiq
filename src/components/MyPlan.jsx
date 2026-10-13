@@ -162,34 +162,34 @@ const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
 
   const brandingEditor = canWhiteLabel ? (
     <div className="plan-branding-editor no-print">
-      <h3>🏷️ Practice Branding <span className="plan-adviser-badge">Ultra</span></h3>
+      <h3>{t('plan.practiceBranding')} <span className="plan-adviser-badge">{t('plan.ultraBadge')}</span></h3>
       <div className="plan-branding-fields">
         <input
           type="text"
           value={branding.firm}
           onChange={(e) => updateBranding({ firm: e.target.value })}
-          placeholder="Firm / practice name (shown on the plan and in print)"
+          placeholder={t('plan.phFirm')}
           maxLength={80}
         />
         <input
           type="text"
           value={branding.tagline}
           onChange={(e) => updateBranding({ tagline: e.target.value })}
-          placeholder="Tagline or licence line (optional)"
+          placeholder={t('plan.phTagline')}
           maxLength={120}
         />
         <input
           type="text"
           value={preparedBy}
           onChange={(e) => updatePreparedBy(e.target.value)}
-          placeholder='Prepared by (adviser name) — shows "Prepared by X on <today>"'
+          placeholder={t('plan.phPrepared')}
           maxLength={80}
         />
         <input
           type="text"
           value={clientName}
           onChange={(e) => updateClientName(e.target.value)}
-          placeholder='Client name (optional) — adds "for [client]" to the line above'
+          placeholder={t('plan.phClient')}
           maxLength={80}
         />
       </div>
@@ -198,12 +198,12 @@ const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
 
   const complianceEditor = canWhiteLabel ? (
     <div className="plan-branding-editor no-print">
-      <h3>⚖️ Compliance Line <span className="plan-adviser-badge">Ultra</span></h3>
+      <h3>{t('plan.complianceTitle')} <span className="plan-adviser-badge">{t('plan.ultraBadge')}</span></h3>
       <textarea
         className="plan-compliance-input"
         value={compliance}
         onChange={(e) => updateCompliance(e.target.value)}
-        placeholder="Your firm's disclosure/compliance wording (e.g. FAIS / FSP licence details). Shown on the plan and always included when it's printed. Saved on this device only."
+        placeholder={t('plan.phCompliance')}
         rows={3}
       />
     </div>
@@ -306,8 +306,8 @@ const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
             When saved: {country.symbol} {Math.round(snapshot.debt.totalBalance).toLocaleString()} total debt,
             paying {country.symbol} {snapshot.debt.extraMonthly.toLocaleString()}/mo extra,{' '}
             {debtReachable
-              ? `on pace to be debt-free in ${snapshot.debt.avalancheMonths} months.`
-              : 'not on track to clear within 50 years at that pace.'}
+              ? t('plan.baselineDebtOn', { n: snapshot.debt.avalancheMonths })
+              : t('plan.baselineDebtOff')}
           </div>
           {debtReachable ? (
             <>
@@ -324,7 +324,7 @@ const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
               )}
             </>
           ) : (
-            <p className="plan-drift behind">This plan doesn't clear the debt at the saved pace -- raise the extra monthly payment on the Debt Payoff tab before tracking progress here.</p>
+            <p className="plan-drift behind">{t('plan.debtNoClear')}</p>
           )}
         </div>
       )}
@@ -388,7 +388,7 @@ const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
       {canWhiteLabel ? (
         <div className="plan-adviser-notes">
           <h3>
-            🗒️ Adviser Notes <span className="plan-adviser-badge">Ultra</span>
+            {t('plan.adviserNotes')} <span className="plan-adviser-badge">{t('plan.ultraBadge')}</span>
             {adviserNotesUpdatedAt && (
               <span className="plan-adviser-updated">last edited {fmtDaysAgo(daysBetween(adviserNotesUpdatedAt))}</span>
             )}
@@ -396,15 +396,15 @@ const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
           <textarea
             value={adviserNotes}
             onChange={(e) => updateAdviserNotes(e.target.value)}
-            placeholder="Context, assumptions, and recommendations to hand to a client with this plan. Saved on this device (not synced or uploaded)."
+            placeholder={t('plan.phNotes')}
             rows={5}
           />
         </div>
       ) : adviserNotes.trim() ? null : (
         <div className="plan-adviser-upsell no-print">
           <p>
-            🗒️ <strong>Adviser Notes</strong> — attach context and recommendations to a client's plan. Included on Ultra.
-            {onOpenPricing && <button type="button" className="plan-adviser-upsell-btn" onClick={onOpenPricing}>View Pricing</button>}
+            🗒️ <strong>{t('plan.notesUpsellBold')}</strong> {t('plan.notesUpsell')}
+            {onOpenPricing && <button type="button" className="plan-adviser-upsell-btn" onClick={onOpenPricing}>{t('nw.viewPricing')}</button>}
           </p>
         </div>
       )}
@@ -413,7 +413,7 @@ const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
         <div className="plan-compliance-note">{compliance.trim()}</div>
       )}
 
-      <button className="plan-clear-btn no-print" onClick={clearPlan}>Clear saved plan</button>
+      <button className="plan-clear-btn no-print" onClick={clearPlan}>{t('plan.clearPlan')}</button>
 
       <p className="plan-note">{t('plan.note')}</p>
     </div>

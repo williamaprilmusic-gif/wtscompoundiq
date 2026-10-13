@@ -8,6 +8,7 @@
 //  - Already running installed (display-mode: standalone) -> render nothing.
 import React, { useEffect, useState } from 'react';
 import './InstallButton.css';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const isStandalone = () => {
   try {
@@ -26,6 +27,7 @@ const isIOS = () => {
 };
 
 export default function InstallButton() {
+  const { t } = useLanguage();
   const [deferred, setDeferred] = useState(null);
   const [showIosHelp, setShowIosHelp] = useState(false);
   const [installed, setInstalled] = useState(isStandalone());
@@ -59,10 +61,10 @@ export default function InstallButton() {
 
   return (
     <>
-      {' '}· <button className="footer-link-btn install-btn" onClick={onClick}>📲 Install app</button>
+      {' '}· <button className="footer-link-btn install-btn" onClick={onClick}>{t('ui.installApp')}</button>
       {showIosHelp && (
         <span className="install-ios-help">
-          {' '}— tap the <strong>Share</strong> icon, then <strong>Add to Home Screen</strong>.
+          {' '}{t('ui.iosPre')} <strong>{t('ui.iosShare')}</strong> {t('ui.iosMid')} <strong>{t('ui.iosAdd')}</strong>.
         </span>
       )}
     </>

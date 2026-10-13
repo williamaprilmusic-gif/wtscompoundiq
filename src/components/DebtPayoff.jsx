@@ -295,11 +295,11 @@ const DebtPayoff = ({ country }) => {
       {validDebts.length > 0 && (
         <div className="debt-results">
           <div className="debt-result-card avalanche">
-            <h3><Term k="avalanche">Avalanche</Term></h3>
-            <span className="debt-result-label">Debt-free in</span>
+            <h3><Term k="avalanche">{t('debt.avalanche')}</Term></h3>
+            <span className="debt-result-label">{t('debt.debtFreeIn')}</span>
             <strong>{avalanche.reachable ? `${avalanche.months} months` : `50+ years`}</strong>
             {avalanche.reachable && <span className="debt-result-date">around {monthsFromNowLabel(avalanche.months)}</span>}
-            <span className="debt-result-label">Total interest paid</span>
+            <span className="debt-result-label">{t('debt.totalInterest')}</span>
             <strong className="interest-figure">{country.symbol} {Math.round(avalanche.totalInterest).toLocaleString()}</strong>
             <div className="debt-order">
               {t('debt.payoffOrder', { order: avalancheOrder(validDebts).map(d => d.name).join(' → ') })}
@@ -307,11 +307,11 @@ const DebtPayoff = ({ country }) => {
           </div>
 
           <div className="debt-result-card snowball">
-            <h3><Term k="snowball">Snowball</Term></h3>
-            <span className="debt-result-label">Debt-free in</span>
+            <h3><Term k="snowball">{t('debt.snowball')}</Term></h3>
+            <span className="debt-result-label">{t('debt.debtFreeIn')}</span>
             <strong>{snowball.reachable ? `${snowball.months} months` : `50+ years`}</strong>
             {snowball.reachable && <span className="debt-result-date">around {monthsFromNowLabel(snowball.months)}</span>}
-            <span className="debt-result-label">Total interest paid</span>
+            <span className="debt-result-label">{t('debt.totalInterest')}</span>
             <strong className="interest-figure">{country.symbol} {Math.round(snowball.totalInterest).toLocaleString()}</strong>
             <div className="debt-order">
               {t('debt.payoffOrder', { order: snowballOrder(validDebts).map(d => d.name).join(' → ') })}
@@ -326,11 +326,9 @@ const DebtPayoff = ({ country }) => {
 
       {validDebts.length > 0 && avalanche.reachable && avalanche.totalInterest > 0 && totalBalance > 0 && (
         <p className="debt-verdict">
-          💸 The Avalanche plan repays {country.symbol} {Math.round(totalBalance + avalanche.totalInterest).toLocaleString()} in
-          total to clear {country.symbol} {Math.round(totalBalance).toLocaleString()} of debt — that means{' '}
-          <strong>{Math.round((avalanche.totalInterest / (totalBalance + avalanche.totalInterest)) * 100)}% of what you pay from
-          here is interest</strong>, not the amount you actually borrowed. Every extra rand aimed at the highest-rate debt
-          drops that share.
+          {t('debt.verdict1', { total: `${country.symbol} ${Math.round(totalBalance + avalanche.totalInterest).toLocaleString()}`, balance: `${country.symbol} ${Math.round(totalBalance).toLocaleString()}` })}{' '}
+          <strong>{t('debt.verdict2', { pct: Math.round((avalanche.totalInterest / (totalBalance + avalanche.totalInterest)) * 100) })}</strong>
+          {t('debt.verdict3')}
         </p>
       )}
 

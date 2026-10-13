@@ -210,18 +210,18 @@ export default function App() {
   // this shares the finished number for someone who doesn't need to open the app at all.
   const copyResultsSummary = async () => {
     const lines = [
-      `WTS CompoundIQ -- ${country.name}`,
-      `Initial: ${country.symbol}${initial.toLocaleString()} | Monthly: ${country.symbol}${monthly.toLocaleString()} | Rate: ${rate}%/yr | Years: ${years}`,
-      `Projected Balance: ${country.symbol}${results.finalBalance.toLocaleString()}`,
-      `Total Deposits: ${country.symbol}${results.totalDeposited.toLocaleString()}`,
-      `Compound Interest Earned: ${country.symbol}${results.totalInterest.toLocaleString()}`,
-      `Real Value (today's money): ${country.symbol}${(results.yearlyData[results.yearlyData.length - 1]?.realValue ?? 0).toLocaleString()}`
+      t('ui.summaryTitle', { country: country.name }),
+      t('ui.summaryInputs', { initial: `${country.symbol}${initial.toLocaleString()}`, monthly: `${country.symbol}${monthly.toLocaleString()}`, rate, years }),
+      t('ui.summaryBalance', { v: `${country.symbol}${results.finalBalance.toLocaleString()}` }),
+      t('ui.summaryDeposits', { v: `${country.symbol}${results.totalDeposited.toLocaleString()}` }),
+      t('ui.summaryInterest', { v: `${country.symbol}${results.totalInterest.toLocaleString()}` }),
+      t('ui.summaryReal', { v: `${country.symbol}${(results.yearlyData[results.yearlyData.length - 1]?.realValue ?? 0).toLocaleString()}` })
     ];
     const text = lines.join('\n');
     try {
       await navigator.clipboard.writeText(text);
     } catch {
-      window.prompt('Copy this summary:', text); // clipboard API unavailable -- fall back to a manual copy
+      window.prompt(t('ui.copySummary'), text); // clipboard API unavailable -- fall back to a manual copy
       return;
     }
     setSummaryCopied(true);
@@ -299,7 +299,7 @@ export default function App() {
         return;
       }
       if (granted && granted.pending) {
-        setTierChangeMsg('Your payment is still being confirmed by PayFast. Your plan unlocks automatically the next time you open the app — no need to pay again.');
+        setTierChangeMsg(t('ui.paymentPending'));
         return;
       }
       if (ent) {
@@ -347,7 +347,7 @@ export default function App() {
     if (legacyTierAllowed.current) {
       try { localStorage.setItem('wts_compoundiq_tier', tier); } catch { /* private mode / quota */ }
     }
-    setTierChangeMsg(tier === 'Basic' ? "You're now on the free Basic plan." : `You're now on ${tier} — premium features unlocked.`);
+    setTierChangeMsg(tier === 'Basic' ? t('ui.nowBasic') : t('ui.nowTier', { tier }));
   };
 
   const processSuccessfulPayment = (tier) => {
@@ -377,12 +377,12 @@ export default function App() {
           : null;
         setShowPricing(false);
         setTierChangeMsg(until
-          ? `Subscription cancelled — you won't be charged again, and you keep ${userTier} until ${until}.`
-          : "Subscription cancelled — you won't be charged again.");
+          ? t('ui.cancelledUntil', { tier: userTier, date: until })
+          : t('ui.cancelled'));
         return;
       }
       if (r.status === 'error') {
-        setTierChangeMsg("We couldn't cancel just now. Please try again in a moment, or cancel from your PayFast account.");
+        setTierChangeMsg(t('ui.cancelFailed'));
         return;
       }
       // 'none' | 'unconfigured' | 'invalid': nothing to cancel server-side -> local downgrade below.
@@ -625,7 +625,7 @@ export default function App() {
       {tierChangeMsg && (
         <div className="tier-change-banner" role="status">
           ✓ {tierChangeMsg}
-          <button className="tier-change-banner-close" onClick={() => setTierChangeMsg(null)} aria-label="Dismiss">&times;</button>
+          <button className="tier-change-banner-close" onClick={() => setTierChangeMsg(null)} aria-label={t('ui.dismiss')}>&times;</button>
         </div>
       )}
 
@@ -1292,7 +1292,7 @@ export default function App() {
           WTS CompoundIQ · {t('footer.tagline')}
           {' '}· <button className="footer-link-btn" onClick={() => setShowLegal(true)}>{t('footer.privacyTerms')}</button>
           {' '}· <button className="footer-link-btn" onClick={() => setShowFaq(true)}>❓ FAQ</button>
-          {' '}· <button className="footer-link-btn" onClick={() => setShowTour(true)}>🧭 Take the Tour</button>
+          {' '}· <button className="footer-link-btn" onClick={() => setShowTour(true)}>{t('app.takeTour')}</button>
           <InstallButton />
         </p>
         {/* Restates the tagline's "not financial advice" in its own full sentence, with

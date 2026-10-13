@@ -6,6 +6,7 @@ const found = import.meta.glob('./*.js', { eager: true });
 
 const modules = Object.entries(found)
   .filter(([path]) => !/\/(index|zuBase)\.js$/.test(path))
-  .map(([, mod]) => mod.default);
+  .map(([, mod]) => mod.default)
+  .flat();
 
 export default modules;

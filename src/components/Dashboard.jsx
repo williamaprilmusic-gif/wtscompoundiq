@@ -208,7 +208,7 @@ const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = fals
 
       {healthScore && (
         <>
-          <HealthScoreGauge score={healthScore.score} grade={healthScore.grade} label={healthScore.label} components={healthScore.components} />
+          <HealthScoreGauge score={healthScore.score} grade={healthScore.grade} label={t(`dashboard.grade${healthScore.grade}`)} components={healthScore.components} />
           <p className="dashboard-note dashboard-health-note">
             {t('dashboard.healthScoreNote', { count: healthScore.components.length })}
           </p>

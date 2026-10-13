@@ -6,6 +6,7 @@
 // (and the tier-gating/nav-wiring that would come with one) for each.
 import React from 'react';
 import './SubTabs.css';
+import { useLanguage } from '../i18n/LanguageContext';
 
 // tabs: [{ key, label }]
 // groups (optional): [{ label, keys: [key, ...] }] -- when passed, the pills are
@@ -16,20 +17,21 @@ import './SubTabs.css';
 // a padlock and, on click, calls onLockedClick(key) instead of onChange (e.g. to open
 // a pricing modal) so the pill still advertises the tool without switching to it.
 const SubTabs = ({ tabs, active, onChange, ariaLabel, groups, lockedKeys, onLockedClick }) => {
+  const { t } = useLanguage();
   const isLocked = (key) => !!(lockedKeys && lockedKeys.has && lockedKeys.has(key));
-  const Pill = (t) => {
-    const locked = isLocked(t.key);
+  const Pill = (tab) => {
+    const locked = isLocked(tab.key);
     return (
       <button
-        key={t.key}
+        key={tab.key}
         type="button"
         role="tab"
-        aria-selected={active === t.key}
-        title={locked ? 'Included with Ultra — tap to see pricing' : undefined}
-        className={`sub-tab-btn ${active === t.key ? 'active' : ''} ${locked ? 'locked' : ''}`}
-        onClick={() => (locked ? onLockedClick && onLockedClick(t.key) : onChange(t.key))}
+        aria-selected={active === tab.key}
+        title={locked ? t('subtabs.ultraTitle') : undefined}
+        className={`sub-tab-btn ${active === tab.key ? 'active' : ''} ${locked ? 'locked' : ''}`}
+        onClick={() => (locked ? onLockedClick && onLockedClick(tab.key) : onChange(tab.key))}
       >
-        {t.label}{locked && <span className="sub-tab-lock" aria-label="locked"> 🔒</span>}
+        {tab.label}{locked && <span className="sub-tab-lock" aria-label={t('subtabs.locked')}> 🔒</span>}
       </button>
     );
   };
@@ -42,9 +44,9 @@ const SubTabs = ({ tabs, active, onChange, ariaLabel, groups, lockedKeys, onLock
     );
   }
 
-  const byKey = new Map(tabs.map(t => [t.key, t]));
+  const byKey = new Map(tabs.map(x => [x.key, x]));
   const grouped = new Set(groups.flatMap(g => g.keys));
-  const leftovers = tabs.filter(t => !grouped.has(t.key));
+  const leftovers = tabs.filter(x => !grouped.has(x.key));
 
   return (
     <div className="sub-tabs-grouped" role="tablist" aria-label={ariaLabel}>
@@ -58,7 +60,7 @@ const SubTabs = ({ tabs, active, onChange, ariaLabel, groups, lockedKeys, onLock
       ))}
       {leftovers.length > 0 && (
         <div className="sub-tab-group">
-          <span className="sub-tab-group-label">More</span>
+          <span className="sub-tab-group-label">{t('subtabs.more')}</span>
           <div className="sub-tabs">{leftovers.map(Pill)}</div>
         </div>
       )}

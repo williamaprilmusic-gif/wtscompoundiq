@@ -110,8 +110,8 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
                     <p className="tfsa-lifetime-note">
                       {country.symbol}{Math.round(tfsaContributed).toLocaleString()} of the {country.symbol}{lifetimeLimit.toLocaleString()} lifetime limit used ({Math.round(tfsaUsedPct)}%).{' '}
                       {tfsaRemaining > 0
-                        ? <>{country.symbol}{Math.round(tfsaRemaining).toLocaleString()} of room left{tfsaYearsLeft != null && annualLimit > 0 ? ` — about ${tfsaYearsLeft.toFixed(1)} more years at the full ${country.symbol}${annualLimit.toLocaleString()}/year` : ''}. Withdrawals don't give the room back.</>
-                        : <>You've used your entire lifetime allowance — further contributions to this wrapper would be taxed like a normal account.</>}
+                        ? <>{t('tax.roomLeft', { amount: `${country.symbol}${Math.round(tfsaRemaining).toLocaleString()}`, more: tfsaYearsLeft != null && annualLimit > 0 ? t('tax.roomMore', { years: tfsaYearsLeft.toFixed(1), limit: `${country.symbol}${annualLimit.toLocaleString()}` }) : '' })}</>
+                        : <>{t('tax.lifetimeUsed')}</>}
                     </p>
                   </>
                 )}
@@ -140,11 +140,9 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
           </div>
           {lossAmount > 0 && (
             <p className="tax-loss-harvest-result">
-              Offsetting a <strong>{country.symbol} {Math.round(lossAmount).toLocaleString()}</strong> loss against a gain saves about{' '}
-              <strong className="positive">{country.symbol} {Math.round(lossHarvesting.taxSaved).toLocaleString()}</strong> in tax
-              -- the loss reduces your taxable capital gain by {country.symbol} {Math.round(lossHarvesting.taxableGainOffset).toLocaleString()}
-              {' '}(SA's 40% individual inclusion rate), taxed away at your {lossMarginalRate}% marginal rate. Only real if there's an
-              actual gain to offset it against -- a loss with nothing to offset just carries forward.
+              {t('tax.lossLine1')} <strong>{country.symbol} {Math.round(lossAmount).toLocaleString()}</strong> {t('tax.lossLine2')}{' '}
+              <strong className="positive">{country.symbol} {Math.round(lossHarvesting.taxSaved).toLocaleString()}</strong>{' '}
+              {t('tax.lossLine3', { offset: `${country.symbol} ${Math.round(lossHarvesting.taxableGainOffset).toLocaleString()}`, rate: lossMarginalRate })}
             </p>
           )}
         </div>

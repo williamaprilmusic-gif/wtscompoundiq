@@ -116,6 +116,14 @@ const SUB_TABS = [
   { key: 'cgt', label: '📑 Capital Gains Tax' }
 ];
 
+// Windfall allocator step labels are English identifiers from windfallAllocator.js; show them translated.
+const WINDFALL_LABEL_KEYS = {
+  'Top up emergency fund': 'pt.wfTopUp',
+  'Clear high-interest debt': 'pt.wfClearDebt',
+  'Fill tax-advantaged room': 'pt.wfFillRoom',
+  'Invest in a taxable account': 'pt.wfInvest'
+};
+
 const ULTRA_SUB_TAB_KEYS = new Set(SUB_TABS.filter(t => t.tier === 'Ultra').map(t => t.key));
 const EMPTY_SET = new Set();
 
@@ -123,16 +131,19 @@ const EMPTY_SET = new Set();
 // key must appear exactly once; any that's missed drops into a "More" catch-all in
 // SubTabs rather than vanishing.
 const SUB_TAB_GROUPS = [
-  { label: 'Retire & Financial Independence', keys: ['fire', 'coastFire', 'baristaFire', 'savingsRate', 'drawdown', 'pretaxRA', 'dividend', 'feeDrag', 'fundFees', 'retireGap', 'seqRisk', 'twoPot'] },
-  { label: 'Debt & Credit', keys: ['debtVsInvest', 'dti', 'cardTrap', 'debtConsol', 'loanCompare', 'cashVsFinance'] },
-  { label: 'Property & Big Purchases', keys: ['affordability', 'rentVsBuy', 'carCost', 'leaseVsBuy', 'depositTimeline', 'homeCosts', 'payback', 'rateShock'] },
-  { label: 'Saving for a Goal', keys: ['savings', 'education', 'sinkingFund', 'efRunway', 'insurance', 'windfall'] },
-  { label: 'Income & Tax', keys: ['salary', 'raiseValue', 'bonusTax', 'raOptimizer', 'contractRate', 'cgt', 'budgetRule', 'marginalTax', 'raiseInflation'] },
-  { label: 'Money Basics', keys: ['futureCost', 'rule72', 'freqCompare', 'effRate', 'realReturn', 'subCost', 'vat'] }
+  { id: 'retire', label: 'Retire & Financial Independence', keys: ['fire', 'coastFire', 'baristaFire', 'savingsRate', 'drawdown', 'pretaxRA', 'dividend', 'feeDrag', 'fundFees', 'retireGap', 'seqRisk', 'twoPot'] },
+  { id: 'debt', label: 'Debt & Credit', keys: ['debtVsInvest', 'dti', 'cardTrap', 'debtConsol', 'loanCompare', 'cashVsFinance'] },
+  { id: 'property', label: 'Property & Big Purchases', keys: ['affordability', 'rentVsBuy', 'carCost', 'leaseVsBuy', 'depositTimeline', 'homeCosts', 'payback', 'rateShock'] },
+  { id: 'goal', label: 'Saving for a Goal', keys: ['savings', 'education', 'sinkingFund', 'efRunway', 'insurance', 'windfall'] },
+  { id: 'income', label: 'Income & Tax', keys: ['salary', 'raiseValue', 'bonusTax', 'raOptimizer', 'contractRate', 'cgt', 'budgetRule', 'marginalTax', 'raiseInflation'] },
+  { id: 'basics', label: 'Money Basics', keys: ['futureCost', 'rule72', 'freqCompare', 'effRate', 'realReturn', 'subCost', 'vat'] }
 ];
 
 const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wrapper, compoundFrequency = 12, contributionIncrease = 0, lumpSums = [], canUltra = true, onOpenPricing }) => {
   const { t } = useLanguage();
+  // Display labels are translated; keys/ids stay stable identifiers.
+  const subTabsT = SUB_TABS.map((x) => ({ ...x, label: t(`pt.tab_${x.key}`) }));
+  const groupsT = SUB_TAB_GROUPS.map((g) => ({ ...g, label: t(`pt.group_${g.id}`) }));
   const [activeSubTab, setActiveSubTab] = useState('fire');
   const lockedSubTabs = canUltra ? EMPTY_SET : ULTRA_SUB_TAB_KEYS;
   // If the tier drops while an Ultra-only tool is open, fall back to the default so a
@@ -719,18 +730,18 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
       </div>
 
       <SubTabs
-        tabs={SUB_TABS}
-        groups={SUB_TAB_GROUPS}
+        tabs={subTabsT}
+        groups={groupsT}
         active={activeSubTab}
         onChange={setActiveSubTab}
-        ariaLabel="Power Tools calculator"
+        ariaLabel={t('pt.ariaLabel')}
         lockedKeys={lockedSubTabs}
         onLockedClick={() => onOpenPricing && onOpenPricing()}
       />
       {!canUltra && (
         <p className="power-tools-tier-hint">
-          🔒 tools are part of the advanced retirement &amp; tax-strategy set on <strong>Ultra</strong> — Drawdown, Coast &amp; Barista FIRE, Pre-Tax &amp; RA Optimizer, Two-Pot, Sequence Risk, Retirement Income Gap.
-          {onOpenPricing && <button type="button" className="power-tools-tier-hint-btn" onClick={onOpenPricing}>See Ultra</button>}
+          {t('pt.tierHintA')} <strong>Ultra</strong> — {t('pt.tierHintB')}
+          {onOpenPricing && <button type="button" className="power-tools-tier-hint-btn" onClick={onOpenPricing}>{t('pt.seeUltra')}</button>}
         </p>
       )}
 
@@ -1088,18 +1099,18 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'salary' && (
       <div className="power-tool-card">
-        <h3>💰 Salary / Take-Home Pay Calculator</h3>
-        <p className="power-tool-desc">What a gross annual income actually works out to after tax -- monthly, in your pocket.</p>
+        <h3>{t('pt.salTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.salDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Gross Annual Income ({country.symbol})</label>
+            <label>{t('pt.salGross', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="1000" value={salaryGross} onChange={(e) => setSalaryGross(Number(e.target.value))} />
           </div>
           {country.taxBrackets && (
             <div className="form-group checkbox-group">
               <label>
                 <input type="checkbox" checked={salaryProgressive} onChange={(e) => setSalaryProgressive(e.target.checked)} />
-                {' '}Use {country.name}'s progressive tax brackets
+                {' '}{t('pt.salBrackets', { country: country.name })}
               </label>
             </div>
           )}
@@ -1108,28 +1119,27 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Net Pay (monthly)</span>
+                <span>{t('pt.salNetM')}</span>
                 <strong className="positive">{country.symbol} {Math.round(takeHome.netMonthly).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Net Pay (annual)</span>
+                <span>{t('pt.salNetA')}</span>
                 <strong className="positive">{country.symbol} {Math.round(takeHome.netAnnual).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Tax Paid (annual)</span>
+                <span>{t('pt.salTax')}</span>
                 <strong className="warn">{country.symbol} {Math.round(takeHome.tax).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Effective Tax Rate</span>
+                <span>{t('pt.salEff')}</span>
                 <strong>{takeHome.effectiveRate.toFixed(1)}%</strong>
               </div>
             </div>
             <p className="power-tool-note">
               {salaryProgressive && country.taxBrackets
-                ? (country.taxBracketsNote || `${country.name}'s progressive bracket schedule -- illustrative only.`)
-                : `Flat ${country.taxRate}% assumed on the full gross amount, no rebate applied.`}{' '}
-              Doesn't model other deductions, UIF/social security or pension contributions, or medical aid tax
-              credits -- a real payslip's net figure will differ. Not tax advice.
+                ? (country.taxBracketsNote || t('pt.salNoteBrackets', { country: country.name }))
+                : t('pt.salNoteFlat', { rate: country.taxRate })}{' '}
+              {t('pt.salNoteTail')}
             </p>
           </>
         )}
@@ -1138,29 +1148,26 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'dti' && (
       <div className="power-tool-card">
-        <h3>📊 Debt-to-Income Ratio Calculator</h3>
-        <p className="power-tool-desc">The metric a lender actually checks -- how much of gross income already goes toward debt repayments, before any new borrowing.</p>
+        <h3>{t('pt.dtiTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.dtiDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Gross Monthly Income ({country.symbol})</label>
+            <label>{t('pt.dtiIncome', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="1000" value={dtiIncome} onChange={(e) => setDtiIncome(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Total Monthly Debt Repayments ({country.symbol})</label>
+            <label>{t('pt.dtiDebt', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="100" value={dtiDebt} onChange={(e) => setDtiDebt(Number(e.target.value))} />
           </div>
         </div>
-        <button type="button" className="power-use-fire-btn" onClick={pullDtiDebtPayments}>Pull existing debt repayments from Debt Payoff</button>
+        <button type="button" className="power-use-fire-btn" onClick={pullDtiDebtPayments}>{t('pt.haPull')}</button>
         {dtiIncome > 0 && (
           <>
             <div className={`power-verdict ${dti.band === 'healthy' || dti.band === 'manageable' ? 'invest' : 'debt'}`}>
-              Debt-to-income ratio: {dti.ratio.toFixed(1)}% -- {dti.bandLabel}.
+              {t('pt.dtiVerdict', { ratio: dti.ratio.toFixed(1), band: t(`pt.dtiBand_${dti.band}`) })}
             </div>
             <p className="power-tool-note">
-              Rough banding from common mortgage-lending guidelines: under 20% is considered healthy, 20-36%
-              manageable, 36-43% getting stretched, and above 43% is where many lenders decline new credit outright.
-              This is one overall ratio, not a lender's actual front-end/back-end underwriting calculation -- treat
-              it as a gut-check, not a pre-approval.
+              {t('pt.dtiNote')}
             </p>
           </>
         )}
@@ -1169,39 +1176,39 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'rentVsBuy' && (
       <div className="power-tool-card">
-        <h3>🏘️ Rent vs. Buy Calculator</h3>
-        <p className="power-tool-desc">Given a specific home, is buying it actually the better move over {years} years compared to renting and investing the difference?</p>
+        <h3>{t('pt.rvbTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.rvbDesc', { years })}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Home Price ({country.symbol})</label>
+            <label>{t('pt.rvbPrice', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={rvbHomePrice} onChange={(e) => setRvbHomePrice(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Down Payment ({country.symbol})</label>
+            <label>{t('pt.rvbDown', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="1000" value={rvbDownPayment} onChange={(e) => setRvbDownPayment(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Mortgage Rate (%)</label>
+            <label>{t('pt.rvbRate')}</label>
             <input type="number" min="0" step="0.1" value={rvbMortgageRate} onChange={(e) => setRvbMortgageRate(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Mortgage Term (years)</label>
+            <label>{t('pt.rvbTerm')}</label>
             <input type="number" min="1" max="30" value={rvbTermYears} onChange={(e) => setRvbTermYears(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Other Monthly Home Costs ({country.symbol})</label>
+            <label>{t('pt.rvbOther', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="100" value={rvbMonthlyExtras} onChange={(e) => setRvbMonthlyExtras(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Home Appreciation (%/yr)</label>
+            <label>{t('pt.rvbAppr')}</label>
             <input type="number" step="0.1" value={rvbAppreciation} onChange={(e) => setRvbAppreciation(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Comparable Monthly Rent ({country.symbol})</label>
+            <label>{t('pt.rvbRent', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="100" value={rvbMonthlyRent} onChange={(e) => setRvbMonthlyRent(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Rent Increase (%/yr)</label>
+            <label>{t('pt.rvbRentUp')}</label>
             <input type="number" step="0.1" value={rvbRentIncrease} onChange={(e) => setRvbRentIncrease(Number(e.target.value))} />
           </div>
         </div>
@@ -1209,28 +1216,25 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className={`power-verdict ${rentVsBuy.buyIsBetter ? 'invest' : 'debt'}`}>
               {rentVsBuy.buyIsBetter
-                ? `Buying wins here. After ${years} years, home equity (${country.symbol} ${Math.round(rentVsBuy.finalBuyEquity).toLocaleString()}) beats renting and investing the difference at ${rate}% (${country.symbol} ${Math.round(rentVsBuy.finalRentPortfolio).toLocaleString()}).`
-                : `Renting and investing wins here. After ${years} years, that portfolio (${country.symbol} ${Math.round(rentVsBuy.finalRentPortfolio).toLocaleString()}) beats home equity (${country.symbol} ${Math.round(rentVsBuy.finalBuyEquity).toLocaleString()}).`}
+                ? t('pt.rvbBuyWins', { years, equity: `${country.symbol} ${Math.round(rentVsBuy.finalBuyEquity).toLocaleString()}`, rate, portfolio: `${country.symbol} ${Math.round(rentVsBuy.finalRentPortfolio).toLocaleString()}` })
+                : t('pt.rvbRentWins', { years, portfolio: `${country.symbol} ${Math.round(rentVsBuy.finalRentPortfolio).toLocaleString()}`, equity: `${country.symbol} ${Math.round(rentVsBuy.finalBuyEquity).toLocaleString()}` })}
             </div>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Monthly Cost to Buy (bond + extras)</span>
+                <span>{t('pt.rvbMonthly')}</span>
                 <strong>{country.symbol} {Math.round(rentVsBuy.monthlyBuyPayment).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Home Equity after {years}yr</span>
+                <span>{t('pt.rvbEquity', { years })}</span>
                 <strong className={rentVsBuy.buyIsBetter ? 'positive' : ''}>{country.symbol} {Math.round(rentVsBuy.finalBuyEquity).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Rent + Invest Portfolio after {years}yr</span>
+                <span>{t('pt.rvbPortfolio', { years })}</span>
                 <strong className={!rentVsBuy.buyIsBetter ? 'positive' : ''}>{country.symbol} {Math.round(rentVsBuy.finalRentPortfolio).toLocaleString()}</strong>
               </div>
             </div>
             <p className="power-tool-note">
-              The rent side invests the down payment upfront, then invests the gap whenever buying would cost more
-              per month than renting, all at your {rate}% Calculator rate. Doesn't model selling costs, transfer
-              duty, maintenance beyond the monthly figure entered, or tax on investment gains outside a wrapper -- a
-              rough comparison of the two paths' trajectories, not a purchase recommendation.
+              {t('pt.rvbNote', { rate })}
             </p>
           </>
         )}
@@ -1239,19 +1243,19 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'futureCost' && (
       <div className="power-tool-card">
-        <h3>📈 Future Cost of Living Calculator</h3>
-        <p className="power-tool-desc">What a today's-money cost will actually be after years of inflation -- and what today's money will be worth by comparison.</p>
+        <h3>{t('pt.fcTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.fcDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Cost / Amount Today ({country.symbol})</label>
+            <label>{t('pt.fcAmount', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="100" value={futureCostAmount} onChange={(e) => setFutureCostAmount(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Years</label>
+            <label>{t('app.csvYears')}</label>
             <input type="number" min="0" max="60" value={futureCostYears} onChange={(e) => setFutureCostYears(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label><Term k="inflation">Inflation</Term> Rate (%/yr)</label>
+            <label><Term k="inflation">{t('calculator.inflation')}</Term>{t('pt.edInflationPost')}</label>
             <input type="number" step="0.1" value={futureCostInflation} onChange={(e) => setFutureCostInflation(Number(e.target.value))} />
           </div>
         </div>
@@ -1259,24 +1263,20 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Future Cost in {futureCostYears}yr</span>
+                <span>{t('pt.fcFuture', { years: futureCostYears })}</span>
                 <strong className="warn">{country.symbol} {Math.round(futureCost.futureCost).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Increase</span>
+                <span>{t('pt.fcIncrease')}</span>
                 <strong className="warn">+{futureCost.percentIncrease.toFixed(0)}%</strong>
               </div>
               <div className="power-stat">
-                <span>Today's {country.symbol}{futureCostAmount.toLocaleString()} in {futureCostYears}yr's real terms</span>
+                <span>{t('pt.fcToday', { amount: `${country.symbol}${futureCostAmount.toLocaleString()}`, years: futureCostYears })}</span>
                 <strong className="warn">{country.symbol} {Math.round(purchasingPower.realValue).toLocaleString()}</strong>
               </div>
             </div>
             <p className="power-tool-note">
-              Two sides of the same {futureCostInflation}%/yr inflation assumption: the top figure is what this
-              cost will actually be charged as in {futureCostYears} years; the bottom is what today's{' '}
-              {country.symbol}{futureCostAmount.toLocaleString()} would be worth if it just sat still, in today's
-              purchasing power. Same math the Calculator tab's "Real Value" column already applies to your
-              investment balance.
+              {t('pt.fcNote', { rate: futureCostInflation, years: futureCostYears, amount: `${country.symbol}${futureCostAmount.toLocaleString()}` })}
             </p>
           </>
         )}
@@ -1285,23 +1285,23 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'coastFire' && (
       <div className="power-tool-card">
-        <h3>🌴 Coast FIRE Calculator</h3>
-        <p className="power-tool-desc">Have you already saved enough that you could stop contributing entirely and still hit your retirement number from growth alone?</p>
+        <h3>{t('pt.cfTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.cfDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Current Invested Portfolio ({country.symbol})</label>
+            <label>{t('pt.cfPot', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={coastPot} onChange={(e) => setCoastPot(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Expected Annual Return (%)</label>
+            <label>{t('charts.mcExpected')}</label>
             <input type="number" step="0.1" value={coastReturn} onChange={(e) => setCoastReturn(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Years Until Retirement</label>
+            <label>{t('pt.cfYears')}</label>
             <input type="number" min="0" max="60" value={coastYears} onChange={(e) => setCoastYears(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Retirement Target ({country.symbol}){coastTarget === 0 && fireNumber > 0 ? ' — using your FIRE Number' : ''}</label>
+            <label>{t('pt.cfTarget', { symbol: country.symbol })}{coastTarget === 0 && fireNumber > 0 ? t('pt.cfUsingFire') : ''}</label>
             <input type="number" min="0" step="100000" value={coastTarget} onChange={(e) => setCoastTarget(Number(e.target.value))} placeholder={fireNumber > 0 ? Math.round(fireNumber).toLocaleString() : '0'} />
           </div>
         </div>
@@ -1309,13 +1309,11 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className={`power-verdict ${coast.hasCoasted ? 'invest' : 'debt'}`}>
               {coast.hasCoasted
-                ? `You've hit Coast FIRE. Left untouched at ${coastReturn}%, today's ${country.symbol} ${Math.round(coastPot).toLocaleString()} grows to ${country.symbol} ${Math.round(coast.projectedAtRetirement).toLocaleString()} in ${coastYears} years — ${country.symbol} ${Math.round(coast.surplusAtRetirement).toLocaleString()} past your ${country.symbol} ${Math.round(coastTargetEffective).toLocaleString()} target. Further saving is optional.`
-                : `Not there yet. Today's ${country.symbol} ${Math.round(coastPot).toLocaleString()} grows to ${country.symbol} ${Math.round(coast.projectedAtRetirement).toLocaleString()} in ${coastYears} years — you'd need ${country.symbol} ${Math.round(coast.coastNumber).toLocaleString()} invested today to coast, a ${country.symbol} ${Math.round(coast.shortfallToday).toLocaleString()} gap.`}
+                ? t('pt.cfHit', { rate: coastReturn, today: `${country.symbol} ${Math.round(coastPot).toLocaleString()}`, future: `${country.symbol} ${Math.round(coast.projectedAtRetirement).toLocaleString()}`, years: coastYears, surplus: `${country.symbol} ${Math.round(coast.surplusAtRetirement).toLocaleString()}`, target: `${country.symbol} ${Math.round(coastTargetEffective).toLocaleString()}` })
+                : t('pt.cfNot', { today: `${country.symbol} ${Math.round(coastPot).toLocaleString()}`, future: `${country.symbol} ${Math.round(coast.projectedAtRetirement).toLocaleString()}`, years: coastYears, need: `${country.symbol} ${Math.round(coast.coastNumber).toLocaleString()}`, gap: `${country.symbol} ${Math.round(coast.shortfallToday).toLocaleString()}` })}
             </div>
             <p className="power-tool-note">
-              Assumes a flat {coastReturn}% return every year with zero further contributions and no tax drag on the way
-              — a milestone marker, not a plan to actually stop saving. "Retirement Target" defaults to your FIRE Number
-              tab figure; type a number to override it.
+              {t('pt.cfNote', { rate: coastReturn })}
             </p>
           </>
         )}
@@ -1324,19 +1322,19 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'savingsRate' && (
       <div className="power-tool-card">
-        <h3>⏱️ Savings Rate → Years to Financial Independence</h3>
-        <p className="power-tool-desc">The "shockingly simple math": how many years to FI depends far more on what fraction of your pay you keep than on how much you earn.</p>
+        <h3>{t('pt.srTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.srDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Annual Take-Home Income ({country.symbol})</label>
+            <label>{t('pt.srIncome', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={srIncome} onChange={(e) => setSrIncome(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Annual Spending ({country.symbol})</label>
+            <label>{t('pt.srSpend', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={srSpending} onChange={(e) => setSrSpending(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Real (after-inflation) Return (%)</label>
+            <label>{t('pt.srReal')}</label>
             <input type="number" step="0.1" value={srReturn} onChange={(e) => setSrReturn(Number(e.target.value))} />
           </div>
         </div>
@@ -1344,25 +1342,22 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Savings Rate</span>
+                <span>{t('pt.srRate')}</span>
                 <strong className={savingsRateResult.savingsRate >= 20 ? 'positive' : 'warn'}>{savingsRateResult.savingsRate.toFixed(0)}%</strong>
               </div>
               <div className="power-stat">
-                <span>Years to Financial Independence</span>
+                <span>{t('pt.srYears')}</span>
                 <strong className={savingsRateResult.years === null ? 'warn' : 'positive'}>
-                  {savingsRateResult.years === null ? 'Never at this rate' : `${savingsRateResult.years} years`}
+                  {savingsRateResult.years === null ? t('pt.srNever') : t('pt.yearsN', { n: savingsRateResult.years })}
                 </strong>
               </div>
               <div className="power-stat">
-                <span>FI Number (25× spending)</span>
+                <span>{t('pt.srFi')}</span>
                 <strong>{country.symbol} {Math.round(savingsRateResult.fiNumber).toLocaleString()}</strong>
               </div>
             </div>
             <p className="power-tool-note">
-              Starts from zero invested, contributes the {country.symbol} {Math.round(savingsRateResult.annualSaving).toLocaleString()}/yr
-              surplus at the end of each year, grows it at {srReturn}% real, and stops when the pot hits 25× your spending
-              (the 4% rule). Ignores any portfolio you already have, taxes, and future spending changes — the point is the
-              shape of the curve, not a dated forecast.
+              {t('pt.srNote', { saving: `${country.symbol} ${Math.round(savingsRateResult.annualSaving).toLocaleString()}`, rate: srReturn })}
             </p>
           </>
         )}
@@ -1371,27 +1366,27 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'cardTrap' && (
       <div className="power-tool-card">
-        <h3>💳 Credit Card Minimum-Payment Trap</h3>
-        <p className="power-tool-desc">Paying only the minimum on one card — because the required amount shrinks with the balance — can stretch payoff over decades. See how much, and what a fixed payment does instead.</p>
+        <h3>{t('pt.ctTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.ctDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Card Balance ({country.symbol})</label>
+            <label>{t('pt.ctBalance', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="1000" value={cardBalance} onChange={(e) => setCardBalance(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Annual Interest Rate / APR (%)</label>
+            <label>{t('pt.ctApr')}</label>
             <input type="number" min="0" step="0.1" value={cardApr} onChange={(e) => setCardApr(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Minimum Payment (% of balance)</label>
+            <label>{t('pt.ctMinPct')}</label>
             <input type="number" min="0.1" step="0.5" value={cardMinPercent} onChange={(e) => setCardMinPercent(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Minimum Payment Floor ({country.symbol})</label>
+            <label>{t('pt.ctFloor', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="50" value={cardMinFloor} onChange={(e) => setCardMinFloor(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Compare: Fixed Payment ({country.symbol}/mo, optional)</label>
+            <label>{t('pt.ctFixed', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="100" value={cardFixedPayment} onChange={(e) => setCardFixedPayment(Number(e.target.value))} />
           </div>
         </div>
@@ -1399,36 +1394,34 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className={`power-verdict ${cardResult.minimumOnly?.neverPaysOff ? 'danger' : 'debt'}`}>
               {cardResult.minimumOnly?.neverPaysOff
-                ? `At ${cardApr}% APR, the minimum payment here never even covers the monthly interest — the balance grows forever. This is the trap in its worst form.`
-                : `Paying only the minimum clears this in ${cardResult.minimumOnly.months} months (${Math.round(cardResult.minimumOnly.months / 12)} years) and costs ${country.symbol} ${Math.round(cardResult.minimumOnly.totalInterest).toLocaleString()} in interest — ${country.symbol} ${Math.round(cardResult.minimumOnly.totalPaid).toLocaleString()} paid on a ${country.symbol} ${Math.round(cardBalance).toLocaleString()} balance.`}
+                ? t('pt.ctNever', { apr: cardApr })
+                : t('pt.ctMin', { months: cardResult.minimumOnly.months, years: Math.round(cardResult.minimumOnly.months / 12), interest: `${country.symbol} ${Math.round(cardResult.minimumOnly.totalInterest).toLocaleString()}`, paid: `${country.symbol} ${Math.round(cardResult.minimumOnly.totalPaid).toLocaleString()}`, balance: `${country.symbol} ${Math.round(cardBalance).toLocaleString()}` })}
             </div>
             {cardResult.fixed && !cardResult.fixed.neverPaysOff && (
               <div className="power-verdict-grid">
                 <div className="power-stat">
-                  <span>Fixed {country.symbol}{Math.round(cardFixedPayment).toLocaleString()}/mo — payoff</span>
-                  <strong className="positive">{cardResult.fixed.months} months</strong>
+                  <span>{t('pt.ctFixedPayoff', { amount: `${country.symbol}${Math.round(cardFixedPayment).toLocaleString()}` })}</span>
+                  <strong className="positive">{t('pt.monthsN', { n: cardResult.fixed.months })}</strong>
                 </div>
                 <div className="power-stat">
-                  <span>Fixed payment — total interest</span>
+                  <span>{t('pt.ctFixedInt')}</span>
                   <strong className="positive">{country.symbol} {Math.round(cardResult.fixed.totalInterest).toLocaleString()}</strong>
                 </div>
                 <div className="power-stat">
-                  <span>Interest saved vs. minimum</span>
+                  <span>{t('pt.ctSaved')}</span>
                   <strong className="positive">
                     {cardResult.minimumOnly.neverPaysOff
-                      ? 'avoids a balance the minimum never clears'
+                      ? t('pt.ctAvoids')
                       : `${country.symbol} ${Math.round(Math.max(0, cardResult.minimumOnly.totalInterest - cardResult.fixed.totalInterest)).toLocaleString()}`}
                   </strong>
                 </div>
               </div>
             )}
             {cardResult.fixed?.neverPaysOff && (
-              <p className="power-tool-note">The fixed payment entered doesn't cover the monthly interest either — raise it above {country.symbol} {Math.round(cardBalance * cardApr / 100 / 12).toLocaleString()}/mo to make any progress.</p>
+              <p className="power-tool-note">{t('pt.ctFixedNo', { min: `${country.symbol} ${Math.round(cardBalance * cardApr / 100 / 12).toLocaleString()}` })}</p>
             )}
             <p className="power-tool-note">
-              The minimum is modeled as the greater of {cardMinPercent}% of the current balance and the {country.symbol}{Math.round(cardMinFloor).toLocaleString()} floor,
-              recalculated every month as the balance falls. Real card terms vary (some add a fixed fee, some a flat
-              1% + interest) — check your statement. For juggling several debts at once, use the Debt Payoff tab.
+              {t('pt.ctNote', { pct: cardMinPercent, floor: `${country.symbol}${Math.round(cardMinFloor).toLocaleString()}` })}
             </p>
           </>
         )}
@@ -1437,15 +1430,15 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'rule72' && (
       <div className="power-tool-card">
-        <h3>⏳ Rule of 72 — Doubling Time</h3>
-        <p className="power-tool-desc">The mental-math shortcut: divide 72 by your return to estimate how many years an amount takes to double. Shown here against the exact figure.</p>
+        <h3>{t('pt.r72Title')}</h3>
+        <p className="power-tool-desc">{t('pt.r72Desc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Annual Return (%)</label>
+            <label>{t('pt.r72Return')}</label>
             <input type="number" step="0.1" value={r72Rate} onChange={(e) => setR72Rate(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Over How Many Years</label>
+            <label>{t('pt.r72Over')}</label>
             <input type="number" min="0" max="80" value={r72Years} onChange={(e) => setR72Years(Number(e.target.value))} />
           </div>
         </div>
@@ -1453,22 +1446,20 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Rule of 72 estimate</span>
-                <strong>{r72.approxDoublingYears.toFixed(1)} years to double</strong>
+                <span>{t('pt.r72Est')}</span>
+                <strong>{t('pt.r72ToDouble', { n: r72.approxDoublingYears.toFixed(1) })}</strong>
               </div>
               <div className="power-stat">
-                <span>Exact doubling time</span>
-                <strong className="positive">{r72.exactDoublingYears.toFixed(1)} years</strong>
+                <span>{t('pt.r72Exact')}</span>
+                <strong className="positive">{t('pt.yearsN', { n: r72.exactDoublingYears.toFixed(1) })}</strong>
               </div>
               <div className="power-stat">
-                <span>Growth over {r72Years} years</span>
-                <strong className="positive">{r72.growthMultiple.toFixed(1)}× (≈{r72.doublingsOverPeriod.toFixed(1)} doublings)</strong>
+                <span>{t('pt.r72Growth', { years: r72Years })}</span>
+                <strong className="positive">{t('pt.r72Mult', { x: r72.growthMultiple.toFixed(1), n: r72.doublingsOverPeriod.toFixed(1) })}</strong>
               </div>
             </div>
             <p className="power-tool-note">
-              The "72" trick is a rough approximation that's closest around 6–10% — the exact answer is
-              ln(2) ÷ ln(1 + rate). Growth multiple assumes the return compounds every year with nothing added or
-              withdrawn. Nominal figures: at a real (after-inflation) return, the doubling is in purchasing power.
+              {t('pt.r72Note')}
             </p>
           </>
         )}
@@ -1477,19 +1468,19 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'dividend' && (
       <div className="power-tool-card">
-        <h3>💵 Dividend / Passive Income Calculator</h3>
-        <p className="power-tool-desc">How big a portfolio it takes to live off the yield without ever selling the capital — and what your current holdings already pay.</p>
+        <h3>{t('pt.divTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.divDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Target Monthly Income ({country.symbol})</label>
+            <label>{t('pt.divTarget', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="1000" value={divTargetIncome} onChange={(e) => setDivTargetIncome(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Portfolio You Already Have ({country.symbol})</label>
+            <label>{t('pt.divPortfolio', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={divPortfolio} onChange={(e) => setDivPortfolio(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Expected Dividend / Interest Yield (%/yr)</label>
+            <label>{t('pt.divYield')}</label>
             <input type="number" min="0" step="0.1" value={divYield} onChange={(e) => setDivYield(Number(e.target.value))} />
           </div>
         </div>
@@ -1498,28 +1489,25 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
             <div className="power-verdict-grid">
               {divTargetIncome > 0 && (
                 <div className="power-stat">
-                  <span>Capital Needed at {divYield}% Yield</span>
+                  <span>{t('pt.divNeeded', { yield: divYield })}</span>
                   <strong className="warn">{dividend.capitalNeeded == null ? '—' : `${country.symbol} ${Math.round(dividend.capitalNeeded).toLocaleString()}`}</strong>
                 </div>
               )}
               {divPortfolio > 0 && (
                 <div className="power-stat">
-                  <span>Your Portfolio Pays (monthly)</span>
+                  <span>{t('pt.divPays')}</span>
                   <strong className="positive">{country.symbol} {Math.round(dividend.monthlyFromPortfolio).toLocaleString()}</strong>
                 </div>
               )}
               {divTargetIncome > 0 && dividend.shortfallCapital != null && (
                 <div className="power-stat">
-                  <span>Still to Invest</span>
+                  <span>{t('pt.divStill')}</span>
                   <strong className={dividend.shortfallCapital > 0 ? 'warn' : 'positive'}>{country.symbol} {Math.round(dividend.shortfallCapital).toLocaleString()}</strong>
                 </div>
               )}
             </div>
             <p className="power-tool-note">
-              A yield-only view: the capital stays intact and you spend what it distributes, unlike the FIRE tool's
-              4%-rule drawdown which sells units over time. Real dividend yields move, aren't guaranteed, and may be
-              taxed — {country.name}'s indicative rate on investment income is {country.taxRate}% outside a
-              {country.wrapperLabel && country.wrapperLabel !== 'N/A' ? ` ${country.wrapperLabel}` : ' tax-free wrapper'}.
+              {t('pt.divNote', { country: country.name, rate: country.taxRate, wrapper: country.wrapperLabel && country.wrapperLabel !== 'N/A' ? country.wrapperLabel : t('pt.taxFreeWrapper') })}
             </p>
           </>
         )}
@@ -1528,70 +1516,67 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'carCost' && (
       <div className="power-tool-card">
-        <h3>🚗 True Cost of Car Ownership</h3>
-        <p className="power-tool-desc">The sticker price is the smallest part. Depreciation, finance interest, and running costs over the years you keep it are the real number.</p>
+        <h3>{t('pt.carTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.carDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Purchase Price ({country.symbol})</label>
+            <label>{t('pt.carPrice', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={carPrice} onChange={(e) => setCarPrice(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Deposit / Cash Down ({country.symbol})</label>
+            <label>{t('pt.carDeposit', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="5000" value={carDeposit} onChange={(e) => setCarDeposit(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Finance Rate (%)</label>
+            <label>{t('pt.carRate')}</label>
             <input type="number" min="0" step="0.1" value={carFinanceRate} onChange={(e) => setCarFinanceRate(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Finance Term (years, 0 = cash)</label>
+            <label>{t('pt.carTerm')}</label>
             <input type="number" min="0" max="10" value={carFinanceTerm} onChange={(e) => setCarFinanceTerm(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Years You'll Keep It</label>
+            <label>{t('pt.carYears')}</label>
             <input type="number" min="1" max="30" value={carYearsOwned} onChange={(e) => setCarYearsOwned(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Depreciation (%/yr of value)</label>
+            <label>{t('pt.carDepr')}</label>
             <input type="number" min="0" max="50" step="0.5" value={carDepreciation} onChange={(e) => setCarDepreciation(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Insurance ({country.symbol}/mo)</label>
+            <label>{t('pt.carInsurance', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="100" value={carInsurance} onChange={(e) => setCarInsurance(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Fuel / Charging ({country.symbol}/mo)</label>
+            <label>{t('pt.carFuel', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="100" value={carFuel} onChange={(e) => setCarFuel(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Maintenance + Licensing ({country.symbol}/mo)</label>
+            <label>{t('pt.carMaint', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="100" value={carMaintenance} onChange={(e) => setCarMaintenance(Number(e.target.value))} />
           </div>
         </div>
         {carPrice > 0 && carYearsOwned > 0 && (
           <>
             <div className="power-verdict debt">
-              Owning this car for {carYearsOwned} years costs about {country.symbol} {Math.round(carCost.totalCost).toLocaleString()} all-in — roughly {country.symbol} {Math.round(carCost.costPerMonth).toLocaleString()}/month. It's worth about {country.symbol} {Math.round(carCost.residualValue).toLocaleString()} at the end.
+              {t('pt.carVerdict', { years: carYearsOwned, total: `${country.symbol} ${Math.round(carCost.totalCost).toLocaleString()}`, perMonth: `${country.symbol} ${Math.round(carCost.costPerMonth).toLocaleString()}`, residual: `${country.symbol} ${Math.round(carCost.residualValue).toLocaleString()}` })}
             </div>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Lost to Depreciation</span>
+                <span>{t('pt.carDepSpan')}</span>
                 <strong className="warn">{country.symbol} {Math.round(carCost.depreciation).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Finance Interest</span>
+                <span>{t('pt.carFinSpan')}</span>
                 <strong className="warn">{country.symbol} {Math.round(carCost.financeInterest).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Running Costs ({carYearsOwned}yr)</span>
+                <span>{t('pt.carRunning', { years: carYearsOwned })}</span>
                 <strong className="warn">{country.symbol} {Math.round(carCost.runningTotal).toLocaleString()}</strong>
               </div>
             </div>
             <p className="power-tool-note">
-              Depreciation compounds at {carDepreciation}%/yr off the declining value (steepest early). Finance
-              interest is the real interest paid over the years held, from the same amortization math the Loan &amp; Bond
-              tab uses. Doesn't model insurance/fuel inflation, tyres and big repairs beyond the monthly figure, or
-              resale-vs-trade-in differences.
+              {t('pt.carNote', { rate: carDepreciation })}
             </p>
           </>
         )}
@@ -1600,35 +1585,33 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'raiseValue' && (
       <div className="power-tool-card">
-        <h3>💹 Lifetime Value of a Pay Rise</h3>
-        <p className="power-tool-desc">A raise now isn't worth "the amount × years left" — every future percentage raise stacks on the higher base, and the after-tax difference can be invested.</p>
+        <h3>{t('pt.rvTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.rvDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Annual Raise Amount ({country.symbol}/yr)</label>
+            <label>{t('pt.rvAmount', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="5000" value={raiseAmount} onChange={(e) => setRaiseAmount(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Future Raises (%/yr on the new base)</label>
+            <label>{t('pt.rvFuture')}</label>
             <input type="number" min="0" step="0.5" value={raiseAnnualPercent} onChange={(e) => setRaiseAnnualPercent(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Working Years Remaining</label>
+            <label>{t('pt.rvYears')}</label>
             <input type="number" min="0" max="50" value={raiseYearsLeft} onChange={(e) => setRaiseYearsLeft(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Marginal Tax Rate (%)</label>
+            <label>{t('pt.rvTax')}</label>
             <input type="number" min="0" max="100" step="1" value={raiseTaxRate} onChange={(e) => setRaiseTaxRate(Number(e.target.value))} />
           </div>
         </div>
         {raiseAmount > 0 && raiseYearsLeft > 0 && (
           <>
             <div className="power-verdict invest">
-              Over {raiseYearsLeft} years this raise is worth about {country.symbol} {Math.round(raise.cumulativeGross).toLocaleString()} gross ({country.symbol} {Math.round(raise.cumulativeAfterTax).toLocaleString()} after {raiseTaxRate}% tax). Invested at your {rate}% Calculator rate, the after-tax difference grows to {country.symbol} {Math.round(raise.investedValue).toLocaleString()}.
+              {t('pt.rvVerdict', { years: raiseYearsLeft, gross: `${country.symbol} ${Math.round(raise.cumulativeGross).toLocaleString()}`, net: `${country.symbol} ${Math.round(raise.cumulativeAfterTax).toLocaleString()}`, tax: raiseTaxRate, rate, invested: `${country.symbol} ${Math.round(raise.investedValue).toLocaleString()}` })}
             </div>
             <p className="power-tool-note">
-              Assumes each future raise is {raiseAnnualPercent}% of the then-current bump, and that you invest the
-              full after-tax difference at the end of every year. A negotiation-context figure, not a promise — raises
-              aren't guaranteed and tax brackets shift.
+              {t('pt.rvNote', { pct: raiseAnnualPercent })}
             </p>
           </>
         )}
@@ -1637,37 +1620,33 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'pretaxRA' && (
       <div className="power-tool-card">
-        <h3>🧾 Pre-Tax Retirement Contribution</h3>
-        <p className="power-tool-desc">Money into a pre-tax retirement account costs less out of pocket (you get your marginal rate back) and the whole amount compounds — not just the after-tax slice.</p>
+        <h3>{t('pt.praTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.praDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Monthly Contribution ({country.symbol})</label>
+            <label>{t('pt.praMonthly', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="500" value={praContribution} onChange={(e) => setPraContribution(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Your Marginal Tax Rate (%)</label>
+            <label>{t('pt.praMarginal')}</label>
             <input type="number" min="0" max="100" step="1" value={praMarginalRate} onChange={(e) => setPraMarginalRate(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Years to Retirement</label>
+            <label>{t('pt.praYears')}</label>
             <input type="number" min="1" max="60" value={praYears} onChange={(e) => setPraYears(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Expected Return (%)</label>
+            <label>{t('pt.praReturn')}</label>
             <input type="number" step="0.1" value={praReturn} onChange={(e) => setPraReturn(Number(e.target.value))} />
           </div>
         </div>
         {praContribution > 0 && (
           <>
             <div className="power-verdict invest">
-              A {country.symbol}{Math.round(praContribution).toLocaleString()}/mo pre-tax contribution costs about {country.symbol} {Math.round(pra.netCost).toLocaleString()}/mo out of pocket after a {country.symbol} {Math.round(pra.annualRefund).toLocaleString()}/yr tax refund, and grows to {country.symbol} {Math.round(pra.pretaxPot).toLocaleString()} in {praYears} years — vs {country.symbol} {Math.round(pra.taxablePot).toLocaleString()} if the same net cost went into a taxable account. Difference: {country.symbol} {Math.round(pra.advantage).toLocaleString()}.
+              {t('pt.praVerdict', { contrib: `${country.symbol}${Math.round(praContribution).toLocaleString()}`, net: `${country.symbol} ${Math.round(pra.netCost).toLocaleString()}`, refund: `${country.symbol} ${Math.round(pra.annualRefund).toLocaleString()}`, pot: `${country.symbol} ${Math.round(pra.pretaxPot).toLocaleString()}`, years: praYears, taxable: `${country.symbol} ${Math.round(pra.taxablePot).toLocaleString()}`, diff: `${country.symbol} ${Math.round(pra.advantage).toLocaleString()}` })}
             </div>
             <p className="power-tool-note">
-              Doesn't model tax on the pre-tax pot when you eventually draw it down in retirement — most systems tax
-              those withdrawals, often at a lower effective rate than working-life income. The figure above is the
-              deferral-plus-full-compounding advantage before that, and applies your entered marginal rate
-              ({praMarginalRate}%) as the taxable account's drag on gains -- most systems tax investment gains
-              lower than income, so the real advantage is likely a little larger than shown. Not tax advice.
+              {t('pt.praNote', { rate: praMarginalRate })}
             </p>
           </>
         )}
@@ -1676,23 +1655,23 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'sinkingFund' && (
       <div className="power-tool-card">
-        <h3>🎯 Sinking Fund Planner</h3>
-        <p className="power-tool-desc">A known expense on a known date — a car, a wedding, next year's school fees. How much a month to have it ready, saving at a modest rate rather than investing.</p>
+        <h3>{t('pt.sfTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.sfDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Amount Needed ({country.symbol})</label>
+            <label>{t('pt.sfAmount', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="5000" value={sfTarget} onChange={(e) => setSfTarget(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Already Set Aside ({country.symbol})</label>
+            <label>{t('pt.sfSaved', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="1000" value={sfSaved} onChange={(e) => setSfSaved(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Months Until You Need It</label>
+            <label>{t('pt.sfMonths')}</label>
             <input type="number" min="0" max="120" value={sfMonths} onChange={(e) => setSfMonths(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Savings Account Rate (%/yr)</label>
+            <label>{t('pt.sfRate')}</label>
             <input type="number" min="0" step="0.1" value={sfRate} onChange={(e) => setSfRate(Number(e.target.value))} />
           </div>
         </div>
@@ -1700,12 +1679,11 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className="power-verdict invest">
               {sfMonths > 0
-                ? `Set aside about ${country.symbol} ${Math.round(sinkingFund.monthlyAmount).toLocaleString()}/month for ${sfMonths} months to have ${country.symbol} ${Math.round(sfTarget).toLocaleString()} ready${sfSaved > 0 ? `, on top of the ${country.symbol} ${Math.round(sfSaved).toLocaleString()} you've already saved` : ''}.`
-                : `You need the full ${country.symbol} ${Math.round(Math.max(0, sfTarget - sfSaved)).toLocaleString()} now — set a number of months to spread it into a monthly amount.`}
+                ? t('pt.sfSet', { monthly: `${country.symbol} ${Math.round(sinkingFund.monthlyAmount).toLocaleString()}`, months: sfMonths, target: `${country.symbol} ${Math.round(sfTarget).toLocaleString()}`, extra: sfSaved > 0 ? t('pt.sfExtra', { saved: `${country.symbol} ${Math.round(sfSaved).toLocaleString()}` }) : '' })
+                : t('pt.sfNow', { amount: `${country.symbol} ${Math.round(Math.max(0, sfTarget - sfSaved)).toLocaleString()}` })}
             </div>
             <p className="power-tool-note">
-              Assumes the balance earns {sfRate}% in a savings account ({country.symbol} {Math.round(sinkingFund.interestEarned).toLocaleString()} of the total over the term), not a market return —
-              for a goal years out where you're willing to take investment risk, use the Invest tab's goal planner instead.
+              {t('pt.sfNote', { rate: sfRate, interest: `${country.symbol} ${Math.round(sinkingFund.interestEarned).toLocaleString()}` })}
             </p>
           </>
         )}
@@ -1714,19 +1692,19 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'efRunway' && (
       <div className="power-tool-card">
-        <h3>🛟 Emergency Fund Runway</h3>
-        <p className="power-tool-desc">If your income stopped today, how many full months would what you've already saved actually cover?</p>
+        <h3>{t('pt.efrTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.efrDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Emergency Savings ({country.symbol})</label>
+            <label>{t('pt.efrSavings', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="5000" value={efrSavings} onChange={(e) => setEfrSavings(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Essential Monthly Expenses ({country.symbol})</label>
+            <label>{t('pt.efrExpenses', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="1000" value={efrExpenses} onChange={(e) => setEfrExpenses(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Interest While It Sits (%/yr)</label>
+            <label>{t('pt.efrInterest')}</label>
             <input type="number" min="0" step="0.1" value={efrRate} onChange={(e) => setEfrRate(Number(e.target.value))} />
           </div>
         </div>
@@ -1734,13 +1712,11 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className={`power-verdict ${efRunway.lastsIndefinitely || efRunway.fullMonths >= 6 ? 'invest' : efRunway.fullMonths >= 3 ? 'debt' : 'danger'}`}>
               {efRunway.lastsIndefinitely
-                ? `At ${efrRate}%, the interest alone covers your ${country.symbol}${Math.round(efrExpenses).toLocaleString()}/mo — this fund lasts indefinitely with no income.`
-                : `This covers about ${efRunway.fullMonths} full month${efRunway.fullMonths === 1 ? '' : 's'} of essential expenses with no income coming in. ${efRunway.fullMonths >= 6 ? 'A solid buffer.' : efRunway.fullMonths >= 3 ? 'A reasonable minimum — aim for 3–6 months.' : 'Below the usual 3-month floor — worth building up.'}`}
+                ? t('pt.efrIndef', { rate: efrRate, expenses: `${country.symbol}${Math.round(efrExpenses).toLocaleString()}` })
+                : t('pt.efrCovers', { n: efRunway.fullMonths, unit: t(efRunway.fullMonths === 1 ? 'pt.unitMonth' : 'pt.unitMonths'), verdict: t(efRunway.fullMonths >= 6 ? 'pt.efrSolid' : efRunway.fullMonths >= 3 ? 'pt.efrReasonable' : 'pt.efrLow') })}
             </div>
             <p className="power-tool-note">
-              Burns the balance down by {country.symbol}{Math.round(efrExpenses).toLocaleString()}/month while the rest earns {efrRate}%. "Essential"
-              means rent/bond, food, utilities, transport, insurance, minimum debt payments — not discretionary spending
-              you'd cut in a real crunch. For building the fund up in the first place, use the Emergency Fund tab.
+              {t('pt.efrNote', { expenses: `${country.symbol}${Math.round(efrExpenses).toLocaleString()}`, rate: efrRate })}
             </p>
           </>
         )}
@@ -1749,19 +1725,19 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'freqCompare' && (
       <div className="power-tool-card">
-        <h3>🔁 Compounding Frequency Comparison</h3>
-        <p className="power-tool-desc">Same money, same rate, same term — how much does it matter whether interest is credited once a year or every day?</p>
+        <h3>{t('pt.fqTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.fqDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Amount ({country.symbol})</label>
+            <label>{t('pt.fqAmount', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={fcPrincipal} onChange={(e) => setFcPrincipal(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Annual Rate (%)</label>
+            <label>{t('calculator.annualRate')}</label>
             <input type="number" step="0.1" value={fcRate} onChange={(e) => setFcRate(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Years</label>
+            <label>{t('app.csvYears')}</label>
             <input type="number" min="1" max="60" value={fcYears} onChange={(e) => setFcYears(Number(e.target.value))} />
           </div>
         </div>
@@ -1770,12 +1746,12 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
             <div className="tbl-wrap">
               <table className="power-freq-table">
                 <thead>
-                  <tr><th>Credited</th><th>Final Balance</th><th>vs. Annually</th></tr>
+                  <tr><th>{t('pt.fqCredited')}</th><th>{t('app.csvFinal')}</th><th>{t('pt.fqVsAnnual')}</th></tr>
                 </thead>
                 <tbody>
                   {freqRows.map(r => (
                     <tr key={r.key}>
-                      <td>{r.label}</td>
+                      <td>{t(`pt.freq_${r.key}`)}</td>
                       <td>{country.symbol} {Math.round(r.finalBalance).toLocaleString()}</td>
                       <td>{r.extraVsAnnual > 0 ? `+${country.symbol} ${Math.round(r.extraVsAnnual).toLocaleString()}` : '—'}</td>
                     </tr>
@@ -1784,9 +1760,7 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
               </table>
             </div>
             <p className="power-tool-note">
-              More frequent compounding always wins, but the gap between monthly and daily is usually tiny — the
-              headline rate and the time invested matter far more. Same engine as the Calculator tab's frequency
-              selector, so these match that tab exactly.
+              {t('pt.fqNote')}
             </p>
           </>
         )}
@@ -1795,23 +1769,23 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'budgetRule' && (
       <div className="power-tool-card">
-        <h3>⚖️ 50/30/20 Budget Check</h3>
-        <p className="power-tool-desc">The rule of thumb: about half of take-home to needs, a third to wants, a fifth to saving and extra debt paydown. See how your split compares.</p>
+        <h3>{t('pt.brTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.brDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Monthly Take-Home Income ({country.symbol})</label>
+            <label>{t('pt.brIncome', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="1000" value={brIncome} onChange={(e) => setBrIncome(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Needs — rent, food, utilities, transport ({country.symbol})</label>
+            <label>{t('pt.brNeeds', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="500" value={brNeeds} onChange={(e) => setBrNeeds(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Wants — dining out, subscriptions, travel ({country.symbol})</label>
+            <label>{t('pt.brWants', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="500" value={brWants} onChange={(e) => setBrWants(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Saving + extra debt paydown ({country.symbol})</label>
+            <label>{t('pt.brSaving', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="500" value={brSavings} onChange={(e) => setBrSavings(Number(e.target.value))} />
           </div>
         </div>
@@ -1819,30 +1793,29 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className={`power-verdict ${budgetRule.onTrack ? 'invest' : 'debt'}`}>
               {budgetRule.onTrack
-                ? `Roughly on the rule: needs ${budgetRule.actualPct.needs.toFixed(0)}%, wants ${budgetRule.actualPct.wants.toFixed(0)}%, saving ${budgetRule.actualPct.savings.toFixed(0)}%.`
-                : `Off the rule: needs ${budgetRule.actualPct.needs.toFixed(0)}% (target ≤50%), wants ${budgetRule.actualPct.wants.toFixed(0)}% (target ~30%), saving ${budgetRule.actualPct.savings.toFixed(0)}% (target ≥20%).`}
+                ? t('pt.brOn', { needs: budgetRule.actualPct.needs.toFixed(0), wants: budgetRule.actualPct.wants.toFixed(0), saving: budgetRule.actualPct.savings.toFixed(0) })
+                : t('pt.brOff', { needs: budgetRule.actualPct.needs.toFixed(0), wants: budgetRule.actualPct.wants.toFixed(0), saving: budgetRule.actualPct.savings.toFixed(0) })}
             </div>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Needs target (50%)</span>
+                <span>{t('pt.brNeedsT')}</span>
                 <strong>{country.symbol} {Math.round(budgetRule.targets.needs).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Wants target (30%)</span>
+                <span>{t('pt.brWantsT')}</span>
                 <strong>{country.symbol} {Math.round(budgetRule.targets.wants).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Saving target (20%)</span>
+                <span>{t('pt.brSavingT')}</span>
                 <strong>{country.symbol} {Math.round(budgetRule.targets.savings).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Unallocated</span>
+                <span>{t('pt.brUnalloc')}</span>
                 <strong className={Math.abs(budgetRule.unallocated) < 1 ? '' : budgetRule.unallocated > 0 ? 'positive' : 'warn'}>{country.symbol} {Math.round(budgetRule.unallocated).toLocaleString()}</strong>
               </div>
             </div>
             <p className="power-tool-note">
-              A starting framework, not a law — high-cost-of-living areas often can't get needs under 50%, and someone
-              chasing FIRE deliberately pushes saving well past 20%. For a full line-item budget, use the Budget tab.
+              {t('pt.brNote')}
             </p>
           </>
         )}
@@ -1851,41 +1824,39 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'windfall' && (
       <div className="power-tool-card">
-        <h3>🎁 Windfall / Bonus Split</h3>
-        <p className="power-tool-desc">A lump sum — bonus, tax refund, inheritance — split down the conventional priority order: emergency fund, then expensive debt, then tax-advantaged room, then the rest invested.</p>
+        <h3>{t('pt.wfTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.wfDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Windfall Amount ({country.symbol})</label>
+            <label>{t('pt.wfAmount', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="5000" value={wfAmount} onChange={(e) => setWfAmount(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Emergency Fund Shortfall ({country.symbol})</label>
+            <label>{t('pt.wfEf', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="1000" value={wfEfShortfall} onChange={(e) => setWfEfShortfall(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Debt Above Your Investment Return ({country.symbol})</label>
+            <label>{t('pt.wfDebt', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="1000" value={wfHighDebt} onChange={(e) => setWfHighDebt(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Unused Tax-Advantaged Room This Year ({country.symbol})</label>
+            <label>{t('pt.wfRoom', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="1000" value={wfWrapperRoom} onChange={(e) => setWfWrapperRoom(Number(e.target.value))} />
           </div>
         </div>
         {wfAmount > 0 && (
           <>
-            <div className="power-verdict invest">Suggested split of {country.symbol} {Math.round(wfAmount).toLocaleString()}:</div>
+            <div className="power-verdict invest">{t('pt.wfSplit', { amount: `${country.symbol} ${Math.round(wfAmount).toLocaleString()}` })}</div>
             <div className="power-verdict-grid">
               {windfall.steps.map((s, i) => (
                 <div className="power-stat" key={i}>
-                  <span>{s.label}</span>
+                  <span>{t(WINDFALL_LABEL_KEYS[s.label] || 'pt.wfInvest')}</span>
                   <strong className={s.label.startsWith('Invest') ? 'positive' : ''}>{country.symbol} {Math.round(s.amount).toLocaleString()}</strong>
                 </div>
               ))}
             </div>
             <p className="power-tool-note">
-              Rule-based, deterministic priority order — the same logic the Coach uses, not personalised advice. "Debt
-              above your investment return" means anything costing more than what investing is expected to keep after
-              tax; clearing that first is a guaranteed return. Adjust the inputs to match your own situation.
+              {t('pt.wfNote')}
             </p>
           </>
         )}
@@ -1894,22 +1865,22 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'marginalTax' && (
       <div className="power-tool-card">
-        <h3>🧮 Marginal Tax Rate & Deduction Value</h3>
-        <p className="power-tool-desc">What the next rand you earn actually keeps — and what a deductible contribution (retirement annuity, donation) saves you this year.</p>
+        <h3>{t('pt.mtTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.mtDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Annual Taxable Income ({country.symbol})</label>
+            <label>{t('pt.mtIncome', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={mtIncome} onChange={(e) => setMtIncome(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Deductible Contribution to Test ({country.symbol})</label>
+            <label>{t('pt.mtDeduct', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="5000" value={mtDeduction} onChange={(e) => setMtDeduction(Number(e.target.value))} />
           </div>
           {country.taxBrackets && (
             <div className="form-group checkbox-group">
               <label>
                 <input type="checkbox" checked={mtProgressive} onChange={(e) => setMtProgressive(e.target.checked)} />
-                {' '}Use {country.name}'s progressive tax brackets
+                {' '}{t('pt.salBrackets', { country: country.name })}
               </label>
             </div>
           )}
@@ -1918,31 +1889,30 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Marginal Tax Rate</span>
+                <span>{t('pt.mtRate')}</span>
                 <strong className="warn">{marginalTax.marginalRate.toFixed(1)}%</strong>
               </div>
               <div className="power-stat">
-                <span>Next {country.symbol}1,000 Earned Keeps</span>
+                <span>{t('pt.mtKeeps', { amount: `${country.symbol}1,000` })}</span>
                 <strong className="positive">{country.symbol} {Math.round(marginalTax.keepsFromNext).toLocaleString()}</strong>
               </div>
               {mtDeduction > 0 && (
                 <div className="power-stat">
-                  <span>{country.symbol}{Math.round(mtDeduction).toLocaleString()} Deduction Saves</span>
+                  <span>{t('pt.mtSaves', { amount: `${country.symbol}${Math.round(mtDeduction).toLocaleString()}` })}</span>
                   <strong className="positive">{country.symbol} {Math.round(marginalTax.deductionTaxSaved).toLocaleString()}</strong>
                 </div>
               )}
               {mtDeduction > 0 && (
                 <div className="power-stat">
-                  <span>Real Cost of That Contribution</span>
+                  <span>{t('pt.mtCost')}</span>
                   <strong>{country.symbol} {Math.round(marginalTax.deductionNetCost).toLocaleString()}</strong>
                 </div>
               )}
             </div>
             <p className="power-tool-note">
               {mtProgressive && country.taxBrackets
-                ? (country.taxBracketsNote || `${country.name}'s progressive bracket schedule -- illustrative only.`)
-                : `Flat ${country.taxRate}% assumed, so that's also the marginal rate.`} Ignores rebates, thresholds,
-              and contribution caps (e.g. a country's limit on deductible retirement contributions). Not tax advice.
+                ? (country.taxBracketsNote || t('pt.salNoteBrackets', { country: country.name }))
+                : t('pt.mtNoteFlat', { rate: country.taxRate })} {t('pt.mtNoteTail')}
             </p>
           </>
         )}
@@ -1951,36 +1921,34 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'raiseInflation' && (
       <div className="power-tool-card">
-        <h3>🏃 Raise Needed to Beat Inflation</h3>
-        <p className="power-tool-desc">A pay rise below the inflation rate is a pay cut in real terms. See the break-even raise, and what an offer is actually worth.</p>
+        <h3>{t('pt.riTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.riDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Current Salary ({country.symbol}/yr)</label>
+            <label>{t('pt.riSalary', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={riSalary} onChange={(e) => setRiSalary(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label><Term k="inflation">Inflation</Term> Rate (%)</label>
+            <label><Term k="inflation">{t('calculator.inflation')}</Term>{t('debt.rate')}</label>
             <input type="number" step="0.1" value={riInflation} onChange={(e) => setRiInflation(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Raise You're Offered (%)</label>
+            <label>{t('pt.riOffered')}</label>
             <input type="number" step="0.1" value={riOffered} onChange={(e) => setRiOffered(Number(e.target.value))} />
           </div>
         </div>
         {riSalary > 0 && (
           <>
             <div className={`power-verdict ${riOffered > 0 ? (raiseInflation.matchesInflation ? 'neutral' : raiseInflation.beatsInflation ? 'invest' : 'debt') : 'debt'}`}>
-              You need a {raiseInflation.breakEvenRaisePercent.toFixed(1)}% raise ({country.symbol} {Math.round(raiseInflation.breakEvenRaiseAmount).toLocaleString()}) just to hold your ground at {riInflation}% inflation.
-              {riOffered > 0 && (raiseInflation.matchesInflation
-                ? ` The ${riOffered}% offered just about keeps pace — roughly flat in real terms.`
+              {t('pt.riNeed', { pct: raiseInflation.breakEvenRaisePercent.toFixed(1), amount: `${country.symbol} ${Math.round(raiseInflation.breakEvenRaiseAmount).toLocaleString()}`, infl: riInflation })}
+              {riOffered > 0 && ' ' + (raiseInflation.matchesInflation
+                ? t('pt.riFlat', { offered: riOffered })
                 : raiseInflation.beatsInflation
-                  ? ` The ${riOffered}% offered is a real gain of about ${raiseInflation.realChangePercent.toFixed(1)}%.`
-                  : ` The ${riOffered}% offered is a real cut of about ${Math.abs(raiseInflation.realChangePercent).toFixed(1)}%.`)}
+                  ? t('pt.riGain', { offered: riOffered, pct: raiseInflation.realChangePercent.toFixed(1) })
+                  : t('pt.riCut', { offered: riOffered, pct: Math.abs(raiseInflation.realChangePercent).toFixed(1) }))}
             </div>
             <p className="power-tool-note">
-              "Real" here means after dividing the new salary back by {riInflation}% inflation — its purchasing power
-              next year in today's money. Doesn't model bracket creep (a raise can push part of your income into a
-              higher tax band). See the Marginal Tax Rate tool for that.
+              {t('pt.riNote', { infl: riInflation })}
             </p>
           </>
         )}
@@ -1989,19 +1957,19 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'rateShock' && (
       <div className="power-tool-card">
-        <h3>📉 Interest-Rate Shock on a Bond</h3>
-        <p className="power-tool-desc">What your bond repayment does if the rate moves. The Loan &amp; Bond tab models one fixed rate — this is the "what if the central bank hikes" view.</p>
+        <h3>{t('pt.rsTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.rsDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Outstanding Balance ({country.symbol})</label>
+            <label>{t('pt.rsBalance', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="50000" value={rsBalance} onChange={(e) => setRsBalance(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Current Rate (%)</label>
+            <label>{t('pt.rsRate')}</label>
             <input type="number" min="0" step="0.1" value={rsRate} onChange={(e) => setRsRate(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Years Left on the Loan</label>
+            <label>{t('pt.rsYears')}</label>
             <input type="number" min="1" max="30" value={rsYearsLeft} onChange={(e) => setRsYearsLeft(Number(e.target.value))} />
           </div>
         </div>
@@ -2010,12 +1978,12 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
             <div className="tbl-wrap">
               <table className="power-freq-table">
                 <thead>
-                  <tr><th>Rate Move</th><th>New Rate</th><th>Monthly Repayment</th><th>vs. Now</th></tr>
+                  <tr><th>{t('pt.rsMove')}</th><th>{t('pt.rsNew')}</th><th>{t('pt.rsRepay')}</th><th>{t('pt.rsVsNow')}</th></tr>
                 </thead>
                 <tbody>
                   {rateShock.map(r => (
                     <tr key={r.shift}>
-                      <td>{r.shift > 0 ? `+${r.shift}%` : r.shift < 0 ? `${r.shift}%` : 'no change'}</td>
+                      <td>{r.shift > 0 ? `+${r.shift}%` : r.shift < 0 ? `${r.shift}%` : t('pt.rsNoChange')}</td>
                       <td>{r.rate.toFixed(2)}%</td>
                       <td>{country.symbol} {Math.round(r.payment).toLocaleString()}</td>
                       <td>{r.shift === 0 ? '—' : `${r.deltaVsNow >= 0 ? '+' : '−'}${country.symbol} ${Math.round(Math.abs(r.deltaVsNow)).toLocaleString()}/mo`}</td>
@@ -2025,9 +1993,7 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
               </table>
             </div>
             <p className="power-tool-note">
-              Reprices the standard installment on the balance over the years left at each rate — it doesn't shorten
-              or extend the term. A +3% move on a large balance is a meaningful monthly jump; stress-test your budget
-              against the top row, not the bottom.
+              {t('pt.rsNote')}
             </p>
           </>
         )}
@@ -2036,49 +2002,47 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'feeDrag' && (
       <div className="power-tool-card">
-        <h3>💸 Investment Fee Drag</h3>
-        <p className="power-tool-desc">A yearly fee sounds small next to a market return — over decades it quietly takes a large slice of the final pot. See how much.</p>
+        <h3>{t('pt.fdTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.fdDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Starting Amount ({country.symbol})</label>
+            <label>{t('pt.fdStart', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={fdInitial} onChange={(e) => setFdInitial(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Monthly Contribution ({country.symbol})</label>
+            <label>{t('pt.fdMonthly', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="500" value={fdMonthly} onChange={(e) => setFdMonthly(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Gross Return Before Fees (%)</label>
+            <label>{t('pt.fdGross')}</label>
             <input type="number" step="0.1" value={fdGross} onChange={(e) => setFdGross(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Annual Fee (%)</label>
+            <label>{t('pt.fdFee')}</label>
             <input type="number" min="0" step="0.05" value={fdFee} onChange={(e) => setFdFee(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Years Invested</label>
+            <label>{t('pt.fdYears')}</label>
             <input type="number" min="1" max="60" value={fdYears} onChange={(e) => setFdYears(Number(e.target.value))} />
           </div>
         </div>
         {(fdInitial > 0 || fdMonthly > 0) && fdFee > 0 && (
           <>
             <div className="power-verdict debt">
-              A {fdFee}% annual fee costs about {country.symbol} {Math.round(feeDrag.lifetimeFeeCost).toLocaleString()} over {fdYears} years — {feeDrag.costAsPercentOfPot.toFixed(0)}% of what the fee-free pot would have been.
+              {t('pt.fdVerdict', { fee: fdFee, cost: `${country.symbol} ${Math.round(feeDrag.lifetimeFeeCost).toLocaleString()}`, years: fdYears, pct: feeDrag.costAsPercentOfPot.toFixed(0) })}
             </div>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Final Pot — No Fee</span>
+                <span>{t('pt.fdNoFee')}</span>
                 <strong className="positive">{country.symbol} {Math.round(feeDrag.finalNoFee).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Final Pot — After {fdFee}% Fee</span>
+                <span>{t('pt.fdAfter', { fee: fdFee })}</span>
                 <strong>{country.symbol} {Math.round(feeDrag.finalWithFee).toLocaleString()}</strong>
               </div>
             </div>
             <p className="power-tool-note">
-              Models the fee as a flat reduction to the annual return ({fdGross}% gross → {(fdGross - fdFee).toFixed(2)}% net),
-              which is how a percentage-of-assets fee (TER, platform fee, advice fee) compounds against you. Ignores tax and
-              assumes the gross return is steady.
+              {t('pt.fdNote', { gross: fdGross, net: (fdGross - fdFee).toFixed(2) })}
             </p>
           </>
         )}
@@ -2087,19 +2051,19 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'baristaFire' && (
       <div className="power-tool-card">
-        <h3>☕ Barista FIRE Number</h3>
-        <p className="power-tool-desc">If you'll keep some part-time or lower-stress income, your investments only have to cover the gap — so the pot you need is smaller.</p>
+        <h3>{t('pt.bfTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.bfDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Annual Expenses ({country.symbol})</label>
+            <label>{t('pt.bfExpenses', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={bfExpenses} onChange={(e) => setBfExpenses(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Part-Time / Ongoing Income ({country.symbol}/yr)</label>
+            <label>{t('pt.bfIncome', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={bfIncome} onChange={(e) => setBfIncome(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label><Term k="safeWithdrawalRate">Safe Withdrawal Rate</Term> (%)</label>
+            <label><Term k="safeWithdrawalRate">{t('pt.swrTerm')}</Term> (%)</label>
             <input type="number" min="1" max="10" step="0.1" value={bfSwr} onChange={(e) => setBfSwr(Number(e.target.value))} />
           </div>
         </div>
@@ -2107,13 +2071,11 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className={`power-verdict ${barista.coversItself ? 'invest' : 'debt'}`}>
               {barista.coversItself
-                ? `Your ${country.symbol}${Math.round(bfIncome).toLocaleString()}/yr income already covers your expenses — no investment pot is strictly required to stop full-time work.`
-                : `Barista FIRE number: ${country.symbol} ${Math.round(barista.baristaFireNumber).toLocaleString()} — ${country.symbol} ${Math.round(barista.reduction).toLocaleString()} less than the ${country.symbol} ${Math.round(barista.fullFireNumber).toLocaleString()} full FIRE number, because the pot only has to fund the ${country.symbol} ${Math.round(barista.gap).toLocaleString()}/yr gap.`}
+                ? t('pt.bfCovers', { income: `${country.symbol}${Math.round(bfIncome).toLocaleString()}` })
+                : t('pt.bfNumber', { number: `${country.symbol} ${Math.round(barista.baristaFireNumber).toLocaleString()}`, reduction: `${country.symbol} ${Math.round(barista.reduction).toLocaleString()}`, full: `${country.symbol} ${Math.round(barista.fullFireNumber).toLocaleString()}`, gap: `${country.symbol} ${Math.round(barista.gap).toLocaleString()}` })}
             </div>
             <p className="power-tool-note">
-              Same {bfSwr}% withdrawal-rate assumption as the FIRE Number tool, applied only to expenses your ongoing
-              income doesn't cover. Assumes that income is durable and roughly keeps pace with inflation — if it's
-              likely to stop or shrink, size closer to the full FIRE number.
+              {t('pt.bfNote', { swr: bfSwr })}
             </p>
           </>
         )}
@@ -2122,106 +2084,102 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'effRate' && (
       <div className="power-tool-card">
-        <h3>🔢 Nominal vs. Effective Annual Rate</h3>
-        <p className="power-tool-desc">A rate quoted "per year, compounded monthly" isn't what you actually earn or pay — the intra-year compounding makes the effective rate higher.</p>
+        <h3>{t('pt.erTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.erDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Quoted Rate (%)</label>
+            <label>{t('pt.erQuoted')}</label>
             <input type="number" step="0.01" value={erRate} onChange={(e) => setErRate(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Compounding Periods per Year</label>
+            <label>{t('pt.erPeriods')}</label>
             <select value={erPeriods} onChange={(e) => setErPeriods(Number(e.target.value))}>
-              <option value="1">1 — Annually</option>
-              <option value="2">2 — Semi-annually</option>
-              <option value="4">4 — Quarterly</option>
-              <option value="12">12 — Monthly</option>
-              <option value="52">52 — Weekly</option>
-              <option value="365">365 — Daily</option>
+              <option value="1">{t('pt.erP1')}</option>
+              <option value="2">{t('pt.erP2')}</option>
+              <option value="4">{t('pt.erP4')}</option>
+              <option value="12">{t('pt.erP12')}</option>
+              <option value="52">{t('pt.erP52')}</option>
+              <option value="365">{t('pt.erP365')}</option>
             </select>
           </div>
         </div>
         {erRate !== 0 && (
           <div className="power-verdict-grid">
             <div className="power-stat">
-              <span>If {erRate}% is the nominal rate, the effective rate is</span>
+              <span>{t('pt.erIfNominal', { rate: erRate })}</span>
               <strong className="positive">{effAnnual.toFixed(3)}%</strong>
             </div>
             <div className="power-stat">
-              <span>If {erRate}% is the effective rate, the nominal rate is</span>
+              <span>{t('pt.erIfEffective', { rate: erRate })}</span>
               <strong>{nominalEquiv.toFixed(3)}%</strong>
             </div>
           </div>
         )}
         <p className="power-tool-note">
-          Nominal → effective: (1 + r/n)<sup>n</sup> − 1. Lenders often quote the nominal (lower-sounding) figure;
-          the effective rate is the honest cost of a debt or the real yield on savings. This is a rate conversion
-          only — it doesn't account for fees.
+          {t('pt.erFormula')} (1 + r/n)<sup>n</sup> − 1. {t('pt.erNote')}
         </p>
       </div>
       )}
 
       {activeSubTab === 'leaseVsBuy' && (
       <div className="power-tool-card">
-        <h3>🚙 Lease vs. Buy a Car</h3>
-        <p className="power-tool-desc">Over the same period: buying costs you depreciation plus finance interest but leaves you owning the residual; leasing costs the payments and leaves you with nothing.</p>
+        <h3>{t('pt.lvTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.lvDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Car Price ({country.symbol})</label>
+            <label>{t('pt.lvPrice', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={lvbPrice} onChange={(e) => setLvbPrice(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Deposit if Buying ({country.symbol})</label>
+            <label>{t('pt.lvDeposit', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="5000" value={lvbDeposit} onChange={(e) => setLvbDeposit(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Finance Rate (%)</label>
+            <label>{t('pt.carRate')}</label>
             <input type="number" min="0" step="0.1" value={lvbFinanceRate} onChange={(e) => setLvbFinanceRate(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Finance Term (years, 0 = cash)</label>
+            <label>{t('pt.carTerm')}</label>
             <input type="number" min="0" max="10" value={lvbFinanceTerm} onChange={(e) => setLvbFinanceTerm(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Depreciation (%/yr)</label>
+            <label>{t('pt.lvDepr')}</label>
             <input type="number" min="0" max="50" step="0.5" value={lvbDepreciation} onChange={(e) => setLvbDepreciation(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Comparison Period (years)</label>
+            <label>{t('pt.lvPeriod')}</label>
             <input type="number" min="1" max="15" value={lvbPeriod} onChange={(e) => setLvbPeriod(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Lease Upfront ({country.symbol})</label>
+            <label>{t('pt.lvUpfront', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="5000" value={lvbLeaseUpfront} onChange={(e) => setLvbLeaseUpfront(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Lease Payment ({country.symbol}/mo)</label>
+            <label>{t('pt.lvPayment', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="500" value={lvbLeaseMonthly} onChange={(e) => setLvbLeaseMonthly(Number(e.target.value))} />
           </div>
         </div>
         {lvbPrice > 0 && lvbLeaseMonthly > 0 && (
           <>
             <div className={`power-verdict ${leaseBuy.buyIsCheaper ? 'invest' : 'debt'}`}>
-              Over {lvbPeriod} years, {leaseBuy.buyIsCheaper ? 'buying' : 'leasing'} is cheaper by about {country.symbol} {Math.round(leaseBuy.difference).toLocaleString()}.
+              {t(leaseBuy.buyIsCheaper ? 'pt.lvBuyCheaper' : 'pt.lvLeaseCheaper', { years: lvbPeriod, amount: `${country.symbol} ${Math.round(leaseBuy.difference).toLocaleString()}` })}
             </div>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Buy — Net Cost (depreciation + interest)</span>
+                <span>{t('pt.lvBuyNet')}</span>
                 <strong className={leaseBuy.buyIsCheaper ? 'positive' : 'warn'}>{country.symbol} {Math.round(leaseBuy.buyNetCost).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Buy — Car Still Worth</span>
+                <span>{t('pt.lvBuyWorth')}</span>
                 <strong>{country.symbol} {Math.round(leaseBuy.residualValue).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Lease — Total Cost</span>
+                <span>{t('pt.lvLeaseTotal')}</span>
                 <strong className={!leaseBuy.buyIsCheaper ? 'positive' : 'warn'}>{country.symbol} {Math.round(leaseBuy.leaseCost).toLocaleString()}</strong>
               </div>
             </div>
             <p className="power-tool-note">
-              Buying's "net cost" is what the car loses in value over the period plus finance interest — you still hold
-              the residual after. Leasing usually includes maintenance and a warranty that buying doesn't; it also caps
-              your mileage and leaves nothing at the end. Insurance and fuel are the same either way and aren't modelled.
+              {t('pt.lvNote')}
             </p>
           </>
         )}
@@ -2230,19 +2188,19 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'retireGap' && (
       <div className="power-tool-card">
-        <h3>📊 Retirement Income Gap</h3>
-        <p className="power-tool-desc">You've a number in mind for the pot you'll retire with. At your withdrawal rate, does the income it throws off actually cover what you want to spend?</p>
+        <h3>{t('pt.rgTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.rgDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Projected Pot at Retirement ({country.symbol})</label>
+            <label>{t('pt.rgPot', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="100000" value={rgPot} onChange={(e) => setRgPot(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Income You Want ({country.symbol}/yr, today's money)</label>
+            <label>{t('pt.rgIncome', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={rgTarget} onChange={(e) => setRgTarget(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label><Term k="safeWithdrawalRate">Safe Withdrawal Rate</Term> (%)</label>
+            <label><Term k="safeWithdrawalRate">{t('pt.swrTerm')}</Term> (%)</label>
             <input type="number" min="1" max="10" step="0.1" value={rgSwr} onChange={(e) => setRgSwr(Number(e.target.value))} />
           </div>
         </div>
@@ -2250,34 +2208,32 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className={`power-verdict ${retireGap.onTrack ? 'invest' : 'debt'}`}>
               {retireGap.onTrack
-                ? `On track. At ${rgSwrShown}%, ${country.symbol} ${Math.round(rgPot).toLocaleString()} throws off about ${country.symbol} ${Math.round(retireGap.incomeFromPot).toLocaleString()}/yr — ${country.symbol} ${Math.round(-retireGap.annualGap).toLocaleString()} more than the ${country.symbol} ${Math.round(rgTarget).toLocaleString()} you want.`
-                : `Short by about ${country.symbol} ${Math.round(retireGap.annualGap).toLocaleString()}/yr — that pot gives ${country.symbol} ${Math.round(retireGap.incomeFromPot).toLocaleString()}/yr (${retireGap.coverageRatio.toFixed(0)}% of your target). Closing the gap needs roughly ${country.symbol} ${Math.round(retireGap.capitalGap).toLocaleString()} more capital.`}
+                ? t('pt.rgOn', { swr: rgSwrShown, pot: `${country.symbol} ${Math.round(rgPot).toLocaleString()}`, income: `${country.symbol} ${Math.round(retireGap.incomeFromPot).toLocaleString()}`, more: `${country.symbol} ${Math.round(-retireGap.annualGap).toLocaleString()}`, target: `${country.symbol} ${Math.round(rgTarget).toLocaleString()}` })
+                : t('pt.rgShort', { gap: `${country.symbol} ${Math.round(retireGap.annualGap).toLocaleString()}`, income: `${country.symbol} ${Math.round(retireGap.incomeFromPot).toLocaleString()}`, pct: retireGap.coverageRatio.toFixed(0), capital: `${country.symbol} ${Math.round(retireGap.capitalGap).toLocaleString()}` })}
             </div>
             <p className="power-tool-note">
-              Uses the same {rgSwrShown}% rule as the FIRE Number tool. "Projected pot" is your own figure — get it from the
-              Calculator tab or the FIRE / Coast FIRE tools. Doesn't model tax on withdrawals or any state/employer
-              pension you'll also receive — subtract those from the income you want first.
+              {t('pt.rgNote', { swr: rgSwrShown })}
             </p>
 
             {!retireGap.onTrack && (
               <div className="power-subsection">
-                <h4>How long to close it?</h4>
-                <p className="power-tool-desc">If you saved extra on top of what's already projected, growing at some rate, how long until it makes up the {country.symbol} {Math.round(retireGap.capitalGap).toLocaleString()} shortfall?</p>
+                <h4>{t('pt.rgCloseTitle')}</h4>
+                <p className="power-tool-desc">{t('pt.rgCloseDesc', { gap: `${country.symbol} ${Math.round(retireGap.capitalGap).toLocaleString()}` })}</p>
                 <div className="power-form">
                   <div className="form-group">
-                    <label>Extra Savings ({country.symbol}/mo)</label>
+                    <label>{t('pt.rgExtra', { symbol: country.symbol })}</label>
                     <input type="number" min="0" step="500" value={rgExtraMonthly} onChange={(e) => setRgExtraMonthly(Number(e.target.value))} />
                   </div>
                   <div className="form-group">
-                    <label>Growth Rate (%/yr)</label>
+                    <label>{t('pt.rgGrowth')}</label>
                     <input type="number" step="0.1" value={rgCloseRate} onChange={(e) => setRgCloseRate(Number(e.target.value))} />
                   </div>
                 </div>
                 {rgExtraMonthly > 0 && rgCloseGap && (
                   <div className={`power-verdict ${rgCloseGap.reachable ? 'invest' : 'danger'}`}>
                     {rgCloseGap.reachable
-                      ? `About ${monthsToYearsLabel(rgCloseGap.months)} (${rgCloseGap.months} months) of saving an extra ${country.symbol}${rgExtraMonthly.toLocaleString()}/month at ${rgCloseRate}%/yr would close the gap.`
-                      : `At ${country.symbol}${rgExtraMonthly.toLocaleString()}/month and ${rgCloseRate}%/yr, this doesn't close the gap within 100 years — a bigger monthly amount, a higher return, or a lower target income is needed.`}
+                      ? t('pt.rgCloseYes', { when: monthsToYearsLabel(rgCloseGap.months), months: rgCloseGap.months, extra: `${country.symbol}${rgExtraMonthly.toLocaleString()}`, rate: rgCloseRate })
+                      : t('pt.rgCloseNo', { extra: `${country.symbol}${rgExtraMonthly.toLocaleString()}`, rate: rgCloseRate })}
                   </div>
                 )}
               </div>
@@ -2289,27 +2245,27 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'depositTimeline' && (
       <div className="power-tool-card">
-        <h3>🕐 Deposit Savings Timeline</h3>
-        <p className="power-tool-desc">How long until you've saved a home deposit, given what you can put away each month and a modest savings rate on the balance.</p>
+        <h3>{t('pt.dtTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.dtDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Home Price ({country.symbol})</label>
+            <label>{t('pt.dtPrice', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="50000" value={dtPrice} onChange={(e) => setDtPrice(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Deposit (% of price)</label>
+            <label>{t('pt.dtPercent')}</label>
             <input type="number" min="0" max="100" step="1" value={dtPercent} onChange={(e) => setDtPercent(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>You Can Save ({country.symbol}/mo)</label>
+            <label>{t('pt.dtSave', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="500" value={dtMonthly} onChange={(e) => setDtMonthly(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Already Saved ({country.symbol})</label>
+            <label>{t('pt.dtSaved', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="5000" value={dtSaved} onChange={(e) => setDtSaved(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Savings Account Rate (%/yr)</label>
+            <label>{t('pt.sfRate')}</label>
             <input type="number" min="0" step="0.1" value={dtRate} onChange={(e) => setDtRate(Number(e.target.value))} />
           </div>
         </div>
@@ -2317,16 +2273,14 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className={`power-verdict ${depositTimeline.months === null ? 'danger' : depositTimeline.alreadyThere || depositTimeline.months <= 36 ? 'invest' : 'debt'}`}>
               {depositTimeline.alreadyThere
-                ? `You've already got the ${country.symbol} ${Math.round(depositTimeline.targetAmount).toLocaleString()} deposit saved.`
+                ? t('pt.dtDone', { amount: `${country.symbol} ${Math.round(depositTimeline.targetAmount).toLocaleString()}` })
                 : depositTimeline.months === null
-                  ? `With nothing going in each month, this deposit never gets saved — set a monthly amount.`
-                  : `About ${depositTimeline.months} months (${(depositTimeline.months / 12).toFixed(1)} years) to save the ${country.symbol} ${Math.round(depositTimeline.targetAmount).toLocaleString()} deposit (${dtPercent}% of ${country.symbol} ${Math.round(dtPrice).toLocaleString()}).`}
+                  ? t('pt.dtNever')
+                  : t('pt.dtAbout', { months: depositTimeline.months, years: (depositTimeline.months / 12).toFixed(1), amount: `${country.symbol} ${Math.round(depositTimeline.targetAmount).toLocaleString()}`, pct: dtPercent, price: `${country.symbol} ${Math.round(dtPrice).toLocaleString()}` })}
             </div>
             {depositTimeline.months != null && depositTimeline.months > 0 && (
               <p className="power-tool-note">
-                The balance earns {dtRate}% along the way ({country.symbol} {Math.round(depositTimeline.interestEarned).toLocaleString()} of the total). House prices move too — a longer timeline is a moving target. To size the
-                bond the remaining balance would need, use the Home Affordability tool; to plan a fixed-date goal, use
-                the Sinking Fund tool.
+                {t('pt.dtNote', { rate: dtRate, interest: `${country.symbol} ${Math.round(depositTimeline.interestEarned).toLocaleString()}` })}
               </p>
             )}
           </>
@@ -2336,34 +2290,31 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'realReturn' && (
       <div className="power-tool-card">
-        <h3>📉 Real (After-Tax, After-Inflation) Return</h3>
-        <p className="power-tool-desc">A headline return is not what your money actually earns. Take tax off the gains, divide out inflation, and see what's left growing your purchasing power.</p>
+        <h3>{t('pt.rrTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.rrDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Nominal Return (%/yr)</label>
+            <label>{t('pt.rrNominal')}</label>
             <input type="number" step="0.1" value={rrNominal} onChange={(e) => setRrNominal(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label><Term k="inflation">Inflation</Term> (%/yr)</label>
+            <label><Term k="inflation">{t('calculator.inflation')}</Term> (%/yr)</label>
             <input type="number" step="0.1" value={rrInflation} onChange={(e) => setRrInflation(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Tax on Gains (%)</label>
+            <label>{t('pt.rrTax')}</label>
             <input type="number" min="0" max="100" step="1" value={rrTax} onChange={(e) => setRrTax(Number(e.target.value))} />
           </div>
         </div>
         {rrNominal !== 0 && (
           <>
             <div className={`power-verdict ${realRet.losesToInflation ? 'danger' : realRet.realRate < 1 ? 'debt' : 'invest'}`}>
-              Your {rrNominal}% nominal return is {realRet.afterTaxNominal.toFixed(1)}% after {rrTax}% tax, and about{' '}
-              <strong>{realRet.realRate.toFixed(1)}% real</strong> once {rrInflation}% inflation is taken out.
-              {realRet.losesToInflation ? ' At this rate your money is losing purchasing power.' : ''}
+              {t('pt.rrVerdict', { nominal: rrNominal, after: realRet.afterTaxNominal.toFixed(1), tax: rrTax })}{' '}
+              <strong>{t('pt.rrReal', { real: realRet.realRate.toFixed(1) })}</strong> {t('pt.rrInflOut', { infl: rrInflation })}
+              {realRet.losesToInflation ? ' ' + t('pt.rrLoses') : ''}
             </div>
             <p className="power-tool-note">
-              Uses the exact (1 + after-tax) ÷ (1 + inflation) − 1 identity. The rough "just subtract" shortcut would
-              say {realRet.roughApprox.toFixed(1)}% — it skips the interaction between the two rates (at normal
-              positive inflation that makes it slightly optimistic). Inside a {country.wrapperLabel && country.wrapperLabel !== 'N/A' ? country.wrapperLabel : 'tax-free wrapper'} the
-              tax line is 0, so set it to 0 to see the sheltered real return.
+              {t('pt.rrNote', { rough: realRet.roughApprox.toFixed(1), wrapper: country.wrapperLabel && country.wrapperLabel !== 'N/A' ? country.wrapperLabel : t('pt.taxFreeWrapper') })}
             </p>
           </>
         )}
@@ -2372,36 +2323,36 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'debtConsol' && (
       <div className="power-tool-card">
-        <h3>🔗 Debt Consolidation</h3>
-        <p className="power-tool-desc">Rolling several debts into one loan can lower the rate and free up monthly cash — or just stretch the term and cost more overall. This compares keeping them as they are against one consolidation loan.</p>
+        <h3>{t('pt.dcTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.dcDesc')}</p>
         <div className="dc-rows">
           {dcRows.map((r, i) => (
             <div className="dc-row" key={r.id}>
               <span className="dc-row-num">{i + 1}</span>
               <div className="form-group">
-                <label>Balance ({country.symbol})</label>
+                <label>{t('pt.dcBalance', { symbol: country.symbol })}</label>
                 <input type="number" min="0" step="1000" value={r.balance} onChange={(e) => updateDcRow(r.id, 'balance', Number(e.target.value))} />
               </div>
               <div className="form-group">
-                <label>Rate (%/yr)</label>
+                <label>{t('pt.edInflationPost')}</label>
                 <input type="number" min="0" step="0.5" value={r.rate} onChange={(e) => updateDcRow(r.id, 'rate', Number(e.target.value))} />
               </div>
               <div className="form-group">
-                <label>You Pay ({country.symbol}/mo)</label>
+                <label>{t('pt.dcPay', { symbol: country.symbol })}</label>
                 <input type="number" min="0" step="100" value={r.minPayment} onChange={(e) => updateDcRow(r.id, 'minPayment', Number(e.target.value))} />
               </div>
-              <button className="dc-row-remove" onClick={() => removeDcRow(r.id)} disabled={dcRows.length <= 1} aria-label={`Remove debt ${i + 1}`}>×</button>
+              <button className="dc-row-remove" onClick={() => removeDcRow(r.id)} disabled={dcRows.length <= 1} aria-label={t('pt.dcRemove', { n: i + 1 })}>×</button>
             </div>
           ))}
-          {dcRows.length < 6 && <button className="power-use-fire-btn" onClick={addDcRow}>+ Add another debt</button>}
+          {dcRows.length < 6 && <button className="power-use-fire-btn" onClick={addDcRow}>{t('pt.dcAdd')}</button>}
         </div>
         <div className="power-form">
           <div className="form-group">
-            <label>Consolidation Loan Rate (%/yr)</label>
+            <label>{t('pt.dcRate')}</label>
             <input type="number" min="0" step="0.5" value={dcNewRate} onChange={(e) => setDcNewRate(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Consolidation Loan Term (years)</label>
+            <label>{t('debt.consolidateTerm')}</label>
             <input type="number" min="1" max="30" step="1" value={dcNewTerm} onChange={(e) => setDcNewTerm(Number(e.target.value))} />
           </div>
         </div>
@@ -2409,27 +2360,27 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Combined balance</span>
+                <span>{t('pt.dcCombined')}</span>
                 <strong>{country.symbol} {Math.round(debtConsol.totalBalance).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>New monthly payment</span>
+                <span>{t('pt.dcNewMonthly')}</span>
                 <strong>{country.symbol} {Math.round(debtConsol.consolidatedMonthly).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Now paying</span>
-                <strong>{country.symbol} {Math.round(debtConsol.currentMonthly).toLocaleString()}/mo</strong>
+                <span>{t('pt.dcNow')}</span>
+                <strong>{country.symbol} {Math.round(debtConsol.currentMonthly).toLocaleString()}{t('pt.perMo')}</strong>
               </div>
             </div>
             <div className={`power-verdict ${debtConsol.interestSaved == null ? 'neutral' : debtConsol.interestSaved > 0 ? 'invest' : 'debt'}`}>
               {debtConsol.anyNeverPaysOff
-                ? `At least one debt's current payment barely covers its interest, so "keeping things as they are" never actually clears — consolidating at ${dcNewRate}% over ${dcNewTerm} years pays it off for about ${country.symbol} ${Math.round(debtConsol.consolidatedMonthly).toLocaleString()}/mo and ${country.symbol} ${Math.round(debtConsol.consolidatedInterest).toLocaleString()} total interest.`
+                ? t('pt.dcNever', { rate: dcNewRate, years: dcNewTerm, monthly: `${country.symbol} ${Math.round(debtConsol.consolidatedMonthly).toLocaleString()}`, interest: `${country.symbol} ${Math.round(debtConsol.consolidatedInterest).toLocaleString()}` })
                 : debtConsol.interestSaved > 0
-                  ? `Consolidating saves about ${country.symbol} ${Math.round(debtConsol.interestSaved).toLocaleString()} in interest${debtConsol.monthsSaved > 0 ? ` and clears the debt ${debtConsol.monthsSaved} months sooner` : ''}${debtConsol.monthlyDifference > 0 ? `, while freeing up about ${country.symbol} ${Math.round(debtConsol.monthlyDifference).toLocaleString()}/mo` : ''}.`
-                  : `Consolidating costs about ${country.symbol} ${Math.round(-debtConsol.interestSaved).toLocaleString()} MORE in interest over the life of the loan — the lower monthly payment (${country.symbol} ${Math.round(debtConsol.monthlyDifference).toLocaleString()}/mo freed up) is bought with a longer term. Only worth it if the cash-flow relief matters more than the total cost.`}
+                  ? t('pt.dcSaves', { saved: `${country.symbol} ${Math.round(debtConsol.interestSaved).toLocaleString()}`, sooner: debtConsol.monthsSaved > 0 ? t('pt.dcSooner', { n: debtConsol.monthsSaved }) : '', freed: debtConsol.monthlyDifference > 0 ? t('pt.dcFreed', { amount: `${country.symbol} ${Math.round(debtConsol.monthlyDifference).toLocaleString()}` }) : '' })
+                  : t('pt.dcCosts', { more: `${country.symbol} ${Math.round(-debtConsol.interestSaved).toLocaleString()}`, freed: `${country.symbol} ${Math.round(debtConsol.monthlyDifference).toLocaleString()}` })}
             </div>
             <p className="power-tool-note">
-              "You Pay" is your current actual monthly payment per debt (for a credit card, roughly its minimum). The current-path figure runs each debt independently at that payment; the consolidation figure is one amortising loan for the combined balance. Doesn't model an origination/initiation fee on the new loan — add that to the balance if it's significant. Not advice.
+              {t('pt.dcNote')}
             </p>
           </>
         )}
@@ -2438,15 +2389,15 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'homeCosts' && (
       <div className="power-tool-card">
-        <h3>🏦 Home Buying — Upfront Costs</h3>
-        <p className="power-tool-desc">The cash you need on the day, over and above the deposit: {country.code === 'za' ? 'transfer duty, the transferring and bond attorneys, and the deeds office' : 'purchase tax and professional fees'}. A bond calculator never shows these.</p>
+        <h3>{t('pt.hcTitle')}</h3>
+        <p className="power-tool-desc">{t(country.code === 'za' ? 'pt.hcDescZa' : 'pt.hcDescOther')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Purchase Price ({country.symbol})</label>
+            <label>{t('pt.hcPrice', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="50000" value={hcPrice} onChange={(e) => setHcPrice(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Deposit ({country.symbol})</label>
+            <label>{t('pt.hcDeposit', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={hcDeposit} onChange={(e) => setHcDeposit(Number(e.target.value))} />
           </div>
         </div>
@@ -2454,30 +2405,30 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>{country.code === 'za' ? 'Transfer duty' : 'Purchase tax'}</span>
+                <span>{t(country.code === 'za' ? 'pt.hcTransferDuty' : 'pt.hcPurchaseTax')}</span>
                 <strong>{country.symbol} {Math.round(homeCosts.transferDuty).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>{country.code === 'za' ? 'Attorneys + deeds office' : 'Professional fees'}</span>
+                <span>{t(country.code === 'za' ? 'pt.hcAttorneys' : 'pt.hcProfFees')}</span>
                 <strong>{country.symbol} {Math.round(homeCosts.transferAttorney + homeCosts.bondRegistration + homeCosts.deedsOffice).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Total fees</span>
+                <span>{t('pt.hcTotalFees')}</span>
                 <strong className="warn">{country.symbol} {Math.round(homeCosts.totalFees).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Cash needed upfront</span>
+                <span>{t('pt.hcCash')}</span>
                 <strong>{country.symbol} {Math.round(homeCosts.cashNeededUpfront).toLocaleString()}</strong>
               </div>
             </div>
             <div className="power-verdict neutral">
-              On a {country.symbol} {Math.round(hcPrice).toLocaleString()} home you'd need about <strong>{country.symbol} {Math.round(homeCosts.cashNeededUpfront).toLocaleString()}</strong> in cash on transfer day — the {country.symbol} {Math.round(hcDeposit).toLocaleString()} deposit plus {country.symbol} {Math.round(homeCosts.totalFees).toLocaleString()} of fees ({homeCosts.feesAsPctOfPrice.toFixed(1)}% of the price).
+              {t('pt.hcVerdictA', { price: `${country.symbol} ${Math.round(hcPrice).toLocaleString()}` })} <strong>{country.symbol} {Math.round(homeCosts.cashNeededUpfront).toLocaleString()}</strong> {t('pt.hcVerdictB', { deposit: `${country.symbol} ${Math.round(hcDeposit).toLocaleString()}`, fees: `${country.symbol} ${Math.round(homeCosts.totalFees).toLocaleString()}`, pct: homeCosts.feesAsPctOfPrice.toFixed(1) })}
             </div>
             <p className="power-tool-note">
               {country.code === 'za'
-                ? 'Transfer duty uses the SARS natural-person brackets (indicative, 2026/27); attorney and deeds-office figures approximate the recommended conveyancing tariff. Not a conveyancer’s quote — bond initiation fees, rates clearance, and levy advances vary. Buying through a company or trust is taxed differently.'
-                : 'Outside South Africa this uses a single purchase-tax percentage plus a professional-fee allowance — refine it with your actual local stamp duty / land tax and solicitor quote.'}
-              {' '}Pair with the Deposit Timeline tool to see how long the cash takes to save.
+                ? t('pt.hcNoteZa')
+                : t('pt.hcNoteOther')}
+              {' '}{t('pt.hcPair')}
             </p>
           </>
         )}
@@ -2486,48 +2437,48 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'bonusTax' && (
       <div className="power-tool-card">
-        <h3>🎉 Bonus / 13th Cheque — Take-Home</h3>
-        <p className="power-tool-desc">A bonus sits on top of your salary, so it's taxed entirely at your marginal rate — the rate on your top slice of income. This is how much actually lands in your account.</p>
+        <h3>{t('pt.btTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.btDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Annual Salary ({country.symbol})</label>
+            <label>{t('pt.btSalary', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={btSalary} onChange={(e) => setBtSalary(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Bonus Amount ({country.symbol})</label>
+            <label>{t('pt.btBonus', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="5000" value={btBonus} onChange={(e) => setBtBonus(Number(e.target.value))} />
           </div>
         </div>
         {country.taxBrackets && (
           <label className="mc-compare-toggle">
             <input type="checkbox" checked={btProgressive} onChange={(e) => setBtProgressive(e.target.checked)} />
-            Use {country.name}'s progressive brackets instead of the flat {country.taxRate}% estimate
+            {t('pt.btBrackets', { country: country.name, rate: country.taxRate })}
           </label>
         )}
         {btBonus > 0 && (
           <>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Tax on the bonus</span>
+                <span>{t('pt.btTaxOn')}</span>
                 <strong className="warn">{country.symbol} {Math.round(bonusTax.taxOnBonus).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>You actually keep</span>
+                <span>{t('pt.btKeep')}</span>
                 <strong className="positive">{country.symbol} {Math.round(bonusTax.netBonus).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Marginal rate</span>
+                <span>{t('pt.btMarginal')}</span>
                 <strong>{bonusTax.marginalRatePct.toFixed(0)}%</strong>
               </div>
             </div>
             <div className="power-verdict debt">
-              Of a {country.symbol} {Math.round(btBonus).toLocaleString()} bonus you keep about <strong>{country.symbol} {Math.round(bonusTax.netBonus).toLocaleString()}</strong> ({bonusTax.keepPct.toFixed(0)}%) — {country.symbol} {Math.round(bonusTax.taxOnBonus).toLocaleString()} goes to tax at an average {bonusTax.averageRateOnBonusPct.toFixed(0)}% across the bonus.
+              {t('pt.btVerdictA', { bonus: `${country.symbol} ${Math.round(btBonus).toLocaleString()}` })} <strong>{country.symbol} {Math.round(bonusTax.netBonus).toLocaleString()}</strong> {t('pt.btVerdictB', { keep: bonusTax.keepPct.toFixed(0), tax: `${country.symbol} ${Math.round(bonusTax.taxOnBonus).toLocaleString()}`, avg: bonusTax.averageRateOnBonusPct.toFixed(0) })}
             </div>
             <p className="power-tool-note">
               {btProgressive && country.taxBrackets
-                ? (country.taxBracketsNote || `${country.name}'s progressive bracket schedule — illustrative only.`)
-                : `Flat ${country.taxRate}% estimate. Turn on progressive brackets above (where available) for a marginal figure.`}
-              {' '}Ignores UIF/pension/medical-aid deductions and any employer withholding quirks — it's the income-tax bite only. To invest what's left, drop the net figure into the Windfall Split tool.
+                ? (country.taxBracketsNote || t('pt.btNoteBrackets', { country: country.name }))
+                : t('pt.btNoteFlat', { rate: country.taxRate })}
+              {' '}{t('pt.btNoteTail')}
             </p>
           </>
         )}
@@ -2536,47 +2487,47 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'raOptimizer' && (
       <div className="power-tool-card">
-        <h3>🧾 Retirement Annuity — Tax Optimizer</h3>
-        <p className="power-tool-desc">South Africa lets you deduct retirement-fund contributions up to 27.5% of income, capped at {country.symbol}350,000/yr. This works out how much more you could put in to reach that ceiling — and the tax the fiscus effectively refunds on it.</p>
+        <h3>{t('pt.raTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.raDesc', { cap: `${country.symbol}350,000` })}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Taxable Income ({country.symbol}/yr)</label>
+            <label>{t('pt.raIncome', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={raIncome} onChange={(e) => setRaIncome(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>RA / Pension Contributions So Far ({country.symbol}/yr)</label>
+            <label>{t('pt.raSoFar', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="5000" value={raCurrent} onChange={(e) => setRaCurrent(Number(e.target.value))} />
           </div>
         </div>
         {country.taxBrackets && (
           <label className="mc-compare-toggle">
             <input type="checkbox" checked={raProgressive} onChange={(e) => setRaProgressive(e.target.checked)} />
-            Use {country.name}'s progressive brackets for the tax-saving figure
+            {t('pt.raBrackets', { country: country.name })}
           </label>
         )}
         {raIncome > 0 && (
           <>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Deductible ceiling</span>
+                <span>{t('pt.raCeiling')}</span>
                 <strong>{country.symbol} {Math.round(raResult.maxDeductible).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Room left this year</span>
+                <span>{t('pt.raRoom')}</span>
                 <strong className={raResult.roomRemaining > 0 ? 'positive' : ''}>{country.symbol} {Math.round(raResult.roomRemaining).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Tax saved if you max it</span>
+                <span>{t('pt.raSaved')}</span>
                 <strong className="positive">{country.symbol} {Math.round(raResult.taxSavingIfMaxed).toLocaleString()}</strong>
               </div>
             </div>
             <div className={`power-verdict ${raResult.alreadyOverLimit ? 'neutral' : 'invest'}`}>
               {raResult.alreadyOverLimit
-                ? `You're already contributing at or above the ${country.symbol}${Math.round(raResult.maxDeductible).toLocaleString()} deductible limit — extra contributions still grow tax-free but no longer cut this year's tax bill.`
-                : `Contributing another ${country.symbol} ${Math.round(raResult.roomRemaining).toLocaleString()} this year gets you to the ceiling and cuts your tax by about ${country.symbol} ${Math.round(raResult.taxSavingIfMaxed).toLocaleString()} — an effective ${raResult.effectiveReliefPct.toFixed(0)}% discount, so the real out-of-pocket cost is about ${country.symbol} ${Math.round(raResult.netCostIfMaxed).toLocaleString()}.`}
+                ? t('pt.raOver', { limit: `${country.symbol}${Math.round(raResult.maxDeductible).toLocaleString()}` })
+                : t('pt.raRoomVerdict', { room: `${country.symbol} ${Math.round(raResult.roomRemaining).toLocaleString()}`, saving: `${country.symbol} ${Math.round(raResult.taxSavingIfMaxed).toLocaleString()}`, pct: raResult.effectiveReliefPct.toFixed(0), cost: `${country.symbol} ${Math.round(raResult.netCostIfMaxed).toLocaleString()}` })}
             </div>
             <p className="power-tool-note">
-              Limit is 27.5% of the greater of taxable income or remuneration, capped at {country.symbol}350,000 — here bound by the {raResult.limitedBy === 'cap' ? `${country.symbol}350k cap` : '27.5% rate'}. Doesn't model the tax on the eventual retirement income (see the Pre-Tax Retirement tool for that side). Not advice.
+              {t('pt.raNote', { cap: `${country.symbol}350,000`, by: raResult.limitedBy === 'cap' ? t('pt.raCap', { cap: `${country.symbol}350k` }) : t('pt.raRate') })}
             </p>
           </>
         )}
@@ -2585,35 +2536,35 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'seqRisk' && (
       <div className="power-tool-card">
-        <h3>🎢 Sequence-of-Returns Risk</h3>
-        <p className="power-tool-desc">Two retirees earn the <em>same average return</em>, but one hits a bad run early — while the pot is largest and being drawn down. This shows how much that timing alone changes how long the money lasts.</p>
+        <h3>{t('pt.sqTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.sqDescA')} <em>{t('pt.sqDescEm')}</em>{t('pt.sqDescB')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Starting Pot ({country.symbol})</label>
+            <label>{t('pt.sqPot', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="100000" value={sqPot} onChange={(e) => setSqPot(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Withdrawal ({country.symbol}/yr, year 1)</label>
+            <label>{t('pt.sqWithdrawal', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={sqWithdrawal} onChange={(e) => setSqWithdrawal(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Retirement Length (years)</label>
+            <label>{t('pt.ddLength')}</label>
             <input type="number" min="1" max="60" step="1" value={sqYears} onChange={(e) => setSqYears(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Average Return (%/yr)</label>
+            <label>{t('pt.sqAvg')}</label>
             <input type="number" step="0.5" value={sqAvgReturn} onChange={(e) => setSqAvgReturn(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Bad-Year Return (%/yr)</label>
+            <label>{t('pt.sqBad')}</label>
             <input type="number" step="0.5" value={sqBadReturn} onChange={(e) => setSqBadReturn(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>How Many Bad Years</label>
+            <label>{t('pt.sqBadYears')}</label>
             <input type="number" min="0" max="20" step="1" value={sqBadYears} onChange={(e) => setSqBadYears(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label><Term k="inflation">Inflation</Term> on Withdrawals (%/yr)</label>
+            <label><Term k="inflation">{t('calculator.inflation')}</Term> {t('pt.sqOnWd')}</label>
             <input type="number" min="0" step="0.5" value={sqInflation} onChange={(e) => setSqInflation(Number(e.target.value))} />
           </div>
         </div>
@@ -2621,25 +2572,25 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Bad years FIRST — pot lasts</span>
-                <strong className="warn">{seqResult.earlyLosses.yearsLasted} yrs</strong>
+                <span>{t('pt.sqFirst')}</span>
+                <strong className="warn">{t('pt.yrsShort', { n: seqResult.earlyLosses.yearsLasted })}</strong>
               </div>
               <div className="power-stat">
-                <span>Bad years LAST — pot lasts</span>
-                <strong className="positive">{seqResult.lateLosses.depleted ? `${seqResult.lateLosses.yearsLasted} yrs` : `${seqResult.horizonYears}+ yrs`}</strong>
+                <span>{t('pt.sqLast')}</span>
+                <strong className="positive">{seqResult.lateLosses.depleted ? t('pt.yrsShort', { n: seqResult.lateLosses.yearsLasted }) : t('pt.yrsPlus', { n: seqResult.horizonYears })}</strong>
               </div>
               <div className="power-stat">
-                <span>Good-year return (implied)</span>
+                <span>{t('pt.sqGood')}</span>
                 <strong>{seqResult.goodYearReturn.toFixed(1)}%</strong>
               </div>
             </div>
             <div className={`power-verdict ${seqResult.bothSurvive ? 'invest' : seqResult.yearsGap >= 3 ? 'danger' : 'debt'}`}>
               {seqResult.bothSurvive
-                ? `This pot survives the full ${seqResult.horizonYears} years either way — it's comfortably funded against sequence risk at this withdrawal.`
-                : `Same ${sqAvgReturn}% average, but hitting the ${sqBadYears} bad years first drains the pot ${seqResult.yearsGap} year${seqResult.yearsGap === 1 ? '' : 's'} sooner than hitting them last (${seqResult.earlyLosses.yearsLasted} vs ${seqResult.lateLosses.depleted ? seqResult.lateLosses.yearsLasted : `${seqResult.horizonYears}+`} years). That gap is sequence-of-returns risk — an average return figure hides it entirely.`}
+                ? t('pt.sqBoth', { years: seqResult.horizonYears })
+                : t('pt.sqGap', { avg: sqAvgReturn, bad: sqBadYears, gap: seqResult.yearsGap, early: seqResult.earlyLosses.yearsLasted, late: seqResult.lateLosses.depleted ? seqResult.lateLosses.yearsLasted : `${seqResult.horizonYears}+` })}
             </div>
             <p className="power-tool-note">
-              The good years' return is solved so the arithmetic mean across all {seqResult.horizonYears} years equals your {sqAvgReturn}% average — a fair like-for-like. A deterministic illustration of one ordering, not a probability (that's the Monte Carlo tab's drawdown mode). Withdrawals come off at the start of each year, rising {sqInflation}%/yr.
+              {t('pt.sqNote', { years: seqResult.horizonYears, avg: sqAvgReturn, infl: sqInflation })}
             </p>
           </>
         )}
@@ -2648,58 +2599,58 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'twoPot' && (
       <div className="power-tool-card">
-        <h3>🫙 Two-Pot Retirement — Cost of Withdrawing</h3>
-        <p className="power-tool-desc">South Africa's two-pot system lets you dip into the savings pot before retirement. It costs you twice: the withdrawal is taxed at your marginal rate now, and you forfeit everything it would have compounded to by retirement.</p>
+        <h3>{t('pt.tpTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.tpDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Amount to Withdraw ({country.symbol})</label>
+            <label>{t('pt.tpAmount', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="5000" value={tpAmount} onChange={(e) => setTpAmount(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Your Taxable Income ({country.symbol}/yr)</label>
+            <label>{t('pt.tpIncome', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={tpIncome} onChange={(e) => setTpIncome(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Years Until Retirement</label>
+            <label>{t('pt.tpYears')}</label>
             <input type="number" min="0" max="60" step="1" value={tpYearsToRetire} onChange={(e) => setTpYearsToRetire(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Expected Growth (%/yr)</label>
+            <label>{t('pt.tpGrowth')}</label>
             <input type="number" step="0.5" value={tpGrowth} onChange={(e) => setTpGrowth(Number(e.target.value))} />
           </div>
         </div>
         {country.taxBrackets && (
           <label className="mc-compare-toggle">
             <input type="checkbox" checked={tpProgressive} onChange={(e) => setTpProgressive(e.target.checked)} />
-            Use {country.name}'s progressive brackets for the tax figure
+            {t('pt.tpBrackets', { country: country.name })}
           </label>
         )}
         {tpAmount > 0 && tpAmount < TWO_POT_MIN_WITHDRAWAL && (
           <div className="power-verdict danger">
-            ⚠️ Below the R{TWO_POT_MIN_WITHDRAWAL.toLocaleString()} minimum -- the two-pot rules don't allow a savings-pot withdrawal smaller than this.
+            {t('pt.tpMin', { min: `R${TWO_POT_MIN_WITHDRAWAL.toLocaleString()}` })}
           </div>
         )}
         {tpAmount >= TWO_POT_MIN_WITHDRAWAL && (
           <>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Tax on the withdrawal</span>
+                <span>{t('pt.tpTax')}</span>
                 <strong className="warn">{country.symbol} {Math.round(twoPot.taxOnWithdrawal).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Cash you actually get</span>
+                <span>{t('pt.tpNet')}</span>
                 <strong>{country.symbol} {Math.round(twoPot.netCashNow).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Retirement value given up</span>
+                <span>{t('pt.tpGiven')}</span>
                 <strong className="warn">{country.symbol} {Math.round(twoPot.futureValueForgone).toLocaleString()}</strong>
               </div>
             </div>
             <div className="power-verdict danger">
-              Withdrawing {country.symbol} {Math.round(tpAmount).toLocaleString()} nets you {country.symbol} {Math.round(twoPot.netCashNow).toLocaleString()} after {twoPot.marginalRatePct.toFixed(0)}% tax — but that money would have grown to about <strong>{country.symbol} {Math.round(twoPot.futureValueForgone).toLocaleString()}</strong> by retirement. Every spendable rand today costs roughly {country.symbol}{twoPot.costPerRandTaken.toFixed(2)} of future retirement money.
+              {t('pt.tpVerdictA', { amount: `${country.symbol} ${Math.round(tpAmount).toLocaleString()}`, net: `${country.symbol} ${Math.round(twoPot.netCashNow).toLocaleString()}`, pct: twoPot.marginalRatePct.toFixed(0) })} <strong>{country.symbol} {Math.round(twoPot.futureValueForgone).toLocaleString()}</strong> {t('pt.tpVerdictB', { cost: `${country.symbol}${twoPot.costPerRandTaken.toFixed(2)}` })}
             </div>
             <p className="power-tool-note">
-              SA two-pot rules. Tax is at your marginal rate (the withdrawal stacks on your income), not the retirement lump-sum tables. "Value given up" grows the gross amount at {tpGrowth}%/yr for {Math.round(tpYearsToRetire)} years with no further contributions. Ignores any SARS admin fee on the withdrawal. Only one savings-pot withdrawal is allowed per tax year -- the current one ({tpTaxYear.label}) ends {tpTaxYear.endDate.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}. Not advice — dipping in during genuine hardship can still be the right call.
+              {t('pt.tpNote', { growth: tpGrowth, years: Math.round(tpYearsToRetire), taxYear: tpTaxYear.label, end: tpTaxYear.endDate.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) })}
             </p>
           </>
         )}
@@ -2708,53 +2659,53 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'loanCompare' && (
       <div className="power-tool-card">
-        <h3>⚖️ Loan Offer Comparison</h3>
-        <p className="power-tool-desc">Two offers for the same amount, compared on what they actually cost once the term and every fee are counted — not just the headline rate.</p>
+        <h3>{t('pt.lcTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.lcDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Amount to Borrow ({country.symbol})</label>
+            <label>{t('pt.lcAmount', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={lcAmount} onChange={(e) => setLcAmount(Number(e.target.value))} />
           </div>
         </div>
         <div className="dc-rows">
           <div className="dc-row">
             <span className="dc-row-num">A</span>
-            <div className="form-group"><label>Rate (%/yr)</label><input type="number" step="0.5" value={lcaRate} onChange={(e) => setLcaRate(Number(e.target.value))} /></div>
-            <div className="form-group"><label>Term (yrs)</label><input type="number" min="1" max="30" value={lcaTerm} onChange={(e) => setLcaTerm(Number(e.target.value))} /></div>
-            <div className="form-group"><label>Upfront fee ({country.symbol})</label><input type="number" min="0" step="500" value={lcaUpfront} onChange={(e) => setLcaUpfront(Number(e.target.value))} /></div>
-            <div className="form-group"><label>Monthly fee ({country.symbol})</label><input type="number" min="0" step="10" value={lcaMonthly} onChange={(e) => setLcaMonthly(Number(e.target.value))} /></div>
+            <div className="form-group"><label>{t('pt.edInflationPost')}</label><input type="number" step="0.5" value={lcaRate} onChange={(e) => setLcaRate(Number(e.target.value))} /></div>
+            <div className="form-group"><label>{t('pt.lcTerm')}</label><input type="number" min="1" max="30" value={lcaTerm} onChange={(e) => setLcaTerm(Number(e.target.value))} /></div>
+            <div className="form-group"><label>{t('pt.lcUpfront', { symbol: country.symbol })}</label><input type="number" min="0" step="500" value={lcaUpfront} onChange={(e) => setLcaUpfront(Number(e.target.value))} /></div>
+            <div className="form-group"><label>{t('pt.lcMonthlyFee', { symbol: country.symbol })}</label><input type="number" min="0" step="10" value={lcaMonthly} onChange={(e) => setLcaMonthly(Number(e.target.value))} /></div>
           </div>
           <div className="dc-row">
             <span className="dc-row-num">B</span>
-            <div className="form-group"><label>Rate (%/yr)</label><input type="number" step="0.5" value={lcbRate} onChange={(e) => setLcbRate(Number(e.target.value))} /></div>
-            <div className="form-group"><label>Term (yrs)</label><input type="number" min="1" max="30" value={lcbTerm} onChange={(e) => setLcbTerm(Number(e.target.value))} /></div>
-            <div className="form-group"><label>Upfront fee ({country.symbol})</label><input type="number" min="0" step="500" value={lcbUpfront} onChange={(e) => setLcbUpfront(Number(e.target.value))} /></div>
-            <div className="form-group"><label>Monthly fee ({country.symbol})</label><input type="number" min="0" step="10" value={lcbMonthly} onChange={(e) => setLcbMonthly(Number(e.target.value))} /></div>
+            <div className="form-group"><label>{t('pt.edInflationPost')}</label><input type="number" step="0.5" value={lcbRate} onChange={(e) => setLcbRate(Number(e.target.value))} /></div>
+            <div className="form-group"><label>{t('pt.lcTerm')}</label><input type="number" min="1" max="30" value={lcbTerm} onChange={(e) => setLcbTerm(Number(e.target.value))} /></div>
+            <div className="form-group"><label>{t('pt.lcUpfront', { symbol: country.symbol })}</label><input type="number" min="0" step="500" value={lcbUpfront} onChange={(e) => setLcbUpfront(Number(e.target.value))} /></div>
+            <div className="form-group"><label>{t('pt.lcMonthlyFee', { symbol: country.symbol })}</label><input type="number" min="0" step="10" value={lcbMonthly} onChange={(e) => setLcbMonthly(Number(e.target.value))} /></div>
           </div>
         </div>
         {lcAmount > 0 && loanCompare.a && (
           <>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Offer A — total cost</span>
+                <span>{t('pt.lcATotal')}</span>
                 <strong className={loanCompare.cheaper === 'A' ? 'positive' : ''}>{country.symbol} {Math.round(loanCompare.a.totalCost).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Offer B — total cost</span>
+                <span>{t('pt.lcBTotal')}</span>
                 <strong className={loanCompare.cheaper === 'B' ? 'positive' : ''}>{country.symbol} {Math.round(loanCompare.b.totalCost).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Monthly: A vs B</span>
+                <span>{t('pt.lcMonthlyAB')}</span>
                 <strong>{country.symbol} {Math.round(loanCompare.a.monthlyPayment).toLocaleString()} / {Math.round(loanCompare.b.monthlyPayment).toLocaleString()}</strong>
               </div>
             </div>
             <div className={`power-verdict ${loanCompare.cheaper === 'tie' ? 'neutral' : 'invest'}`}>
               {loanCompare.cheaper === 'tie'
-                ? 'Both offers cost the same all-in. Pick on flexibility, service, or early-settlement terms.'
-                : `Offer ${loanCompare.cheaper} is cheaper overall by about ${country.symbol} ${Math.round(loanCompare.totalCostSaving).toLocaleString()} across the life of the loan${loanCompare.monthlyDifference > 1 ? `, though its monthly differs by about ${country.symbol} ${Math.round(loanCompare.monthlyDifference).toLocaleString()}` : ''}.`}
+                ? t('pt.lcTie')
+                : t('pt.lcCheaper', { offer: loanCompare.cheaper, saving: `${country.symbol} ${Math.round(loanCompare.totalCostSaving).toLocaleString()}`, diff: loanCompare.monthlyDifference > 1 ? t('pt.lcDiff', { amount: `${country.symbol} ${Math.round(loanCompare.monthlyDifference).toLocaleString()}` }) : '' })}
             </div>
             <p className="power-tool-note">
-              All-in cost = principal + total interest + every fee. The "all-in %" is a rough comparative rate, not a regulated APR/APRC. Assumes each loan runs its full term with no early settlement.
+              {t('pt.lcNote')}
             </p>
           </>
         )}
@@ -2763,23 +2714,23 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'subCost' && (
       <div className="power-tool-card">
-        <h3>🔁 What a Subscription Really Costs</h3>
-        <p className="power-tool-desc">A small monthly charge is an annual cost that creeps up with inflation — and every rand of it is a rand not compounding somewhere else.</p>
+        <h3>{t('pt.scTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.scDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Monthly Cost ({country.symbol})</label>
+            <label>{t('pt.scMonthly', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10" value={scMonthly} onChange={(e) => setScMonthly(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Over How Many Years</label>
+            <label>{t('pt.scYears')}</label>
             <input type="number" min="1" max="60" step="1" value={scYears} onChange={(e) => setScYears(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>If Invested Instead (%/yr)</label>
+            <label>{t('pt.scInvested')}</label>
             <input type="number" step="0.5" value={scReturn} onChange={(e) => setScReturn(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Annual Price Increase (%)</label>
+            <label>{t('pt.scIncrease')}</label>
             <input type="number" min="0" step="0.5" value={scIncrease} onChange={(e) => setScIncrease(Number(e.target.value))} />
           </div>
         </div>
@@ -2787,23 +2738,23 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Costs you now</span>
-                <strong>{country.symbol} {Math.round(subCost.annualCostNow).toLocaleString()}/yr</strong>
+                <span>{t('pt.scNow')}</span>
+                <strong>{country.symbol} {Math.round(subCost.annualCostNow).toLocaleString()}{t('pt.perYr')}</strong>
               </div>
               <div className="power-stat">
-                <span>Total paid over {subCost.horizonYears} yrs</span>
+                <span>{t('pt.scTotal', { years: subCost.horizonYears })}</span>
                 <strong className="warn">{country.symbol} {Math.round(subCost.totalPaid).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>That money invested instead</span>
+                <span>{t('pt.scInvestedInstead')}</span>
                 <strong className="positive">{country.symbol} {Math.round(subCost.investedInsteadValue).toLocaleString()}</strong>
               </div>
             </div>
             <div className="power-verdict debt">
-              {country.symbol}{Math.round(scMonthly).toLocaleString()}/month is {country.symbol}{Math.round(subCost.annualCostNow).toLocaleString()} a year now, about <strong>{country.symbol} {Math.round(subCost.totalPaid).toLocaleString()}</strong> over {subCost.horizonYears} years with {scIncrease}%/yr price rises. Invested at {scReturn}% instead it would be worth {country.symbol} {Math.round(subCost.investedInsteadValue).toLocaleString()} — {country.symbol} {Math.round(subCost.opportunityCost).toLocaleString()} of that is growth you're giving up on top of the cash.
+              {t('pt.scVerdictA', { monthly: `${country.symbol}${Math.round(scMonthly).toLocaleString()}`, annual: `${country.symbol}${Math.round(subCost.annualCostNow).toLocaleString()}` })} <strong>{country.symbol} {Math.round(subCost.totalPaid).toLocaleString()}</strong> {t('pt.scVerdictB', { years: subCost.horizonYears, incr: scIncrease, ret: scReturn, invested: `${country.symbol} ${Math.round(subCost.investedInsteadValue).toLocaleString()}`, opp: `${country.symbol} ${Math.round(subCost.opportunityCost).toLocaleString()}` })}
             </div>
             <p className="power-tool-note">
-              Worth it or not is your call — this just puts a number on the trade-off. Stack a few subscriptions together to see the real total.
+              {t('pt.scNote')}
             </p>
           </>
         )}
@@ -2812,31 +2763,31 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'payback' && (
       <div className="power-tool-card">
-        <h3>☀️ Big-Purchase Payback</h3>
-        <p className="power-tool-desc">Solar, a heat pump, a borehole, a water tank, a home gym, prepaying an annual plan — a big cost now that saves you money each month. This is when it breaks even, and whether it beats just investing the cash.</p>
+        <h3>{t('pt.pbTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.pbDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Upfront Cost ({country.symbol})</label>
+            <label>{t('pt.pbCost', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="5000" value={pbCost} onChange={(e) => setPbCost(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Saves You ({country.symbol}/mo)</label>
+            <label>{t('pt.pbSaves', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="100" value={pbSaving} onChange={(e) => setPbSaving(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Upkeep ({country.symbol}/mo)</label>
+            <label>{t('pt.pbUpkeep', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="50" value={pbMaint} onChange={(e) => setPbMaint(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Useful Life (years)</label>
+            <label>{t('pt.pbLife')}</label>
             <input type="number" min="1" max="50" step="1" value={pbLife} onChange={(e) => setPbLife(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Saving Grows (%/yr)</label>
+            <label>{t('pt.pbGrows')}</label>
             <input type="number" step="0.5" value={pbSavingGrowth} onChange={(e) => setPbSavingGrowth(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>If Invested Instead (%/yr)</label>
+            <label>{t('pt.scInvested')}</label>
             <input type="number" step="0.5" value={pbReturn} onChange={(e) => setPbReturn(Number(e.target.value))} />
           </div>
         </div>
@@ -2844,29 +2795,29 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Breaks even in</span>
+                <span>{t('pt.pbBreaks')}</span>
                 <strong className={payback.breakEvenMonths ? 'positive' : 'warn'}>
-                  {payback.breakEvenMonths ? `${payback.breakEvenYears.toFixed(1)} yrs` : '—'}
+                  {payback.breakEvenMonths ? t('pt.yrsShort', { n: payback.breakEvenYears.toFixed(1) }) : '—'}
                 </strong>
               </div>
               <div className="power-stat">
-                <span>Net over {Math.round(pbLife)} yrs</span>
+                <span>{t('pt.pbNetOver', { years: Math.round(pbLife) })}</span>
                 <strong className={payback.lifetimeNet >= 0 ? 'positive' : 'warn'}>{country.symbol} {Math.round(payback.lifetimeNet).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>First-year saving</span>
+                <span>{t('pt.pbFirst')}</span>
                 <strong>{country.symbol} {Math.round(payback.firstYearSaving).toLocaleString()}</strong>
               </div>
             </div>
             <div className={`power-verdict ${payback.neverBreaksEven ? 'danger' : payback.beatsInvesting ? 'invest' : 'debt'}`}>
               {payback.neverBreaksEven
-                ? `Upkeep eats the saving — this never pays for itself at these numbers.`
+                ? t('pt.pbNever')
                 : payback.breakEvenMonths
-                  ? `Pays for itself in about ${payback.breakEvenYears.toFixed(1)} years, then nets roughly ${country.symbol} ${Math.round(payback.lifetimeNet).toLocaleString()} over its ${Math.round(pbLife)}-year life. ${payback.beatsInvesting ? 'It also beats leaving the cash invested at ' + pbReturn + '%.' : 'But leaving the ' + country.symbol + Math.round(pbCost).toLocaleString() + ' invested at ' + pbReturn + '% would have done better — it grows to about ' + country.symbol + Math.round(payback.investedInsteadValue).toLocaleString() + '.'}`
-                  : `Doesn't break even within its ${Math.round(pbLife)}-year life at these numbers.`}
+                  ? t('pt.pbPays', { years: payback.breakEvenYears.toFixed(1), net: `${country.symbol} ${Math.round(payback.lifetimeNet).toLocaleString()}`, life: Math.round(pbLife) }) + ' ' + (payback.beatsInvesting ? t('pt.pbBeats', { ret: pbReturn }) : t('pt.pbLoses', { cost: `${country.symbol}${Math.round(pbCost).toLocaleString()}`, ret: pbReturn, value: `${country.symbol}${Math.round(payback.investedInsteadValue).toLocaleString()}` }))
+                  : t('pt.pbNo', { life: Math.round(pbLife) })}
             </div>
             <p className="power-tool-note">
-              "Breaks even" is the plain cost ÷ net monthly saving. "Beats investing" compounds both the saving stream and the untouched upfront cash at {pbReturn}%/yr and compares — the fair test for a purchase you don't strictly need. Doesn't model resale value, tax, or a finance deal on the purchase itself.
+              {t('pt.pbNote', { ret: pbReturn })}
             </p>
           </>
         )}
@@ -2875,27 +2826,27 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'cashVsFinance' && (
       <div className="power-tool-card">
-        <h3>💳 Pay Cash or Finance It?</h3>
-        <p className="power-tool-desc">You're buying the thing regardless. Paying cash gives up the growth that cash would have earned; financing costs interest but keeps the cash invested. This compares your wealth at the end of the term either way.</p>
+        <h3>{t('pt.cfTitle2')}</h3>
+        <p className="power-tool-desc">{t('pt.cfDesc2')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Price ({country.symbol})</label>
+            <label>{t('pt.cfPrice', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={cfPrice} onChange={(e) => setCfPrice(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Deposit ({country.symbol})</label>
+            <label>{t('pt.cfDeposit', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="5000" value={cfDeposit} onChange={(e) => setCfDeposit(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Finance Rate (%/yr)</label>
+            <label>{t('pt.cfRate')}</label>
             <input type="number" step="0.5" value={cfRate} onChange={(e) => setCfRate(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Finance Term (years)</label>
+            <label>{t('pt.cfTerm')}</label>
             <input type="number" min="1" max="10" step="1" value={cfTerm} onChange={(e) => setCfTerm(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Your Invest Return (%/yr)</label>
+            <label>{t('pt.cfInvest')}</label>
             <input type="number" step="0.5" value={cfReturn} onChange={(e) => setCfReturn(Number(e.target.value))} />
           </div>
         </div>
@@ -2903,27 +2854,27 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Finance interest</span>
+                <span>{t('pt.cfInterest')}</span>
                 <strong className="warn">{country.symbol} {Math.round(cashVsFinance.financeInterest).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Monthly payment</span>
+                <span>{t('debt.monthlyPayment')}</span>
                 <strong>{country.symbol} {Math.round(cashVsFinance.monthlyPayment).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Wealth gap after {Math.round(cfTerm)} yrs</span>
+                <span>{t('pt.cfGap', { years: Math.round(cfTerm) })}</span>
                 <strong className="positive">{country.symbol} {Math.round(cashVsFinance.gap).toLocaleString()}</strong>
               </div>
             </div>
             <div className={`power-verdict ${cashVsFinance.cheaper === 'tie' ? 'neutral' : 'invest'}`}>
               {cashVsFinance.cheaper === 'tie'
-                ? `At a ${cfReturn}% return vs a ${cfRate}% finance rate it's basically a wash — decide on cash-flow comfort and flexibility.`
+                ? t('pt.cfTie', { ret: cfReturn, rate: cfRate })
                 : cashVsFinance.cheaper === 'cash'
-                  ? `Paying cash comes out about ${country.symbol} ${Math.round(cashVsFinance.gap).toLocaleString()} ahead over ${Math.round(cfTerm)} years — your ${cfReturn}% return doesn't beat the ${cfRate}% finance cost, so the interest outweighs the growth you'd keep.`
-                  : `Financing and keeping the cash invested comes out about ${country.symbol} ${Math.round(cashVsFinance.gap).toLocaleString()} ahead — your ${cfReturn}% return beats the ${cfRate}% finance rate, so the growth outweighs the interest.`}
+                  ? t('pt.cfCash', { gap: `${country.symbol} ${Math.round(cashVsFinance.gap).toLocaleString()}`, years: Math.round(cfTerm), ret: cfReturn, rate: cfRate })
+                  : t('pt.cfFinance', { gap: `${country.symbol} ${Math.round(cashVsFinance.gap).toLocaleString()}`, ret: cfReturn, rate: cfRate })}
             </div>
             <p className="power-tool-note">
-              Both paths end owning the same asset, so its value cancels — this compares only the money. Break-even is roughly when your return equals the finance rate ({cashVsFinance.breakEvenReturnApprox}%). Ignores initiation fees and any cash-price discount a dealer might give.
+              {t('pt.cfNote2', { be: cashVsFinance.breakEvenReturnApprox })}
             </p>
           </>
         )}
@@ -2932,57 +2883,57 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'fundFees' && (
       <div className="power-tool-card">
-        <h3>⚖️ Fund Fee Face-off</h3>
-        <p className="power-tool-desc">Two funds, head to head, over your contribution schedule. A half-percent of annual fee looks trivial; over decades it quietly compounds into a real gap. Distinct from Fee Drag, which compares one fund against a zero-fee ideal.</p>
+        <h3>{t('pt.ffTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.ffDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Starting Amount ({country.symbol})</label>
+            <label>{t('pt.ffStart', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={ffInitial} onChange={(e) => setFfInitial(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Monthly Contribution ({country.symbol})</label>
+            <label>{t('pt.ffMonthly', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="500" value={ffMonthly} onChange={(e) => setFfMonthly(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Years</label>
+            <label>{t('app.csvYears')}</label>
             <input type="number" min="1" max="60" step="1" value={ffYears} onChange={(e) => setFfYears(Number(e.target.value))} />
           </div>
         </div>
         <div className="dc-rows">
           <div className="dc-row">
             <span className="dc-row-num">A</span>
-            <div className="form-group"><label>Gross return (%/yr)</label><input type="number" step="0.1" value={ffGrossA} onChange={(e) => setFfGrossA(Number(e.target.value))} /></div>
-            <div className="form-group"><label>Total fee / TER (%/yr)</label><input type="number" min="0" step="0.05" value={ffTerA} onChange={(e) => setFfTerA(Number(e.target.value))} /></div>
+            <div className="form-group"><label>{t('pt.ffGross')}</label><input type="number" step="0.1" value={ffGrossA} onChange={(e) => setFfGrossA(Number(e.target.value))} /></div>
+            <div className="form-group"><label>{t('pt.ffTer')}</label><input type="number" min="0" step="0.05" value={ffTerA} onChange={(e) => setFfTerA(Number(e.target.value))} /></div>
           </div>
           <div className="dc-row">
             <span className="dc-row-num">B</span>
-            <div className="form-group"><label>Gross return (%/yr)</label><input type="number" step="0.1" value={ffGrossB} onChange={(e) => setFfGrossB(Number(e.target.value))} /></div>
-            <div className="form-group"><label>Total fee / TER (%/yr)</label><input type="number" min="0" step="0.05" value={ffTerB} onChange={(e) => setFfTerB(Number(e.target.value))} /></div>
+            <div className="form-group"><label>{t('pt.ffGross')}</label><input type="number" step="0.1" value={ffGrossB} onChange={(e) => setFfGrossB(Number(e.target.value))} /></div>
+            <div className="form-group"><label>{t('pt.ffTer')}</label><input type="number" min="0" step="0.05" value={ffTerB} onChange={(e) => setFfTerB(Number(e.target.value))} /></div>
           </div>
         </div>
         {(ffInitial > 0 || ffMonthly > 0) && (
           <>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Fund A ends with</span>
+                <span>{t('pt.ffAEnds')}</span>
                 <strong className={fundFees.winner === 'A' ? 'positive' : ''}>{country.symbol} {Math.round(fundFees.a.finalBalance).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Fund B ends with</span>
+                <span>{t('pt.ffBEnds')}</span>
                 <strong className={fundFees.winner === 'B' ? 'positive' : ''}>{country.symbol} {Math.round(fundFees.b.finalBalance).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Gap after {Math.round(ffYears)} yrs</span>
+                <span>{t('pt.ffGap', { years: Math.round(ffYears) })}</span>
                 <strong className="warn">{country.symbol} {Math.round(fundFees.endingGap).toLocaleString()}</strong>
               </div>
             </div>
             <div className={`power-verdict ${fundFees.winner === 'tie' ? 'neutral' : 'invest'}`}>
               {fundFees.winner === 'tie'
-                ? 'The two funds land in the same place — decide on tracking quality, spread, or provider.'
-                : `Fund ${fundFees.winner} ends about ${country.symbol} ${Math.round(fundFees.endingGap).toLocaleString()} ahead over ${Math.round(ffYears)} years. Fund A hands over ${country.symbol} ${Math.round(fundFees.a.feeCost).toLocaleString()} in fees along the way vs Fund B's ${country.symbol} ${Math.round(fundFees.b.feeCost).toLocaleString()}.`}
+                ? t('pt.ffTie')
+                : t('pt.ffWinner', { fund: fundFees.winner, gap: `${country.symbol} ${Math.round(fundFees.endingGap).toLocaleString()}`, years: Math.round(ffYears), a: `${country.symbol} ${Math.round(fundFees.a.feeCost).toLocaleString()}`, b: `${country.symbol} ${Math.round(fundFees.b.feeCost).toLocaleString()}` })}
             </div>
             <p className="power-tool-note">
-              Net return = gross − TER, run through the app's compounding engine, pre-tax / in a wrapper. "Fee cost" is each fund vs a zero-TER version of itself. Real funds also differ on tracking error, bid-offer spread, and platform fees — fold those into the TER to compare fairly.
+              {t('pt.ffNote')}
             </p>
           </>
         )}
@@ -2991,31 +2942,31 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'contractRate' && (
       <div className="power-tool-card">
-        <h3>🧑‍💻 Contractor / Freelance Rate</h3>
-        <p className="power-tool-desc">Thinking of going independent? A contractor gives up paid leave, sick days, and benefits, pays their own tax, and can't bill every hour. This works your target take-home back up into the rate you'd need to charge.</p>
+        <h3>{t('pt.crTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.crDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Target Take-Home ({country.symbol}/yr)</label>
+            <label>{t('pt.crTake', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="20000" value={crTakeHome} onChange={(e) => setCrTakeHome(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Your Tax Rate (%)</label>
+            <label>{t('pt.crTax')}</label>
             <input type="number" min="0" max="60" step="1" value={crTaxRate} onChange={(e) => setCrTaxRate(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Benefits to Self-Fund (% of pay)</label>
+            <label>{t('pt.crBenefits')}</label>
             <input type="number" min="0" max="50" step="1" value={crBenefits} onChange={(e) => setCrBenefits(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Billable Weeks / Year</label>
+            <label>{t('pt.crWeeks')}</label>
             <input type="number" min="1" max="52" step="1" value={crWeeks} onChange={(e) => setCrWeeks(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Hours / Week</label>
+            <label>{t('pt.crHours')}</label>
             <input type="number" min="1" max="80" step="1" value={crHours} onChange={(e) => setCrHours(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Utilisation (% of hours billed)</label>
+            <label>{t('pt.crUtil')}</label>
             <input type="number" min="1" max="100" step="5" value={crUtil} onChange={(e) => setCrUtil(Number(e.target.value))} />
           </div>
         </div>
@@ -3023,23 +2974,23 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
           <>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Rate you'd charge</span>
-                <strong className="positive">{country.symbol} {Math.round(contractRate.hourlyRate).toLocaleString()}/hr</strong>
+                <span>{t('pt.crRate')}</span>
+                <strong className="positive">{country.symbol} {Math.round(contractRate.hourlyRate).toLocaleString()}{t('pt.perHr')}</strong>
               </div>
               <div className="power-stat">
-                <span>Roughly per day</span>
+                <span>{t('pt.crDay')}</span>
                 <strong>{country.symbol} {Math.round(contractRate.dailyRate).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Revenue you need</span>
-                <strong>{country.symbol} {Math.round(contractRate.grossRevenueNeeded).toLocaleString()}/yr</strong>
+                <span>{t('pt.crRevenue')}</span>
+                <strong>{country.symbol} {Math.round(contractRate.grossRevenueNeeded).toLocaleString()}{t('pt.perYr')}</strong>
               </div>
             </div>
             <div className="power-verdict invest">
-              To take home {country.symbol} {Math.round(crTakeHome).toLocaleString()} you'd need to bill about <strong>{country.symbol} {Math.round(contractRate.hourlyRate).toLocaleString()}/hour</strong> ({country.symbol} {Math.round(contractRate.dailyRate).toLocaleString()}/day) across {Math.round(contractRate.billableHoursPerYear).toLocaleString()} billable hours a year — roughly {(contractRate.upliftVsNaive * 100).toFixed(0)}% more than a naive "salary ÷ 2,080 hours" rate, which is the cost of leave, bench time, and self-funded overhead.
+              {t('pt.crVerdictA', { take: `${country.symbol} ${Math.round(crTakeHome).toLocaleString()}` })} <strong>{t('pt.crVerdictRate', { rate: `${country.symbol} ${Math.round(contractRate.hourlyRate).toLocaleString()}` })}</strong> {t('pt.crVerdictB', { day: `${country.symbol} ${Math.round(contractRate.dailyRate).toLocaleString()}`, hours: Math.round(contractRate.billableHoursPerYear).toLocaleString(), pct: (contractRate.upliftVsNaive * 100).toFixed(0) })}
             </div>
             <p className="power-tool-note">
-              Tax rate is your effective rate on gross (income tax plus any self-paid contributions). Benefits loading covers a pension match, medical subsidy, and insurance you'd now pay yourself. Doesn't model VAT registration, a company structure, or provisional-tax timing. Not advice.
+              {t('pt.crNote')}
             </p>
           </>
         )}
@@ -3048,34 +2999,34 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'vat' && (
       <div className="power-tool-card">
-        <h3>🧾 VAT / Sales Tax Calculator</h3>
-        <p className="power-tool-desc">Add VAT to a price, or pull it back out of a total that already includes it — the two aren't the same calculation, since the rate applies to the exclusive amount, not the inclusive one.</p>
+        <h3>{t('pt.vatTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.vatDesc')}</p>
         <div className="vat-mode-toggle">
-          <button className={vatMode === 'add' ? 'active' : ''} onClick={() => setVatMode('add')}>Add VAT (exclusive → inclusive)</button>
-          <button className={vatMode === 'extract' ? 'active' : ''} onClick={() => setVatMode('extract')}>Extract VAT (inclusive → exclusive)</button>
+          <button className={vatMode === 'add' ? 'active' : ''} onClick={() => setVatMode('add')}>{t('pt.vatAdd')}</button>
+          <button className={vatMode === 'extract' ? 'active' : ''} onClick={() => setVatMode('extract')}>{t('pt.vatExtract')}</button>
         </div>
         <div className="power-form">
           <div className="form-group">
-            <label>{vatMode === 'add' ? 'Price excl. VAT' : 'Price incl. VAT'} ({country.symbol})</label>
+            <label>{t(vatMode === 'add' ? 'pt.vatPriceEx' : 'pt.vatPriceIn', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10" value={vatAmount} onChange={(e) => setVatAmount(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>VAT Rate (%)</label>
+            <label>{t('pt.vatRate')}</label>
             <input type="number" min="0" max="30" step="0.5" value={vatRate} onChange={(e) => setVatRate(Number(e.target.value))} />
           </div>
         </div>
         {vatAmount > 0 && (
           <div className="power-verdict-grid">
             <div className="power-stat">
-              <span>Excl. VAT</span>
+              <span>{t('pt.vatExcl')}</span>
               <strong>{country.symbol} {Math.round(vatResult.exclusiveAmount).toLocaleString()}</strong>
             </div>
             <div className="power-stat">
-              <span>VAT ({vatRate}%)</span>
+              <span>{t('pt.vatLine', { rate: vatRate })}</span>
               <strong className="warn">{country.symbol} {Math.round(vatResult.vatAmount).toLocaleString()}</strong>
             </div>
             <div className="power-stat">
-              <span>Incl. VAT</span>
+              <span>{t('pt.vatIncl')}</span>
               <strong className="positive">{country.symbol} {Math.round(vatResult.inclusiveAmount).toLocaleString()}</strong>
             </div>
           </div>
@@ -3085,49 +3036,49 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
 
       {activeSubTab === 'cgt' && (
       <div className="power-tool-card">
-        <h3>📑 Capital Gains Tax</h3>
-        <p className="power-tool-desc">In South Africa, the gain on a disposal — less an annual exclusion — gets a 40% inclusion rate, and that "taxable capital gain" is taxed at your normal marginal rate on top of your other income. It's not a separate flat CGT rate.</p>
+        <h3>{t('pt.cgtTitle')}</h3>
+        <p className="power-tool-desc">{t('pt.cgtDesc')}</p>
         <div className="power-form">
           <div className="form-group">
-            <label>Sale Proceeds ({country.symbol})</label>
+            <label>{t('pt.cgtProceeds', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={cgtProceeds} onChange={(e) => setCgtProceeds(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Base Cost ({country.symbol})</label>
+            <label>{t('pt.cgtBase', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={cgtBaseCost} onChange={(e) => setCgtBaseCost(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label>Other Taxable Income ({country.symbol}/yr)</label>
+            <label>{t('pt.cgtOther', { symbol: country.symbol })}</label>
             <input type="number" min="0" step="10000" value={cgtOtherIncome} onChange={(e) => setCgtOtherIncome(Number(e.target.value))} />
           </div>
         </div>
         {country.taxBrackets && (
           <label className="mc-compare-toggle">
             <input type="checkbox" checked={cgtProgressive} onChange={(e) => setCgtProgressive(e.target.checked)} />
-            Use {country.name}'s progressive brackets for the marginal rate
+            {t('pt.cgtBrackets', { country: country.name })}
           </label>
         )}
         {cgtProceeds > 0 && (
           <>
             <div className="power-verdict-grid">
               <div className="power-stat">
-                <span>Gross gain</span>
+                <span>{t('pt.cgtGross')}</span>
                 <strong>{country.symbol} {Math.round(cgtResult.grossGain).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Taxable capital gain</span>
+                <span>{t('pt.cgtTaxable')}</span>
                 <strong>{country.symbol} {Math.round(cgtResult.taxableCapitalGain).toLocaleString()}</strong>
               </div>
               <div className="power-stat">
-                <span>Tax owed</span>
+                <span>{t('pt.cgtOwed')}</span>
                 <strong className="warn">{country.symbol} {Math.round(cgtResult.taxOnGain).toLocaleString()}</strong>
               </div>
             </div>
             <div className="power-verdict debt">
-              A {country.symbol} {Math.round(cgtResult.grossGain).toLocaleString()} gain costs about <strong>{country.symbol} {Math.round(cgtResult.taxOnGain).toLocaleString()}</strong> in tax — {cgtResult.effectiveRateOnGainPct.toFixed(1)}% of the raw gain (your {cgtResult.marginalRatePct.toFixed(0)}% marginal rate applied to just the {country.symbol}{Math.round(cgtResult.taxableCapitalGain).toLocaleString()} that's actually taxable). Net proceeds after tax: {country.symbol} {Math.round(cgtResult.netProceeds).toLocaleString()}.
+              {t('pt.cgtVerdictA', { gain: `${country.symbol} ${Math.round(cgtResult.grossGain).toLocaleString()}` })} <strong>{country.symbol} {Math.round(cgtResult.taxOnGain).toLocaleString()}</strong> {t('pt.cgtVerdictB', { eff: cgtResult.effectiveRateOnGainPct.toFixed(1), marg: cgtResult.marginalRatePct.toFixed(0), taxable: `${country.symbol}${Math.round(cgtResult.taxableCapitalGain).toLocaleString()}`, net: `${country.symbol} ${Math.round(cgtResult.netProceeds).toLocaleString()}` })}
             </div>
             <p className="power-tool-note">
-              SA individual rules: R{CGT_ANNUAL_EXCLUSION.toLocaleString()} annual exclusion, {CGT_INCLUSION_RATE_INDIVIDUAL}% inclusion rate (companies/trusts differ). Primary-residence and other specific exclusions aren't modelled — this is the general disposal case. Indicative, not a return.
+              {t('pt.cgtNote', { exclusion: `R${CGT_ANNUAL_EXCLUSION.toLocaleString()}`, inclusion: CGT_INCLUSION_RATE_INDIVIDUAL })}
             </p>
           </>
         )}

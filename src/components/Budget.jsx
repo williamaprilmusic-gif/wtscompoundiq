@@ -14,7 +14,6 @@ import { downloadCSV } from '../utils/csv';
 import { readJSONArray, writeJSON } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 
-const HISTORY_SERIES = [{ key: 'surplus', label: 'Monthly Surplus' }];
 
 // Fixed hue per expense category, assigned by identity -- same convention as
 // NetWorth.jsx's CATEGORY_COLOR_VAR. 'Other' reads as neutral everywhere else in the
@@ -31,6 +30,7 @@ const EXPENSE_CATEGORY_COLOR_VAR = {
 
 const Budget = ({ country }) => {
   const { t } = useLanguage();
+  const HISTORY_SERIES = [{ key: 'surplus', label: t('budget.surplusSeries') }];
   const [items, setItems] = usePersistedState(BUDGET_ITEMS_KEY, []);
   const [pushed, setPushed] = useState(false);
   const [history, setHistory] = useState([]);
@@ -100,7 +100,7 @@ const Budget = ({ country }) => {
   };
 
   const clearBudgetHistory = () => {
-    if (!window.confirm("Clear all saved budget snapshots? This can't be undone.")) return;
+    if (!window.confirm(t('budget.confirmClear'))) return;
     localStorage.removeItem(BUDGET_HISTORY_KEY);
     setHistory([]);
   };
@@ -184,8 +184,8 @@ const Budget = ({ country }) => {
           <div className="budget-history-header">
             <h3>Surplus History ({convertedHistory.length} snapshot{convertedHistory.length === 1 ? '' : 's'})</h3>
             <div className="budget-history-header-actions">
-              <button className="history-export-btn" onClick={exportBudgetHistoryCSV}>⬇️ Export CSV</button>
-              <button className="budget-clear-history-btn" onClick={clearBudgetHistory}>Clear history</button>
+              <button className="history-export-btn" onClick={exportBudgetHistoryCSV}>{t('calculator.exportCsv')}</button>
+              <button className="budget-clear-history-btn" onClick={clearBudgetHistory}>{t('debt.clearHistory')}</button>
             </div>
           </div>
           {delta !== null && (
@@ -217,9 +217,7 @@ const Budget = ({ country }) => {
       )}
 
       <p className="budget-note">
-        Saved only in your browser's local storage -- nothing is sent anywhere. Update the line items as your budget
-        changes, then log a snapshot each month to track your surplus trend over time, the same way Net Worth, Debt
-        Payoff, and Emergency Fund do.
+        {t('budget.note')}
       </p>
     </div>
   );

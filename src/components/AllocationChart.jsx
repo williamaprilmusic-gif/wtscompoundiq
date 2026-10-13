@@ -94,7 +94,7 @@ const AllocationChart = ({ segments, symbol = '' }) => {
       </ul>
       {dominant && dominant.value / total > 0.5 && (
         <p className="alloc-chart-note">
-          {Math.round((dominant.value / total) * 100)}% of this is in {dominant.label} -- worth thinking about whether that's concentrated more than you'd like.
+          {t('ui.allocNote', { pct: Math.round((dominant.value / total) * 100), label: dominant.label })}
         </p>
       )}
     </div>

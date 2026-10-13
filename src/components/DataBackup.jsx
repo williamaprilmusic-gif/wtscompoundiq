@@ -138,17 +138,19 @@ const importData = (file, onDone, t) => {
   reader.readAsText(file);
 };
 
-const EMAIL_MESSAGES = {
-  unconfigured: 'Emailing a backup isn\'t switched on for this app yet — use "Save to Device" instead.',
-  bad_email: 'That doesn\'t look like a valid email address.',
-  too_large: 'Your saved data is unexpectedly large to email — use "Save to Device" instead.',
-  rate_limited: 'You\'ve requested a few of these recently. Wait a little while and try again.',
-  error: 'Couldn\'t send it just now. Try again in a moment, or use "Save to Device".'
+// status -> backup.* translation key
+const EMAIL_MESSAGE_KEYS = {
+  unconfigured: 'backup.emUnconfigured',
+  bad_email: 'backup.emBad',
+  too_large: 'backup.emTooLarge',
+  rate_limited: 'backup.emRate',
+  error: 'backup.emError'
 };
 
 // Inline "email me a copy" form -- opens on demand so the footer stays a single line
 // until it's wanted. Mirrors RestorePlan's pattern.
 const EmailBackup = ({ onSent }) => {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
@@ -165,7 +167,7 @@ const EmailBackup = ({ onSent }) => {
       setResult({ ok: true });
       if (r.exportedAt) onSent?.(r.exportedAt);
     } else {
-      setResult({ ok: false, message: EMAIL_MESSAGES[r.status] || EMAIL_MESSAGES.error });
+      setResult({ ok: false, message: t(EMAIL_MESSAGE_KEYS[r.status] || EMAIL_MESSAGE_KEYS.error) });
     }
   };
 
@@ -187,20 +189,19 @@ const EmailBackup = ({ onSent }) => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           disabled={busy}
-          aria-label="Email address to send the backup to"
+          aria-label={t('backup.emailAria')}
         />
-        <button type="submit" disabled={busy || !email.trim()}>{busy ? 'Sending…' : 'Send'}</button>
+        <button type="submit" disabled={busy || !email.trim()}>{busy ? t('backup.sending') : t('backup.send')}</button>
       </div>
       {result && (
         <p className={`data-backup-email-msg ${result.ok ? 'ok' : 'err'}`}>
           {result.ok
-            ? 'Sent — check your inbox for a .json file you can Import on any device.'
+            ? t('backup.emailSent')
             : result.message}
         </p>
       )}
       <p className="data-backup-email-note">
-        The file travels through a third-party email service and lands in your mailbox unencrypted — only send it to an
-        address you control. Nothing is stored on our side.
+        {t('backup.emailNote')}
       </p>
     </form>
   );
@@ -243,7 +244,7 @@ const DataBackup = () => {
     <div className="data-backup">
       <span className="data-backup-text">{t('common.backupText')}</span>
       <div className="data-backup-buttons">
-        <button className="data-backup-btn" onClick={handleExport}>⬇️ Save to Device</button>
+        <button className="data-backup-btn" onClick={handleExport}>{t('backup.saveDevice')}</button>
         <EmailBackup onSent={handleEmailed} />
         <label className="data-backup-btn secondary">
           {t('common.backupImport')}
@@ -253,7 +254,7 @@ const DataBackup = () => {
       <span className={`data-backup-last ${backupStale ? 'stale' : ''}`}>
         {lastBackupAt
           ? `Last backup: ${fmtDaysAgo(backupDaysAgo)}${backupStale ? ' -- consider exporting a fresh one' : ''}`
-          : "You haven't exported a backup yet in this browser -- clearing browser data without one loses everything above."}
+          : t('backup.noBackup')}
       </span>
     </div>
   );

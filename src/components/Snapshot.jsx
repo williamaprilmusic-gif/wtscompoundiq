@@ -95,15 +95,15 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
           <p>{t('snap.intro')}</p>
         </div>
         <div className="snapshot-buttons">
-          <button className="snapshot-btn" onClick={() => window.print()}>🖨️ Print / Save as PDF</button>
-          <button className="snapshot-btn secondary" onClick={() => exportProjectionCSV(results, country)}>⬇️ Download CSV</button>
+          <button className="snapshot-btn" onClick={() => window.print()}>{t('snap.print')}</button>
+          <button className="snapshot-btn secondary" onClick={() => exportProjectionCSV(results, country)}>{t('snap.downloadCsv')}</button>
         </div>
       </div>
 
       {canWhiteLabel ? (
         <div className="snapshot-branding no-print">
-          <h3>🏷️ Client Report Branding</h3>
-          <p className="snapshot-branding-desc">Ultra feature -- add your firm's details below and they'll appear on the report header instead of WTS CompoundIQ's own, ready to hand to a client.</p>
+          <h3>{t('snap.brandingTitle')}</h3>
+          <p className="snapshot-branding-desc">{t('snap.brandingDesc')}</p>
           <div className="snapshot-branding-form">
             <div className="form-group">
               <label>{t('snap.firmName')}</label>
@@ -118,12 +118,12 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
               <input type="text" value={branding.clientName} onChange={(e) => updateBranding('clientName', e.target.value)} placeholder={t('snap.clientPlaceholder')} />
             </div>
             <div className="form-group">
-              <label>Contact Info (for the report footer)</label>
-              <input type="text" value={branding.contactInfo} onChange={(e) => updateBranding('contactInfo', e.target.value)} placeholder="e.g. 011 123 4567 · jane@acmefinancial.co.za" />
+              <label>{t('snap.contactLabel')}</label>
+              <input type="text" value={branding.contactInfo} onChange={(e) => updateBranding('contactInfo', e.target.value)} placeholder={t('snap.phContact')} />
             </div>
             <div className="form-group">
-              <label>FSP Number (FAIS licence)</label>
-              <input type="text" value={branding.fspNumber} onChange={(e) => updateBranding('fspNumber', e.target.value)} placeholder="e.g. FSP 12345" />
+              <label>{t('snap.fspLabel')}</label>
+              <input type="text" value={branding.fspNumber} onChange={(e) => updateBranding('fspNumber', e.target.value)} placeholder={t('snap.phFsp')} />
             </div>
           </div>
           <div className="snapshot-branding-logo-row">
@@ -141,9 +141,8 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
       ) : (
         <div className="snapshot-branding-upsell no-print">
           <p>
-            🏷️ <strong>White-label this report</strong> -- add your firm's name, logo, and client details to the header
-            instead of WTS CompoundIQ's own. Included on Ultra.{' '}
-            {onOpenPricing && <button type="button" className="snapshot-branding-upsell-btn" onClick={onOpenPricing}>View Pricing</button>}
+            🏷️ <strong>{t('snap.upsellBold')}</strong> {t('snap.upsellRest')}{' '}
+            {onOpenPricing && <button type="button" className="snapshot-branding-upsell-btn" onClick={onOpenPricing}>{t('snap.viewPricing')}</button>}
           </p>
         </div>
       )}
@@ -204,8 +203,8 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
               {country.symbol} {Math.round(plan.debt.totalBalance).toLocaleString()} total debt,
               paying {country.symbol} {plan.debt.extraMonthly.toLocaleString()}/month extra,{' '}
               {plan.debt.avalancheReachable === false
-                ? 'not clearing within 50 years at that pace.'
-                : `on pace to be debt-free in ${plan.debt.avalancheMonths} months.`}
+                ? t('snap.debtOffPace')
+                : t('snap.debtOnPace', { n: plan.debt.avalancheMonths })}
             </p>
           </section>
         )}
@@ -249,10 +248,7 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
         </table>
         </div>
 
-        <p className="snapshot-disclaimer">
-          WTS CompoundIQ · educational tool · figures are indicative projections, not financial advice. Tax and wrapper
-          data is simplified and may drift from current law -- verify with a qualified advisor before acting.
-        </p>
+        <p className="snapshot-disclaimer">{t('snap.disclaimer')}</p>
         {canWhiteLabel && compliance.trim() && (
           <p className="snapshot-disclaimer snapshot-compliance">{compliance.trim()}</p>
         )}
@@ -267,7 +263,7 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
 
       {canWhiteLabel && !compliance.trim() && (
         <p className="snapshot-compliance-hint no-print">
-          Add a firm compliance/disclosure line (e.g. FAIS / FSP details) in the My Plan tab's Practice Branding section -- it'll appear on this report too.
+          {t('snap.complianceHint')}
         </p>
       )}
     </div>
