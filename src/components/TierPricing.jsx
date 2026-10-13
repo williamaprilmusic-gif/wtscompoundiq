@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import './TierPricing.css';
 import FAQHelper from './FAQHelper';
 import RestorePlan from './RestorePlan';
+import { useLanguage } from '../i18n/LanguageContext';
 
 // Renders a tier's `price`/`priceAnnual` field for display -- a plain ZAR number
 // (149, 1199) for a priced tier, formatted here; Basic instead carries the literal
@@ -12,7 +13,14 @@ import RestorePlan from './RestorePlan';
 // parsed back into a number with a regex, which meant a purely cosmetic copy change (a
 // different currency symbol placement, an unexpected separator) could silently compute
 // the wrong checkout price, or drop a tier's price entirely by returning null.
-const formatTierPrice = (value) => typeof value === 'number' ? `R${value.toLocaleString()}` : value;
+const formatTierPrice = (value, t) => typeof value === 'number' ? `R${value.toLocaleString()}` : (value === 'Free' ? t('pricing.free') : value);
+
+// The English copy below is the fallback; the translated billing label / description / feature
+// list for the active language come from src/i18n/strings/pricing.js, looked up by tier name.
+const tierCopy = (t, tier, field, fallback) => {
+  const v = t(`pricing.tiers.${tier.name}.${field}`);
+  return (typeof v === 'string' || Array.isArray(v)) && v !== `pricing.tiers.${tier.name}.${field}` ? v : fallback;
+};
 
 // Low -> high. Drives whether a card's button reads "Upgrade to X" or "Downgrade to X"
 // relative to the tier the user is currently on -- kept in sync with `tiers` order.
@@ -123,6 +131,7 @@ export const UPGRADE_PRICES = tiers.reduce((acc, tier) => {
 }, {});
 
 export default function TierPricing({ currentTier, onUpgrade, onClose }) {
+  const { t } = useLanguage();
   // Only Pro/Ultra carry an annual option -- Basic is free, so this toggle only ever
   // changes what those two cards show.
   const [billingPeriod, setBillingPeriod] = useState('monthly');
@@ -134,7 +143,7 @@ export default function TierPricing({ currentTier, onUpgrade, onClose }) {
   const [confirmingTier, setConfirmingTier] = useState(null);
 
   const isDowngrade = (tierName) => tierRank(tierName) < tierRank(currentTier);
-  const ctaFor = (tierName) => `${isDowngrade(tierName) ? 'Downgrade' : 'Upgrade'} to ${tierName}`;
+  const ctaFor = (tierName) => t(isDowngrade(tierName) ? 'pricing.downgradeTo' : 'pricing.upgradeTo', { tier: tierName });
 
   const resetConfirm = () => setConfirmingTier(null);
 
@@ -153,22 +162,22 @@ export default function TierPricing({ currentTier, onUpgrade, onClose }) {
   return (
     <div className="pricing-overlay">
       <div className="pricing-modal">
-        <button className="close-btn" onClick={onClose} aria-label="Close">&times;</button>
-        <h2 className="pricing-title">Choose Your Plan</h2>
-        <p className="pricing-subtitle">See what's possible with your own numbers. The Basic calculator is free to explore; the tools that show more possibilities depend on an active subscription.</p>
+        <button className="close-btn" onClick={onClose} aria-label={t('pricing.close')}>&times;</button>
+        <h2 className="pricing-title">{t('pricing.title')}</h2>
+        <p className="pricing-subtitle">{t('pricing.subtitle')}</p>
 
-        <div className="billing-toggle" role="group" aria-label="Billing period">
+        <div className="billing-toggle" role="group" aria-label={t('pricing.billingAria')}>
           <button
             className={billingPeriod === 'monthly' ? 'active' : ''}
             onClick={() => { setBillingPeriod('monthly'); resetConfirm(); }}
           >
-            Monthly
+            {t('pricing.monthly')}
           </button>
           <button
             className={billingPeriod === 'annual' ? 'active' : ''}
             onClick={() => { setBillingPeriod('annual'); resetConfirm(); }}
           >
-            Annual <span className="save-badge">Save up to 33%</span>
+            {t('pricing.annual')} <span className="save-badge">{t('pricing.saveBadge')}</span>
           </button>
         </div>
 
@@ -177,15 +186,15 @@ export default function TierPricing({ currentTier, onUpgrade, onClose }) {
             const showAnnual = billingPeriod === 'annual' && tier.priceAnnual;
             return (
               <div key={tier.name} className={`tier-card ${tier.highlighted ? 'highlighted' : ''} ${currentTier === tier.name ? 'active' : ''}`}>
-                {tier.highlighted && <div className="badge">MOST POPULAR</div>}
+                {tier.highlighted && <div className="badge">{t('pricing.popular')}</div>}
                 <h3 className="tier-name">{tier.name}</h3>
                 <div className="tier-price">
-                  <span className="currency">{formatTierPrice(showAnnual ? tier.priceAnnual : tier.price)}</span>
-                  <span className="billing">{showAnnual ? tier.billingAnnual : tier.billing}</span>
+                  <span className="currency">{formatTierPrice(showAnnual ? tier.priceAnnual : tier.price, t)}</span>
+                  <span className="billing">{showAnnual ? tierCopy(t, tier, 'billingAnnual', tier.billingAnnual) : tierCopy(t, tier, 'billing', tier.billing)}</span>
                 </div>
-                <p className="tier-desc">{tier.description}</p>
+                <p className="tier-desc">{tierCopy(t, tier, 'description', tier.description)}</p>
                 <ul className="tier-features">
-                  {tier.features.map((feature, idx) => (
+                  {tierCopy(t, tier, 'features', tier.features).map((feature, idx) => (
                     <li key={idx}>✅ {feature}</li>
                   ))}
                 </ul>
@@ -195,14 +204,14 @@ export default function TierPricing({ currentTier, onUpgrade, onClose }) {
                   disabled={currentTier === tier.name}
                 >
                   {currentTier === tier.name
-                    ? 'Active Plan'
+                    ? t('pricing.activePlan')
                     : confirmingTier === tier.name
-                      ? 'Tap again to confirm downgrade'
+                      ? t('pricing.tapConfirm')
                       : ctaFor(tier.name)}
                 </button>
                 {confirmingTier === tier.name && (
                   <button type="button" className="downgrade-cancel-btn" onClick={resetConfirm}>
-                    Keep {currentTier}
+                    {t('pricing.keep', { tier: currentTier })}
                   </button>
                 )}
               </div>

@@ -6,17 +6,19 @@
 import React, { useState } from 'react';
 import './LegalModal.css';
 import { LEGAL_DOCS } from './legalDocs';
+import { useLanguage } from '../i18n/LanguageContext';
 
 export default function LegalModal({ onClose, initialDoc = 'terms' }) {
+  const { t, language } = useLanguage();
   const [activeId, setActiveId] = useState(initialDoc);
   const doc = LEGAL_DOCS.find(d => d.id === activeId) || LEGAL_DOCS[0];
 
   return (
     <div className="legal-overlay" onClick={onClose}>
-      <div className="legal-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Legal documents">
-        <button className="close-btn" onClick={onClose} aria-label="Close">&times;</button>
+      <div className="legal-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={t('legal.dialogAria')}>
+        <button className="close-btn" onClick={onClose} aria-label={t('legal.close')}>&times;</button>
 
-        <div className="legal-doc-switch" role="tablist" aria-label="Choose a document">
+        <div className="legal-doc-switch" role="tablist" aria-label={t('legal.chooseAria')}>
           {LEGAL_DOCS.map((d, i) => (
             <button
               key={d.id}
@@ -35,8 +37,9 @@ export default function LegalModal({ onClose, initialDoc = 'terms' }) {
           <p className="legal-eyebrow">{doc.docLabel}</p>
           <h2>{doc.title}</h2>
           <p className="legal-updated">
-            Effective {doc.effective} · Last updated {doc.updated}
+            {t('legal.effective', { effective: doc.effective, updated: doc.updated })}
           </p>
+          {language !== 'en' && <p className="legal-updated">{t('legal.englishOnly')}</p>}
 
           {doc.callout && (
             <div className="legal-callout">

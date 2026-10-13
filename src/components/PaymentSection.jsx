@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import './PaymentSection.css';
 import { getPaymentsConfig, PAYFAST_PENDING_KEY } from '../utils/entitlement';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const SA_BANKS = [
   'Absa Bank',
@@ -22,9 +23,14 @@ const SA_BANKS = [
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function PaymentSection({ tier, price, period = 'monthly', country, onSuccess, onClose, action = 'Upgrade' }) {
+  const { t } = useLanguage();
   // 'Upgrade' or 'Downgrade' -- App.jsx sets it from the current vs. target tier rank so
-  // this screen's wording matches the pricing card the user just clicked.
-  const actioning = `${action.slice(0, -1)}ing…`; // "Upgrading…" / "Downgrading…"
+  // this screen's wording matches the pricing card the user just clicked. The values stay
+  // English identifiers; the wording shown comes from the translations.
+  const isDowngradeAction = action === 'Downgrade';
+  const actioning = t(isDowngradeAction ? 'payment.downgrading' : 'payment.upgrading');
+  const actionTitle = t(isDowngradeAction ? 'payment.downgradeTo' : 'payment.upgradeTo', { tier });
+  const actionWord = t(isDowngradeAction ? 'payment.actionDowngrade' : 'payment.actionUpgrade');
   const bankRedirectAvailable = country?.code === 'za';
   const [processing, setProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('card');
@@ -43,7 +49,7 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
   const [attempt, setAttempt] = useState(0); // bumped by "Try again" to re-fetch /api/config
   // Which processor is live: 'payfast' | 'paystack' (from /api/config).
   const [provider, setProvider] = useState('paystack');
-  const periodLabel = period === 'annual' ? '/yr' : '/mo';
+  const periodLabel = period === 'annual' ? t('payment.perYr') : t('payment.perMo');
   const priceLabel = typeof price === 'number' ? `R${price.toLocaleString()}${periodLabel}` : price;
 
   useEffect(() => {
@@ -101,7 +107,7 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
           form.submit();
           return;
         }
-        setCheckoutError('Could not start checkout. Please try again.');
+        setCheckoutError(t('payment.startError'));
         setProcessing(false);
         return;
       }
@@ -117,9 +123,9 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
         window.location.href = data.authorization_url;
         return;
       }
-      setCheckoutError(data.message || 'Could not start checkout. Please try again.');
+      setCheckoutError(data.message || t('payment.startError'));
     } catch {
-      setCheckoutError('Network error starting checkout. Please try again.');
+      setCheckoutError(t('payment.networkError'));
     }
     setProcessing(false);
   };
@@ -137,14 +143,14 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
     const failed = mode === 'unavailable';
     return (
       <div className="payment-overlay">
-        <div className="payment-card" role="dialog" aria-modal="true" aria-label="Checkout">
-          <button className="close-btn" onClick={onClose} aria-label="Close">&times;</button>
+        <div className="payment-card" role="dialog" aria-modal="true" aria-label={t('payment.checkoutAria')}>
+          <button className="close-btn" onClick={onClose} aria-label={t('payment.close')}>&times;</button>
           <p className="payment-sub">
-            {failed ? "Checkout isn't available right now. Please check your connection and try again." : 'Loading checkout…'}
+            {failed ? t('payment.unavailable') : t('payment.loading')}
           </p>
           {failed && (
             <button className="btn-pay now" onClick={() => { setMode('loading'); setAttempt((n) => n + 1); }}>
-              Try again
+              {t('payment.tryAgain')}
             </button>
           )}
         </div>
@@ -155,32 +161,32 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
   if (mode === 'live') {
     return (
       <div className="payment-overlay">
-        <div className="payment-card" role="dialog" aria-modal="true" aria-label={`${action} to ${tier}`}>
-          <button className="close-btn" onClick={onClose} aria-label="Close">&times;</button>
-          <h3>{action} to {tier}</h3>
+        <div className="payment-card" role="dialog" aria-modal="true" aria-label={actionTitle}>
+          <button className="close-btn" onClick={onClose} aria-label={t('payment.close')}>&times;</button>
+          <h3>{actionTitle}</h3>
           <p className="payment-sub">
-            <strong>{priceLabel}</strong>, billed {period === 'annual' ? 'yearly' : provider === 'payfast' ? 'monthly' : 'every 30 days'} via {provider === 'payfast' ? 'PayFast' : 'Paystack'}.
+            <strong>{priceLabel}</strong>{t('payment.billedRest', { period: t(period === 'annual' ? 'payment.billedYearly' : provider === 'payfast' ? 'payment.billedMonthly' : 'payment.billedEvery30'), provider: provider === 'payfast' ? 'PayFast' : 'Paystack' })}
             {provider === 'payfast'
-              ? ' You can cancel anytime from your PayFast account or the link in your PayFast receipt email.'
-              : ' You can cancel anytime from the app.'}
+              ? t('payment.cancelPayfast')
+              : t('payment.cancelApp')}
           </p>
 
           <input
             type="email"
             className={`payment-email-input ${emailError ? 'has-error' : ''}`}
-            placeholder="Email for your receipt"
-            aria-label="Email address"
+            placeholder={t('payment.emailPlaceholder')}
+            aria-label={t('payment.emailAria')}
             value={email}
             onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError(false); }}
           />
-          {emailError && <small className="payment-email-hint">Enter a valid email to continue.</small>}
+          {emailError && <small className="payment-email-hint">{t('payment.emailInvalid')}</small>}
           {checkoutError && <small className="payment-email-hint">{checkoutError}</small>}
 
           <button className="btn-pay now" onClick={startLiveCheckout} disabled={processing}>
-            {processing ? 'Starting checkout…' : 'Continue to secure checkout →'}
+            {processing ? t('payment.starting') : t('payment.continue')}
           </button>
           <small className="secure-note">
-            🔒 Card details are entered on {provider === 'payfast' ? "PayFast's" : "Paystack's"} own PCI-DSS-compliant page — never on this site.
+            {t('payment.secureNote', { provider: provider === 'payfast' ? 'PayFast' : 'Paystack' })}
           </small>
         </div>
       </div>
@@ -190,16 +196,16 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
   // --- DEMO MODE (default when live payments aren't configured) ------------------
   return (
     <div className="payment-overlay">
-      <div className="payment-card" role="dialog" aria-modal="true" aria-label={`Demo ${action}`}>
-        <button className="close-btn" onClick={onClose} aria-label="Close">&times;</button>
-        <h3>Demo {action} <span className="demo-badge">No Charge</span></h3>
-        <p className="payment-sub">You are previewing <strong>{tier}</strong> (normally <strong>{priceLabel}</strong>). This is a demo checkout -- no card is charged and no payment is processed.</p>
+      <div className="payment-card" role="dialog" aria-modal="true" aria-label={t('payment.demoTitle', { action: actionWord })}>
+        <button className="close-btn" onClick={onClose} aria-label={t('payment.close')}>&times;</button>
+        <h3>{t('payment.demoTitle', { action: actionWord })} <span className="demo-badge">{t('payment.demoBadge')}</span></h3>
+        <p className="payment-sub">{t('payment.demoSub', { tier, price: priceLabel })}</p>
 
         <input
           type="email"
           className="payment-email-input"
-          placeholder="Email (optional in this demo)"
-          aria-label="Email address"
+          placeholder={t('payment.demoEmail')}
+          aria-label={t('payment.emailAria')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
@@ -210,13 +216,13 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
               className={paymentMethod === 'card' ? 'active' : ''}
               onClick={() => setPaymentMethod('card')}
             >
-              Credit / Debit Card
+              {t('payment.card')}
             </button>
             <button
               className={paymentMethod === 'bank' ? 'active' : ''}
               onClick={() => setPaymentMethod('bank')}
             >
-              Bank Redirect (Payfast/Paystack)
+              {t('payment.bank')}
             </button>
           </div>
         )}
@@ -224,28 +230,28 @@ export default function PaymentSection({ tier, price, period = 'monthly', countr
         <div className="payment-form">
           {paymentMethod === 'card' || !bankRedirectAvailable ? (
             <div className="card-fields">
-              <input type="text" placeholder="Card Number (e.g. 4111 1111 1111 1111)" aria-label="Card number" />
+              <input type="text" placeholder={t('payment.cardNumber')} aria-label={t('payment.cardNumberAria')} />
               <div className="row">
-                <input type="text" placeholder="MM / YY" aria-label="Card expiry (MM / YY)" style={{width:'50%'}} />
-                <input type="text" placeholder="CVV" aria-label="Card CVV" style={{width:'50%'}} />
+                <input type="text" placeholder={t('payment.expiry')} aria-label={t('payment.expiryAria')} style={{width:'50%'}} />
+                <input type="text" placeholder="CVV" aria-label={t('payment.cvvAria')} style={{width:'50%'}} />
               </div>
-              <input type="text" placeholder="Card Holder Name" aria-label="Card holder name" />
+              <input type="text" placeholder={t('payment.holder')} aria-label={t('payment.holderAria')} />
             </div>
           ) : (
             <div className="bank-fields">
-              <select aria-label="Bank">
+              <select aria-label={t('payment.bankAria')}>
                 {SA_BANKS.map((bank) => <option key={bank}>{bank}</option>)}
               </select>
-              <input type="text" placeholder="Account Number / Phone Number" aria-label="Account number or phone number" />
+              <input type="text" placeholder={t('payment.account')} aria-label={t('payment.accountAria')} />
             </div>
           )}
 
           <div id="payment-container"></div>
 
           <button className="btn-pay now" onClick={simulateLocalPayment} disabled={processing}>
-            {processing ? actioning : `Simulate ${action} (No Charge)`}
+            {processing ? actioning : t('payment.simulate', { action: actionWord })}
           </button>
-          <small className="secure-note">⚠️ Demo mode: no real payment processor is connected. No card details are collected, validated, or stored.</small>
+          <small className="secure-note">{t('payment.demoNote')}</small>
         </div>
       </div>
     </div>

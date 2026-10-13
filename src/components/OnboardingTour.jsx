@@ -8,33 +8,20 @@
 // (always lands on Start Here) as it does when replayed from any other tab.
 import React, { useEffect, useState } from 'react';
 import './OnboardingTour.css';
+import { useLanguage } from '../i18n/LanguageContext';
 
 export const TOUR_SEEN_KEY = 'wts_compoundiq_tour_seen';
 
+// title/body come from the translations (tour.s{n}Title / tour.s{n}Body).
 const STEPS = [
-  {
-    selector: '.tabs-nav',
-    title: 'Your toolkit',
-    body: "Everything lives here -- free tools first, then Planning and AI-powered tools as you go Pro or Ultra. Click any tab to jump straight in."
-  },
-  {
-    selector: '.header-actions .btn-upgrade',
-    title: 'See what unlocks what',
-    body: 'A locked tab shows 🔒 until your plan covers it -- tap this anytime to compare Free, Pro and Ultra side by side.'
-  },
-  {
-    selector: '.language-switcher',
-    title: 'Your language',
-    body: 'Switch the app language here -- it stays visible from every tab, so you never need to hunt for it.'
-  },
-  {
-    selector: '.data-backup',
-    title: 'Nothing leaves your browser',
-    body: "Your plan, tier, and everything you've entered is saved only on this device. Export a backup here before clearing browser data or switching devices, then import it to pick up where you left off."
-  }
+  { selector: '.tabs-nav', n: 1 },
+  { selector: '.header-actions .btn-upgrade', n: 2 },
+  { selector: '.language-switcher', n: 3 },
+  { selector: '.data-backup', n: 4 }
 ];
 
 const OnboardingTour = ({ onClose }) => {
+  const { t } = useLanguage();
   const [stepIdx, setStepIdx] = useState(0);
   const step = STEPS[stepIdx];
 
@@ -57,16 +44,16 @@ const OnboardingTour = ({ onClose }) => {
   const back = () => setStepIdx(i => Math.max(0, i - 1));
 
   return (
-    <div className="tour-card" role="dialog" aria-label={`Tour step ${stepIdx + 1} of ${STEPS.length}: ${step.title}`}>
+    <div className="tour-card" role="dialog" aria-label={t('tour.aria', { n: stepIdx + 1, total: STEPS.length, title: t(`tour.s${step.n}Title`) })}>
       <div className="tour-card-header">
         <span className="tour-step-count">{stepIdx + 1} / {STEPS.length}</span>
-        <button className="tour-skip-btn" onClick={onClose}>Skip tour</button>
+        <button className="tour-skip-btn" onClick={onClose}>{t('tour.skip')}</button>
       </div>
-      <h3>{step.title}</h3>
-      <p>{step.body}</p>
+      <h3>{t(`tour.s${step.n}Title`)}</h3>
+      <p>{t(`tour.s${step.n}Body`)}</p>
       <div className="tour-card-actions">
-        {stepIdx > 0 && <button className="tour-back-btn" onClick={back}>Back</button>}
-        <button className="tour-next-btn" onClick={next}>{stepIdx < STEPS.length - 1 ? 'Next' : 'Done'}</button>
+        {stepIdx > 0 && <button className="tour-back-btn" onClick={back}>{t('tour.back')}</button>}
+        <button className="tour-next-btn" onClick={next}>{stepIdx < STEPS.length - 1 ? t('tour.next') : t('tour.done')}</button>
       </div>
     </div>
   );

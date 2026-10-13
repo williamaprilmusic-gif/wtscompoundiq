@@ -1,6 +1,7 @@
 // src/components/FAQHelper.jsx
 import React, { useState } from 'react';
 import './FAQHelper.css';
+import { useLanguage } from '../i18n/LanguageContext';
 
 // The FAQ's Power Tools coverage: one overview entry plus one entry per tool. The
 // per-tool entries are generated from the POWER_TOOLS table below so the copy stays in
@@ -153,6 +154,61 @@ const FAQ_DATA = [
   ...POWER_TOOL_FAQS
 ];
 
+// Translation overlay. FAQ_DATA above stays the English source of truth (and keeps its English
+// search keywords); for another language each entry's question/answer is looked up by index
+// in src/i18n/strings/faq.js (q0/a0/k0 ...), and the per-tool entries are assembled from the
+// Power Tools' own translated names and descriptions so the two never drift apart.
+const BASE_FAQ_COUNT = 10; // entries before the Power Tools overview
+const CATEGORY_IDS = {
+  'Retire & Financial Independence': 'retire', 'Debt & Credit': 'debt', 'Property & Big Purchases': 'property',
+  'Saving for a Goal': 'goal', 'Income & Tax': 'income', 'Money Basics': 'basics'
+};
+// Same order as POWER_TOOLS: [sub-tab key, description key, params]
+const TOOL_TRANSLATION = [
+  ['fire', 'fireDesc'], ['coastFire', 'cfDesc'], ['baristaFire', 'bfDesc'], ['savingsRate', 'srDesc'], ['drawdown', 'ddDesc'],
+  ['pretaxRA', 'praDesc'], ['dividend', 'divDesc'], ['feeDrag', 'fdDesc'], ['fundFees', 'ffDesc'], ['retireGap', 'rgDesc'],
+  ['seqRisk', null], ['twoPot', 'tpDesc'], ['debtVsInvest', 'dviDesc', { years: 20 }], ['dti', 'dtiDesc'], ['cardTrap', 'ctDesc'],
+  ['debtConsol', 'dcDesc'], ['loanCompare', 'lcDesc'], ['cashVsFinance', 'cfDesc2'], ['affordability', 'haDesc'],
+  ['rentVsBuy', 'rvbDesc', { years: 20 }], ['carCost', 'carDesc'], ['leaseVsBuy', 'lvDesc'], ['depositTimeline', 'dtDesc'],
+  ['homeCosts', 'hcDescZa'], ['payback', 'pbDesc'], ['rateShock', 'rsDesc'], ['savings', 'svDesc'], ['education', 'edDesc'],
+  ['sinkingFund', 'sfDesc'], ['efRunway', 'efrDesc'], ['insurance', 'inDesc'], ['windfall', 'wfDesc'], ['salary', 'salDesc'],
+  ['raiseValue', 'rvDesc'], ['bonusTax', 'btDesc'], ['raOptimizer', 'raDesc', { cap: 'R350,000' }], ['contractRate', 'crDesc'],
+  ['cgt', 'cgtDesc'], ['budgetRule', 'brDesc'], ['marginalTax', 'mtDesc'], ['raiseInflation', 'riDesc'], ['futureCost', 'fcDesc'],
+  ['rule72', 'r72Desc'], ['freqCompare', 'fqDesc'], ['effRate', 'erDesc'], ['realReturn', 'rrDesc'], ['subCost', 'scDesc'], ['vat', 'vatDesc']
+];
+const stripEmoji = (s) => s.replace(/^[^\p{L}\p{N}]+/u, '').trim();
+const words = (s) => s.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((w) => w.length > 1);
+
+const buildFaqData = (t, language) => {
+  if (language === 'en') return FAQ_DATA;
+  return FAQ_DATA.map((entry, i) => {
+    if (i < BASE_FAQ_COUNT) {
+      return {
+        ...entry,
+        question: t(`faq.q${i}`),
+        answer: t(`faq.a${i}`),
+        keywords: [...entry.keywords, ...t(`faq.k${i}`).split(',').map((k) => k.trim()).filter(Boolean)]
+      };
+    }
+    if (i === BASE_FAQ_COUNT) return { ...entry, question: t('faq.overviewQ'), answer: t('faq.overviewA') };
+    const toolIdx = i - BASE_FAQ_COUNT - 1;
+    const tool = POWER_TOOLS[toolIdx];
+    const map = TOOL_TRANSLATION[toolIdx];
+    if (!tool || !map) return entry;
+    const [, category, , , isUltra] = tool;
+    const name = stripEmoji(t(`pt.tab_${map[0]}`));
+    const desc = map[1]
+      ? t(`pt.${map[1]}`, map[2])
+      : `${t('pt.sqDescA')} ${t('pt.sqDescEm')}${t('pt.sqDescB')}`;
+    return {
+      ...entry,
+      question: `${t('faq.toolPrefix')} — ${name}`,
+      answer: `${desc} ${t('faq.category')}: ${t(`pt.group_${CATEGORY_IDS[category]}`)}. ${isUltra ? t('faq.ultraReq') : t('faq.includedPro')}`,
+      keywords: [...entry.keywords, ...words(name)]
+    };
+  });
+};
+
 const STOPWORDS = new Set(['the', 'a', 'an', 'is', 'are', 'do', 'does', 'i', 'my', 'to', 'of', 'for', 'and', 'in', 'on', 'can', 'how', 'what', 'this']);
 
 const tokenize = (text) => text.toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 1 && !STOPWORDS.has(w));
@@ -181,6 +237,8 @@ const FAQAnswer = ({ entry, className = 'faq-item-answer' }) => (
 );
 
 const FAQHelper = () => {
+  const { t, language } = useLanguage();
+  const faqData = buildFaqData(t, language);
   const [query, setQuery] = useState('');
   const [openIndex, setOpenIndex] = useState(null);
 
@@ -188,7 +246,7 @@ const FAQHelper = () => {
   const hasQuery = queryTokens.length > 0;
 
   const matches = hasQuery
-    ? FAQ_DATA
+    ? faqData
         .map((entry, index) => ({ entry, index, score: scoreEntry(entry, queryTokens) }))
         .filter(m => m.score > 0)
         .sort((a, b) => b.score - a.score)
@@ -198,15 +256,12 @@ const FAQHelper = () => {
   return (
     <div className="faq-section">
       <div className="faq-helper">
-        <h3>🤖 Ask the FAQ Assistant</h3>
-        <p className="faq-helper-note">
-          Type a question in your own words. This searches our FAQ by keyword match -- it's not a live AI chat, so it
-          can only find answers already written below, not generate new ones.
-        </p>
+        <h3>{t('faq.title')}</h3>
+        <p className="faq-helper-note">{t('faq.note')}</p>
         <input
           type="text"
           className="faq-search-input"
-          placeholder="e.g. is this secure? what's the difference between tiers?"
+          placeholder={t('faq.placeholder')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -221,17 +276,15 @@ const FAQHelper = () => {
                 </div>
               ))
             ) : (
-              <div className="faq-no-match">
-                No close match found -- browse the full list below.
-              </div>
+              <div className="faq-no-match">{t('faq.noMatch')}</div>
             )}
           </div>
         )}
       </div>
 
       <div className="faq-list">
-        <h3>All Questions</h3>
-        {FAQ_DATA.map((entry, index) => (
+        <h3>{t('faq.all')}</h3>
+        {faqData.map((entry, index) => (
           <div key={index} className={`faq-item ${openIndex === index ? 'open' : ''}`}>
             <button className="faq-item-question" onClick={() => setOpenIndex(openIndex === index ? null : index)}>
               {entry.question}
