@@ -450,19 +450,19 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
       {(totalAssets > 0 || totalDebts > 0) && (
         <div className="nw-ratios">
           <div className="nw-ratio">
-            <span>Leverage (debt ÷ assets)</span>
+            <span>{t('left.nwLeverage')}</span>
             <strong className={bsRatios.band === 'strong' || bsRatios.band === 'ok' ? 'positive' : 'warn'}>
               {bsRatios.debtToAsset == null ? '—' : `${bsRatios.debtToAsset.toFixed(0)}%`}
             </strong>
           </div>
           <div className="nw-ratio">
-            <span>Equity ratio (owned outright)</span>
+            <span>{t('left.nwEquity')}</span>
             <strong className={bsRatios.equityRatio == null || bsRatios.equityRatio >= 50 ? 'positive' : 'warn'}>
               {bsRatios.equityRatio == null ? '—' : `${bsRatios.equityRatio.toFixed(0)}%`}
             </strong>
           </div>
           <div className="nw-ratio">
-            <span>Read</span>
+            <span>{t('left.nwRead')}</span>
             <strong>{t(`coach.band_${bsRatios.band || 'none'}`)}</strong>
           </div>
         </div>
@@ -562,7 +562,7 @@ const NetWorth = ({ country, scenarioCountry, reportingCurrencyCode = '', onRepo
                 </strong>
               </div>
               <div className="nw-fx-stress-stat">
-                <span>Leverage at {fxShockPct > 0 ? '+' : ''}{fxShockPct}% (vs {bsRatios.debtToAsset == null ? '—' : `${bsRatios.debtToAsset.toFixed(0)}%`} today)</span>
+                <span>{t('left.nwLeverageAt', { shock: `${fxShockPct > 0 ? '+' : ''}${fxShockPct}`, now: bsRatios.debtToAsset == null ? '—' : `${bsRatios.debtToAsset.toFixed(0)}%` })}</span>
                 <strong className={shockedRatios.band === 'strong' || shockedRatios.band === 'ok' ? 'positive' : 'warn'}>
                   {shockedRatios.debtToAsset == null ? '—' : `${shockedRatios.debtToAsset.toFixed(0)}%`}
                 </strong>

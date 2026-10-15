@@ -254,7 +254,7 @@ const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = fals
           <div className="dashboard-card">
             <div className="dashboard-card-header">
               <h3>{t('dashboard.netWorthCard')}</h3>
-              <span className="dashboard-card-meta">{t('dashboard.asOf', { date: fmtDaysAgo(daysBetween(netWorthEntry.date)) })}</span>
+              <span className="dashboard-card-meta">{t('dashboard.asOf', { date: fmtDaysAgo(daysBetween(netWorthEntry.date), t) })}</span>
             </div>
             {/* netWorthEntry was saved while a possibly-different currency was active --
                 convert from its saved displayCurrency into netWorthCountry (Net Worth's
@@ -287,10 +287,10 @@ const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = fals
           <div className="dashboard-card">
             <div className="dashboard-card-header">
               <h3>{t('dashboard.budgetCard')}</h3>
-              <span className="dashboard-card-meta">{t('dashboard.asOf', { date: fmtDaysAgo(daysBetween(lastBudgetEntry.date)) })}</span>
+              <span className="dashboard-card-meta">{t('dashboard.asOf', { date: fmtDaysAgo(daysBetween(lastBudgetEntry.date), t) })}</span>
             </div>
             <strong className={`dashboard-card-value ${lastBudgetEntry.surplus >= 0 ? 'positive' : 'negative'}`}>
-              {lastBudgetEntry.surplus >= 0 ? '' : '−'}{country.symbol} {Math.abs(Math.round(lastBudgetEntry.surplus)).toLocaleString()}/mo
+              {lastBudgetEntry.surplus >= 0 ? '' : '−'}{country.symbol} {Math.abs(Math.round(lastBudgetEntry.surplus)).toLocaleString()}{t('pt.perMo')}
             </strong>
             <span className="dashboard-card-sub">{t(lastBudgetEntry.surplus >= 0 ? 'dashboard.budgetSurplusLogged' : 'dashboard.budgetDeficitLogged')}</span>
             {budgetSummary && (() => {
@@ -333,7 +333,7 @@ const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = fals
           <div className="dashboard-card">
             <div className="dashboard-card-header">
               <h3>{t('dashboard.efCard')}</h3>
-              <span className="dashboard-card-meta">{t('dashboard.savedOn', { date: fmtDaysAgo(daysBetween(plan.emergencyFund.savedAt)) })}</span>
+              <span className="dashboard-card-meta">{t('dashboard.savedOn', { date: fmtDaysAgo(daysBetween(plan.emergencyFund.savedAt), t) })}</span>
             </div>
             <strong className="dashboard-card-value">
               {t('dashboard.efFundedValue', { pct: plan.emergencyFund.targetAmount > 0 ? Math.min(100, Math.round((plan.emergencyFund.currentSavings / plan.emergencyFund.targetAmount) * 100)) : 0 })}
@@ -358,7 +358,7 @@ const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = fals
           <div className="dashboard-card">
             <div className="dashboard-card-header">
               <h3>{t('dashboard.debtCard')}</h3>
-              <span className="dashboard-card-meta">{t('dashboard.savedOn', { date: fmtDaysAgo(daysBetween(plan.debt.savedAt)) })}</span>
+              <span className="dashboard-card-meta">{t('dashboard.savedOn', { date: fmtDaysAgo(daysBetween(plan.debt.savedAt), t) })}</span>
             </div>
             <strong className="dashboard-card-value warn">{country.symbol} {Math.round(plan.debt.totalBalance).toLocaleString()}</strong>
             <span className="dashboard-card-sub">{plan.debt.avalancheReachable === false ? t('dashboard.debtNotReachable') : t('dashboard.debtOnPace', { months: plan.debt.avalancheMonths })}</span>
@@ -376,14 +376,14 @@ const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = fals
           <div className="dashboard-card">
             <div className="dashboard-card-header">
               <h3>{plan.loan.loanTypeLabel || t('dashboard.loanCard')}</h3>
-              <span className="dashboard-card-meta">{t('dashboard.savedOn', { date: fmtDaysAgo(daysBetween(plan.loan.savedAt)) })}</span>
+              <span className="dashboard-card-meta">{t('dashboard.savedOn', { date: fmtDaysAgo(daysBetween(plan.loan.savedAt), t) })}</span>
             </div>
             <strong className="dashboard-card-value warn">{country.symbol} {Math.round(plan.loan.principal).toLocaleString()}</strong>
             {/* monthlyPayment is the required base installment; extraMonthly (if any) is what's
                 actually being paid each month to hit the accelerated payoffMonths/totalInterest
                 saved above -- show the real total (and the real, shortened payoff horizon) so
                 this doesn't understate the payment or contradict itself with the nominal term. */}
-            <span className="dashboard-card-sub">{t('dashboard.loanSub', { payment: `${country.symbol} ${loanEffectiveMonthlyPayment(plan.loan).toLocaleString()}`, term: loanEffectiveTermLabel(plan.loan) })}</span>
+            <span className="dashboard-card-sub">{t('dashboard.loanSub', { payment: `${country.symbol} ${loanEffectiveMonthlyPayment(plan.loan).toLocaleString()}`, term: loanEffectiveTermLabel(plan.loan, t) })}</span>
             <button className="dashboard-card-link" onClick={() => onNavigate('Loan & Bond')}>{t('dashboard.openTab', { tab: 'Loan & Bond' })}</button>
           </div>
         ) : (
@@ -398,7 +398,7 @@ const Dashboard = ({ country, reportingCountry, onNavigate, canWhiteLabel = fals
           <div className="dashboard-card">
             <div className="dashboard-card-header">
               <h3>{t('dashboard.fireCard')}</h3>
-              <span className="dashboard-card-meta">{t('dashboard.savedOn', { date: fmtDaysAgo(daysBetween(plan.fire.savedAt)) })}</span>
+              <span className="dashboard-card-meta">{t('dashboard.savedOn', { date: fmtDaysAgo(daysBetween(plan.fire.savedAt), t) })}</span>
             </div>
             <strong className="dashboard-card-value positive">{country.symbol} {Math.round(plan.fire.fireNumber).toLocaleString()}</strong>
             <span className="dashboard-card-sub">

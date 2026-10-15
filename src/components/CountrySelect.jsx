@@ -9,8 +9,10 @@
 // with the props swapped, not a UI rewrite.
 import React, { useState, useRef, useEffect, useId } from 'react';
 import './CountrySelect.css';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const CountrySelect = ({ countries, value, onChange, ariaLabel }) => {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [highlightIdx, setHighlightIdx] = useState(0);
@@ -102,7 +104,7 @@ const CountrySelect = ({ countries, value, onChange, ariaLabel }) => {
           id={listboxId}
           onMouseDown={(e) => e.preventDefault()}
         >
-          {filtered.length === 0 && <li className="country-select-empty">No matching country</li>}
+          {filtered.length === 0 && <li className="country-select-empty">{t('common.noMatchingCountry')}</li>}
           {filtered.map((c, i) => (
             <li key={c.code} role="option" aria-selected={c.code === value}>
               <button

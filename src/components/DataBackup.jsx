@@ -174,7 +174,7 @@ const EmailBackup = ({ onSent }) => {
   if (!open) {
     return (
       <button type="button" className="data-backup-btn secondary" onClick={() => setOpen(true)}>
-        📧 Email a Copy
+        {t('left.emailCopy')}
       </button>
     );
   }
@@ -253,7 +253,7 @@ const DataBackup = () => {
       </div>
       <span className={`data-backup-last ${backupStale ? 'stale' : ''}`}>
         {lastBackupAt
-          ? `Last backup: ${fmtDaysAgo(backupDaysAgo)}${backupStale ? ' -- consider exporting a fresh one' : ''}`
+          ? `${t('left.lastBackup', { when: fmtDaysAgo(backupDaysAgo, t) })}${backupStale ? t('left.lastBackupStale') : ''}`
           : t('backup.noBackup')}
       </span>
     </div>

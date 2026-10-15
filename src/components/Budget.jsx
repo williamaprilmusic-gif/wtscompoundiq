@@ -107,7 +107,7 @@ const Budget = ({ country }) => {
 
   const exportBudgetHistoryCSV = () => {
     downloadCSV('wts-compoundiq-budget-history.csv', [
-      ['Date', `Surplus (${country.currency})`],
+      [t('debt.csvDate'), `${t('left.surplusSeries')} (${country.currency})`],
       ...convertedHistory.map(h => [new Date(h.date).toLocaleDateString(), Math.round(h.surplus)])
     ]);
   };
@@ -176,13 +176,13 @@ const Budget = ({ country }) => {
       )}
 
       {(summary.totalIncome > 0 || summary.totalExpenses > 0) && (
-        <button className="budget-log-btn" onClick={saveBudgetSnapshot}>📸 Log This Month's Surplus</button>
+        <button className="budget-log-btn" onClick={saveBudgetSnapshot}>{t('left.logSurplus')}</button>
       )}
 
       {history.length > 0 && (
         <div className="budget-history">
           <div className="budget-history-header">
-            <h3>Surplus History ({convertedHistory.length} snapshot{convertedHistory.length === 1 ? '' : 's'})</h3>
+            <h3>{t(convertedHistory.length === 1 ? 'left.surplusHistoryOne' : 'left.surplusHistoryMany', { n: convertedHistory.length })}</h3>
             <div className="budget-history-header-actions">
               <button className="history-export-btn" onClick={exportBudgetHistoryCSV}>{t('calculator.exportCsv')}</button>
               <button className="budget-clear-history-btn" onClick={clearBudgetHistory}>{t('debt.clearHistory')}</button>
@@ -190,7 +190,7 @@ const Budget = ({ country }) => {
           </div>
           {delta !== null && (
             <div className={`budget-history-delta ${delta >= 0 ? 'up' : 'down'}`}>
-              {delta >= 0 ? '▲' : '▼'} {country.symbol} {Math.abs(Math.round(delta)).toLocaleString()} since last snapshot
+              {t('left.sinceLast', { arrow: delta >= 0 ? '▲' : '▼', amount: `${country.symbol} ${Math.abs(Math.round(delta)).toLocaleString()}` })}
             </div>
           )}
           {convertedHistory.length > 1 && (

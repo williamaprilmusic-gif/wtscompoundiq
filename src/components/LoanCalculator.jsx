@@ -191,14 +191,14 @@ const LoanCalculator = ({ country }) => {
         {quotedAsPrimePlus ? (
           <>
             <div className="form-group">
-              <label>Prime Rate (%/yr)</label>
+              <label>{t('left.loanPrime')}</label>
               <input type="number" min="0" step="0.1" value={primeRate} onChange={(e) => updateInput('primeRate', e.target.value)} />
             </div>
             <div className="form-group">
-              <label>Margin Above Prime (%)</label>
+              <label>{t('left.loanMargin')}</label>
               <input type="number" step="0.1" value={margin} onChange={(e) => updateInput('margin', e.target.value)} />
               {(primeRate > 0 || margin !== 0) && (
-                <span className="loan-prime-effective">= {effectiveAnnualRate.toFixed(2)}%/yr effective</span>
+                <span className="loan-prime-effective">{t('left.primeEffective', { rate: effectiveAnnualRate.toFixed(2) })}</span>
               )}
             </div>
           </>
@@ -271,12 +271,12 @@ const LoanCalculator = ({ country }) => {
 
           {rateShockRows && (
             <div className="loan-rate-shock">
-              <h3>If the rate moves (variable-rate loan)</h3>
+              <h3>{t('left.loanShockTitle')}</h3>
               <div className="loan-rate-shock-grid">
                 {rateShockRows.map((row) => (
                   <div key={row.delta} className={`loan-rate-shock-cell ${row.delta === 0 ? 'baseline' : ''} ${row.delta > 0 ? 'up' : ''}`}>
                     <span>{row.delta === 0 ? 'now' : `${row.delta > 0 ? '+' : ''}${row.delta}%`}</span>
-                    <strong>{country.symbol} {Math.round(row.payment).toLocaleString()}/mo</strong>
+                    <strong>{country.symbol} {Math.round(row.payment).toLocaleString()}{t('pt.perMo')}</strong>
                     {row.delta !== 0 && (
                       <span className="loan-rate-shock-diff">
                         {row.payment >= result.monthlyPayment ? '+' : '−'}{country.symbol} {Math.abs(Math.round(row.payment - result.monthlyPayment)).toLocaleString()}
@@ -294,7 +294,7 @@ const LoanCalculator = ({ country }) => {
           {extraMonthly > 0 && result.extra && (
             <div className="loan-extra-callout">
               {t('loan.extraCallout1', { amount: `${country.symbol}${extraMonthly.toLocaleString()}`, type: activeType.shortLabel })}{' '}
-              <strong>{monthsToYearsLabel(result.extra.payoffMonths)}</strong> {t('loan.extraCallout2', { was: monthsToYearsLabel(result.payoffMonths) })}{' '}
+              <strong>{monthsToYearsLabel(result.extra.payoffMonths)}</strong> {t('loan.extraCallout2', { was: monthsToYearsLabel(result.payoffMonths, t) })}{' '}
               (<span className="loan-result-date">{t('loan.around', { date: monthsFromNowLabel(result.extra.payoffMonths) })}</span>) --{' '}
               {t('loan.extraCallout3')} <strong className="positive">{country.symbol} {result.extra.interestSaved.toLocaleString()}</strong>{' '}
               {t('loan.extraCallout4', { years: Math.floor(result.extra.monthsSaved / 12), months: result.extra.monthsSaved % 12 })}
@@ -304,7 +304,7 @@ const LoanCalculator = ({ country }) => {
           {biweeklyResult?.extra && (
             <div className="loan-extra-callout biweekly">
               {t('loan.biweeklyA', { payment: `${country.symbol}${result.monthlyPayment.toLocaleString()}`, type: activeType.shortLabel })}{' '}
-              <strong>{monthsToYearsLabel(biweeklyResult.extra.payoffMonths)}</strong> {t('loan.biweeklyB', { was: monthsToYearsLabel(result.payoffMonths) })}{' '}
+              <strong>{monthsToYearsLabel(biweeklyResult.extra.payoffMonths)}</strong> {t('loan.biweeklyB', { was: monthsToYearsLabel(result.payoffMonths, t) })}{' '}
               (<span className="loan-result-date">{t('loan.around', { date: monthsFromNowLabel(biweeklyResult.extra.payoffMonths) })}</span>),{' '}
               {t('loan.extraCallout3')} <strong className="positive">{country.symbol} {biweeklyResult.extra.interestSaved.toLocaleString()}</strong>{t('loan.biweekly3')}</div>
           )}

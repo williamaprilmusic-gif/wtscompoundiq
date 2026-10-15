@@ -16,7 +16,7 @@ describe('i18n render smoke', () => {
       const { countriesData } = await import('../data/countries.js');
       const country = countriesData[0];
       const comps = {};
-      for (const name of ['FAQHelper', 'TierPricing', 'WealthPath', 'Coach', 'PowerTools', 'Compare', 'MonteCarlo', 'RestorePlan', 'OnboardingTour', 'LegalModal']) {
+      for (const name of ['FAQHelper', 'TierPricing', 'WealthPath', 'Coach', 'PowerTools', 'Compare', 'MonteCarlo', 'RestorePlan', 'OnboardingTour', 'LegalModal', 'Dashboard', 'Budget', 'EmergencyFund', 'DebtPayoff', 'LoanCalculator', 'MyPlan', 'NetWorth', 'Snapshot', 'Invest', 'TaxOptimizer', 'StartHere', 'DataBackup', 'FAQModal', 'PaymentSection']) {
         comps[name] = (await import(`../components/${name}.jsx`)).default;
       }
       const props = {
@@ -29,7 +29,7 @@ describe('i18n render smoke', () => {
         out[name] = renderToString(<LanguageProvider><C {...props} /></LanguageProvider>);
       }
       // a raw key looks like "pt.something" / "faq.q0" rendered as visible text
-      const rawKey = />\s*((?:pt|faq|wp|coach|charts|plan|pricing|payment|tour|legal|ui|nw|tax|snap|loan|budget|invest|debt|restore|subtabs)\.[A-Za-z0-9_.]+)\s*</g;
+      const rawKey = />\s*((?:pt|faq|wp|coach|charts|plan|pricing|payment|tour|legal|ui|nw|tax|snap|loan|budget|invest|debt|restore|subtabs|left|dash|dashboard|common|calculator|app|ef|backup|startHere|footer|header|nav)\.[A-Za-z0-9_.]+)\s*</g;
       const leaks = [];
       for (const [name, html] of Object.entries(out)) for (const m of html.matchAll(rawKey)) leaks.push(`${name}: ${m[1]}`);
       expect(leaks).toEqual([]);

@@ -1137,7 +1137,7 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
             </div>
             <p className="power-tool-note">
               {salaryProgressive && country.taxBrackets
-                ? (country.taxBracketsNote || t('pt.salNoteBrackets', { country: country.name }))
+                ? ((country.code === 'za' ? t('left.zaBracketsNote') : country.taxBracketsNote) || t('pt.salNoteBrackets', { country: country.name }))
                 : t('pt.salNoteFlat', { rate: country.taxRate })}{' '}
               {t('pt.salNoteTail')}
             </p>
@@ -1911,7 +1911,7 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
             </div>
             <p className="power-tool-note">
               {mtProgressive && country.taxBrackets
-                ? (country.taxBracketsNote || t('pt.salNoteBrackets', { country: country.name }))
+                ? ((country.code === 'za' ? t('left.zaBracketsNote') : country.taxBracketsNote) || t('pt.salNoteBrackets', { country: country.name }))
                 : t('pt.mtNoteFlat', { rate: country.taxRate })} {t('pt.mtNoteTail')}
             </p>
           </>
@@ -2232,7 +2232,7 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
                 {rgExtraMonthly > 0 && rgCloseGap && (
                   <div className={`power-verdict ${rgCloseGap.reachable ? 'invest' : 'danger'}`}>
                     {rgCloseGap.reachable
-                      ? t('pt.rgCloseYes', { when: monthsToYearsLabel(rgCloseGap.months), months: rgCloseGap.months, extra: `${country.symbol}${rgExtraMonthly.toLocaleString()}`, rate: rgCloseRate })
+                      ? t('pt.rgCloseYes', { when: monthsToYearsLabel(rgCloseGap.months, t), months: rgCloseGap.months, extra: `${country.symbol}${rgExtraMonthly.toLocaleString()}`, rate: rgCloseRate })
                       : t('pt.rgCloseNo', { extra: `${country.symbol}${rgExtraMonthly.toLocaleString()}`, rate: rgCloseRate })}
                   </div>
                 )}
@@ -2298,7 +2298,7 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
             <input type="number" step="0.1" value={rrNominal} onChange={(e) => setRrNominal(Number(e.target.value))} />
           </div>
           <div className="form-group">
-            <label><Term k="inflation">{t('calculator.inflation')}</Term> (%/yr)</label>
+            <label><Term k="inflation">{t('calculator.inflation')}</Term> {t('left.parenPctYr')}</label>
             <input type="number" step="0.1" value={rrInflation} onChange={(e) => setRrInflation(Number(e.target.value))} />
           </div>
           <div className="form-group">
@@ -2476,7 +2476,7 @@ const PowerTools = ({ country, initial, monthly, rate, years = 20, inflation, wr
             </div>
             <p className="power-tool-note">
               {btProgressive && country.taxBrackets
-                ? (country.taxBracketsNote || t('pt.btNoteBrackets', { country: country.name }))
+                ? ((country.code === 'za' ? t('left.zaBracketsNote') : country.taxBracketsNote) || t('pt.btNoteBrackets', { country: country.name }))
                 : t('pt.btNoteFlat', { rate: country.taxRate })}
               {' '}{t('pt.btNoteTail')}
             </p>

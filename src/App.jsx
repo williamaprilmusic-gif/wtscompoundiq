@@ -687,7 +687,7 @@ export default function App() {
                   <input type="number" step="0.1" value={rate} onChange={(e) => setRate(Number(e.target.value))} />
                 </div>
                 <div className="form-group">
-                  <label>{t('calculator.yearsToGrow')} (max {MAX_YEARS})</label>
+                  <label>{t('calculator.yearsToGrow')} {t('left.maxN', { max: MAX_YEARS })}</label>
                   <input type="number" min="1" max={MAX_YEARS} value={years} onChange={(e) => setYearsClamped(e.target.value)} />
                   {years >= 1 && (
                     <span className="years-to-grow-date">
@@ -734,7 +734,7 @@ export default function App() {
                         <input type="number" min="0" step="1000" value={otherTaxableIncome} onChange={(e) => setOtherTaxableIncome(Number(e.target.value))} />
                       </div>
                       <p className="bracket-note">
-                        {t('calculator.bracketNote', { country: country.name })} {country.taxBracketsNote}
+                        {t('calculator.bracketNote', { country: country.name })} {(country.code === 'za' ? t('left.zaBracketsNote') : country.taxBracketsNote)}
                       </p>
                     </div>
                   )}
@@ -844,7 +844,7 @@ export default function App() {
                       type="number"
                       min="0"
                       step="100000"
-                      placeholder="target"
+                      placeholder={t('left.targetPh')}
                       value={targetAmount || ''}
                       onChange={(e) => setTargetAmount(Number(e.target.value))}
                     />{' '}
@@ -873,15 +873,15 @@ export default function App() {
                   <span className="rate-band-label">{t('calculator.rateBandLabel', { band: RATE_BAND, rate })}</span>
                   <div className="rate-band-cells">
                     <div>
-                      <span>{(rate - RATE_BAND).toFixed(1)}%/yr</span>
+                      <span>{t('left.pctYr', { n: (rate - RATE_BAND).toFixed(1) })}</span>
                       <strong>{country.symbol} {Math.round(rateBandLow).toLocaleString()}</strong>
                     </div>
                     <div className="rate-band-mid">
-                      <span>{Number(rate).toFixed(1)}%/yr</span>
+                      <span>{t('left.pctYr', { n: Number(rate).toFixed(1) })}</span>
                       <strong>{country.symbol} {results.finalBalance.toLocaleString()}</strong>
                     </div>
                     <div>
-                      <span>{(rate + RATE_BAND).toFixed(1)}%/yr</span>
+                      <span>{t('left.pctYr', { n: (rate + RATE_BAND).toFixed(1) })}</span>
                       <strong>{country.symbol} {Math.round(rateBandHigh).toLocaleString()}</strong>
                     </div>
                   </div>
@@ -1094,7 +1094,7 @@ export default function App() {
                           />
                           <button className="scenario-remove" onClick={() => removeScenario(s.id)} aria-label={t('calculator.removeScenarioAria')}>&times;</button>
                         </div>
-                        <span className="scenario-meta">{s.countryName} · {s.symbol}{s.initial.toLocaleString()} + {s.symbol}{s.monthly.toLocaleString()}/mo · {s.rate}% · {s.years}yr{s.wrapper ? t('calculator.wrapperWordSuffix') : ''}</span>
+                        <span className="scenario-meta">{t('left.scenarioMeta', { country: s.countryName, initial: `${s.symbol}${s.initial.toLocaleString()}`, monthly: `${s.symbol}${s.monthly.toLocaleString()}`, rate: s.rate, years: s.years })}{s.wrapper ? t('calculator.wrapperWordSuffix') : ''}</span>
                         <div className="scenario-values">
                           <div><span>{t('calculator.scenarioBalance')}</span><strong>{s.symbol} {s.finalBalance.toLocaleString()}</strong></div>
                           <div><span>{t('calculator.scenarioInterest')}</span><strong className="positive">{s.symbol} {s.totalInterest.toLocaleString()}</strong></div>
@@ -1291,7 +1291,7 @@ export default function App() {
         <p>
           WTS CompoundIQ · {t('footer.tagline')}
           {' '}· <button className="footer-link-btn" onClick={() => setShowLegal(true)}>{t('footer.privacyTerms')}</button>
-          {' '}· <button className="footer-link-btn" onClick={() => setShowFaq(true)}>❓ FAQ</button>
+          {' '}· <button className="footer-link-btn" onClick={() => setShowFaq(true)}>{t('left.faq')}</button>
           {' '}· <button className="footer-link-btn" onClick={() => setShowTour(true)}>{t('app.takeTour')}</button>
           <InstallButton />
         </p>

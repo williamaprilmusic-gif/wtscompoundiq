@@ -87,10 +87,10 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
   const runnerUpName = scenarioWinner ? (scenarioRanked[1].scenario.name || `Plan ${scenarioRanked[1].label}`) : '';
 
   const exportScenarioCSV = () => {
-    const header = ['Year',
-      `${scenarioA.name} Balance (${country.currency})`, `${scenarioA.name} Interest`,
-      `${scenarioB.name} Balance (${country.currency})`, `${scenarioB.name} Interest`,
-      `${scenarioC.name} Balance (${country.currency})`, `${scenarioC.name} Interest`];
+    const header = [t('app.csvYears'),
+      `${scenarioA.name} ${t('left.csvBalance', { currency: country.currency })}`, `${scenarioA.name} ${t('left.csvInterest')}`,
+      `${scenarioB.name} ${t('left.csvBalance', { currency: country.currency })}`, `${scenarioB.name} ${t('left.csvInterest')}`,
+      `${scenarioC.name} ${t('left.csvBalance', { currency: country.currency })}`, `${scenarioC.name} ${t('left.csvInterest')}`];
     // Each plan has its own independently-set Years, so the yearlyData arrays can differ
     // in length -- iterate the longest so a shorter plan's early rollover-to-empty
     // doesn't truncate a longer plan's remaining years out of the export.
@@ -109,7 +109,7 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
   return (
     <div className="card country-compare">
       <div className="compare-header">
-        <h2>📊 Compare My Plans</h2>
+        <h2>{t('plan.cmpPlans')}</h2>
         <p>{t('plan.cmpIntro')}</p>
       </div>
 
@@ -130,7 +130,7 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
             />
             <div className="compare-scenario-form">
               <div className="form-group">
-                <label>Initial ({country.symbol})</label>
+                <label>{t('left.cmpInitial', { symbol: country.symbol })}</label>
                 <input type="number" min="0" value={scenario.initial} onChange={(e) => updateScenario(setScenario, 'initial', e.target.value)} />
               </div>
               <div className="form-group">
@@ -152,15 +152,15 @@ const Compare = ({ country, initial, monthly, rate, years, inflation, wrapper, c
             </div>
             <label className="compare-scenario-wrapper-toggle">
               <input type="checkbox" checked={!!scenario.wrapper} onChange={() => toggleScenarioWrapper(setScenario)} />
-              Use {country.wrapperLabel}
+              {t('left.useWrapper', { wrapper: country.wrapperLabel })}
             </label>
             <button type="button" className="compare-scenario-sync-btn" onClick={() => syncScenarioWithCalculator(setScenario)}>
-              🔄 Sync with Calculator tab
+              {t('left.cmpSync')}
             </button>
             <strong className="compare-value">{country.symbol} {Math.round(results.finalBalance).toLocaleString()}</strong>
             <div className="compare-details">
-              <span>Deposited: {country.symbol} {Math.round(results.totalDeposited).toLocaleString()}</span>
-              <span>Interest: {country.symbol} {Math.round(results.totalInterest).toLocaleString()}</span>
+              <span>{t('left.cmpDeposited', { amount: `${country.symbol} ${Math.round(results.totalDeposited).toLocaleString()}` })}</span>
+              <span>{t('left.cmpInterest', { amount: `${country.symbol} ${Math.round(results.totalInterest).toLocaleString()}` })}</span>
             </div>
           </div>
         ))}

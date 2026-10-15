@@ -87,9 +87,9 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
         {hasWrapper && (
           <div className="tax-plan-card">
             <h3><Term k="wrapper">{t('tax.wrapperTerm')}</Term> {t('tax.wrapperSuffix')}</h3>
-            <p>{t('tax.wrapperUse', { wrapper: country.taxFreeWrapper })}</p>
+            <p>{t('tax.wrapperUse', { wrapper: country.code === 'za' ? t('left.tfsaName') : country.taxFreeWrapper })}</p>
             <ul>
-              <li>{t('tax.contributionLimit', { limit: country.taxFreeLimit })}</li>
+              <li>{t('tax.contributionLimit', { limit: country.code === 'za' ? t('left.zaLimit', { annual: `${country.symbol}${Number(country.annualWrapperLimit).toLocaleString()}`, lifetime: `${country.symbol}${Number(country.lifetimeWrapperLimit).toLocaleString()}` }) : country.taxFreeLimit })}</li>
               <li>{t('tax.taxAvoided', { years })} <strong>{country.symbol} {totalTaxPaid.toLocaleString()}</strong></li>
               <li>{t('tax.extraBalance')} <strong className="positive">{country.symbol} {wrapperBenefit.toLocaleString()}</strong></li>
             </ul>
@@ -99,16 +99,16 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
             {lifetimeLimit > 0 && (
               <div className="tfsa-lifetime-tracker">
                 <div className="form-group">
-                  <label>{country.wrapperLabel} contributed so far, lifetime ({country.symbol})</label>
+                  <label>{t('left.tfsaContributed', { wrapper: country.wrapperLabel, symbol: country.symbol })}</label>
                   <input type="number" min="0" step="5000" value={tfsaContributed} onChange={(e) => setTfsaContributed(Number(e.target.value))} />
                 </div>
                 {tfsaContributed > 0 && (
                   <>
-                    <div className="tfsa-lifetime-bar" role="img" aria-label={`${Math.round(tfsaUsedPct)} percent of the lifetime limit used`}>
+                    <div className="tfsa-lifetime-bar" role="img" aria-label={t('left.tfsaBarAria', { pct: Math.round(tfsaUsedPct) })}>
                       <div className="tfsa-lifetime-fill" style={{ width: `${tfsaUsedPct}%` }} />
                     </div>
                     <p className="tfsa-lifetime-note">
-                      {country.symbol}{Math.round(tfsaContributed).toLocaleString()} of the {country.symbol}{lifetimeLimit.toLocaleString()} lifetime limit used ({Math.round(tfsaUsedPct)}%).{' '}
+                      {t('left.tfsaNote', { contributed: `${country.symbol}${Math.round(tfsaContributed).toLocaleString()}`, limit: `${country.symbol}${lifetimeLimit.toLocaleString()}`, pct: Math.round(tfsaUsedPct) })}{' '}
                       {tfsaRemaining > 0
                         ? <>{t('tax.roomLeft', { amount: `${country.symbol}${Math.round(tfsaRemaining).toLocaleString()}`, more: tfsaYearsLeft != null && annualLimit > 0 ? t('tax.roomMore', { years: tfsaYearsLeft.toFixed(1), limit: `${country.symbol}${annualLimit.toLocaleString()}` }) : '' })}</>
                         : <>{t('tax.lifetimeUsed')}</>}
@@ -130,11 +130,11 @@ const TaxOptimizer = ({ country, initial, monthly, rate, years, inflation, compo
           </ul>
           <div className="tax-loss-harvest-calc">
             <div className="form-group">
-              <label>Realised Loss ({country.symbol})</label>
+              <label>{t('left.realisedLoss', { symbol: country.symbol })}</label>
               <input type="number" min="0" step="1000" value={lossAmount} onChange={(e) => setLossAmount(Number(e.target.value))} />
             </div>
             <div className="form-group">
-              <label>Your Marginal Rate (%)</label>
+              <label>{t('left.taxMarginal')}</label>
               <input type="number" min="0" max="60" step="1" value={lossMarginalRate} onChange={(e) => setLossMarginalRate(Number(e.target.value))} />
             </div>
           </div>

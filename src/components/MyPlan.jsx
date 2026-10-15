@@ -154,7 +154,7 @@ const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
       {branding.tagline.trim() && <span className="plan-branding-tagline">{branding.tagline.trim()}</span>}
       {preparedBy.trim() && (
         <span className="plan-branding-prepared">
-          Prepared by {preparedBy.trim()}{clientName.trim() ? ` for ${clientName.trim()}` : ''} · {new Date().toLocaleDateString()}
+          {clientName.trim() ? t('left.preparedByFor', { name: preparedBy.trim(), client: clientName.trim() }) : t('left.preparedBy', { name: preparedBy.trim() })} · {new Date().toLocaleDateString()}
         </span>
       )}
     </div>
@@ -303,8 +303,7 @@ const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
         <div className="plan-section">
           <h3>{t('plan.debtTitle')} <span className="plan-saved-label">{t('common.savedAgo', { when: fmtDaysAgo(debtDaysAgo, t) })}</span></h3>
           <div className="plan-baseline">
-            When saved: {country.symbol} {Math.round(snapshot.debt.totalBalance).toLocaleString()} total debt,
-            paying {country.symbol} {snapshot.debt.extraMonthly.toLocaleString()}/mo extra,{' '}
+            {t('left.whenSaved', { balance: `${country.symbol} ${Math.round(snapshot.debt.totalBalance).toLocaleString()}`, extra: `${country.symbol} ${snapshot.debt.extraMonthly.toLocaleString()}` })}{' '}
             {debtReachable
               ? t('plan.baselineDebtOn', { n: snapshot.debt.avalancheMonths })
               : t('plan.baselineDebtOff')}
@@ -312,14 +311,14 @@ const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
           {debtReachable ? (
             <>
               <div className="plan-checkin">
-                <label>What's your total debt balance right now? ({country.symbol})</label>
-                <input type="number" min="0" value={currentDebtBalance} onChange={(e) => setCurrentDebtBalance(e.target.value)} placeholder={`Expected: ~${Math.round(debtExpectedRemaining).toLocaleString()}`} />
+                <label>{t('left.debtBalanceQ', { symbol: country.symbol })}</label>
+                <input type="number" min="0" value={currentDebtBalance} onChange={(e) => setCurrentDebtBalance(e.target.value)} placeholder={t('left.expectedPh', { amount: Math.round(debtExpectedRemaining).toLocaleString() })} />
               </div>
               {debtDrift !== null && (
                 <p className={`plan-drift ${debtDrift >= 0 ? 'ahead' : 'behind'}`}>
                   {debtDrift >= 0
-                    ? `You're ${country.symbol} ${Math.round(debtDrift).toLocaleString()} ahead of schedule -- nice.`
-                    : `You're ${country.symbol} ${Math.round(-debtDrift).toLocaleString()} behind where the plan expected. Worth revisiting the Debt Payoff tab.`}
+                    ? t('left.driftAhead', { amount: `${country.symbol} ${Math.round(debtDrift).toLocaleString()}` })
+                    : t('left.driftBehind', { amount: `${country.symbol} ${Math.round(-debtDrift).toLocaleString()}` })}
                 </p>
               )}
             </>
@@ -390,7 +389,7 @@ const MyPlan = ({ country, canWhiteLabel = false, onOpenPricing }) => {
           <h3>
             {t('plan.adviserNotes')} <span className="plan-adviser-badge">{t('plan.ultraBadge')}</span>
             {adviserNotesUpdatedAt && (
-              <span className="plan-adviser-updated">last edited {fmtDaysAgo(daysBetween(adviserNotesUpdatedAt))}</span>
+              <span className="plan-adviser-updated">{t('left.lastEdited', { when: fmtDaysAgo(daysBetween(adviserNotesUpdatedAt), t) })}</span>
             )}
           </h3>
           <textarea

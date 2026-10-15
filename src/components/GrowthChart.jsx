@@ -157,7 +157,7 @@ const GrowthChart = ({ yearlyData, initial = 0, symbol = '', milestones = [] }) 
             d={`M ${xScale(m.year).toFixed(2)} ${(yScale(m.balance) - 5).toFixed(2)} l 5 5 l -5 5 l -5 -5 z`}
             className="growth-chart-milestone"
           >
-            <title>{symbol}{Math.round(m.amount).toLocaleString()} in year {m.year}</title>
+            <title>{t('left.milestoneTip', { amount: `${symbol}${Math.round(m.amount).toLocaleString()}`, year: m.year })}</title>
           </path>
         ))}
 

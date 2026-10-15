@@ -434,7 +434,7 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
           <span className="mc-worst-window-label">{t('charts.worstLabel', { n: worstWindow.windowYears })}</span>
           <p>
             {t('charts.worstBody1', { n: worstWindow.windowYears, model: activeHistoricalModel.label })}{' '}
-            <strong>{worstWindow.growthMultiple.toFixed(2)}×</strong> ({worstWindow.annualisedReturnPct.toFixed(1)}%/yr).{' '}
+            <strong>{worstWindow.growthMultiple.toFixed(2)}×</strong> ({t('left.pctYr', { n: worstWindow.annualisedReturnPct.toFixed(1) })}).{' '}
             {t('charts.worstBody2', { contrib: `${country.symbol}${Math.round(worstWindowOutcome.totalContributed).toLocaleString()}` })}{' '}
             <strong>{country.symbol}{Math.round(worstWindowOutcome.finalBalance).toLocaleString()}</strong>.{' '}
             {t('charts.worstBody3')}
@@ -478,10 +478,10 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
                 type="number" min="1" max="99"
                 value={Math.max(1, Math.min(99, targetProb || 90))}
                 onChange={(e) => setTargetProb(Number(e.target.value))}
-              />% of the time
+              />{t('left.ofTheTime')}
             </label>
             <button className="mc-solver-btn" onClick={handleSolveWithdrawal} disabled={isSolvingWithdrawal}>
-              {isSolvingWithdrawal ? '⏳ Solving…' : 'Find it'}
+              {isSolvingWithdrawal ? t('charts.solving') : t('charts.findIt')}
             </button>
           </div>
           {withdrawalSolveResult && (
@@ -553,11 +553,11 @@ const MonteCarlo = ({ country, initial, monthly, rate, years, compoundFrequency 
 
           {result.goalProbByYear && result.goalProbByYear.length > 0 && (
             <div className="mc-prob-timeline">
-              <span className="mc-prob-timeline-label">Chance you're already there by year…</span>
+              <span className="mc-prob-timeline-label">{t('left.mcChance')}</span>
               <div className="mc-prob-timeline-cells">
                 {result.goalProbByYear.map(pt => (
                   <div key={pt.year}>
-                    <span>Yr {pt.year}</span>
+                    <span>{t('left.yrN', { n: pt.year })}</span>
                     <strong className={pt.probability >= 50 ? 'positive' : ''}>{pt.probability.toFixed(0)}%</strong>
                   </div>
                 ))}

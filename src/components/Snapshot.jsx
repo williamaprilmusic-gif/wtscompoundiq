@@ -21,10 +21,10 @@ export const DEFAULT_BRANDING = { firmName: '', advisorName: '', clientName: '',
 // masthead comfortably fits well under this.
 const MAX_LOGO_BYTES = 500 * 1024;
 
-const exportProjectionCSV = (results, country) => downloadCSV(
+const exportProjectionCSV = (results, country, t) => downloadCSV(
   `wts-compoundiq-${country.code}-projection.csv`,
   [
-    ['Year', 'Balance', 'Real Value', 'Deposited', 'Interest', 'Tax Paid'],
+    [t('app.csvYears'), t('left.csvBal'), t('left.csvReal'), t('left.csvDeposited'), t('left.csvInt'), t('left.csvTax')],
     ...results.yearlyData.map(r => [r.year, r.balance, r.realValue, r.deposited, r.interest, r.taxPaid])
   ]
 );
@@ -96,7 +96,7 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
         </div>
         <div className="snapshot-buttons">
           <button className="snapshot-btn" onClick={() => window.print()}>{t('snap.print')}</button>
-          <button className="snapshot-btn secondary" onClick={() => exportProjectionCSV(results, country)}>{t('snap.downloadCsv')}</button>
+          <button className="snapshot-btn secondary" onClick={() => exportProjectionCSV(results, country, t)}>{t('snap.downloadCsv')}</button>
         </div>
       </div>
 
@@ -154,10 +154,10 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
           )}
           <h1>{canWhiteLabel && branding.firmName ? branding.firmName : 'WTS CompoundIQ'} -- {t('snap.reportTitle')}</h1>
           <p>
-            {country.name} · Generated {today}
-            {canWhiteLabel && branding.advisorName && ` · Prepared by ${branding.advisorName}`}
-            {canWhiteLabel && branding.clientName && ` · Prepared for ${branding.clientName}`}
-            {canWhiteLabel && ` · Ref ${reportRef}`}
+            {t('left.generated', { country: country.name, date: today })}
+            {canWhiteLabel && branding.advisorName && ` · ${t('left.preparedBy', { name: branding.advisorName })}`}
+            {canWhiteLabel && branding.clientName && ` · ${t('left.preparedFor', { client: branding.clientName })}`}
+            {canWhiteLabel && ` · ${t('left.refLine', { ref: reportRef })}`}
           </p>
         </div>
 
@@ -200,8 +200,7 @@ const Snapshot = ({ country, initial, monthly, rate, years, inflation, wrapper, 
           <section className="snapshot-section">
             <h3>{t('snap.debtHeading')}</h3>
             <p>
-              {country.symbol} {Math.round(plan.debt.totalBalance).toLocaleString()} total debt,
-              paying {country.symbol} {plan.debt.extraMonthly.toLocaleString()}/month extra,{' '}
+              {t('left.totalDebtLine', { balance: `${country.symbol} ${Math.round(plan.debt.totalBalance).toLocaleString()}`, extra: `${country.symbol} ${plan.debt.extraMonthly.toLocaleString()}` })}{' '}
               {plan.debt.avalancheReachable === false
                 ? t('snap.debtOffPace')
                 : t('snap.debtOnPace', { n: plan.debt.avalancheMonths })}

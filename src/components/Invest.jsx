@@ -223,16 +223,16 @@ const Invest = ({ country, rate, inflation, wrapper, compoundFrequency = 12, con
       {goals.length > 1 && (
         <div className="invest-combined">
           <div className="invest-combined-main">
-            <span>Combined monthly needed for all {goals.length} goals</span>
-            <strong>{country.symbol} {Math.round(combinedMonthly).toLocaleString()}/month</strong>
+            <span>{t('left.invCombined', { n: goals.length })}</span>
+            <strong>{country.symbol} {Math.round(combinedMonthly).toLocaleString()}{t('left.perMonth')}</strong>
           </div>
           <div className="invest-combined-totals">
             <div>
-              <span>Total contributed across all goals</span>
+              <span>{t('left.invTotalContributed')}</span>
               <strong>{country.symbol} {Math.round(combinedContributed).toLocaleString()}</strong>
             </div>
             <div>
-              <span>Total interest earned across all goals</span>
+              <span>{t('left.invTotalInterest')}</span>
               <strong className="positive">{country.symbol} {Math.round(combinedInterest).toLocaleString()}</strong>
             </div>
           </div>

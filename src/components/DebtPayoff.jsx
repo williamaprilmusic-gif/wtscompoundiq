@@ -298,7 +298,7 @@ const DebtPayoff = ({ country }) => {
             <h3><Term k="avalanche">{t('debt.avalanche')}</Term></h3>
             <span className="debt-result-label">{t('debt.debtFreeIn')}</span>
             <strong>{avalanche.reachable ? `${avalanche.months} months` : `50+ years`}</strong>
-            {avalanche.reachable && <span className="debt-result-date">around {monthsFromNowLabel(avalanche.months)}</span>}
+            {avalanche.reachable && <span className="debt-result-date">{t('loan.around', { date: monthsFromNowLabel(avalanche.months) })}</span>}
             <span className="debt-result-label">{t('debt.totalInterest')}</span>
             <strong className="interest-figure">{country.symbol} {Math.round(avalanche.totalInterest).toLocaleString()}</strong>
             <div className="debt-order">
@@ -310,7 +310,7 @@ const DebtPayoff = ({ country }) => {
             <h3><Term k="snowball">{t('debt.snowball')}</Term></h3>
             <span className="debt-result-label">{t('debt.debtFreeIn')}</span>
             <strong>{snowball.reachable ? `${snowball.months} months` : `50+ years`}</strong>
-            {snowball.reachable && <span className="debt-result-date">around {monthsFromNowLabel(snowball.months)}</span>}
+            {snowball.reachable && <span className="debt-result-date">{t('loan.around', { date: monthsFromNowLabel(snowball.months) })}</span>}
             <span className="debt-result-label">{t('debt.totalInterest')}</span>
             <strong className="interest-figure">{country.symbol} {Math.round(snowball.totalInterest).toLocaleString()}</strong>
             <div className="debt-order">

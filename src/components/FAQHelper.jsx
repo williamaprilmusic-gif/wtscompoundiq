@@ -103,17 +103,17 @@ const POWER_TOOL_FAQS = [
 const FAQ_DATA = [
   {
     question: 'Can I change my plan later?',
-    answer: 'Yes -- open "Upgrade Plan" any time to switch tiers. Changes apply immediately since this is a local demo with no real billing cycle to wait out.',
+    answer: 'Yes -- open "Upgrade Plan" to move to a different paid plan (it starts immediately and your previous one is cancelled, so you are never billed for both), or use "Downgrade to Basic" to cancel. Cancelling stops future renewal charges; you keep your current tier until the end of the period you have already paid for. The details are in the Refund & Cancellation Policy.',
     keywords: ['change', 'plan', 'downgrade', 'switch', 'cancel']
   },
   {
     question: 'What payment methods do you accept?',
-    answer: 'None yet, honestly. The upgrade flow is a "Demo Upgrade -- No Charge" simulation: no real payment is processed, and no card or bank details are collected or stored. South African users see a real local bank list (Absa, Standard Bank, Capitec, etc.) in the bank-redirect option, but it is for demo purposes only.',
+    answer: 'Paid plans are processed by PayFast, an independent South African payment processor. You pay on PayFast\'s own secure checkout page -- we never see or store your card or bank details -- and PayFast emails you a receipt. Which payment methods appear there (for example card or instant EFT) is decided by PayFast.',
     keywords: ['payment', 'card', 'pay', 'bank', 'billing', 'charge', 'credit']
   },
   {
     question: 'Is there a money-back guarantee?',
-    answer: 'There is nothing to refund -- no real charge ever happens in this version of the app.',
+    answer: 'Yes -- if you are not happy with a paid tier, you can request a full refund within 14 days of your first payment on that tier (once per person per tier). After that, payments are non-refundable for the rest of the billing period you have paid for, but you can cancel at any time to stop the next charge. The full rules are in the Refund & Cancellation Policy (open Privacy & Terms).',
     keywords: ['refund', 'guarantee', 'money back', 'cancel']
   },
   {
@@ -128,7 +128,7 @@ const FAQ_DATA = [
   },
   {
     question: 'Is my data safe? Is this app secure?',
-    answer: 'Yes -- everything runs in your browser. Nothing you type is sent to a server, there is no login/account system, and no card or personal data is ever collected. Your selected tier is stored only in your own browser\'s local storage, which is why it can be reset by clearing your browser data.',
+    answer: 'Your plans, budgets and calculations stay in your browser\'s local storage -- they are not uploaded, and there is no login or account system. The only personal data we collect is what a paid subscription needs: the email address you give at checkout, your tier and billing period, and the subscription status and PayFast reference numbers (see the Privacy Policy). Card and bank details go straight to PayFast and never touch our servers. Clearing your browser data erases your saved plans, so export a backup first.',
     keywords: ['secure', 'security', 'safe', 'hack', 'data', 'privacy']
   },
   {
