@@ -27,7 +27,7 @@ const LanguageSwitcher = () => {
         aria-label={t('header.language')}
       >
         {languages.map((l) => (
-          <option key={l.code} value={l.code}>{l.label}</option>
+          <option key={l.code} value={l.code}>{l.label}{['en','af','zu'].includes(l.code) ? '' : ' (beta)'}</option>
         ))}
       </select>
       <span className="language-switcher-caret" aria-hidden="true">▾</span>

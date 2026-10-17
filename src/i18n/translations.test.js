@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { translations, LANGUAGES } from './translations';
-import stringModules from './strings';
 
 const flat = (o, p = '') =>
   Object.entries(o).flatMap(([k, v]) => (typeof v === 'object' && v ? flat(v, `${p}${k}.`) : [[`${p}${k}`, v]]));
@@ -8,12 +7,7 @@ const flat = (o, p = '') =>
 // {plural} is an English-only "s" suffix; other languages legitimately drop it.
 const placeholders = (s) => (String(s).match(/\{[a-zA-Z]+\}/g) || []).filter(x => x !== '{plural}').sort().join();
 
-// Per-component namespaces (strings/*.js) are translated for these languages only; the
-// rest intentionally fall back to English through t().
-const FULL_COVERAGE = new Set(['en', 'af', 'zu']);
-const STRING_NAMESPACES = new Set(stringModules.map(m => m.ns));
 const en = flat(translations.en);
-const enFor = (code) => FULL_COVERAGE.has(code) ? en : en.filter(([k]) => !STRING_NAMESPACES.has(k.split('.')[0]));
 
 describe('translations', () => {
   it('has a block for every listed language', () => {
@@ -25,7 +19,7 @@ describe('translations', () => {
       const own = Object.fromEntries(flat(translations[code]));
 
       it('translates every English key (no half-English screens)', () => {
-        expect(enFor(code).map(([k]) => k).filter(k => !(k in own))).toEqual([]);
+        expect(en.map(([k]) => k).filter(k => !(k in own))).toEqual([]);
       });
 
       it('keeps the same {placeholders} as English', () => {

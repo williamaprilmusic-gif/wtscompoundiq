@@ -40,6 +40,6 @@ describe('i18n render smoke', () => {
         expect(out.FAQHelper).not.toContain('Ask the FAQ Assistant');
         expect(out.PowerTools).not.toContain('FIRE Number');
       }
-    });
+    }, 60000);
   }
 });

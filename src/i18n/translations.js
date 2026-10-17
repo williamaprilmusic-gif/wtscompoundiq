@@ -37,6 +37,7 @@ export const LANGUAGES = [
 ];
 
 import stringModules from './strings';
+import languagePacks from './langs';
 
 export const translations = {
   en: {
@@ -2548,4 +2549,16 @@ export const translations = {
 // merged in here for English, Afrikaans and isiZulu; the other languages fall back to English.
 for (const m of stringModules) {
   for (const lang of ['en', 'af', 'zu']) translations[lang][m.ns] = { ...translations[lang][m.ns], ...m[lang] };
+}
+
+// Flat "ns.key.path" packs for the other eight South African languages (see ./langs/index.js).
+const setPath = (obj, path, value) => {
+  const parts = path.split('.');
+  let o = obj;
+  for (let i = 0; i < parts.length - 1; i++) o = o[parts[i]] = o[parts[i]] || {};
+  o[parts[parts.length - 1]] = value;
+};
+for (const [lang, pack] of Object.entries(languagePacks)) {
+  if (!translations[lang]) continue;
+  for (const [path, value] of Object.entries(pack)) setPath(translations[lang], path, value);
 }
