@@ -3,15 +3,36 @@
 // Policy in one modal with a document switcher. Content lives in legalDocs.jsx; this file
 // is just the shell -- section numbers come from array position so the prose's
 // "Section N" cross-references are the only thing to keep in sync by hand.
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './LegalModal.css';
 import { LEGAL_DOCS } from './legalDocs';
 import { useLanguage } from '../i18n/LanguageContext';
+import { renderBlocks } from './legalMarkup';
+
+const LOADERS = import.meta.glob('../legal/*.js');
+
+// Translated legal text (src/legal/<lang>.js), loaded on demand; English is the JSX in legalDocs.
+function useTranslatedDocs(language) {
+  const [pack, setPack] = useState(null);
+  useEffect(() => {
+    let live = true;
+    setPack(null);
+    const load = LOADERS['../legal/' + language + '.js'];
+    if (language !== 'en' && load) load().then(m => { if (live) setPack(m.default); }).catch(() => {});
+    return () => { live = false; };
+  }, [language]);
+  return pack;
+}
 
 export default function LegalModal({ onClose, initialDoc = 'terms' }) {
   const { t, language } = useLanguage();
   const [activeId, setActiveId] = useState(initialDoc);
-  const doc = LEGAL_DOCS.find(d => d.id === activeId) || LEGAL_DOCS[0];
+  const pack = useTranslatedDocs(language);
+  const enDoc = LEGAL_DOCS.find(d => d.id === activeId) || LEGAL_DOCS[0];
+  const tr = pack && pack.docs && pack.docs[enDoc.id];
+  const doc = tr
+    ? { ...enDoc, ...tr, callout: { tag: tr.callout.tag, body: <p>{tr.callout.body}</p> }, sections: tr.sections.map(sec => ({ heading: sec.heading, body: renderBlocks(sec.body) })) }
+    : enDoc;
 
   return (
     <div className="legal-overlay" onClick={onClose}>
@@ -27,7 +48,7 @@ export default function LegalModal({ onClose, initialDoc = 'terms' }) {
               className={d.id === activeId ? 'active' : ''}
               onClick={() => { setActiveId(d.id); }}
             >
-              {d.tab}
+              {pack && pack.docs && pack.docs[d.id] ? pack.docs[d.id].tab : d.tab}
               <span className="n">{String(i + 1).padStart(2, '0')}</span>
             </button>
           ))}
@@ -39,7 +60,7 @@ export default function LegalModal({ onClose, initialDoc = 'terms' }) {
           <p className="legal-updated">
             {t('legal.effective', { effective: doc.effective, updated: doc.updated })}
           </p>
-          {language !== 'en' && <p className="legal-updated">{t('legal.englishOnly')}</p>}
+          {language !== 'en' && <p className="legal-updated">{tr ? pack.notice : t('legal.englishOnly')}</p>}
 
           {doc.callout && (
             <div className="legal-callout">
